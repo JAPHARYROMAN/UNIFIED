@@ -75,4 +75,6 @@ production funds, token distribution, or public lending.
 The Phase 4 risk, custody, and liquidation boundaries are documented in
 `docs/architecture/phase-4a-risk-servicing.md`,
 `docs/architecture/phase-4b1-collateral-custody.md`, and
-`docs/architecture/phase-4b2-liquidation.md`.
+`docs/architecture/phase-4b2-liquidation.md`. The bounded Phase 4 engineering exit
+decision is recorded in `docs/reviews/phase-4-exit-review.md`; it is not production
+ratification.
