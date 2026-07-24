@@ -11,12 +11,12 @@ UNI-SIM-004,WS-RISK,Simulate callback delivery and reconciliation faults,DONE,Ac
 UNI-SEC-010,WS-SECURITY,Complete Phase 7A internal review,DONE,Security Authority,No unresolved critical or existential payment-ingress finding
 UNI-REVIEW-008,WS-SPEC,Complete bounded Phase 7A engineering exit,DONE,Program Authority,Exit separates synthetic ingress proof from live payment and loan-allocation approval
 UNI-ADR-011,WS-SPEC,Accept Phase 7B final payment allocation boundary,DONE,Protocol Architecture Authority,ADR 0016 fixes finality reconciliation waterfall excess reversal and collateral-evidence boundaries
-UNI-ALLOC-001,WS-PAYMENTS,Implement idempotent principal-only allocation projector,TODO,Protocol Architecture Authority,Matched final payment reduces one exact versioned synthetic obligation once
-UNI-WATERFALL-001,WS-RISK,Implement immutable principal then excess waterfall,TODO,Accounting and Economic Risk Authority,Every final unit becomes principal reduction or refundable credit
-UNI-ACCOUNTING-009,WS-LEDGER,Post atomic allocation and lender payable journals,TODO,Accounting and Economic Risk Authority,Unallocated liability receivable lender claim repayment payable and refund payable remain balanced
-UNI-REVERSAL-001,WS-PAYMENTS,Restore exact allocation on provider reversal,TODO,Security Authority,Linked opposite journals and obligation state restore once without history mutation
-UNI-COLLATERAL-008,WS-COLLATERAL,Compute non-executing release eligibility evidence,TODO,Security Authority,Zero projected debt matched finality elapsed risk deadline and no reversal are all required
-UNI-SCHEMA-010,WS-SCHEMA,Define allocation reversal and release evidence,TODO,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
-UNI-SIM-005,WS-RISK,Simulate allocation overpayment and reversal faults,TODO,Accounting and Economic Risk Authority,Partial full excess replay conflict outage and reversal scenarios conserve units
-UNI-SEC-011,WS-SECURITY,Complete Phase 7B internal review,TODO,Security Authority,No unresolved critical or existential allocation finding
+UNI-ALLOC-001,WS-PAYMENTS,Implement idempotent principal-only allocation projector,DONE,Protocol Architecture Authority,Matched final payment reduces one exact versioned synthetic obligation once
+UNI-WATERFALL-001,WS-RISK,Implement immutable principal then excess waterfall,DONE,Accounting and Economic Risk Authority,Every final unit becomes principal reduction or refundable credit
+UNI-ACCOUNTING-009,WS-LEDGER,Post atomic allocation and lender payable journals,DONE,Accounting and Economic Risk Authority,Unallocated liability receivable lender claim repayment payable and refund payable remain balanced
+UNI-REVERSAL-001,WS-PAYMENTS,Restore exact allocation on provider reversal,DONE,Security Authority,Linked opposite journals and obligation state restore once without history mutation
+UNI-COLLATERAL-008,WS-COLLATERAL,Compute non-executing release eligibility evidence,DONE,Security Authority,Zero projected debt matched finality elapsed risk deadline and no reversal are all required
+UNI-SCHEMA-010,WS-SCHEMA,Define allocation reversal and release evidence,DONE,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
+UNI-SIM-005,WS-RISK,Simulate allocation overpayment and reversal faults,DONE,Accounting and Economic Risk Authority,Partial full excess replay conflict outage and reversal scenarios conserve units
+UNI-SEC-011,WS-SECURITY,Complete Phase 7B internal review,DONE,Security Authority,No unresolved critical or existential allocation finding
 UNI-REVIEW-009,WS-SPEC,Complete bounded Phase 7B engineering exit,TODO,Program Authority,Exit separates synthetic allocation proof from canonical debt and collateral authority

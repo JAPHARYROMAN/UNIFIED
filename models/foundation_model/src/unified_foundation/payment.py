@@ -133,3 +133,47 @@ def _allowed(current: PaymentStatus, target: PaymentStatus) -> bool:
         )
         or (current == PaymentStatus.FINAL and target == PaymentStatus.REVERSED)
     )
+
+
+@dataclass(frozen=True)
+class AllocationResult:
+    debt_before: int
+    principal: int
+    refundable_excess: int
+    debt_after: int
+    reversed_debt: int
+    journal_count: int
+
+
+def simulate_final_allocation(
+    *,
+    payment_units: int,
+    outstanding_principal: int,
+    final: bool,
+    reconciliation_matched: bool,
+    reverse: bool = False,
+    accounting_failure: bool = False,
+) -> AllocationResult:
+    """Conserve a principal-only allocation or return untouched state on failure."""
+    if payment_units <= 0 or outstanding_principal <= 0:
+        raise ValueError("invalid allocation simulation")
+    if not final or not reconciliation_matched or accounting_failure:
+        return AllocationResult(
+            debt_before=outstanding_principal,
+            principal=0,
+            refundable_excess=0,
+            debt_after=outstanding_principal,
+            reversed_debt=outstanding_principal,
+            journal_count=0,
+        )
+    principal = min(payment_units, outstanding_principal)
+    excess = payment_units - principal
+    debt_after = outstanding_principal - principal
+    return AllocationResult(
+        debt_before=outstanding_principal,
+        principal=principal,
+        refundable_excess=excess,
+        debt_after=debt_after,
+        reversed_debt=outstanding_principal if reverse else debt_after,
+        journal_count=4 if reverse else 2,
+    )

@@ -2,6 +2,7 @@ from unified_foundation.payment import (
     Callback,
     PaymentStatus,
     simulate_callback_delivery,
+    simulate_final_allocation,
 )
 
 
@@ -100,3 +101,46 @@ def test_reconciliation_difference_remains_explicit() -> None:
     )
     assert result.final_units == 1_000
     assert result.reconciliation_difference == -100
+
+
+def test_final_allocation_conserves_principal_and_refundable_excess() -> None:
+    result = simulate_final_allocation(
+        payment_units=1_250,
+        outstanding_principal=1_000,
+        final=True,
+        reconciliation_matched=True,
+    )
+    assert result.principal == 1_000
+    assert result.refundable_excess == 250
+    assert result.debt_after == 0
+    assert result.principal + result.refundable_excess == 1_250
+
+
+def test_allocation_hold_and_accounting_failure_change_nothing() -> None:
+    for final, matched, failure in (
+        (False, True, False),
+        (True, False, False),
+        (True, True, True),
+    ):
+        result = simulate_final_allocation(
+            payment_units=400,
+            outstanding_principal=1_000,
+            final=final,
+            reconciliation_matched=matched,
+            accounting_failure=failure,
+        )
+        assert result.debt_after == 1_000
+        assert result.journal_count == 0
+
+
+def test_allocation_reversal_restores_exact_debt() -> None:
+    result = simulate_final_allocation(
+        payment_units=1_250,
+        outstanding_principal=1_000,
+        final=True,
+        reconciliation_matched=True,
+        reverse=True,
+    )
+    assert result.debt_after == 0
+    assert result.reversed_debt == result.debt_before
+    assert result.journal_count == 4

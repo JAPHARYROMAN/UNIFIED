@@ -31,7 +31,7 @@
     },
     {
       "path": "packages/generated/go/unified/v1/payment.pb.go",
-      "sha256": "5642c1ea746f2196be4ac551fa5856cf06ca975147c38967a05052069ae649ef"
+      "sha256": "df3eb191cee2651b2af9bb67c8e1d1a677b17bdc873665e1051b86a795422035"
     },
     {
       "path": "packages/generated/go/unified/v1/risk.pb.go",
@@ -75,7 +75,7 @@
     },
     {
       "path": "packages/generated/typescript/unified/v1/payment_pb.ts",
-      "sha256": "05f921f629f454cde83b7d1a51322a008707aa0497a828dfc09b1fd24611e1fd"
+      "sha256": "c8eadea7a0fc7faeacf2eced80c5db8e30b38bfe4bd9240e3b359783ddf4e30b"
     },
     {
       "path": "packages/generated/typescript/unified/v1/risk_pb.ts",
@@ -127,7 +127,7 @@
     },
     {
       "path": "packages/generated/python/unified/v1/payment_pb2.py",
-      "sha256": "0e943b1c5f99f4a7cd0eddc56c249c98184199939b3438b21e5a90caf3eb8c2d"
+      "sha256": "df5153ddcbeaada3d2adf2598c4eedcb774870ee47d713944cc8c787268ed3b8"
     },
     {
       "path": "packages/generated/python/unified/v1/risk_pb2.py",
@@ -143,7 +143,7 @@
     },
     {
       "path": "protocol/src/generated/FoundationTypes.sol",
-      "sha256": "75108f51b5b1e89be611ccc17e2101b411fef62f30ceb526f927c471914a742f"
+      "sha256": "0ae582ca933fba53306faf0bc0bcea8c42c26c97441bd757032248269ae11788"
     }
   ]
 }

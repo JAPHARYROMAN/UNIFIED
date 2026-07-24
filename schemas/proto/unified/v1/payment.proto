@@ -153,3 +153,68 @@ message PaymentReconciliationResolutionEvidence {
   string resolved_by = 5;
   google.protobuf.Timestamp resolved_at = 6;
 }
+
+// Synthetic Phase 7B projection evidence. It is not canonical on-chain loan state.
+message LoanObligationSnapshotEvidence {
+  LoanId loan_id = 1;
+  PartyId borrower_id = 2;
+  PartyId lender_id = 3;
+  Money outstanding_principal = 4;
+  uint64 aggregate_version = 5;
+  string source_authority = 6;
+  bytes source_evidence_hash = 7;
+  google.protobuf.Timestamp as_of = 8;
+}
+
+message FinalPaymentAllocationEvidence {
+  Identifier allocation_id = 1;
+  Identifier payment_id = 2;
+  LoanId loan_id = 3;
+  string provider_id = 4;
+  string provider_reference = 5;
+  Money gross_payment = 6;
+  Money principal_allocation = 7;
+  Money refundable_excess = 8;
+  Money debt_before = 9;
+  Money debt_after = 10;
+  uint64 obligation_version_before = 11;
+  uint64 obligation_version_after = 12;
+  bytes waterfall_policy_hash = 13;
+  bytes finality_policy_hash = 14;
+  Identifier reconciliation_id = 15;
+  repeated Identifier journal_ids = 16;
+  bytes evidence_hash = 17;
+  google.protobuf.Timestamp reversal_deadline = 18;
+  google.protobuf.Timestamp allocated_at = 19;
+}
+
+message PaymentAllocationReversalEvidence {
+  Identifier reversal_id = 1;
+  Identifier allocation_id = 2;
+  Identifier payment_id = 3;
+  LoanId loan_id = 4;
+  Money restored_principal = 5;
+  Money removed_refundable_excess = 6;
+  Money debt_before = 7;
+  Money debt_after = 8;
+  uint64 obligation_version_before = 9;
+  uint64 obligation_version_after = 10;
+  string reason_code = 11;
+  repeated Identifier journal_ids = 12;
+  bytes evidence_hash = 13;
+  google.protobuf.Timestamp reversed_at = 14;
+}
+
+message CollateralReleaseEligibilityEvidence {
+  Identifier evidence_id = 1;
+  Identifier allocation_id = 2;
+  LoanId loan_id = 3;
+  bool eligible = 4;
+  Money projected_outstanding_principal = 5;
+  bool payment_final = 6;
+  bool reconciliation_matched = 7;
+  bool reversal_deadline_elapsed = 8;
+  bool allocation_reversed = 9;
+  bytes evidence_hash = 10;
+  google.protobuf.Timestamp evaluated_at = 11;
+}

@@ -1,6 +1,6 @@
 # Phase 7B Final Payment Allocation and Reversal
 
-Status: accepted boundary; implementation pending
+Status: implemented for synthetic local engineering; not canonical loan authority
 
 ## Authority flow
 
@@ -125,6 +125,17 @@ policy atomically.
 - `INV-ACC-002`, `INV-ACC-003`, and `INV-ACC-004`: journals are balanced, immutable,
   linked, atomic, and idempotent.
 - `INV-PAY-011`: an unmatched reconciliation blocks allocation.
+
+## Implemented slice
+
+- a versioned synthetic obligation projector with exact compare-and-set allocation;
+- deterministic principal-then-refundable-excess arithmetic;
+- separate atomic allocation/lender-claim journals and linked reversal batches;
+- exact provider/payment reversal binding and idempotent restoration;
+- non-executing collateral-release eligibility across every unreversed payment risk
+  deadline on the projected loan;
+- additive allocation/reversal/release Protobuf and deterministic four-language bindings;
+- append-only SQL evidence, synthetic fault simulations, and an internal security review.
 
 ## Explicitly unavailable
 

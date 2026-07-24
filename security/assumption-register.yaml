@@ -134,3 +134,17 @@ assumptions:
     expiry: 2026-10-24
     downstream_impact: Callback authentication replay conflict quarantine and raw evidence retention
     validation: Exact-byte authentication noncanonical and oversize rejection plus forged stale mismatch and replay tests
+  - id: ASM-020
+    assumption: Phase 7B obligation snapshots are synthetic projections and are never represented as canonical on-chain loan state.
+    owner: Protocol Architecture Authority
+    evidence: adr/0016-phase-7b-final-payment-allocation-boundary.md
+    expiry: 2026-10-24
+    downstream_impact: Debt reduction terminal state collateral eligibility accounting and user disclosures
+    validation: No chain or collateral dependency and explicit projection naming in code schema SQL and review
+  - id: ASM-021
+    assumption: The first Phase 7B waterfall contains principal and refundable excess only in one exact asset.
+    owner: Accounting and Economic Risk Authority
+    evidence: docs/architecture/phase-7b-final-payment-allocation.md
+    expiry: 2026-10-24
+    downstream_impact: Allocation arithmetic receivable lender claim refund payable and reversal restoration
+    validation: Integer conservation tests and rejection of provisional mismatched stale or foreign-asset inputs

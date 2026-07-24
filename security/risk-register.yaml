@@ -379,3 +379,39 @@ risks:
     downstream_impact: Privacy breach regulatory exposure credential compromise and irreversible public disclosure
     validation: Synthetic-only bounded raw store hash-only public schemas forbidden-field gate and no live provider integration
     status: CONSTRAINED_LOCAL_ONLY
+  - id: RISK-PHASE7B-001
+    severity: EXISTENTIAL
+    title: Off-chain projection is mistaken for canonical loan repayment
+    owner: Protocol Architecture Authority
+    evidence: security/reviews/phase-7b-internal-review.md
+    expiry: 2026-10-24
+    downstream_impact: False terminal state unsecured collateral release and irreconcilable debt
+    validation: No on-chain or collateral authority explicit synthetic naming and non-executing eligibility only
+    status: CONSTRAINED_LOCAL_ONLY
+  - id: RISK-PHASE7B-002
+    severity: CRITICAL
+    title: Final payment units are allocated twice or against stale debt
+    owner: Security Authority
+    evidence: services/payment-orchestrator/allocation/allocation_test.go
+    expiry: 2026-10-24
+    downstream_impact: Understated debt duplicate lender payable and excess refund
+    validation: Single payment allocation deterministic ID and exact obligation version compare-and-set
+    status: CONTROLLED
+  - id: RISK-PHASE7B-003
+    severity: CRITICAL
+    title: Overpayment is hidden as revenue or lost
+    owner: Accounting and Economic Risk Authority
+    evidence: services/foundation-ledger/internal/allocationaccounting/accounting_test.go
+    expiry: 2026-10-24
+    downstream_impact: Borrower loss misstated revenue and unbalanced settlement
+    validation: Gross equals principal plus refund payable with no allocation revenue account
+    status: CONTROLLED
+  - id: RISK-PHASE7B-004
+    severity: CRITICAL
+    title: Reversal fails to restore the original obligation and claims
+    owner: Accounting and Economic Risk Authority
+    evidence: services/payment-orchestrator/allocation/allocation.go
+    expiry: 2026-10-24
+    downstream_impact: Understated debt duplicate restoration or inconsistent lender and refund liabilities
+    validation: Exact stored allocation reuse versioned debt restoration linked opposite batch and replay test
+    status: CONTROLLED
