@@ -102,4 +102,5 @@ in `docs/reviews/phase-6a-exit-review.md`. It is not a production identity, unde
 or unsecured-credit system. ADR 0014 and
 `docs/architecture/phase-6b-underwritten-activation.md` now govern the bounded Phase 6B
 implementation: an atomic, synthetic, principal-only version-3 loan activation path with
-policy-isolated exposure controls. It does not authorize real unsecured funds.
+policy-isolated exposure controls. Its bounded engineering exit is recorded in
+`docs/reviews/phase-6b-exit-review.md`. It does not authorize real unsecured funds.
