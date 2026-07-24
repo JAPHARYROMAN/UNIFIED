@@ -98,5 +98,7 @@ The bounded Phase 6A implementation adds commitment-only provider, credential, d
 and exposure controls plus synthetic underwriting and audit evidence. Its architecture
 and layouts are documented in `docs/architecture/phase-6a-identity-underwriting.md` and
 `docs/architecture/phase-6a-storage-layouts.md`; its bounded engineering exit is recorded
-in `docs/reviews/phase-6a-exit-review.md`. It is not a production identity or
-unsecured-credit system.
+in `docs/reviews/phase-6a-exit-review.md`. It is not a production identity, underwriting,
+or unsecured-credit system. The accepted next integration boundary is ADR 0014 and
+`docs/architecture/phase-6b-underwritten-activation.md`: an atomic, synthetic,
+principal-only version-3 loan activation path. It does not authorize real unsecured funds.
