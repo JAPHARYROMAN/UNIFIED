@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+set -eu
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "Direct pushes to main are prohibited. Open a pull request." >&2
+    exit 1
+  fi
+done
+

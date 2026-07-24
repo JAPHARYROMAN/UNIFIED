@@ -1,0 +1,9 @@
+package adapter
+
+// Adapter normalizes provider evidence without granting the provider canonical
+// protocol authority.
+type Adapter interface {
+	VerifyCallback(payload []byte, signature []byte) error
+	Normalize(payload []byte) ([]byte, error)
+}
+

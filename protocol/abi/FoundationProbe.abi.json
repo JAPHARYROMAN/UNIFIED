@@ -1,0 +1,77 @@
+[
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "string",
+                "name": "value",
+                "type": "string"
+              }
+            ],
+            "internalType": "struct FoundationTypes.AssetId",
+            "name": "assetId",
+            "type": "tuple"
+          },
+          {
+            "internalType": "string",
+            "name": "units",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct FoundationTypes.Money",
+        "name": "amount",
+        "type": "tuple"
+      }
+    ],
+    "name": "moneyHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "string",
+            "name": "policyId",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "version",
+            "type": "string"
+          },
+          {
+            "internalType": "bytes",
+            "name": "contentHash",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct FoundationTypes.PolicyReference",
+        "name": "policy",
+        "type": "tuple"
+      }
+    ],
+    "name": "policyHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  }
+]
+

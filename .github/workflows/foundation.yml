@@ -1,0 +1,68 @@
+name: Foundation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.0"
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.13.1"
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.6"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.15"
+          enable-cache: true
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          version: "1.69.0"
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: "v1.7.1"
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.28.2 --activate
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          uv sync --frozen
+      - name: Generate and verify
+        shell: pwsh
+        run: |
+          ./scripts/generate.ps1
+          git diff --exit-code
+          ./scripts/check-foundation.ps1
+
+  local-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start isolated foundation topology
+        shell: pwsh
+        run: ./scripts/local-up.ps1
+      - name: Exercise command event and ledger flow
+        shell: pwsh
+        run: ./scripts/smoke-local.ps1
+      - name: Reset isolated topology
+        if: always()
+        shell: pwsh
+        run: ./scripts/local-reset.ps1
+

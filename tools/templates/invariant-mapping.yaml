@@ -1,0 +1,7 @@
+work_item: UNI-WORKSTREAM-NNN
+invariants:
+  - id: INV-DOMAIN-NNN
+    enforcement: assertion-or-test
+    evidence: path/to/test-or-report
+    owner: Authority role
+

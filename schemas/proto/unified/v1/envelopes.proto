@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+// CommandEnvelope is the attributable, idempotent input contract for a state
+// transition. Payload bytes are interpreted by payload_type and schema_version.
+message CommandEnvelope {
+  Identifier command_id = 1;
+  string command_type = 2;
+  string schema_version = 3;
+  PartyId actor_id = 4;
+  string idempotency_key = 5;
+  Identifier correlation_id = 6;
+  Identifier causation_id = 7;
+  google.protobuf.Timestamp issued_at = 8;
+  google.protobuf.Timestamp expires_at = 9;
+  string payload_type = 10;
+  bytes payload = 11;
+  bytes payload_hash = 12;
+}
+
+// EventEnvelope carries an immutable canonical or derived fact.
+message EventEnvelope {
+  Identifier event_id = 1;
+  string event_type = 2;
+  string schema_version = 3;
+  string authority_class = 4;
+  Identifier aggregate_id = 5;
+  uint64 aggregate_version = 6;
+  Identifier correlation_id = 7;
+  Identifier causation_id = 8;
+  google.protobuf.Timestamp occurred_at = 9;
+  google.protobuf.Timestamp recorded_at = 10;
+  string payload_type = 11;
+  bytes payload = 12;
+  bytes payload_hash = 13;
+}
+

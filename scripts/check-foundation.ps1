@@ -1,0 +1,44 @@
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
+
+$workspace = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
+Set-Location -LiteralPath $workspace
+
+buf lint
+buf build --output '.cache/unified-schema.binpb'
+buf breaking --against 'schemas/baseline/v0.1'
+
+go test ./...
+pnpm run check
+uv run python -m compileall -q models packages/generated/python tools
+uv run pytest -q
+uv run ruff check models tools
+uv run python tools/check_foundation.py
+uv run python tools/check_privileged_surface.py
+
+$solcTarget = Join-Path $workspace '.cache\solc'
+if (Test-Path -LiteralPath $solcTarget) {
+    Remove-Item -LiteralPath $solcTarget -Recurse -Force
+}
+New-Item -ItemType Directory -Force -Path $solcTarget | Out-Null
+pnpm run solidity:compile
+uv run python tools/check_abi.py
+
+if (Get-Command forge -ErrorAction SilentlyContinue) {
+    Push-Location protocol
+    try {
+        forge test
+    } finally {
+        Pop-Location
+    }
+} else {
+    Write-Warning 'forge not installed locally; solc compilation passed. CI installs pinned Foundry.'
+}
+
+if (Test-Path -LiteralPath '.git') {
+    pwsh ./scripts/generate.ps1
+    git diff --exit-code -- packages/generated protocol/src/generated `
+        docs/specifications/registry.yaml security/invariant-catalog.csv
+}
+
+Write-Output 'All foundation checks passed.'

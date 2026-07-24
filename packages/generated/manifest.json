@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "path": "packages/generated/go/unified/v1/envelopes.pb.go",
+      "sha256": "59353fb11be90ee6ca2279b223f686640c53054865151a30b96891eda157e94a"
+    },
+    {
+      "path": "packages/generated/go/unified/v1/finance.pb.go",
+      "sha256": "7e0f887a5334befb016cdfad56e96b2a079858772cdb7ab63c41b9aa88b82c6f"
+    },
+    {
+      "path": "packages/generated/go/unified/v1/governance.pb.go",
+      "sha256": "f56d3d8a77c0a3c8bd0b6ed133d5d0360dadb8d04583b164aacaf138cdb9813e"
+    },
+    {
+      "path": "packages/generated/go/unified/v1/loan.pb.go",
+      "sha256": "07cb80ccb8f675ef3e81e3ead55ac42c98ebe2be6736cf9f287c127eb02d4510"
+    },
+    {
+      "path": "packages/generated/go/unified/v1/types.pb.go",
+      "sha256": "4a4707332b2c93af7e666bebf42e26c53e9fcb8989ab4ee2ee9da6c502e26ec6"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/envelopes_pb.ts",
+      "sha256": "fac0f7b7ca2b4a5f1783ad99908dcb1c749565f3b976c3fb3391e3bbff1abe3d"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/finance_pb.ts",
+      "sha256": "28dd18226be1d4bca605675f756762f8c75ffff7a8f2b9bff2fb90d429564536"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/governance_pb.ts",
+      "sha256": "8da5bac695a47affe560c436d5e5eec5938d017ee6dd7c1bc518420bb3e943ca"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/loan_pb.ts",
+      "sha256": "310a983db303024e93b3d4de9f962cad614757f8bffaf3032d53ed44503738f3"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/types_pb.ts",
+      "sha256": "91de1888ae9a20ea946a3172a73412817145bd0dbc3ae5758ad5ca33973e4fc7"
+    },
+    {
+      "path": "packages/generated/python/unified/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "packages/generated/python/unified/v1/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "packages/generated/python/unified/v1/envelopes_pb2.py",
+      "sha256": "57a9b08d1f101d231d387fe40c9167b5af37ea5535242aed4669dfe0e1d4d271"
+    },
+    {
+      "path": "packages/generated/python/unified/v1/finance_pb2.py",
+      "sha256": "43911156a19adc3cf76f551be96f5f64f161bea715235bb7052b0b3075ba628b"
+    },
+    {
+      "path": "packages/generated/python/unified/v1/governance_pb2.py",
+      "sha256": "8cc2942a08b91b67d93d72f823ec8eeaf899762d31c0274d625949380b0d2a56"
+    },
+    {
+      "path": "packages/generated/python/unified/v1/loan_pb2.py",
+      "sha256": "c1fad151f4c76ba410a582fe78d2465e7a78648fcebf6eb27a6d11f42e43c714"
+    },
+    {
+      "path": "packages/generated/python/unified/v1/types_pb2.py",
+      "sha256": "9cca84920369994ad324024b7411aafaf66c39aa18904f4fef8868c3e6183ac4"
+    },
+    {
+      "path": "protocol/src/generated/FoundationTypes.sol",
+      "sha256": "28f48696c34b65b2d2a2be48a914245de5f47f1b3ccac1982e23124ee56fc17e"
+    }
+  ]
+}

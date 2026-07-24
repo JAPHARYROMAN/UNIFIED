@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+// GovernanceAction binds an approved proposal to an exact executable payload.
+message GovernanceAction {
+  Identifier proposal_id = 1;
+  string proposal_class = 2;
+  string target_domain = 3;
+  bytes payload = 4;
+  bytes payload_hash = 5;
+  google.protobuf.Timestamp executable_after = 6;
+  google.protobuf.Timestamp expires_at = 7;
+  string authority_scope = 8;
+}
+

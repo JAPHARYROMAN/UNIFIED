@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/v1/payments/mock-payment-001"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "payment_id": "mock-payment-001",
+      "provider_id": "local-mock-provider",
+      "provider_reference": "example-reference-001",
+      "finality_status": "PROVISIONAL",
+      "asset_id": "asset:local:usd",
+      "units": "1000",
+      "contains_real_value": false
+    }
+  }
+}
+

@@ -1,0 +1,15 @@
+version: 1
+templates:
+  solidity_contract: protocol/src/FoundationProbe.sol
+  go_financial_service: services/foundation-ledger
+  typescript_application: apps/foundation-console
+  python_model: models/foundation_model
+  protobuf_api: schemas/proto/unified/v1
+  database_migration: services/foundation-ledger/migrations/000001_foundation_ledger.sql
+  workflow_orchestrator: tools/templates/workflow-orchestrator.go.tmpl
+  provider_adapter: tools/templates/provider-adapter.go.tmpl
+  threat_mapping: tools/templates/threat-mapping.yaml
+  invariant_mapping: tools/templates/invariant-mapping.yaml
+  adr: tools/templates/adr.md
+  rfc: tools/templates/rfc.md
+

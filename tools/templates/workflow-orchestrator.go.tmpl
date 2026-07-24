@@ -1,0 +1,9 @@
+package workflow
+
+// Orchestrator coordinates durable steps; financial truth remains with the
+// canonical domain and ledger owners.
+type Orchestrator interface {
+	Start(workflowID string, commandID string) error
+	Resume(workflowID string, eventID string) error
+}
+

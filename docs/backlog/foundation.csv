@@ -1,0 +1,17 @@
+id,workstream,title,status,owner,acceptance
+UNI-SPEC-001,WS-SPEC,Index twelve specifications,DONE,Program Authority,Registry hash check passes
+UNI-SPEC-002,WS-SPEC,Correct stale cross references,DONE,Protocol Architecture Authority,Cross-reference check passes
+UNI-ADR-001,WS-SPEC,Accept foundation decisions,DONE,Protocol Architecture Authority,ADRs 0001-0006 accepted
+UNI-PLATFORM-001,WS-PLATFORM,Bootstrap canonical monorepo,DONE,Release Authority,Required directories and root controls exist
+UNI-TOOLCHAIN-001,WS-PLATFORM,Pin foundation toolchains,DONE,Release Authority,Bootstrap reports exact expected versions
+UNI-SCHEMA-001,WS-SCHEMA,Define common identifiers money and assets,DONE,Protocol Architecture Authority,Buf lint and build pass
+UNI-SCHEMA-002,WS-SCHEMA,Define command and event envelopes,DONE,Protocol Architecture Authority,Generated projections compile
+UNI-SCHEMA-003,WS-SCHEMA,Define loan finance and governance messages,DONE,Protocol Architecture Authority,Breaking check passes
+UNI-GEN-001,WS-SCHEMA,Generate four-language bindings,DONE,Protocol Architecture Authority,Regeneration produces no diff
+UNI-KERNEL-001,WS-PROTOCOL,Compile protocol foundation probe,DONE,Protocol Architecture Authority,Foundry and solc checks pass
+UNI-LEDGER-001,WS-LEDGER,Implement balanced ledger skeleton,DONE,Accounting and Economic Risk Authority,Unit tests reject unbalanced journals
+UNI-DATA-001,WS-LEDGER,Create foundation database migration,DONE,Accounting and Economic Risk Authority,Migration and local smoke test pass
+UNI-SEC-001,WS-SECURITY,Generate invariant catalog,DONE,Security Authority,Invariant identifiers are unique
+UNI-CI-001,WS-PLATFORM,Install foundation CI gates,DONE,Release Authority,Required checks run on pull requests
+UNI-LOCAL-001,WS-PLATFORM,Create isolated local topology,DONE,Release Authority,Health and reset checks pass
+UNI-RELEASE-001,WS-PLATFORM,Commit and tag foundation baseline,DONE,Release Authority,Annotated tag spec-baseline-v0.1.0 exists

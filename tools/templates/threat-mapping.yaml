@@ -1,0 +1,7 @@
+work_item: UNI-WORKSTREAM-NNN
+threats:
+  - id: THREAT-ID
+    control: CONTROL-ID
+    evidence: path/to/test-or-report
+    owner: Security Authority
+

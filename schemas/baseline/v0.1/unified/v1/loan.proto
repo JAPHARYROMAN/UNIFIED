@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+// InterestKind identifies the deterministic interest calculation family.
+enum InterestKind {
+  INTEREST_KIND_UNSPECIFIED = 0;
+  INTEREST_KIND_FIXED = 1;
+  INTEREST_KIND_VARIABLE = 2;
+  INTEREST_KIND_ZERO = 3;
+}
+
+// LoanTerms is the immutable economic snapshot accepted at activation.
+message LoanTerms {
+  LoanId loan_id = 1;
+  PartyId borrower_id = 2;
+  Money principal = 3;
+  InterestKind interest_kind = 4;
+  int64 annual_rate_basis_points = 5;
+  google.protobuf.Timestamp accrual_starts_at = 6;
+  google.protobuf.Timestamp maturity_at = 7;
+  repeated PolicyReference policies = 8;
+  bytes agreement_hash = 9;
+  string schema_version = 10;
+}
+

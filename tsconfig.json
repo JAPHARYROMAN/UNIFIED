@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "exactOptionalPropertyTypes": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "outDir": "dist/typescript",
+    "rootDir": ".",
+    "strict": true,
+    "target": "ES2022"
+  },
+  "include": [
+    "apps/**/*.ts",
+    "packages/generated/typescript/**/*.ts"
+  ]
+}
+

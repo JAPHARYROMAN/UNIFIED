@@ -1,0 +1,90 @@
+version: 1
+baseline: spec-baseline-v0.1.0
+baseline_status: APPROVED_FOR_FOUNDATION_IMPLEMENTATION
+production_ratified: false
+reviewed_at: 2026-07-24
+specifications:
+  - id: UNI-CONSTITUTION
+    path: 'constitution/Unified_Constitution_v0.1.md'
+    version: '0.1'
+    sha256: 75fff6238e9ed010fd420ff23fab7e83733cf59c38841b9738e8c0133e42b75e
+    owner: 'Program Authority'
+    authority: constitutional
+    dependencies: []
+  - id: UNI-DOMAIN
+    path: 'docs/specifications/Unified_Domain_Model_v0.1.md'
+    version: '0.1'
+    sha256: 1f515c35ddd7bbca3e619439cc313a32c688f20d5221e91518b94220a2d649e4
+    owner: 'Protocol Architecture Authority'
+    authority: subordinate
+    dependencies: [UNI-CONSTITUTION]
+  - id: UNI-LOAN
+    path: 'docs/specifications/Universal_Loan_Model_and_State_Machines_v0.1.md'
+    version: '0.1'
+    sha256: 76c36c6f0cee2b9de6d8ebbfe69dd85d847bb9e21414d754431617b77b62604f
+    owner: 'Protocol Architecture Authority'
+    authority: subordinate
+    dependencies: [UNI-CONSTITUTION, UNI-DOMAIN]
+  - id: UNI-ACCOUNTING
+    path: 'docs/specifications/Unified_Financial_Accounting_Specification_v0.1.md'
+    version: '0.1'
+    sha256: 6635b26fb574a519a7ae4c544d885f4db2c86160153785d6ac995c93d8d41d18
+    owner: 'Accounting and Economic Risk Authority'
+    authority: subordinate
+    dependencies: [UNI-CONSTITUTION, UNI-DOMAIN, UNI-LOAN]
+  - id: UNI-UFT
+    path: 'docs/specifications/UFT_Tokenomics_and_Economic_Security_Specification_v0.1.md'
+    version: '0.1'
+    sha256: 27374b346f211d0caf0ec1a34b740513c4b90b413ac3cff75558326b0551ffd9
+    owner: 'Accounting and Economic Risk Authority'
+    authority: subordinate
+    dependencies: [UNI-CONSTITUTION, UNI-DOMAIN, UNI-LOAN, UNI-ACCOUNTING]
+  - id: UNI-THREAT
+    path: 'docs/specifications/Unified_Threat_Model_and_Adversarial_Security_Specification_v0.1.md'
+    version: '0.1'
+    sha256: 9c86a9a17ddefb1a9cf6d2776e3e8a5b45a60b35ff526a71b900d926a2362485
+    owner: 'Security Authority'
+    authority: subordinate
+    dependencies: [UNI-CONSTITUTION, UNI-DOMAIN, UNI-LOAN, UNI-ACCOUNTING, UNI-UFT]
+  - id: UNI-INVARIANTS
+    path: 'docs/specifications/Unified_Protocol_Invariants_and_Formal_Verification_Specification_v0.1.md'
+    version: '0.1'
+    sha256: 4aa5519bf5f13b83fa78583d29818a5631ef1bc6058dffe8da04e9063450fd84
+    owner: 'Security Authority'
+    authority: subordinate
+    dependencies: [UNI-CONSTITUTION, UNI-DOMAIN, UNI-LOAN, UNI-ACCOUNTING, UNI-UFT, UNI-THREAT]
+  - id: UNI-API
+    path: 'docs/specifications/Unified_Smart_Contract_Interface_and_Protocol_API_Specification_v0.1.md'
+    version: '0.1'
+    sha256: f1eb311cc6e14d2b6c66c2f325ad6c0bde0c2e77cd9d3d4c43a7dfefc875e869
+    owner: 'Protocol Architecture Authority'
+    authority: subordinate
+    dependencies: [UNI-DOMAIN, UNI-LOAN, UNI-INVARIANTS]
+  - id: UNI-DATA
+    path: 'docs/specifications/Unified_OnChain_OffChain_Data_Architecture_and_Event_Contract_Specification_v0.1.md'
+    version: '0.1'
+    sha256: edde75bdbd4d39f4ebbed196a89a4a1bdf733176b50b733649524935f4593b0b
+    owner: 'Protocol Architecture Authority'
+    authority: subordinate
+    dependencies: [UNI-DOMAIN, UNI-ACCOUNTING, UNI-INVARIANTS, UNI-API]
+  - id: UNI-SYSTEM
+    path: 'docs/specifications/Unified_System_Architecture_Service_Boundaries_and_Deployment_Topology_Specification_v0.1.md'
+    version: '0.1'
+    sha256: ee534262a101e2ffc584e8804bc76b62493a06ca1973f5fe937107e0707b1fa2
+    owner: 'Protocol Architecture Authority'
+    authority: subordinate
+    dependencies: [UNI-DATA, UNI-API, UNI-INVARIANTS, UNI-THREAT]
+  - id: UNI-ENGINEERING
+    path: 'docs/specifications/Unified_Repository_Architecture_Engineering_Constitution_and_Delivery_Workflow_Specification_v0.1.md'
+    version: '0.1'
+    sha256: 31249fc6db65d5b2f7c6cb41e5edd57f6489885458ed7e0c6704d2698e1655ae
+    owner: 'Release Authority'
+    authority: delivery
+    dependencies: [UNI-SYSTEM, UNI-DATA, UNI-INVARIANTS]
+  - id: UNI-PLAN
+    path: 'docs/specifications/Unified_Implementation_Master_Plan_Work_Breakdown_and_Parallel_Agent_Orchestration_Specification_v0.1.md'
+    version: '0.1'
+    sha256: 70abcb23a5fdd8abd7d565a55577f89f2009c8c002019a2a04baa1eee595340d
+    owner: 'Program Authority'
+    authority: delivery
+    dependencies: [UNI-ENGINEERING, UNI-SYSTEM, UNI-DATA, UNI-API, UNI-INVARIANTS]

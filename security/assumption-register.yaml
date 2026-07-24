@@ -1,0 +1,32 @@
+version: 1
+reviewed_at: 2026-07-24
+assumptions:
+  - id: ASM-001
+    assumption: Foundation execution is local-only and carries no real value.
+    owner: Release Authority
+    evidence: infrastructure/local/compose.yaml
+    expiry: 2026-10-24
+    downstream_impact: All local safety controls and smoke tests
+    validation: Reject production environment names and require local labels
+  - id: ASM-002
+    assumption: EVM chain id 31337 is development-only and is not a production-chain choice.
+    owner: Protocol Architecture Authority
+    evidence: adr/0004-local-development-topology.md
+    expiry: 2026-10-24
+    downstream_impact: Contract configuration and chain-domain identifiers
+    validation: Production chain requires a new accepted ADR
+  - id: ASM-003
+    assumption: Provider callbacks are synthetic and contain no personal or financial data.
+    owner: Security Authority
+    evidence: infrastructure/local/mock-provider/
+    expiry: 2026-10-24
+    downstream_impact: Payment identity oracle and bridge adapters
+    validation: Test fixtures use reserved example identifiers only
+  - id: ASM-004
+    assumption: USD is the reporting presentation currency while original asset denominations remain authoritative.
+    owner: Accounting and Economic Risk Authority
+    evidence: adr/0005-ledger-topology-and-reporting.md
+    expiry: 2026-10-24
+    downstream_impact: Ledger dimensions and reporting models
+    validation: No journal may convert or net original denomination implicitly
+

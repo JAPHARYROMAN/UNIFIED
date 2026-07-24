@@ -1,0 +1,58 @@
+version: 1
+reviewed_at: 2026-07-24
+risks:
+  - id: RISK-FOUNDATION-001
+    severity: EXISTENTIAL
+    title: Specification authority drift
+    owner: Program Authority
+    evidence: docs/specifications/registry.yaml
+    expiry: 2026-10-24
+    downstream_impact: Conflicting implementations and unenforceable invariants
+    validation: Registry hash and cross-reference checks on every pull request
+    status: CONTROLLED
+  - id: RISK-FOUNDATION-002
+    severity: CRITICAL
+    title: Ambiguous money representation
+    owner: Accounting and Economic Risk Authority
+    evidence: adr/0003-money-and-precision.md
+    expiry: 2026-10-24
+    downstream_impact: Asset loss or inconsistent debt calculations
+    validation: Schema lint plus ledger and numeric boundary tests
+    status: CONTROLLED
+  - id: RISK-FOUNDATION-003
+    severity: CRITICAL
+    title: Generated interface drift
+    owner: Protocol Architecture Authority
+    evidence: scripts/generate.ps1
+    expiry: 2026-10-24
+    downstream_impact: Cross-language semantic incompatibility
+    validation: Deterministic regeneration and clean Git diff in CI
+    status: CONTROLLED
+  - id: RISK-FOUNDATION-004
+    severity: CRITICAL
+    title: Local credentials mistaken for production credentials
+    owner: Security Authority
+    evidence: infrastructure/local/.env.example
+    expiry: 2026-10-24
+    downstream_impact: Credential exposure or unauthorized transactions
+    validation: Local-only labels, secret scanning, and production-value rejection
+    status: CONTROLLED
+  - id: RISK-FOUNDATION-005
+    severity: CRITICAL
+    title: Unbalanced or duplicate ledger posting
+    owner: Accounting and Economic Risk Authority
+    evidence: services/foundation-ledger/internal/ledger/ledger_test.go
+    expiry: 2026-10-24
+    downstream_impact: Corrupted financial truth
+    validation: Balance, currency, immutability, and idempotency tests
+    status: CONTROLLED
+  - id: RISK-FOUNDATION-006
+    severity: CRITICAL
+    title: Premature production use
+    owner: Release Authority
+    evidence: SECURITY.md
+    expiry: 2026-10-24
+    downstream_impact: Real financial loss without audits or ratification
+    validation: No production configuration, real providers, or deployment jobs
+    status: CONTROLLED
+

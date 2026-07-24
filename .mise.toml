@@ -1,0 +1,24 @@
+[tools]
+go = "1.26.0"
+node = "22.13.1"
+python = "3.12.6"
+uv = "0.11.15"
+terraform = "1.15.3"
+"ubi:bufbuild/buf" = "1.69.0"
+"ubi:foundry-rs/foundry" = "v1.7.1"
+
+[env]
+UNIFIED_ENVIRONMENT = "local"
+
+[tasks.generate]
+run = "pwsh ./scripts/generate.ps1"
+
+[tasks.check]
+run = "pwsh ./scripts/check-foundation.ps1"
+
+[tasks.local-up]
+run = "pwsh ./scripts/local-up.ps1"
+
+[tasks.local-reset]
+run = "pwsh ./scripts/local-reset.ps1"
+
