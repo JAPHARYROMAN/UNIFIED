@@ -88,3 +88,8 @@ The Phase 5 syndication boundary and implementation are recorded in
 `docs/architecture/phase-5-storage-layouts.md`. Its bounded engineering exit is recorded
 in `docs/reviews/phase-5-exit-review.md`. This is not an authorization for production
 lending or trading.
+
+The accepted next engineering boundary for commitment-only identity attestations,
+versioned underwriting decisions, and subject-level exposure reservations is recorded in
+`adr/0013-phase-6-identity-underwriting-boundary.md`. Raw identity data, production
+providers, and live unsecured lending remain prohibited.

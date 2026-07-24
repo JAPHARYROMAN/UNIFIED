@@ -91,6 +91,20 @@ approval is mandatory before public testnet.
 - **Acceptance:** Foundry and independent Go vectors, ABI review, and risk traceability pass.
 - **Accountable:** Accounting and Economic Risk Authority.
 
+## WS-IDENTITY — Identity and restricted evidence
+
+- **Owns:** public identity commitment interfaces and future restricted identity services.
+- **Produces:** provider/schema approvals, subject-bound credential attestations,
+  revocation evidence, consent controls, and privacy classifications.
+- **Consumes:** provider authority, credential policy, legal basis, and retention rules.
+- **Invariants:** no raw public identity; subject binding; validity; scoped uniqueness;
+  prospective revocation.
+- **Threats:** identity theft; synthetic identity; credential replay; public data leakage;
+  malicious providers; insider access.
+- **Acceptance:** commitment, binding, validity, revocation, privacy, and multi-wallet
+  exposure tests pass.
+- **Accountable:** Security Authority.
+
 ## WS-CUSTODY — Collateral custody
 
 - **Owns:** `protocol/src/collateral/`.
