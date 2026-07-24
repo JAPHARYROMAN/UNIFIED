@@ -85,3 +85,24 @@ assumptions:
     expiry: 2026-10-24
     downstream_impact: Activation distribution gas cost and supported syndicate size
     validation: Contract constants capacity rejections optimized runtime-size gate and full-capacity testing before public testnet
+  - id: ASM-013
+    assumption: Phase 6 subject and claim commitments are constructed off-chain with domain separation and at least 128 bits of secret randomness.
+    owner: Security Authority
+    evidence: adr/0013-phase-6-identity-underwriting-boundary.md
+    expiry: 2026-10-24
+    downstream_impact: Public identity confidentiality dictionary-attack resistance and exposure aggregation
+    validation: Synthetic randomized fixtures commitment-only public schema and production provider security review before integration
+  - id: ASM-014
+    assumption: All Phase 6A identities credentials features and decisions are synthetic and contain no personal data.
+    owner: Release Authority
+    evidence: tools/check_privacy_surface.py
+    expiry: 2026-10-24
+    downstream_impact: Repository logs generated bindings tests local object storage and public events
+    validation: Privacy-surface gate secret scanning fixture review and no provider or restricted-vault integration
+  - id: ASM-015
+    assumption: Each Phase 6A decision limit applies to one exact settlement asset without FX conversion or cross-asset netting.
+    owner: Accounting and Economic Risk Authority
+    evidence: docs/architecture/phase-6a-identity-underwriting.md
+    expiry: 2026-10-24
+    downstream_impact: Exposure conservation underwriting capacity and portfolio reporting
+    validation: Exact asset equality in decisions reservations simulations and contract tests

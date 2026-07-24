@@ -1,12 +1,5 @@
-import sys
-from pathlib import Path
-
 import pytest
-
-MODEL_SRC = Path(__file__).resolve().parents[1] / "src"
-sys.path.insert(0, str(MODEL_SRC))
-
-from unified_foundation import Money  # noqa: E402
+from unified_foundation import Money
 
 
 def test_exact_addition() -> None:
@@ -17,4 +10,3 @@ def test_exact_addition() -> None:
 def test_cross_asset_addition_is_rejected() -> None:
     with pytest.raises(ValueError, match="different assets"):
         Money("asset:local:usd", 1).add(Money("asset:local:uft", 1))
-

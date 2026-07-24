@@ -31,3 +31,7 @@ import { LiquidationEngine } from "./collateral/LiquidationEngine.sol";
 import { PositionManager } from "./syndicate/PositionManager.sol";
 import { SyndicateFactory } from "./syndicate/SyndicateFactory.sol";
 import { SyndicateVault } from "./syndicate/SyndicateVault.sol";
+import { IdentityProviderRegistry } from "./identity/IdentityProviderRegistry.sol";
+import { CredentialRegistry } from "./identity/CredentialRegistry.sol";
+import { CreditDecisionRegistry } from "./identity/CreditDecisionRegistry.sol";
+import { ExposureManager } from "./identity/ExposureManager.sol";

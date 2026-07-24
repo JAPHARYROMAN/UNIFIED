@@ -14,6 +14,11 @@ library ProtocolRoles {
     bytes32 internal constant BRIDGE_OPERATOR_ROLE = keccak256("BRIDGE_OPERATOR_ROLE");
     bytes32 internal constant TREASURY_OPERATOR_ROLE = keccak256("TREASURY_OPERATOR_ROLE");
     bytes32 internal constant RISK_COUNCIL_ROLE = keccak256("RISK_COUNCIL_ROLE");
+    bytes32 internal constant IDENTITY_REGISTRAR_ROLE = keccak256("IDENTITY_REGISTRAR_ROLE");
+    bytes32 internal constant CREDENTIAL_ISSUER_ROLE = keccak256("CREDENTIAL_ISSUER_ROLE");
+    bytes32 internal constant UNDERWRITER_ROLE = keccak256("UNDERWRITER_ROLE");
+    bytes32 internal constant EXPOSURE_FACTORY_ROLE = keccak256("EXPOSURE_FACTORY_ROLE");
+    bytes32 internal constant IDENTITY_REVOCATION_ROLE = keccak256("IDENTITY_REVOCATION_ROLE");
     bytes32 internal constant EMERGENCY_COUNCIL_ROLE = keccak256("EMERGENCY_COUNCIL_ROLE");
     bytes32 internal constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 }

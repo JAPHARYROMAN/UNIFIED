@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+enum IdentityProviderStatus {
+  IDENTITY_PROVIDER_STATUS_UNSPECIFIED = 0;
+  IDENTITY_PROVIDER_STATUS_ACTIVE = 1;
+  IDENTITY_PROVIDER_STATUS_SUSPENDED = 2;
+  IDENTITY_PROVIDER_STATUS_RETIRED = 3;
+}
+
+enum IdentityCredentialStatus {
+  IDENTITY_CREDENTIAL_STATUS_UNSPECIFIED = 0;
+  IDENTITY_CREDENTIAL_STATUS_ACTIVE = 1;
+  IDENTITY_CREDENTIAL_STATUS_REVOKED = 2;
+}
+
+enum CreditDecisionStatus {
+  CREDIT_DECISION_STATUS_UNSPECIFIED = 0;
+  CREDIT_DECISION_STATUS_ACTIVE = 1;
+  CREDIT_DECISION_STATUS_REVOKED = 2;
+}
+
+enum ExposureReservationStatus {
+  EXPOSURE_RESERVATION_STATUS_UNSPECIFIED = 0;
+  EXPOSURE_RESERVATION_STATUS_RESERVED = 1;
+  EXPOSURE_RESERVATION_STATUS_ACTIVE = 2;
+  EXPOSURE_RESERVATION_STATUS_RELEASED = 3;
+  EXPOSURE_RESERVATION_STATUS_CANCELLED = 4;
+}
+
+message IdentityProvider {
+  Identifier provider_id = 1;
+  PartyId operator_id = 2;
+  bytes metadata_hash = 3;
+  uint32 maximum_assurance = 4;
+  google.protobuf.Timestamp registered_at = 5;
+  IdentityProviderStatus status = 6;
+}
+
+message IdentityCredentialSchema {
+  Identifier schema_id = 1;
+  Identifier provider_id = 2;
+  bytes definition_hash = 3;
+  uint32 maximum_assurance = 4;
+  google.protobuf.Timestamp registered_at = 5;
+  bool active = 6;
+}
+
+// Commitments must be domain-separated and secretly randomized. Never place raw
+// identity data or a plain low-entropy personal-data hash in these fields.
+message IdentityCredential {
+  Identifier credential_id = 1;
+  bytes subject_commitment = 2;
+  PartyId bound_account_id = 3;
+  Identifier provider_id = 4;
+  Identifier schema_id = 5;
+  bytes claims_commitment = 6;
+  bytes scope_hash = 7;
+  uint64 epoch = 8;
+  uint32 assurance = 9;
+  google.protobuf.Timestamp valid_from = 10;
+  google.protobuf.Timestamp valid_until = 11;
+  google.protobuf.Timestamp issued_at = 12;
+  google.protobuf.Timestamp revoked_at = 13;
+  PartyId issuer_id = 14;
+  IdentityCredentialStatus status = 15;
+}
+
+message CreditDecision {
+  Identifier decision_id = 1;
+  Identifier credential_id = 2;
+  bytes subject_commitment = 3;
+  PartyId borrower_account_id = 4;
+  bytes credential_scope_hash = 5;
+  uint64 credential_epoch = 6;
+  uint32 minimum_assurance = 7;
+  PolicyReference policy = 8;
+  bytes rule_set_hash = 9;
+  bytes model_set_hash = 10;
+  bytes feature_evidence_root = 11;
+  bytes feature_schema_hash = 12;
+  google.protobuf.Timestamp features_as_of = 13;
+  AssetId settlement_asset_id = 14;
+  bytes product_hash = 15;
+  Money maximum_exposure = 16;
+  uint64 maximum_duration_seconds = 17;
+  google.protobuf.Timestamp issued_at = 18;
+  google.protobuf.Timestamp expires_at = 19;
+  bytes reason_codes_hash = 20;
+  PartyId underwriter_id = 21;
+  google.protobuf.Timestamp revoked_at = 22;
+  CreditDecisionStatus status = 23;
+  Identifier previous_decision_id = 24;
+  uint64 sequence = 25;
+}
+
+message ExposureReservation {
+  LoanId loan_id = 1;
+  Identifier decision_id = 2;
+  bytes subject_commitment = 3;
+  PartyId borrower_account_id = 4;
+  AssetId settlement_asset_id = 5;
+  bytes product_hash = 6;
+  Money amount = 7;
+  uint64 duration_seconds = 8;
+  google.protobuf.Timestamp reserved_at = 9;
+  google.protobuf.Timestamp reservation_expires_at = 10;
+  PartyId factory_id = 11;
+  ExposureReservationStatus status = 12;
+  bytes evidence_hash = 13;
+}
+
+message UnderwritingFeatureEvidence {
+  Identifier feature_id = 1;
+  Identifier source_id = 2;
+  string transformation_version = 3;
+  bytes value_commitment = 4;
+  bytes evidence_hash = 5;
+  google.protobuf.Timestamp observed_at = 6;
+}

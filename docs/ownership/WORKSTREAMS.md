@@ -51,7 +51,7 @@ approval is mandatory before public testnet.
 
 - **Owns:** `services/foundation-ledger/`.
 - **Produces:** balanced posting kernel, loan subledger, linked reversals,
-  finality-gated loan accounting, and migrations.
+  finality-gated loan accounting, identity/credit control evidence, and migrations.
 - **Consumes:** finance schemas and accounting rules.
 - **Invariants:** balanced entries; idempotency; immutable posted history.
 - **Threats:** duplicate posting; unbalanced journals; currency mixing.
@@ -84,7 +84,7 @@ approval is mandatory before public testnet.
 
 - **Owns:** `protocol/src/risk/`, `services/risk-engine/`.
 - **Produces:** approved oracle aggregation, interest calculations, repayment schedules,
-  and servicing/default predicates.
+  servicing/default predicates, and deterministic synthetic underwriting rules.
 - **Consumes:** immutable policy references, asset identities, and final observations.
 - **Invariants:** deterministic debt; fresh approved prices; cure priority; explicit safe mode.
 - **Threats:** oracle manipulation; calculation drift; premature default or liquidation.
