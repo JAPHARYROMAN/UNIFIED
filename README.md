@@ -121,3 +121,13 @@ principal-only allocation, overpayment-credit, accounting-reversal, and non-exec
 collateral-eligibility proof. Canonical loan mutation, refunds, payouts, collateral
 release, live providers, and real funds remain prohibited. Its bounded engineering exit
 is recorded in `docs/reviews/phase-7b-exit-review.md`.
+
+The accepted Phase 7C boundary is recorded in
+`adr/0017-phase-7c-canonical-external-settlement-boundary.md` and
+`docs/architecture/phase-7c-canonical-external-settlement.md`. It permits implementation
+of a synthetic mature-only, exact-token gateway and recoverable canonicalization saga.
+Canonical mutation must wait through the reversal deadline, deliver the registered loan
+token, and atomically pay the lender and refund excess. The source provider asset and
+target token remain explicitly distinct under a fixed one-to-one first-slice conversion.
+Reserve-backed early settlement, cross-denomination FX, live providers, automatic
+collateral release, and real funds remain prohibited.
