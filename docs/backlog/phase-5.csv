@@ -9,4 +9,5 @@ UNI-ACCOUNTING-005,WS-LEDGER,Implement syndicate and position accounting,DONE,Ac
 UNI-SCHEMA-006,WS-SCHEMA,Define funding tranche and position schemas,DONE,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
 UNI-SIM-001,WS-RISK,Add tranche loss simulations,DONE,Accounting and Economic Risk Authority,Priority conservation and boundary scenarios pass
 UNI-SEC-007,WS-SECURITY,Complete Phase 5 internal review,DONE,Security Authority,No unresolved critical or existential finding
+UNI-REVIEW-005,WS-SPEC,Complete bounded Phase 5 engineering exit,DONE,Program Authority,Exit evidence records principal-only pass and deferred full-product capabilities
 UNI-LOSS-001,WS-PROTOCOL,Authorize recognized loss and legal write-off,DEFERRED,Accounting and Economic Risk Authority,Requires versioned debt mutation authority accounting and borrower protection policy

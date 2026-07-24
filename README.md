@@ -85,5 +85,6 @@ ratification.
 The Phase 5 syndication boundary and implementation are recorded in
 `adr/0012-phase-5-syndication-and-position-boundary.md`,
 `docs/architecture/phase-5-syndication.md`, and
-`docs/architecture/phase-5-storage-layouts.md`. This remains a bounded local/testnet
-engineering milestone and is not an authorization for production lending or trading.
+`docs/architecture/phase-5-storage-layouts.md`. Its bounded engineering exit is recorded
+in `docs/reviews/phase-5-exit-review.md`. This is not an authorization for production
+lending or trading.
