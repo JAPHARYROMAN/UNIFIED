@@ -2,7 +2,7 @@
 pragma solidity 0.8.36;
 
 // Code generated from schemas/proto/unified/v1. DO NOT EDIT.
-// Source SHA-256: 360216d205cc6f2b81791b77a2e9e3043f2499beb60f54ede21745cd4e937693
+// Source SHA-256: c8f4113249589591a1423da65f031587056f2c25141a3e5d55ca910852c6e771
 library FoundationTypes {
     enum CollateralKind { UNSPECIFIED, NATIVE, ERC20, ERC721, ERC1155 }
 
@@ -13,6 +13,14 @@ library FoundationTypes {
     enum LiquidationStatus { UNSPECIFIED, ACTIVE, SETTLED, FAILED, CANCELLED }
 
     enum PostingSide { UNSPECIFIED, DEBIT, CREDIT }
+
+    enum IdentityProviderStatus { UNSPECIFIED, ACTIVE, SUSPENDED, RETIRED }
+
+    enum IdentityCredentialStatus { UNSPECIFIED, ACTIVE, REVOKED }
+
+    enum CreditDecisionStatus { UNSPECIFIED, ACTIVE, REVOKED }
+
+    enum ExposureReservationStatus { UNSPECIFIED, RESERVED, ACTIVE, RELEASED, CANCELLED }
 
     enum InterestKind { UNSPECIFIED, FIXED, VARIABLE, ZERO }
 
@@ -199,6 +207,95 @@ library FoundationTypes {
         int64 executableAfter;
         int64 expiresAt;
         string authorityScope;
+    }
+
+    struct IdentityProvider {
+        Identifier providerId;
+        PartyId operatorId;
+        bytes metadataHash;
+        uint32 maximumAssurance;
+        int64 registeredAt;
+        IdentityProviderStatus status;
+    }
+
+    struct IdentityCredentialSchema {
+        Identifier schemaId;
+        Identifier providerId;
+        bytes definitionHash;
+        uint32 maximumAssurance;
+        int64 registeredAt;
+        bool active;
+    }
+
+    struct IdentityCredential {
+        Identifier credentialId;
+        bytes subjectCommitment;
+        PartyId boundAccountId;
+        Identifier providerId;
+        Identifier schemaId;
+        bytes claimsCommitment;
+        bytes scopeHash;
+        uint64 epoch;
+        uint32 assurance;
+        int64 validFrom;
+        int64 validUntil;
+        int64 issuedAt;
+        int64 revokedAt;
+        PartyId issuerId;
+        IdentityCredentialStatus status;
+    }
+
+    struct CreditDecision {
+        Identifier decisionId;
+        Identifier credentialId;
+        bytes subjectCommitment;
+        PartyId borrowerAccountId;
+        bytes credentialScopeHash;
+        uint64 credentialEpoch;
+        uint32 minimumAssurance;
+        PolicyReference policy;
+        bytes ruleSetHash;
+        bytes modelSetHash;
+        bytes featureEvidenceRoot;
+        bytes featureSchemaHash;
+        int64 featuresAsOf;
+        AssetId settlementAssetId;
+        bytes productHash;
+        Money maximumExposure;
+        uint64 maximumDurationSeconds;
+        int64 issuedAt;
+        int64 expiresAt;
+        bytes reasonCodesHash;
+        PartyId underwriterId;
+        int64 revokedAt;
+        CreditDecisionStatus status;
+        Identifier previousDecisionId;
+        uint64 sequence;
+    }
+
+    struct ExposureReservation {
+        LoanId loanId;
+        Identifier decisionId;
+        bytes subjectCommitment;
+        PartyId borrowerAccountId;
+        AssetId settlementAssetId;
+        bytes productHash;
+        Money amount;
+        uint64 durationSeconds;
+        int64 reservedAt;
+        int64 reservationExpiresAt;
+        PartyId factoryId;
+        ExposureReservationStatus status;
+        bytes evidenceHash;
+    }
+
+    struct UnderwritingFeatureEvidence {
+        Identifier featureId;
+        Identifier sourceId;
+        string transformationVersion;
+        bytes valueCommitment;
+        bytes evidenceHash;
+        int64 observedAt;
     }
 
     struct LoanTerms {

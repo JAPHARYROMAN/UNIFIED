@@ -15,6 +15,7 @@ uv run pytest -q
 uv run ruff check models tools scripts
 uv run python tools/check_foundation.py
 uv run python tools/check_privileged_surface.py
+uv run python tools/check_privacy_surface.py
 
 $solcTarget = Join-Path $workspace '.cache\solc'
 if (Test-Path -LiteralPath $solcTarget) {
@@ -29,7 +30,8 @@ if (Get-Command forge -ErrorAction SilentlyContinue) {
     Push-Location protocol
     try {
         forge fmt --check src/FoundationProbe.sol src/ProtocolCompilation.sol `
-            src/collateral src/interfaces src/kernel src/loan src/risk src/token test script
+            src/collateral src/identity src/interfaces src/kernel src/loan src/risk `
+            src/token test script
         forge test
         uv run python ../scripts/check-contract-sizes.py
     } finally {

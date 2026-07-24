@@ -162,6 +162,34 @@ ABI_PAIRS = {
         / "protocol_src_syndicate_SyndicateVault_sol_SyndicateVault.abi",
         ROOT / "protocol" / "abi" / "phase5" / "SyndicateVault.abi.json",
     ),
+    "IdentityProviderRegistry": (
+        ROOT
+        / ".cache"
+        / "solc"
+        / "protocol_src_identity_IdentityProviderRegistry_sol_IdentityProviderRegistry.abi",
+        ROOT / "protocol" / "abi" / "phase6" / "IdentityProviderRegistry.abi.json",
+    ),
+    "CredentialRegistry": (
+        ROOT
+        / ".cache"
+        / "solc"
+        / "protocol_src_identity_CredentialRegistry_sol_CredentialRegistry.abi",
+        ROOT / "protocol" / "abi" / "phase6" / "CredentialRegistry.abi.json",
+    ),
+    "CreditDecisionRegistry": (
+        ROOT
+        / ".cache"
+        / "solc"
+        / "protocol_src_identity_CreditDecisionRegistry_sol_CreditDecisionRegistry.abi",
+        ROOT / "protocol" / "abi" / "phase6" / "CreditDecisionRegistry.abi.json",
+    ),
+    "ExposureManager": (
+        ROOT
+        / ".cache"
+        / "solc"
+        / "protocol_src_identity_ExposureManager_sol_ExposureManager.abi",
+        ROOT / "protocol" / "abi" / "phase6" / "ExposureManager.abi.json",
+    ),
 }
 
 

@@ -1,0 +1,622 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "roleManager_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract CredentialRegistry",
+        "name": "credentialRegistry_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "decisionId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "DecisionAlreadyRevoked",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidDecision",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unauthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "decisionId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnknownDecision",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "decisionId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "subjectCommitment",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "previousDecisionId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "sequence",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "credentialId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "policyId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "settlementAssetId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "productHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maximumExposure",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "maximumDuration",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "expiresAt",
+        "type": "uint64"
+      }
+    ],
+    "name": "CreditDecisionIssued",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "decisionId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "evidenceHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "CreditDecisionRevoked",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_DECISION_VALIDITY",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_FEATURE_AGE",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "credentialRegistry",
+    "outputs": [
+      {
+        "internalType": "contract CredentialRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "subjectCommitment",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "settlementAssetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "productHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "currentDecisionId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "decisionId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "decision",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "decisionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "previousDecisionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "credentialId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "subjectCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "credentialScopeHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "credentialEpoch",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint16",
+            "name": "minimumAssurance",
+            "type": "uint16"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "policyMajor",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "policyMinor",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "policyPatch",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "ruleSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "modelSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "featureEvidenceRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "featureSchemaHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "featuresAsOf",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "productHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maximumExposure",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "maximumDuration",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "issuedAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sequence",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "reasonCodesHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "underwriter",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "revokedAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum IdentityTypes.DecisionStatus",
+            "name": "status",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct IdentityTypes.CreditDecision",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "decisionIds",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "decisionId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "subjectCommitment",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "settlementAssetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "productHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint64",
+        "name": "duration",
+        "type": "uint64"
+      }
+    ],
+    "name": "isUsable",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "decisionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "previousDecisionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "credentialId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "subjectCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "credentialScopeHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "credentialEpoch",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint16",
+            "name": "minimumAssurance",
+            "type": "uint16"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "policyMajor",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "policyMinor",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "policyPatch",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "ruleSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "modelSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "featureEvidenceRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "featureSchemaHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "featuresAsOf",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "productHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maximumExposure",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "maximumDuration",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sequence",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "reasonCodesHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct IdentityTypes.CreditDecisionInput",
+        "name": "input",
+        "type": "tuple"
+      }
+    ],
+    "name": "issueDecision",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "decisionId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "evidenceHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "revokeDecision",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "roleManager",
+    "outputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

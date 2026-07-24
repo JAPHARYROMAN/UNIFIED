@@ -253,3 +253,48 @@ risks:
     downstream_impact: Permanent lender loss without an activated borrower obligation
     validation: Terminal failed and cancelled states exact pull refunds immutable recipient and no-double-refund tests
     status: CONTROLLED
+  - id: RISK-PHASE6A-001
+    severity: EXISTENTIAL
+    title: Restricted identity data is exposed on public immutable infrastructure
+    owner: Security Authority
+    evidence: tools/check_privacy_surface.py
+    expiry: 2026-10-24
+    downstream_impact: Irreversible privacy harm regulatory breach identity theft and loss of trust
+    validation: Commitment-only schemas and Solidity types static privacy gate synthetic fixtures and no production provider integration
+    status: CONTROLLED
+  - id: RISK-PHASE6A-002
+    severity: CRITICAL
+    title: Synthetic or duplicate identity bypasses aggregate exposure limits
+    owner: Accounting and Economic Risk Authority
+    evidence: security/reviews/phase-6a-internal-review.md
+    expiry: 2026-10-24
+    downstream_impact: Correlated unsecured losses exceed decision and portfolio capacity
+    validation: Same-commitment multi-wallet aggregation scoped uniqueness disclosure zero production limits and no live activation adapter
+    status: CONSTRAINED_LOCAL_ONLY
+  - id: RISK-PHASE6A-003
+    severity: CRITICAL
+    title: Revoked or stale credential authorizes new exposure
+    owner: Security Authority
+    evidence: protocol/test/Phase6Identity.t.sol
+    expiry: 2026-10-24
+    downstream_impact: Unauthorized credit activation after provider compromise or eligibility loss
+    validation: Provider schema credential decision and reservation validity rechecked through activation including revocation race rollback
+    status: CONTROLLED
+  - id: RISK-PHASE6A-004
+    severity: CRITICAL
+    title: Pending or multi-wallet exposure bypasses the decision limit
+    owner: Accounting and Economic Risk Authority
+    evidence: protocol/src/identity/ExposureManager.sol
+    expiry: 2026-10-24
+    downstream_impact: Recognized unsecured principal exceeds approved capacity
+    validation: Reserved plus active exact-asset totals aggregate by subject and release only on expiry cancellation or canonical zero-debt terminal state
+    status: CONTROLLED
+  - id: RISK-PHASE6A-005
+    severity: CRITICAL
+    title: Underwriting evidence or model provenance is stale altered or unauthenticated
+    owner: Accounting and Economic Risk Authority
+    evidence: services/risk-engine/internal/underwriting/engine_test.go
+    expiry: 2026-10-24
+    downstream_impact: Unsafe inexplicable or non-reproducible credit decisions
+    validation: Versioned rules schema and evidence roots with freshness source transform duplicate and unknown-feature rejection
+    status: CONTROLLED

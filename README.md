@@ -93,3 +93,9 @@ The accepted next engineering boundary for commitment-only identity attestations
 versioned underwriting decisions, and subject-level exposure reservations is recorded in
 `adr/0013-phase-6-identity-underwriting-boundary.md`. Raw identity data, production
 providers, and live unsecured lending remain prohibited.
+
+The bounded Phase 6A implementation adds commitment-only provider, credential, decision,
+and exposure controls plus synthetic underwriting and audit evidence. Its architecture
+and layouts are documented in `docs/architecture/phase-6a-identity-underwriting.md` and
+`docs/architecture/phase-6a-storage-layouts.md`. It is not a production identity or
+unsecured-credit system.

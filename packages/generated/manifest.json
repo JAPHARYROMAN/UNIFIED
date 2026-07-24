@@ -18,6 +18,10 @@
       "sha256": "f56d3d8a77c0a3c8bd0b6ed133d5d0360dadb8d04583b164aacaf138cdb9813e"
     },
     {
+      "path": "packages/generated/go/unified/v1/identity.pb.go",
+      "sha256": "c138a870a5a367bf70cf167de0fd66d1e5fa8f2e5befbd1934a01c48405c6616"
+    },
+    {
       "path": "packages/generated/go/unified/v1/loan.pb.go",
       "sha256": "07cb80ccb8f675ef3e81e3ead55ac42c98ebe2be6736cf9f287c127eb02d4510"
     },
@@ -52,6 +56,10 @@
     {
       "path": "packages/generated/typescript/unified/v1/governance_pb.ts",
       "sha256": "75dfadb0e50155cdc389accda681cb55ba71adc976bd4af2f16f19a79d967f08"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/identity_pb.ts",
+      "sha256": "0d832a42f1034a7ef8ff5c087598cfb49ae15975c73a75dc9cd0bfc8eb840182"
     },
     {
       "path": "packages/generated/typescript/unified/v1/loan_pb.ts",
@@ -98,6 +106,10 @@
       "sha256": "8cc2942a08b91b67d93d72f823ec8eeaf899762d31c0274d625949380b0d2a56"
     },
     {
+      "path": "packages/generated/python/unified/v1/identity_pb2.py",
+      "sha256": "d79c561c0431c4bf84caaeb6af6c646eee9eafc73ab66be85c0aa5b12b24a81d"
+    },
+    {
       "path": "packages/generated/python/unified/v1/loan_pb2.py",
       "sha256": "c1fad151f4c76ba410a582fe78d2465e7a78648fcebf6eb27a6d11f42e43c714"
     },
@@ -119,7 +131,7 @@
     },
     {
       "path": "protocol/src/generated/FoundationTypes.sol",
-      "sha256": "13d991e54865df40d925363e0ddf072dd293d6d252c27c00f1c2bf52417e7b95"
+      "sha256": "19d20a1593df829a56ff87489d49a616f2595dd32e0f2bcff5b5cbd0c445966d"
     }
   ]
 }
