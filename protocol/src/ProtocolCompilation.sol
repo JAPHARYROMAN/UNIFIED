@@ -28,3 +28,6 @@ import { ServicingEngine } from "./risk/ServicingEngine.sol";
 import { CollateralManager } from "./collateral/CollateralManager.sol";
 import { CollateralVault } from "./collateral/CollateralVault.sol";
 import { LiquidationEngine } from "./collateral/LiquidationEngine.sol";
+import { PositionManager } from "./syndicate/PositionManager.sol";
+import { SyndicateFactory } from "./syndicate/SyndicateFactory.sol";
+import { SyndicateVault } from "./syndicate/SyndicateVault.sol";

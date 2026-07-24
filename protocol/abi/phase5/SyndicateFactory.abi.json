@@ -1,0 +1,599 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "roleManager_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ILoanRegistry",
+        "name": "loanRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract AssetRegistry",
+        "name": "assetRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract PolicyRegistry",
+        "name": "policyRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IEmergencyController",
+        "name": "emergencyController_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "vaultImplementation_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "positionManagerImplementation_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "FailedDeployment",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "balance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "needed",
+        "type": "uint256"
+      }
+    ],
+    "name": "InsufficientBalance",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidSyndicate",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NewLoanActivationPaused",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "UnapprovedPolicy",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unauthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "assetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnsupportedAsset",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "roundId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "vault",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "positionManager",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "policySetHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "SyndicateCreated",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "CAPABILITY_NEW_LOANS",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "IMPLEMENTATION_VERSION",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "assetRegistry",
+    "outputs": [
+      {
+        "internalType": "contract AssetRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "roundId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      }
+    ],
+    "name": "calculateLoanId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "roundId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "agreementHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policySetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "metadataHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minimumFunding",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetFunding",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maximumFunding",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "opensAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "closesAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "finalMaturityTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "gracePeriod",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "protocolVersion",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct SyndicateTypes.FundingRoundTerms",
+        "name": "terms",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "trancheId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "nameHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "seniorityRank",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetSize",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint16",
+            "name": "couponBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "votingBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "enum SyndicateTypes.TransferPolicy",
+            "name": "transferPolicy",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct SyndicateTypes.TrancheConfiguration[]",
+        "name": "tranches",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "policyId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "implementation",
+            "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "major",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "minor",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "patch",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "interfaceId",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "configurationSchemaHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct ProtocolTypes.PolicyRef[]",
+        "name": "policies",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "createSyndicate",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "vault",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "manager",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "emergencyController",
+    "outputs": [
+      {
+        "internalType": "contract IEmergencyController",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "loanRegistry",
+    "outputs": [
+      {
+        "internalType": "contract ILoanRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "policyRegistry",
+    "outputs": [
+      {
+        "internalType": "contract PolicyRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "policyId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "implementation",
+            "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "major",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "minor",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "patch",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "interfaceId",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "configurationSchemaHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct ProtocolTypes.PolicyRef[]",
+        "name": "policies",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "policySetHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "positionManagerImplementation",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "positionManagerSalt",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "predictPositionManager",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "predictVault",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "roleManager",
+    "outputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "vaultImplementation",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

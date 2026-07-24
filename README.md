@@ -2,8 +2,9 @@
 
 Unified is a governed, multi-language foundation for a decentralized credit and
 financial coordination protocol. This repository implements the reviewed
-foundation baseline, Phase 2 protocol-kernel/UFT milestone, and Phase 3 core
-loan/accounting engineering milestone, plus the Phase 4A deterministic risk foundation:
+foundation baseline, Phase 2 protocol-kernel/UFT milestone, Phase 3 core
+loan/accounting engineering milestone, the Phase 4 deterministic risk/custody/liquidation
+foundation, and the bounded Phase 5 syndication foundation:
 shared schemas and bindings, append-only registries, scoped authority, a
 fixed-supply token, genesis allocation and vesting controls, a fee-router
 skeleton, signed tender and offer flow, atomic principal-only loans, balanced
@@ -11,6 +12,8 @@ loan accounting, deterministic chain projections, authenticated API boundaries,
 multi-source oracle safety, cross-language interest and schedule calculations,
 objective servicing transitions, multi-asset per-loan collateral custody, UFT exposure
 controls, reproducible direct and auction liquidation, reconciled recovery accounting,
+exact funding rounds, deterministic syndicate vaults, conserved lender positions,
+senior-first principal waterfalls, checkpointed voting,
 engineering gates, and a reproducible local environment.
 
 No production deployment, real token deployment, real funds, production keys,
@@ -79,6 +82,8 @@ The Phase 4 risk, custody, and liquidation boundaries are documented in
 decision is recorded in `docs/reviews/phase-4-exit-review.md`; it is not production
 ratification.
 
-The accepted next engineering boundary for bounded funding rounds, syndicate vaults,
-tranches, and lender positions is recorded in
-`adr/0012-phase-5-syndication-and-position-boundary.md`.
+The Phase 5 syndication boundary and implementation are recorded in
+`adr/0012-phase-5-syndication-and-position-boundary.md`,
+`docs/architecture/phase-5-syndication.md`, and
+`docs/architecture/phase-5-storage-layouts.md`. This remains a bounded local/testnet
+engineering milestone and is not an authorization for production lending or trading.

@@ -38,7 +38,8 @@ approval is mandatory before public testnet.
 - **Owns:** `protocol/`.
 - **Produces:** foundation interfaces, kernel and registries, fixed-supply UFT,
   allocation and vesting controls, fee-router skeleton, signed offers, atomic
-  funding, versioned core loan accounts, and bounded liquidation execution.
+  funding, versioned core loan accounts, bounded liquidation execution, deterministic
+  syndicate vaults, and conserved lender-position rights.
 - **Consumes:** generated Solidity types and protocol invariants.
 - **Invariants:** no mint path; no hidden superuser; checked authority.
 - **Threats:** unsafe privilege; ABI or storage drift.
@@ -101,6 +102,19 @@ approval is mandatory before public testnet.
 - **Acceptance:** mixed-bundle, release, concentration, liquidation, auction failure,
   proceeds conservation, and residual bad-debt tests pass.
 - **Accountable:** Security Authority.
+
+## WS-SYNDICATE — Funding and lender rights
+
+- **Owns:** `protocol/src/syndicate/` and syndication accounting interfaces.
+- **Produces:** bounded funding rounds, canonical aggregate loan accounts, ordered
+  tranches, lender positions, voting checkpoints, and transfer cut-offs.
+- **Consumes:** canonical assets, policy approvals, loans, emergency state, and final
+  accounting events.
+- **Invariants:** funding, shares, payments, votes, transfers, and refunds conserve.
+- **Threats:** duplicate claims; waterfall bypass; accrued-right replay; encumbrance escape.
+- **Acceptance:** funding, refund, priority, residual, lifecycle, transfer, vote, and
+  accounting tests pass.
+- **Accountable:** Protocol Architecture Authority.
 
 ## WS-PLATFORM — Toolchain and delivery
 

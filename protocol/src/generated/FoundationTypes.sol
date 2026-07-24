@@ -2,7 +2,7 @@
 pragma solidity 0.8.36;
 
 // Code generated from schemas/proto/unified/v1. DO NOT EDIT.
-// Source SHA-256: 254b387e274cf665c0b33d1599665f02a8ecc5329563ddbe07c1861bc7800e2e
+// Source SHA-256: 360216d205cc6f2b81791b77a2e9e3043f2499beb60f54ede21745cd4e937693
 library FoundationTypes {
     enum CollateralKind { UNSPECIFIED, NATIVE, ERC20, ERC721, ERC1155 }
 
@@ -33,6 +33,14 @@ library FoundationTypes {
     enum ScheduleKind { UNSPECIFIED, BULLET, EQUAL_PRINCIPAL, ANNUITY, INTEREST_ONLY, BALLOON, CUSTOM }
 
     enum InstallmentState { UNSPECIFIED, SCHEDULED, DUE, PARTIALLY_PAID, PAID, OVERDUE, WAIVED, DEFERRED, REPLACED }
+
+    enum FundingRoundStatus { UNSPECIFIED, SCHEDULED, OPEN, ACTIVE, FAILED, CANCELLED, CLOSED }
+
+    enum CommitmentStatus { UNSPECIFIED, FUNDED, POSITION_ACTIVE, REFUNDED }
+
+    enum PositionStatus { UNSPECIFIED, PENDING, ACTIVE, PLEDGED, FROZEN, MERGED, REDEEMED, CANCELLED }
+
+    enum PositionTransferPolicy { UNSPECIFIED, NON_TRANSFERABLE, FREELY_TRANSFERABLE }
 
     enum AssetKind { UNSPECIFIED, NATIVE, FUNGIBLE_TOKEN, NON_FUNGIBLE_TOKEN, FIAT, OFF_CHAIN }
 
@@ -337,6 +345,87 @@ library FoundationTypes {
         int64 cureEndsAt;
         ServicingState status;
         uint64 stateVersion;
+    }
+
+    struct FundingRound {
+        Identifier roundId;
+        LoanId loanId;
+        PartyId borrowerId;
+        Money minimumFunding;
+        Money targetFunding;
+        Money maximumFunding;
+        Money totalCommitted;
+        int64 opensAt;
+        int64 closesAt;
+        FundingRoundStatus status;
+        bytes agreementHash;
+        bytes policySetHash;
+    }
+
+    struct FundingCommitment {
+        Identifier commitmentId;
+        Identifier roundId;
+        Identifier trancheId;
+        Identifier positionId;
+        PartyId lenderId;
+        Money amount;
+        CommitmentStatus status;
+        bytes settlementEvidenceHash;
+    }
+
+    struct Tranche {
+        Identifier trancheId;
+        LoanId loanId;
+        string name;
+        uint32 seniorityRank;
+        Money targetSize;
+        Money fundedPrincipal;
+        Money outstandingPrincipal;
+        uint32 couponBasisPoints;
+        uint32 votingBasisPoints;
+        PositionTransferPolicy transferPolicy;
+    }
+
+    struct LenderPosition {
+        Identifier positionId;
+        LoanId loanId;
+        Identifier trancheId;
+        PartyId ownerId;
+        PartyId pledgeeId;
+        string shareUnits;
+        string votingPower;
+        Money accruedDistribution;
+        int64 acquiredAt;
+        PositionStatus status;
+    }
+
+    struct PositionTransfer {
+        Identifier transferId;
+        Identifier positionId;
+        PartyId sellerId;
+        PartyId buyerId;
+        string shareUnits;
+        uint64 cutoffBlock;
+        bytes settlementEvidenceHash;
+        int64 settledAt;
+        Money outstandingClaim;
+    }
+
+    struct PositionDistributionAllocation {
+        Identifier positionId;
+        PartyId ownerId;
+        Money amount;
+    }
+
+    struct SyndicateDistribution {
+        Identifier paymentId;
+        LoanId loanId;
+        Money finalizedAmount;
+        PositionDistributionAllocation[] allocations;
+        Money explicitResidual;
+        bytes journalReference;
+        bytes settlementEvidenceHash;
+        int64 finalizedAt;
     }
 
     struct Identifier {

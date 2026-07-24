@@ -30,6 +30,10 @@
       "sha256": "88f21facfcb77f242b58fa6f137ec20c1d7495698c1a07517c4f1041693f7562"
     },
     {
+      "path": "packages/generated/go/unified/v1/syndication.pb.go",
+      "sha256": "528f8a97f49ba7b214bda8ec355b0991949a2415c8fa30225ef8ef65de75a21b"
+    },
+    {
       "path": "packages/generated/go/unified/v1/types.pb.go",
       "sha256": "4a4707332b2c93af7e666bebf42e26c53e9fcb8989ab4ee2ee9da6c502e26ec6"
     },
@@ -60,6 +64,10 @@
     {
       "path": "packages/generated/typescript/unified/v1/risk_pb.ts",
       "sha256": "78b5aba57f1607ad9038fa9abe42b92cc977e4f4f91eb089a96205732cb84089"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/syndication_pb.ts",
+      "sha256": "20474bc1c2ea1d341cff64c3303fca96b2bab02fdc642c4c69a07f6eb07eb6e4"
     },
     {
       "path": "packages/generated/typescript/unified/v1/types_pb.ts",
@@ -102,12 +110,16 @@
       "sha256": "f8fded0eda918d40bcabcc91cda7c992b6ff53a97331a5c6fa3e0d87d90333a7"
     },
     {
+      "path": "packages/generated/python/unified/v1/syndication_pb2.py",
+      "sha256": "4217f2e791d84d8fa6996bd549f69587755aea133f03fd18e22104df57b5b47a"
+    },
+    {
       "path": "packages/generated/python/unified/v1/types_pb2.py",
       "sha256": "9cca84920369994ad324024b7411aafaf66c39aa18904f4fef8868c3e6183ac4"
     },
     {
       "path": "protocol/src/generated/FoundationTypes.sol",
-      "sha256": "3f30b02fae3a9ae0ee4c2d08218c634b1c590f5b126b4e8149921860e63a7739"
+      "sha256": "13d991e54865df40d925363e0ddf072dd293d6d252c27c00f1c2bf52417e7b95"
     }
   ]
 }

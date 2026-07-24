@@ -35,6 +35,7 @@ type Entry struct {
 	Units       string `json:"units"`
 	PartyID     string `json:"party_id,omitempty"`
 	LoanID      string `json:"loan_id,omitempty"`
+	TrancheID   string `json:"tranche_id,omitempty"`
 }
 
 type Journal struct {

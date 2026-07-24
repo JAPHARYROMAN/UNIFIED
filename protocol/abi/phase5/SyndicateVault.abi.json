@@ -1,0 +1,1035 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "AlreadyInitialized",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paymentId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "DuplicatePayment",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidCommitment",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidFundingRound",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "enum SyndicateTypes.RoundStatus",
+        "name": "status",
+        "type": "uint8"
+      }
+    ],
+    "name": "InvalidFundingState",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "SafeERC20FailedOperation",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SettlementBalanceMismatch",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "commitmentId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "trancheId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "lender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "CommitmentFunded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "commitmentId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "lender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "CommitmentRefunded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "fundedPrincipal",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "journalRef",
+        "type": "bytes32"
+      }
+    ],
+    "name": "FundingRoundActivated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum SyndicateTypes.RoundStatus",
+        "name": "status",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "reasonCode",
+        "type": "bytes32"
+      }
+    ],
+    "name": "FundingRoundEnded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "roundId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "closesAt",
+        "type": "uint64"
+      }
+    ],
+    "name": "FundingRoundOpened",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "paymentId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "remainingPrincipal",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "journalRef",
+        "type": "bytes32"
+      }
+    ],
+    "name": "SyndicatePaymentAllocated",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_COMMITMENTS",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_TRANCHES",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "borrower",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "reasonCode",
+        "type": "bytes32"
+      }
+    ],
+    "name": "cancelRound",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "commitmentId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "trancheId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "commit",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "commitmentId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "commitment",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "commitmentId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "trancheId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "positionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "lender",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum SyndicateTypes.CommitmentStatus",
+            "name": "status",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct SyndicateTypes.Commitment",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "commitmentIds",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint64",
+        "name": "asOf",
+        "type": "uint64"
+      }
+    ],
+    "name": "debtSnapshot",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "outstandingPrincipal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedInterest",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "capitalizedInterest",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedFees",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedPenalties",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "recoverableCosts",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "unappliedCredit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "asOf",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct LoanTypes.DebtSnapshot",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "factory",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "journalRef",
+        "type": "bytes32"
+      }
+    ],
+    "name": "finalize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "fundingTerms",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "roundId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "agreementHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policySetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "metadataHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minimumFunding",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetFunding",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maximumFunding",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "opensAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "closesAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "finalMaturityTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "gracePeriod",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "protocolVersion",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct SyndicateTypes.FundingRoundTerms",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "factory_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ILoanRegistry",
+        "name": "loanRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract PositionManager",
+        "name": "positionManager_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "settlementToken_",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "roundId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "agreementHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policySetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "metadataHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minimumFunding",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetFunding",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maximumFunding",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "opensAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "closesAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "finalMaturityTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "gracePeriod",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "protocolVersion",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct SyndicateTypes.FundingRoundTerms",
+        "name": "fundingTerms_",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "trancheId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "nameHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint8",
+            "name": "seniorityRank",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "targetSize",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint16",
+            "name": "couponBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "votingBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "enum SyndicateTypes.TransferPolicy",
+            "name": "transferPolicy",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct SyndicateTypes.TrancheConfiguration[]",
+        "name": "tranches",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "initialized",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "isRepaymentAllowed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "lender",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "loanId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "loanRegistry",
+    "outputs": [
+      {
+        "internalType": "contract ILoanRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "openRound",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "outstandingPrincipal",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "positionManager",
+    "outputs": [
+      {
+        "internalType": "contract PositionManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paymentId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "processedPayments",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "processed",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "commitmentId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "refund",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paymentId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "journalRef",
+        "type": "bytes32"
+      }
+    ],
+    "name": "repay",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "roundStatus",
+    "outputs": [
+      {
+        "internalType": "enum SyndicateTypes.RoundStatus",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "settlementToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "terms",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "tenderId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "acceptedOfferId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "agreementHash",
+            "type": "bytes32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "borrower",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "arranger",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "servicer",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "collateralAgent",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "paymentAgent",
+                "type": "address"
+              }
+            ],
+            "internalType": "struct LoanTypes.AgreementParties",
+            "name": "parties",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "assetId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LoanTypes.MonetaryAmount",
+            "name": "principal",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint64",
+            "name": "fundingDeadline",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "activationDeadline",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "commencementTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "finalMaturityTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "gracePeriod",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "protocolVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policySetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "metadataHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct LoanTypes.UniversalLoanTerms",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "totalCommitted",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

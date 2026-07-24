@@ -1,0 +1,123 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+enum FundingRoundStatus {
+  FUNDING_ROUND_STATUS_UNSPECIFIED = 0;
+  FUNDING_ROUND_STATUS_SCHEDULED = 1;
+  FUNDING_ROUND_STATUS_OPEN = 2;
+  FUNDING_ROUND_STATUS_ACTIVE = 3;
+  FUNDING_ROUND_STATUS_FAILED = 4;
+  FUNDING_ROUND_STATUS_CANCELLED = 5;
+  FUNDING_ROUND_STATUS_CLOSED = 6;
+}
+
+enum CommitmentStatus {
+  COMMITMENT_STATUS_UNSPECIFIED = 0;
+  COMMITMENT_STATUS_FUNDED = 1;
+  COMMITMENT_STATUS_POSITION_ACTIVE = 2;
+  COMMITMENT_STATUS_REFUNDED = 3;
+}
+
+enum PositionStatus {
+  POSITION_STATUS_UNSPECIFIED = 0;
+  POSITION_STATUS_PENDING = 1;
+  POSITION_STATUS_ACTIVE = 2;
+  POSITION_STATUS_PLEDGED = 3;
+  POSITION_STATUS_FROZEN = 4;
+  POSITION_STATUS_MERGED = 5;
+  POSITION_STATUS_REDEEMED = 6;
+  POSITION_STATUS_CANCELLED = 7;
+}
+
+enum PositionTransferPolicy {
+  POSITION_TRANSFER_POLICY_UNSPECIFIED = 0;
+  POSITION_TRANSFER_POLICY_NON_TRANSFERABLE = 1;
+  POSITION_TRANSFER_POLICY_FREELY_TRANSFERABLE = 2;
+}
+
+message FundingRound {
+  Identifier round_id = 1;
+  LoanId loan_id = 2;
+  PartyId borrower_id = 3;
+  Money minimum_funding = 4;
+  Money target_funding = 5;
+  Money maximum_funding = 6;
+  Money total_committed = 7;
+  google.protobuf.Timestamp opens_at = 8;
+  google.protobuf.Timestamp closes_at = 9;
+  FundingRoundStatus status = 10;
+  bytes agreement_hash = 11;
+  bytes policy_set_hash = 12;
+}
+
+message FundingCommitment {
+  Identifier commitment_id = 1;
+  Identifier round_id = 2;
+  Identifier tranche_id = 3;
+  Identifier position_id = 4;
+  PartyId lender_id = 5;
+  Money amount = 6;
+  CommitmentStatus status = 7;
+  bytes settlement_evidence_hash = 8;
+}
+
+message Tranche {
+  Identifier tranche_id = 1;
+  LoanId loan_id = 2;
+  string name = 3;
+  uint32 seniority_rank = 4;
+  Money target_size = 5;
+  Money funded_principal = 6;
+  Money outstanding_principal = 7;
+  uint32 coupon_basis_points = 8;
+  uint32 voting_basis_points = 9;
+  PositionTransferPolicy transfer_policy = 10;
+}
+
+message LenderPosition {
+  Identifier position_id = 1;
+  LoanId loan_id = 2;
+  Identifier tranche_id = 3;
+  PartyId owner_id = 4;
+  PartyId pledgee_id = 5;
+  string share_units = 6;
+  string voting_power = 7;
+  Money accrued_distribution = 8;
+  google.protobuf.Timestamp acquired_at = 9;
+  PositionStatus status = 10;
+}
+
+message PositionTransfer {
+  Identifier transfer_id = 1;
+  Identifier position_id = 2;
+  PartyId seller_id = 3;
+  PartyId buyer_id = 4;
+  string share_units = 5;
+  uint64 cutoff_block = 6;
+  bytes settlement_evidence_hash = 7;
+  google.protobuf.Timestamp settled_at = 8;
+  Money outstanding_claim = 9;
+}
+
+message PositionDistributionAllocation {
+  Identifier position_id = 1;
+  PartyId owner_id = 2;
+  Money amount = 3;
+}
+
+message SyndicateDistribution {
+  Identifier payment_id = 1;
+  LoanId loan_id = 2;
+  Money finalized_amount = 3;
+  repeated PositionDistributionAllocation allocations = 4;
+  Money explicit_residual = 5;
+  bytes journal_reference = 6;
+  bytes settlement_evidence_hash = 7;
+  google.protobuf.Timestamp finalized_at = 8;
+}
