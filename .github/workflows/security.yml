@@ -21,7 +21,7 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: aquasecurity/trivy-action@0.33.1
+      - uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -35,6 +35,9 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.26.0"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "10.28.2"
       - uses: actions/setup-node@v4
         with:
           node-version: "22.13.1"
@@ -44,10 +47,6 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.11.15"
-      - name: Enable pinned pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.28.2 --activate
       - name: Audit dependencies
         run: |
           pnpm install --frozen-lockfile

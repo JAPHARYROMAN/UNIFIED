@@ -1,14 +1,13 @@
-# Foundation ownership is role-based until named organizational identities are
-# configured on the remote. Replace these aliases with real teams before public
-# testnet.
-* @unified-program
-/constitution/ @unified-program @unified-architecture
-/docs/specifications/ @unified-architecture
-/adr/ @unified-architecture
-/protocol/ @unified-protocol @unified-security
-/services/foundation-ledger/ @unified-accounting @unified-security
-/schemas/ @unified-schema @unified-architecture
-/security/ @unified-security
-/infrastructure/ @unified-release @unified-security
-/.github/ @unified-release @unified-security
-
+# The repository currently lives under a personal GitHub account, so the named
+# foundation authority roles in docs/ownership/WORKSTREAMS.md resolve to the
+# repository owner until an organization and corresponding teams are created.
+* @JAPHARYROMAN
+/constitution/ @JAPHARYROMAN
+/docs/specifications/ @JAPHARYROMAN
+/adr/ @JAPHARYROMAN
+/protocol/ @JAPHARYROMAN
+/services/foundation-ledger/ @JAPHARYROMAN
+/schemas/ @JAPHARYROMAN
+/security/ @JAPHARYROMAN
+/infrastructure/ @JAPHARYROMAN
+/.github/ @JAPHARYROMAN

@@ -19,5 +19,10 @@
     "@bufbuild/protoc-gen-es": "2.13.0",
     "solc": "0.8.36",
     "typescript": "7.0.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "tmp": "0.2.7"
+    }
   }
 }
