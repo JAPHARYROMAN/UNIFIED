@@ -127,3 +127,30 @@ risks:
     downstream_impact: Borrower lender or protocol receives a different amount than recorded
     validation: Active asset registry gate plus exact sender recipient and fee-receiver balance deltas
     status: CONTROLLED
+  - id: RISK-PHASE4A-001
+    severity: CRITICAL
+    title: Stale or manipulated oracle authorizes a risk-sensitive action
+    owner: Security Authority
+    evidence: protocol/test/Phase4RiskEngines.t.sol
+    expiry: 2026-10-24
+    downstream_impact: Unsafe origination margin action or premature liquidation
+    validation: Approved bounded sources freshness normalization median deviation quorum evidence and circuit-breaker tests
+    status: CONTROLLED
+  - id: RISK-PHASE4A-002
+    severity: CRITICAL
+    title: Debt calculation differs between protocol and service
+    owner: Accounting and Economic Risk Authority
+    evidence: services/risk-engine/internal/calculation/calculation_test.go
+    expiry: 2026-10-24
+    downstream_impact: Incorrect payment allocation default or liquidation amount
+    validation: Independent Solidity and Go implementations share exact canonical integer vectors
+    status: CONTROLLED
+  - id: RISK-PHASE4A-003
+    severity: CRITICAL
+    title: Valid cure is ignored and liquidation remains eligible
+    owner: Security Authority
+    evidence: protocol/test/Phase4RiskEngines.t.sol
+    expiry: 2026-10-24
+    downstream_impact: Borrower collateral is liquidated after timely cure
+    validation: Cure-deadline state-ordering test and default transition role separation
+    status: CONTROLLED

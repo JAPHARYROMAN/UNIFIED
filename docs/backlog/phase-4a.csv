@@ -1,0 +1,12 @@
+id,workstream,title,status,owner,acceptance
+UNI-ADR-004,WS-SPEC,Accept deterministic Phase 4A risk boundary,DONE,Protocol Architecture Authority,ADR 0009 accepted with cross-authority review
+UNI-ORACLE-001,WS-PROTOCOL,Implement approved multi-source oracle router,DONE,Security Authority,Normalization freshness quorum deviation evidence safe-mode and recovery tests pass
+UNI-INTEREST-001,WS-PROTOCOL,Implement fixed and bounded variable interest,DONE,Accounting and Economic Risk Authority,Ray actual-365 floor cap staleness and rounding vectors pass
+UNI-SCHEDULE-001,WS-PROTOCOL,Implement deterministic schedule families,DONE,Accounting and Economic Risk Authority,Bullet equal-principal annuity interest-only balloon custom and holiday generation compile and conserve principal
+UNI-SERVICE-001,WS-PROTOCOL,Implement servicing and cure state machine,DONE,Security Authority,Due grace delinquency cure acceleration default and repayment transition tests pass
+UNI-RISK-001,WS-SERVICE,Implement independent Go calculation parity,DONE,Accounting and Economic Risk Authority,Canonical Solidity and Go interest and schedule vectors match
+UNI-SCHEMA-003,WS-DATA,Define risk servicing schemas,DONE,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
+UNI-DEPLOY-003,WS-PLATFORM,Add reproducible Phase 4A deployment,DONE,Release Authority,Deployment compiles without keys feeds or configuration side effects
+UNI-SEC-004,WS-SECURITY,Complete Phase 4A internal review,DONE,Security Authority,No unresolved critical or existential finding
+UNI-COLLATERAL-001,WS-PROTOCOL,Implement multi-asset collateral custody,IN_PROGRESS,Security Authority,Required for Phase 4B exit
+UNI-LIQUIDATION-001,WS-PROTOCOL,Implement reproducible liquidation and auction routes,IN_PROGRESS,Accounting and Economic Risk Authority,Required for Phase 4B exit

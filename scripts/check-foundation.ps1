@@ -29,7 +29,7 @@ if (Get-Command forge -ErrorAction SilentlyContinue) {
     Push-Location protocol
     try {
         forge fmt --check src/FoundationProbe.sol src/ProtocolCompilation.sol `
-            src/interfaces src/kernel src/loan src/token test script
+            src/interfaces src/kernel src/loan src/risk src/token test script
         forge test
         uv run python ../scripts/check-contract-sizes.py
     } finally {

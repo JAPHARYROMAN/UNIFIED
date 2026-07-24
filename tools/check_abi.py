@@ -104,6 +104,22 @@ ABI_PAIRS = {
         ROOT / ".cache" / "solc" / "protocol_src_loan_TenderRegistry_sol_TenderRegistry.abi",
         ROOT / "protocol" / "abi" / "phase3" / "TenderRegistry.abi.json",
     ),
+    "InterestEngine": (
+        ROOT / ".cache" / "solc" / "protocol_src_risk_InterestEngine_sol_InterestEngine.abi",
+        ROOT / "protocol" / "abi" / "phase4" / "InterestEngine.abi.json",
+    ),
+    "OracleRouter": (
+        ROOT / ".cache" / "solc" / "protocol_src_risk_OracleRouter_sol_OracleRouter.abi",
+        ROOT / "protocol" / "abi" / "phase4" / "OracleRouter.abi.json",
+    ),
+    "ScheduleEngine": (
+        ROOT / ".cache" / "solc" / "protocol_src_risk_ScheduleEngine_sol_ScheduleEngine.abi",
+        ROOT / "protocol" / "abi" / "phase4" / "ScheduleEngine.abi.json",
+    ),
+    "ServicingEngine": (
+        ROOT / ".cache" / "solc" / "protocol_src_risk_ServicingEngine_sol_ServicingEngine.abi",
+        ROOT / "protocol" / "abi" / "phase4" / "ServicingEngine.abi.json",
+    ),
 }
 
 

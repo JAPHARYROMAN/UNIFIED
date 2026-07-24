@@ -21,3 +21,7 @@ import { CoreLoanFactory } from "./loan/CoreLoanFactory.sol";
 import { FundingManager } from "./loan/FundingManager.sol";
 import { OfferManager } from "./loan/OfferManager.sol";
 import { TenderRegistry } from "./loan/TenderRegistry.sol";
+import { InterestEngine } from "./risk/InterestEngine.sol";
+import { OracleRouter } from "./risk/OracleRouter.sol";
+import { ScheduleEngine } from "./risk/ScheduleEngine.sol";
+import { ServicingEngine } from "./risk/ServicingEngine.sol";

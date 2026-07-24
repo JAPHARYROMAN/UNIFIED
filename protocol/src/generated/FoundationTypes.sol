@@ -2,7 +2,7 @@
 pragma solidity 0.8.36;
 
 // Code generated from schemas/proto/unified/v1. DO NOT EDIT.
-// Source SHA-256: 92fb372534c74138bfe341e152f29fe2a35ceed21b59987bf2cd7890511cc0f7
+// Source SHA-256: e135c39e38ca75c41727837bdfd876d430acc7d08435b8a56830de8d77b81b86
 library FoundationTypes {
     enum PostingSide { UNSPECIFIED, DEBIT, CREDIT }
 
@@ -21,6 +21,10 @@ library FoundationTypes {
     enum PaymentState { UNSPECIFIED, REQUESTED, AUTHORIZED, PROCESSING, PROVISIONAL, FINAL, ALLOCATED, REVERSED, DISPUTED, FAILED, REFUNDED }
 
     enum FinalityState { UNSPECIFIED, PROVISIONAL, FINAL, REORGED }
+
+    enum ScheduleKind { UNSPECIFIED, BULLET, EQUAL_PRINCIPAL, ANNUITY, INTEREST_ONLY, BALLOON, CUSTOM }
+
+    enum InstallmentState { UNSPECIFIED, SCHEDULED, DUE, PARTIALLY_PAID, PAID, OVERDUE, WAIVED, DEFERRED, REPLACED }
 
     enum AssetKind { UNSPECIFIED, NATIVE, FUNGIBLE_TOKEN, NON_FUNGIBLE_TOKEN, FIAT, OFF_CHAIN }
 
@@ -197,6 +201,59 @@ library FoundationTypes {
         string valueUnits;
         bytes expectedTermsHash;
         int64 expiresAt;
+    }
+
+    struct OracleObservation {
+        AssetId assetId;
+        AssetId quoteAssetId;
+        string normalizedValue;
+        uint32 decimals;
+        int64 observedAt;
+        int64 retrievedAt;
+        uint64 roundId;
+        uint32 confidenceBasisPoints;
+        bytes sourceEvidenceHash;
+    }
+
+    struct InterestTerms {
+        string annualRateRay;
+        string spreadRay;
+        string floorRateRay;
+        string capRateRay;
+        uint64 maximumBenchmarkAgeSeconds;
+        string dayCountConvention;
+        string roundingMode;
+    }
+
+    struct SchedulePlan {
+        ScheduleKind kind;
+        Money principal;
+        Money totalInterest;
+        string periodicRateRay;
+        Money balloonPrincipal;
+        int64 startAt;
+        uint64 periodSeconds;
+        uint32 installmentCount;
+        uint32 paymentHolidayCount;
+    }
+
+    struct Installment {
+        uint32 index;
+        int64 dueAt;
+        Money principalDue;
+        Money interestDue;
+        InstallmentState state;
+    }
+
+    struct ServicingRecord {
+        LoanId loanId;
+        Money amountDue;
+        Money amountPaid;
+        int64 dueAt;
+        int64 graceEndsAt;
+        int64 cureEndsAt;
+        ServicingState status;
+        uint64 stateVersion;
     }
 
     struct Identifier {

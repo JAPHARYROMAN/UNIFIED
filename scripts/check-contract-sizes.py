@@ -11,14 +11,17 @@ LIMIT = 24_576
 NON_PRODUCTION = {
     "DeployPhase2",
     "DeployPhase3",
+    "DeployPhase4A",
     "FoundationProbeTest",
     "FeeSettlementToken",
     "Phase2KernelTest",
     "Phase3CoreLoanTest",
+    "Phase4RiskEnginesTest",
     "UFTSupplyInvariantTest",
     "BurnHandler",
     "TestSettlementToken",
     "TestPolicy",
+    "TestOracleAdapter",
     "ZeroInterestPolicy",
 }
 

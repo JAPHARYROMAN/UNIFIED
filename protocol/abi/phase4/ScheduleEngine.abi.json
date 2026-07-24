@@ -1,0 +1,190 @@
+[
+  {
+    "inputs": [],
+    "name": "InvalidSchedule",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "principal",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "periodicRateRay",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint32",
+        "name": "periods",
+        "type": "uint32"
+      }
+    ],
+    "name": "annuityPayment",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint64[]",
+        "name": "dueTimes",
+        "type": "uint64[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "principalAmounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "interestAmounts",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "expectedPrincipal",
+        "type": "uint256"
+      }
+    ],
+    "name": "custom",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "index",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "dueTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "principalDue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "interestDue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum RiskTypes.InstallmentState",
+            "name": "state",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct RiskTypes.Installment[]",
+        "name": "installments",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "enum RiskTypes.ScheduleKind",
+            "name": "kind",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "principal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalInterest",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "periodicRateRay",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "balloonPrincipal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "startTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "periodSeconds",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "installmentCount",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "paymentHolidayCount",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct RiskTypes.SchedulePlan",
+        "name": "plan",
+        "type": "tuple"
+      }
+    ],
+    "name": "generate",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "index",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "dueTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "principalDue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "interestDue",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum RiskTypes.InstallmentState",
+            "name": "state",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct RiskTypes.Installment[]",
+        "name": "installments",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  }
+]

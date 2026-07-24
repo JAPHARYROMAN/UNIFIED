@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/origination.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+enum ScheduleKind {
+  SCHEDULE_KIND_UNSPECIFIED = 0;
+  SCHEDULE_KIND_BULLET = 1;
+  SCHEDULE_KIND_EQUAL_PRINCIPAL = 2;
+  SCHEDULE_KIND_ANNUITY = 3;
+  SCHEDULE_KIND_INTEREST_ONLY = 4;
+  SCHEDULE_KIND_BALLOON = 5;
+  SCHEDULE_KIND_CUSTOM = 6;
+}
+
+enum InstallmentState {
+  INSTALLMENT_STATE_UNSPECIFIED = 0;
+  INSTALLMENT_STATE_SCHEDULED = 1;
+  INSTALLMENT_STATE_DUE = 2;
+  INSTALLMENT_STATE_PARTIALLY_PAID = 3;
+  INSTALLMENT_STATE_PAID = 4;
+  INSTALLMENT_STATE_OVERDUE = 5;
+  INSTALLMENT_STATE_WAIVED = 6;
+  INSTALLMENT_STATE_DEFERRED = 7;
+  INSTALLMENT_STATE_REPLACED = 8;
+}
+
+message OracleObservation {
+  AssetId asset_id = 1;
+  AssetId quote_asset_id = 2;
+  string normalized_value = 3;
+  uint32 decimals = 4;
+  google.protobuf.Timestamp observed_at = 5;
+  google.protobuf.Timestamp retrieved_at = 6;
+  uint64 round_id = 7;
+  uint32 confidence_basis_points = 8;
+  bytes source_evidence_hash = 9;
+}
+
+message InterestTerms {
+  string annual_rate_ray = 1;
+  string spread_ray = 2;
+  string floor_rate_ray = 3;
+  string cap_rate_ray = 4;
+  uint64 maximum_benchmark_age_seconds = 5;
+  string day_count_convention = 6;
+  string rounding_mode = 7;
+}
+
+message SchedulePlan {
+  ScheduleKind kind = 1;
+  Money principal = 2;
+  Money total_interest = 3;
+  string periodic_rate_ray = 4;
+  Money balloon_principal = 5;
+  google.protobuf.Timestamp start_at = 6;
+  uint64 period_seconds = 7;
+  uint32 installment_count = 8;
+  uint32 payment_holiday_count = 9;
+}
+
+message Installment {
+  uint32 index = 1;
+  google.protobuf.Timestamp due_at = 2;
+  Money principal_due = 3;
+  Money interest_due = 4;
+  InstallmentState state = 5;
+}
+
+message ServicingRecord {
+  LoanId loan_id = 1;
+  Money amount_due = 2;
+  Money amount_paid = 3;
+  google.protobuf.Timestamp due_at = 4;
+  google.protobuf.Timestamp grace_ends_at = 5;
+  google.protobuf.Timestamp cure_ends_at = 6;
+  ServicingState status = 7;
+  uint64 state_version = 8;
+}
