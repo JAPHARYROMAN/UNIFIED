@@ -57,3 +57,10 @@ assumptions:
     expiry: 2026-10-24
     downstream_impact: Debt snapshots installments servicing and accounting
     validation: Exact cross-language vectors and policy-version review
+  - id: ASM-009
+    assumption: Admitted on-chain collateral tokens implement standard ERC20 ERC721 or ERC1155 balance ownership and transfer semantics.
+    owner: Security Authority
+    evidence: adr/0010-phase-4b1-collateral-custody-boundary.md
+    expiry: 2026-10-24
+    downstream_impact: Custody existence release and liquidation disposition
+    validation: Asset admission review exact ERC20 deltas NFT callback matching and active-registry checks

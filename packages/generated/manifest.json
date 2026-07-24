@@ -2,6 +2,10 @@
   "version": 1,
   "files": [
     {
+      "path": "packages/generated/go/unified/v1/collateral.pb.go",
+      "sha256": "cba1a56a9c7b80262d023035fbb8d4add8d654852858f820e37a0c331f9ef2c8"
+    },
+    {
       "path": "packages/generated/go/unified/v1/envelopes.pb.go",
       "sha256": "59353fb11be90ee6ca2279b223f686640c53054865151a30b96891eda157e94a"
     },
@@ -28,6 +32,10 @@
     {
       "path": "packages/generated/go/unified/v1/types.pb.go",
       "sha256": "4a4707332b2c93af7e666bebf42e26c53e9fcb8989ab4ee2ee9da6c502e26ec6"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/collateral_pb.ts",
+      "sha256": "6adac99c4838c1b60abae16e4256b0783bd60afb18859c27cea4199247e89c7f"
     },
     {
       "path": "packages/generated/typescript/unified/v1/envelopes_pb.ts",
@@ -66,6 +74,10 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
+      "path": "packages/generated/python/unified/v1/collateral_pb2.py",
+      "sha256": "089275944aedea0c442246f6fee95892ae096bfea5c50b2b847492862f2a7706"
+    },
+    {
       "path": "packages/generated/python/unified/v1/envelopes_pb2.py",
       "sha256": "57a9b08d1f101d231d387fe40c9167b5af37ea5535242aed4669dfe0e1d4d271"
     },
@@ -95,7 +107,7 @@
     },
     {
       "path": "protocol/src/generated/FoundationTypes.sol",
-      "sha256": "15443ffdc100ef3500fd3f6776a0933d6ee801b7bac88286eb259116a3176c56"
+      "sha256": "f60ce339cd681278273b1c268ced7df108b3adb7c01b07c652a2e63f8d027bd6"
     }
   ]
 }

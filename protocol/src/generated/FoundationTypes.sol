@@ -2,8 +2,12 @@
 pragma solidity 0.8.36;
 
 // Code generated from schemas/proto/unified/v1. DO NOT EDIT.
-// Source SHA-256: e135c39e38ca75c41727837bdfd876d430acc7d08435b8a56830de8d77b81b86
+// Source SHA-256: ed6b0be44aeed37d395ae58b7705772137459cd0f0dd20a553879ebeb8c7a9d9
 library FoundationTypes {
+    enum CollateralKind { UNSPECIFIED, NATIVE, ERC20, ERC721, ERC1155 }
+
+    enum CollateralStatus { UNSPECIFIED, LOCKED, RELEASED, LIQUIDATED, CLAIMED }
+
     enum PostingSide { UNSPECIFIED, DEBIT, CREDIT }
 
     enum InterestKind { UNSPECIFIED, FIXED, VARIABLE, ZERO }
@@ -27,6 +31,37 @@ library FoundationTypes {
     enum InstallmentState { UNSPECIFIED, SCHEDULED, DUE, PARTIALLY_PAID, PAID, OVERDUE, WAIVED, DEFERRED, REPLACED }
 
     enum AssetKind { UNSPECIFIED, NATIVE, FUNGIBLE_TOKEN, NON_FUNGIBLE_TOKEN, FIAT, OFF_CHAIN }
+
+    struct CollateralItem {
+        Identifier collateralId;
+        LoanId loanId;
+        AssetId assetId;
+        CollateralKind kind;
+        string tokenAddress;
+        string tokenId;
+        string quantity;
+        PartyId ownerId;
+        int64 lockedAt;
+        CollateralStatus status;
+        bytes custodyEvidenceHash;
+    }
+
+    struct CollateralBundle {
+        LoanId loanId;
+        CollateralItem[] items;
+        uint64 stateVersion;
+    }
+
+    struct UftCollateralExposure {
+        LoanId loanId;
+        PartyId borrowerId;
+        string loanQuantity;
+        string borrowerQuantity;
+        string circulatingSupply;
+        Money backedDebtValue;
+        Money protocolDebtCeiling;
+        bytes policyEvidenceHash;
+    }
 
     struct CommandEnvelope {
         Identifier commandId;

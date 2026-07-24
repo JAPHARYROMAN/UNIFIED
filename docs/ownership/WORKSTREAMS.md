@@ -90,6 +90,16 @@ approval is mandatory before public testnet.
 - **Acceptance:** Foundry and independent Go vectors, ABI review, and risk traceability pass.
 - **Accountable:** Accounting and Economic Risk Authority.
 
+## WS-CUSTODY — Collateral custody
+
+- **Owns:** `protocol/src/collateral/`.
+- **Produces:** per-loan vaults, multi-asset custody, release gates, and exposure records.
+- **Consumes:** canonical loans, asset registry identities, debt state, and risk policy.
+- **Invariants:** custody existence; exact identity; no double release; borrower surplus rights.
+- **Threats:** unsolicited callbacks; accounting drift; premature release; UFT reflexivity.
+- **Acceptance:** mixed-bundle, reconciliation, release, callback, and concentration tests pass.
+- **Accountable:** Security Authority.
+
 ## WS-PLATFORM — Toolchain and delivery
 
 - **Owns:** `.github/`, `infrastructure/`, `scripts/`, `tools/`.

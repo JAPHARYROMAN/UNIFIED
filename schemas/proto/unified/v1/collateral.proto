@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+enum CollateralKind {
+  COLLATERAL_KIND_UNSPECIFIED = 0;
+  COLLATERAL_KIND_NATIVE = 1;
+  COLLATERAL_KIND_ERC20 = 2;
+  COLLATERAL_KIND_ERC721 = 3;
+  COLLATERAL_KIND_ERC1155 = 4;
+}
+
+enum CollateralStatus {
+  COLLATERAL_STATUS_UNSPECIFIED = 0;
+  COLLATERAL_STATUS_LOCKED = 1;
+  COLLATERAL_STATUS_RELEASED = 2;
+  COLLATERAL_STATUS_LIQUIDATED = 3;
+  COLLATERAL_STATUS_CLAIMED = 4;
+}
+
+message CollateralItem {
+  Identifier collateral_id = 1;
+  LoanId loan_id = 2;
+  AssetId asset_id = 3;
+  CollateralKind kind = 4;
+  string token_address = 5;
+  string token_id = 6;
+  string quantity = 7;
+  PartyId owner_id = 8;
+  google.protobuf.Timestamp locked_at = 9;
+  CollateralStatus status = 10;
+  bytes custody_evidence_hash = 11;
+}
+
+message CollateralBundle {
+  LoanId loan_id = 1;
+  repeated CollateralItem items = 2;
+  uint64 state_version = 3;
+}
+
+message UftCollateralExposure {
+  LoanId loan_id = 1;
+  PartyId borrower_id = 2;
+  string loan_quantity = 3;
+  string borrower_quantity = 4;
+  string circulating_supply = 5;
+  Money backed_debt_value = 6;
+  Money protocol_debt_ceiling = 7;
+  bytes policy_evidence_hash = 8;
+}
