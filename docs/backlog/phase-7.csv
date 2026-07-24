@@ -19,4 +19,4 @@ UNI-COLLATERAL-008,WS-COLLATERAL,Compute non-executing release eligibility evide
 UNI-SCHEMA-010,WS-SCHEMA,Define allocation reversal and release evidence,DONE,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
 UNI-SIM-005,WS-RISK,Simulate allocation overpayment and reversal faults,DONE,Accounting and Economic Risk Authority,Partial full excess replay conflict outage and reversal scenarios conserve units
 UNI-SEC-011,WS-SECURITY,Complete Phase 7B internal review,DONE,Security Authority,No unresolved critical or existential allocation finding
-UNI-REVIEW-009,WS-SPEC,Complete bounded Phase 7B engineering exit,TODO,Program Authority,Exit separates synthetic allocation proof from canonical debt and collateral authority
+UNI-REVIEW-009,WS-SPEC,Complete bounded Phase 7B engineering exit,DONE,Program Authority,Exit separates synthetic allocation proof from canonical debt and collateral authority
