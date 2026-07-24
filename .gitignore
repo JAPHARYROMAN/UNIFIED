@@ -5,6 +5,7 @@
 .venv/
 .cache/
 node_modules/
+protocol/lib/
 .pnpm-store/
 dist/
 build/

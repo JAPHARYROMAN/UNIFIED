@@ -10,9 +10,9 @@ buf breaking --against 'schemas/baseline/v0.1'
 
 go test ./...
 pnpm run check
-uv run python -m compileall -q models packages/generated/python tools
+uv run python -m compileall -q models packages/generated/python tools scripts
 uv run pytest -q
-uv run ruff check models tools
+uv run ruff check models tools scripts
 uv run python tools/check_foundation.py
 uv run python tools/check_privileged_surface.py
 
@@ -25,9 +25,13 @@ pnpm run solidity:compile
 uv run python tools/check_abi.py
 
 if (Get-Command forge -ErrorAction SilentlyContinue) {
+    pwsh ./scripts/prepare-foundry.ps1
     Push-Location protocol
     try {
+        forge fmt --check src/FoundationProbe.sol src/Phase2Compilation.sol `
+            src/interfaces src/kernel src/token test script
         forge test
+        uv run python ../scripts/check-contract-sizes.py
     } finally {
         Pop-Location
     }

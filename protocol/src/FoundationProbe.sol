@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.36;
 
-import {FoundationTypes} from "./generated/FoundationTypes.sol";
+import { FoundationTypes } from "./generated/FoundationTypes.sol";
 
 /// @notice Compile-tested boundary probe for generated foundation types.
 /// @dev This contract carries no funds, authority, loan behavior, or UFT mint path.

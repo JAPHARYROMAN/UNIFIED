@@ -1,0 +1,715 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "roleManager_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract AssetRegistry",
+        "name": "assetRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IUnifiedToken",
+        "name": "uft_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IUFTBurner",
+        "name": "burner_",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "uftAssetId_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address[6]",
+        "name": "receivers",
+        "type": "address[6]"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "assetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "InsufficientCollected",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidConfiguration",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidSplit",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "SafeERC20FailedOperation",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unauthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "assetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnsupportedAsset",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "flags",
+        "type": "uint8"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "evidenceReference",
+        "type": "bytes32"
+      }
+    ],
+    "name": "BurnSuspensionFlagsChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "sourceId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "assetId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "requestedAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "receivedAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "journalRef",
+        "type": "bytes32"
+      }
+    ],
+    "name": "FeeCollected",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "deficient",
+        "type": "bool"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "evidenceReference",
+        "type": "bytes32"
+      }
+    ],
+    "name": "ReserveDeficiencyChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "assetId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "insuranceAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "stakerAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "treasuryAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "burnAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "liquidityAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "publicGoodsAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "RevenueDistributed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "insuranceBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "stakerBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "treasuryBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "burnBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "liquidityBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "publicGoodsBps",
+            "type": "uint16"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct ProtocolTypes.RevenueSplit",
+        "name": "split",
+        "type": "tuple"
+      }
+    ],
+    "name": "RevenueSplitChanged",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "BPS",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SUSPEND_BRIDGE_DEFICIT",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SUSPEND_EMERGENCY_RESERVE_MODE",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SUSPEND_INSURANCE_BELOW_FLOOR",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SUSPEND_MATERIAL_BAD_DEBT",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SUSPEND_TREASURY_RUNWAY",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "assetRegistry",
+    "outputs": [
+      {
+        "internalType": "contract AssetRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "burnReserve",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "burnSuspended",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "burnSuspensionFlags",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "burner",
+    "outputs": [
+      {
+        "internalType": "contract IUFTBurner",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "sourceId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "assetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "journalRef",
+        "type": "bytes32"
+      }
+    ],
+    "name": "collectFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "assetId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "distribute",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "insuranceReceiver",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "liquidityReceiver",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "publicGoodsReceiver",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "revenueSplit",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "insuranceBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "stakerBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "treasuryBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "burnBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "liquidityBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "publicGoodsBps",
+            "type": "uint16"
+          }
+        ],
+        "internalType": "struct ProtocolTypes.RevenueSplit",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "roleManager",
+    "outputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "flags",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "evidenceReference",
+        "type": "bytes32"
+      }
+    ],
+    "name": "setBurnSuspensionFlags",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "deficient",
+        "type": "bool"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "evidenceReference",
+        "type": "bytes32"
+      }
+    ],
+    "name": "setReserveDeficient",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint16",
+            "name": "insuranceBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "stakerBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "treasuryBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "burnBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "liquidityBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "publicGoodsBps",
+            "type": "uint16"
+          }
+        ],
+        "internalType": "struct ProtocolTypes.RevenueSplit",
+        "name": "split",
+        "type": "tuple"
+      }
+    ],
+    "name": "setRevenueSplit",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "stakerReceiver",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "treasuryReceiver",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "uft",
+    "outputs": [
+      {
+        "internalType": "contract IUnifiedToken",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "uftAssetId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "assetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "undistributed",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]
