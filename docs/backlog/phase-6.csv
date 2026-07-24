@@ -1,0 +1,14 @@
+id,workstream,title,status,owner,acceptance
+UNI-ADR-008,WS-SPEC,Accept Phase 6 identity underwriting and exposure boundary,DONE,Protocol Architecture Authority,ADR 0013 accepted with privacy security accounting and risk constraints
+UNI-IDENTITY-001,WS-PROTOCOL,Implement provider and credential registries,READY,Security Authority,Issuer schema subject validity revocation scope epoch and assurance tests pass
+UNI-UW-001,WS-PROTOCOL,Implement immutable credit decision registry,READY,Protocol Architecture Authority,Policy model feature provenance product amount duration and expiry checks pass
+UNI-EXPOSURE-001,WS-PROTOCOL,Implement subject-level exposure reservations,READY,Accounting and Economic Risk Authority,Pending and active exposure cannot exceed the exact-asset decision limit
+UNI-UWENGINE-001,WS-RISK,Implement deterministic underwriting rules,READY,Accounting and Economic Risk Authority,Authenticated synthetic features yield versioned explainable decisions
+UNI-SCHEMA-007,WS-SCHEMA,Define credential decision and exposure schemas,READY,Protocol Architecture Authority,Commitment-only additive Protobuf generates deterministic bindings in four languages
+UNI-ACCOUNTING-006,WS-LEDGER,Record decision and exposure control evidence,READY,Accounting and Economic Risk Authority,Reservations activations releases and conflicts are immutable and idempotent
+UNI-SIM-002,WS-RISK,Add synthetic identity and exposure simulations,READY,Security Authority,Same-subject multi-wallet and reservation race scenarios conserve limits
+UNI-SEC-008,WS-SECURITY,Complete Phase 6A internal review,READY,Security Authority,No unresolved critical or existential finding
+UNI-UNSECURED-001,WS-PROTOCOL,Connect decisions to unsecured loan activation,DEFERRED,Protocol Architecture Authority,Requires separate Phase 6B borrower lender funding and terminal-release review
+UNI-CONSENT-001,WS-IDENTITY,Implement restricted consent and data vault,DEFERRED,Security Authority,Requires privacy legal retention encryption and access-audit approval
+UNI-ZK-001,WS-IDENTITY,Implement zero-knowledge credentials and nullifiers,DEFERRED,Security Authority,Requires circuit threat model trusted setup decision and independent cryptographic review
+UNI-REPUTATION-001,WS-RISK,Implement public reputation scoring,DEFERRED,Accounting and Economic Risk Authority,Requires manipulation bias privacy appeals and version-governance review
