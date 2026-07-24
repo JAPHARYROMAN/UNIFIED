@@ -104,3 +104,10 @@ or unsecured-credit system. ADR 0014 and
 implementation: an atomic, synthetic, principal-only version-3 loan activation path with
 policy-isolated exposure controls. Its bounded engineering exit is recorded in
 `docs/reviews/phase-6b-exit-review.md`. It does not authorize real unsecured funds.
+
+The accepted Phase 7A boundary is recorded in
+`adr/0015-phase-7a-payment-ingress-and-reconciliation-boundary.md` and
+`docs/architecture/phase-7a-payment-ingress-reconciliation.md`. It permits only
+synthetic, local payment-ingress, provisional/final accounting, quarantine, and
+reconciliation engineering. Live providers, real financial data, loan allocation,
+refunds, payouts, collateral release, and real funds remain prohibited.
