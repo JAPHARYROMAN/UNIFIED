@@ -9,6 +9,12 @@ New-Item -ItemType Directory -Force -Path '.cache' | Out-Null
 buf build --output '.cache/unified-schema.binpb'
 buf generate
 
+Get-ChildItem -LiteralPath 'packages/generated/typescript/unified/v1' -Filter '*.ts' |
+    ForEach-Object {
+        $generated = [IO.File]::ReadAllText($_.FullName).TrimEnd() + "`n"
+        [IO.File]::WriteAllText($_.FullName, $generated, [Text.UTF8Encoding]::new($false))
+    }
+
 $pythonTarget = Join-Path $workspace 'packages\generated\python'
 if (-not $pythonTarget.StartsWith($workspace, [System.StringComparison]::OrdinalIgnoreCase)) {
     throw 'Generated Python target escaped the workspace.'

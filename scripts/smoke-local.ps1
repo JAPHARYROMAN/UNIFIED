@@ -3,8 +3,8 @@ $PSNativeCommandUseErrorActionPreference = $true
 
 $workspace = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $composeFile = (Resolve-Path -LiteralPath (Join-Path $workspace 'infrastructure\local\compose.yaml')).Path
-$migration = (Resolve-Path -LiteralPath (
-    Join-Path $workspace 'services\foundation-ledger\migrations\000001_foundation_ledger.sql'
+$migrationRoot = (Resolve-Path -LiteralPath (
+    Join-Path $workspace 'services\foundation-ledger\migrations'
 )).Path
 
 $running = docker compose --project-name unified-local --file $composeFile ps --status running --quiet
@@ -27,9 +27,13 @@ if ($topics -notmatch 'unified\.foundation\.events') {
     docker compose --project-name unified-local --file $composeFile exec -T redpanda `
         rpk topic produce unified.foundation.events | Out-Null
 
-Get-Content -LiteralPath $migration -Raw |
-    docker compose --project-name unified-local --file $composeFile exec -T postgres `
-        psql --set ON_ERROR_STOP=1 --username unified_local --dbname unified_local | Out-Null
+Get-ChildItem -LiteralPath $migrationRoot -Filter '*.sql' |
+    Sort-Object Name |
+    ForEach-Object {
+        Get-Content -LiteralPath $_.FullName -Raw |
+            docker compose --project-name unified-local --file $composeFile exec -T postgres `
+                psql --set ON_ERROR_STOP=1 --username unified_local --dbname unified_local | Out-Null
+    }
 
 $sampleSql = @'
 BEGIN;
@@ -50,8 +54,8 @@ INSERT INTO journal (
 INSERT INTO journal_entry (
   journal_id, line_number, account_code, side, asset_id, units
 ) VALUES
-  ('journal-001', 1, '1000', 'DEBIT', 'asset:local:usd', 1000),
-  ('journal-001', 2, '2000', 'CREDIT', 'asset:local:usd', 1000);
+  ('journal-001', 1, '1310', 'DEBIT', 'asset:local:usd', 1000),
+  ('journal-001', 2, '2310', 'CREDIT', 'asset:local:usd', 1000);
 INSERT INTO event_log (
   event_id, event_type, schema_version, authority_class, aggregate_id,
   aggregate_version, correlation_id, causation_id, payload, payload_hash

@@ -18,28 +18,36 @@
       "sha256": "07cb80ccb8f675ef3e81e3ead55ac42c98ebe2be6736cf9f287c127eb02d4510"
     },
     {
+      "path": "packages/generated/go/unified/v1/origination.pb.go",
+      "sha256": "797a8141e9a5ad2a3f58c580183b6acd08fc70e98cdba309589af07902493929"
+    },
+    {
       "path": "packages/generated/go/unified/v1/types.pb.go",
       "sha256": "4a4707332b2c93af7e666bebf42e26c53e9fcb8989ab4ee2ee9da6c502e26ec6"
     },
     {
       "path": "packages/generated/typescript/unified/v1/envelopes_pb.ts",
-      "sha256": "fac0f7b7ca2b4a5f1783ad99908dcb1c749565f3b976c3fb3391e3bbff1abe3d"
+      "sha256": "5f4966a444bf4cfcecf99ff2fd0df387e8bf9b83fff74d357862e133c35cae1b"
     },
     {
       "path": "packages/generated/typescript/unified/v1/finance_pb.ts",
-      "sha256": "28dd18226be1d4bca605675f756762f8c75ffff7a8f2b9bff2fb90d429564536"
+      "sha256": "67ff0fd6acee4306d1e037aa01cc487b982ee5f5a6a50e50acb219615ed014e7"
     },
     {
       "path": "packages/generated/typescript/unified/v1/governance_pb.ts",
-      "sha256": "8da5bac695a47affe560c436d5e5eec5938d017ee6dd7c1bc518420bb3e943ca"
+      "sha256": "75dfadb0e50155cdc389accda681cb55ba71adc976bd4af2f16f19a79d967f08"
     },
     {
       "path": "packages/generated/typescript/unified/v1/loan_pb.ts",
-      "sha256": "310a983db303024e93b3d4de9f962cad614757f8bffaf3032d53ed44503738f3"
+      "sha256": "7ffe59ea9bfff8e6e76c501d9a773d7219b15a2dce64621ea49e2bfce55bba48"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/origination_pb.ts",
+      "sha256": "29b962342e9fd46f7ab723def932425d7e13b5bbffc071de2bfa646e33650dc2"
     },
     {
       "path": "packages/generated/typescript/unified/v1/types_pb.ts",
-      "sha256": "91de1888ae9a20ea946a3172a73412817145bd0dbc3ae5758ad5ca33973e4fc7"
+      "sha256": "f7e2242557b2a9a61fe907480ba9a7c1a787a286f2c42c80f0bde9255cd80a7e"
     },
     {
       "path": "packages/generated/python/unified/__init__.py",
@@ -66,12 +74,16 @@
       "sha256": "c1fad151f4c76ba410a582fe78d2465e7a78648fcebf6eb27a6d11f42e43c714"
     },
     {
+      "path": "packages/generated/python/unified/v1/origination_pb2.py",
+      "sha256": "babe6caa508434aec486bd891c388e17923ed93409f44e270dee93a9b0ef9778"
+    },
+    {
       "path": "packages/generated/python/unified/v1/types_pb2.py",
       "sha256": "9cca84920369994ad324024b7411aafaf66c39aa18904f4fef8868c3e6183ac4"
     },
     {
       "path": "protocol/src/generated/FoundationTypes.sol",
-      "sha256": "28f48696c34b65b2d2a2be48a914245de5f47f1b3ccac1982e23124ee56fc17e"
+      "sha256": "d56fc27e7f7c23c3f132a875e7a57825c5d8e02a8e98d3e6edaa1f06159fd0d0"
     }
   ]
 }

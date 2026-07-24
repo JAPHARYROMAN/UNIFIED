@@ -112,4 +112,3 @@ export enum InterestKind {
  */
 export const InterestKindSchema: GenEnum<InterestKind> = /*@__PURE__*/
   enumDesc(file_unified_v1_loan, 0);
-

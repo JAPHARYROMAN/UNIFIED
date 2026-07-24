@@ -2,10 +2,13 @@
 
 Unified is a governed, multi-language foundation for a decentralized credit and
 financial coordination protocol. This repository implements the reviewed
-foundation baseline and the Phase 2 protocol-kernel/UFT engineering milestone:
+foundation baseline, Phase 2 protocol-kernel/UFT milestone, and Phase 3 core
+loan/accounting engineering milestone:
 shared schemas and bindings, append-only registries, scoped authority, a
 fixed-supply token, genesis allocation and vesting controls, a fee-router
-skeleton, engineering gates, and a reproducible local environment.
+skeleton, signed tender and offer flow, atomic principal-only loans, balanced
+loan accounting, deterministic chain projections, authenticated API boundaries,
+engineering gates, and a reproducible local environment.
 
 No production loan behavior, real token deployment, real funds, production keys,
 external provider, bridge, oracle, or mainnet integration is included.
@@ -16,9 +19,10 @@ external provider, bridge, oracle, or mainnet integration is included.
 - `docs/specifications/` — subordinate architecture and delivery specifications.
 - `adr/` and `rfcs/` — accepted decisions and proposed cross-domain changes.
 - `schemas/` — canonical Protobuf interfaces and frozen compatibility baselines.
-- `protocol/` — Solidity foundation, Phase 2 kernel, UFT, tests, ABIs, and local
-  deployment script.
-- `services/` — Go financial-service skeletons and database migrations.
+- `protocol/` — Solidity foundation, kernel, UFT, core loan contracts, tests,
+  reviewed ABIs, and local deployment scripts.
+- `services/` — Go accounting, chain-projection, and core API kernels plus
+  database migrations.
 - `apps/` — TypeScript experience-layer skeletons.
 - `models/` — Python model and simulation skeletons.
 - `packages/generated/` — generated Solidity, Go, TypeScript, and Python types.
@@ -59,6 +63,8 @@ promise, or an independent security audit. See
 
 The Phase 2 boundary and storage layouts are documented in
 `docs/architecture/phase-2-kernel.md` and
-`docs/architecture/phase-2-storage-layouts.md`. Its internal security review
-authorizes local and testnet engineering only; it does not authorize production
-funds or token distribution.
+`docs/architecture/phase-2-storage-layouts.md`. The Phase 3 boundary, flow, and
+storage layouts are documented in `docs/architecture/phase-3-loan-accounting.md`
+and `docs/architecture/phase-3-storage-layouts.md`. Their internal security
+reviews authorize local and testnet engineering only; they do not authorize
+production funds, token distribution, or public lending.

@@ -58,9 +58,15 @@ contract LoanRegistry is ILoanRegistry, RoleControlled {
         emit LoanRegistered(loanId, account, borrower, agreementHash, protocolVersion);
     }
 
-    function markTerminal(bytes32 loanId) external onlyRole(ProtocolRoles.SERVICER_ROLE) {
+    function markTerminal(bytes32 loanId) external {
         LoanRecord storage loan = _loans[loanId];
         if (loan.loanAccount == address(0)) revert UnknownLoan(loanId);
+        if (
+            msg.sender != loan.loanAccount
+                && !roleManager.hasRole(ProtocolRoles.SERVICER_ROLE, msg.sender)
+        ) {
+            revert Unauthorized(ProtocolRoles.SERVICER_ROLE, msg.sender);
+        }
         if (loan.terminal) revert TerminalStateAlreadySet(loanId);
         loan.terminal = true;
         emit LoanMarkedTerminal(loanId, msg.sender);

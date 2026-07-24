@@ -1,0 +1,163 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/loan.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+enum TenderState {
+  TENDER_STATE_UNSPECIFIED = 0;
+  TENDER_STATE_OPEN = 1;
+  TENDER_STATE_COMMITMENT_PENDING = 2;
+  TENDER_STATE_FULFILLED = 3;
+  TENDER_STATE_CANCELLED = 4;
+  TENDER_STATE_EXPIRED = 5;
+}
+
+enum OfferState {
+  OFFER_STATE_UNSPECIFIED = 0;
+  OFFER_STATE_ACTIVE = 1;
+  OFFER_STATE_COUNTERED = 2;
+  OFFER_STATE_CONSUMED = 3;
+  OFFER_STATE_CANCELLED = 4;
+  OFFER_STATE_EXPIRED = 5;
+}
+
+enum LoanLifecycle {
+  LOAN_LIFECYCLE_UNSPECIFIED = 0;
+  LOAN_LIFECYCLE_PROPOSED = 1;
+  LOAN_LIFECYCLE_UNDERWRITING = 2;
+  LOAN_LIFECYCLE_FUNDING = 3;
+  LOAN_LIFECYCLE_ACTIVATING = 4;
+  LOAN_LIFECYCLE_ACTIVE = 5;
+  LOAN_LIFECYCLE_CLOSED = 6;
+  LOAN_LIFECYCLE_CANCELLED = 7;
+}
+
+enum ServicingState {
+  SERVICING_STATE_UNSPECIFIED = 0;
+  SERVICING_STATE_CURRENT = 1;
+  SERVICING_STATE_GRACE = 2;
+  SERVICING_STATE_DELINQUENT = 3;
+  SERVICING_STATE_ACCELERATED = 4;
+  SERVICING_STATE_RESTRUCTURING = 5;
+  SERVICING_STATE_REFINANCING = 6;
+  SERVICING_STATE_DEFAULTED = 7;
+  SERVICING_STATE_REPAID = 8;
+  SERVICING_STATE_SETTLED = 9;
+  SERVICING_STATE_WRITTEN_OFF = 10;
+}
+
+enum FundingState {
+  FUNDING_STATE_UNSPECIFIED = 0;
+  FUNDING_STATE_OPEN = 1;
+  FUNDING_STATE_PARTIALLY_FUNDED = 2;
+  FUNDING_STATE_FUNDED = 3;
+  FUNDING_STATE_FAILED = 4;
+  FUNDING_STATE_REFUNDING = 5;
+  FUNDING_STATE_CLOSED = 6;
+}
+
+enum PaymentState {
+  PAYMENT_STATE_UNSPECIFIED = 0;
+  PAYMENT_STATE_REQUESTED = 1;
+  PAYMENT_STATE_AUTHORIZED = 2;
+  PAYMENT_STATE_PROCESSING = 3;
+  PAYMENT_STATE_PROVISIONAL = 4;
+  PAYMENT_STATE_FINAL = 5;
+  PAYMENT_STATE_ALLOCATED = 6;
+  PAYMENT_STATE_REVERSED = 7;
+  PAYMENT_STATE_DISPUTED = 8;
+  PAYMENT_STATE_FAILED = 9;
+  PAYMENT_STATE_REFUNDED = 10;
+}
+
+enum FinalityState {
+  FINALITY_STATE_UNSPECIFIED = 0;
+  FINALITY_STATE_PROVISIONAL = 1;
+  FINALITY_STATE_FINAL = 2;
+  FINALITY_STATE_REORGED = 3;
+}
+
+message Tender {
+  Identifier tender_id = 1;
+  PartyId borrower_id = 2;
+  bytes metadata_hash = 3;
+  TenderState state = 4;
+  Identifier selected_offer_id = 5;
+  google.protobuf.Timestamp expires_at = 6;
+}
+
+message SignedOffer {
+  Identifier offer_id = 1;
+  Identifier tender_id = 2;
+  Identifier parent_offer_id = 3;
+  PartyId lender_id = 4;
+  PartyId borrower_id = 5;
+  LoanTerms terms = 6;
+  Money origination_fee = 7;
+  uint64 nonce = 8;
+  google.protobuf.Timestamp expires_at = 9;
+  bytes signature = 10;
+  OfferState state = 11;
+}
+
+message LoanAgreementSnapshot {
+  LoanTerms terms = 1;
+  Identifier tender_id = 2;
+  Identifier offer_id = 3;
+  PartyId lender_id = 4;
+  Money origination_fee = 5;
+  bytes policy_set_hash = 6;
+  bytes agreement_hash = 7;
+  google.protobuf.Timestamp activated_at = 8;
+}
+
+message LoanStateVector {
+  LoanId loan_id = 1;
+  LoanLifecycle lifecycle = 2;
+  FundingState funding = 3;
+  PaymentState latest_payment = 4;
+  Money outstanding_principal = 5;
+  uint64 state_version = 6;
+  ServicingState servicing = 7;
+}
+
+message ChainEventReference {
+  Identifier event_id = 1;
+  string chain_domain = 2;
+  bytes transaction_hash = 3;
+  uint64 block_number = 4;
+  bytes block_hash = 5;
+  uint32 log_index = 6;
+  FinalityState finality = 7;
+}
+
+message LoanActivated {
+  LoanAgreementSnapshot agreement = 1;
+  LoanStateVector state = 2;
+  ChainEventReference evidence = 3;
+}
+
+message PrincipalRepaid {
+  Identifier payment_id = 1;
+  LoanId loan_id = 2;
+  PartyId payer_id = 3;
+  Money amount = 4;
+  Money outstanding_principal = 5;
+  uint64 state_version = 6;
+  ChainEventReference evidence = 7;
+}
+
+message TransactionPreparation {
+  Identifier preparation_id = 1;
+  string chain_domain = 2;
+  string to_address = 3;
+  bytes call_data = 4;
+  string value_units = 5;
+  bytes expected_terms_hash = 6;
+  google.protobuf.Timestamp expires_at = 7;
+}

@@ -84,6 +84,26 @@ ABI_PAIRS = {
         / "protocol_src_token_VestingPoolVault_sol_VestingPoolVault.abi",
         ROOT / "protocol" / "abi" / "phase2" / "VestingPoolVault.abi.json",
     ),
+    "CoreLoanAccount": (
+        ROOT / ".cache" / "solc" / "protocol_src_loan_CoreLoanAccount_sol_CoreLoanAccount.abi",
+        ROOT / "protocol" / "abi" / "phase3" / "CoreLoanAccount.abi.json",
+    ),
+    "CoreLoanFactory": (
+        ROOT / ".cache" / "solc" / "protocol_src_loan_CoreLoanFactory_sol_CoreLoanFactory.abi",
+        ROOT / "protocol" / "abi" / "phase3" / "CoreLoanFactory.abi.json",
+    ),
+    "FundingManager": (
+        ROOT / ".cache" / "solc" / "protocol_src_loan_FundingManager_sol_FundingManager.abi",
+        ROOT / "protocol" / "abi" / "phase3" / "FundingManager.abi.json",
+    ),
+    "OfferManager": (
+        ROOT / ".cache" / "solc" / "protocol_src_loan_OfferManager_sol_OfferManager.abi",
+        ROOT / "protocol" / "abi" / "phase3" / "OfferManager.abi.json",
+    ),
+    "TenderRegistry": (
+        ROOT / ".cache" / "solc" / "protocol_src_loan_TenderRegistry_sol_TenderRegistry.abi",
+        ROOT / "protocol" / "abi" / "phase3" / "TenderRegistry.abi.json",
+    ),
 }
 
 

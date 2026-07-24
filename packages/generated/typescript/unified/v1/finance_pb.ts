@@ -240,4 +240,3 @@ export enum PostingSide {
  */
 export const PostingSideSchema: GenEnum<PostingSide> = /*@__PURE__*/
   enumDesc(file_unified_v1_finance, 0);
-

@@ -233,4 +233,3 @@ export enum AssetKind {
  */
 export const AssetKindSchema: GenEnum<AssetKind> = /*@__PURE__*/
   enumDesc(file_unified_v1_types, 0);
-

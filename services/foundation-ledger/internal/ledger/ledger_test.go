@@ -12,7 +12,10 @@ func balancedJournal() Journal {
 		LegalEntityID:  "entity-local",
 		BookID:         "protocol",
 		SourceSystem:   "foundation-test",
+		EntryType:      "FOUNDATION_TEST",
+		SourceEventID:  "event-001",
 		IdempotencyKey: "command-001",
+		CorrelationID:  "correlation-001",
 		EffectiveAt:    time.Unix(1_700_000_000, 0).UTC(),
 		Entries: []Entry{
 			{AccountCode: "1000", Side: Debit, AssetID: "asset:local:usd", Units: "1000"},
@@ -88,3 +91,48 @@ func TestPostedJournalIsImmutableThroughCopies(t *testing.T) {
 	}
 }
 
+func TestReversalPostsAnImmutableOppositeJournal(t *testing.T) {
+	book := New()
+	if _, err := book.Post(balancedJournal()); err != nil {
+		t.Fatalf("post original: %v", err)
+	}
+	reversal, err := book.Reverse(
+		"journal-001",
+		"journal-001-reversal",
+		"command-001-reversal",
+		"event-001-reversal",
+		"canonical source event was reorged",
+		time.Unix(1_700_000_100, 0).UTC(),
+	)
+	if err != nil {
+		t.Fatalf("reverse: %v", err)
+	}
+	if reversal.ReversalOf != "journal-001" ||
+		reversal.Entries[0].Side != Credit ||
+		reversal.Entries[1].Side != Debit {
+		t.Fatal("reversal did not preserve its link and invert every posting side")
+	}
+	if _, err := book.Reverse(
+		"journal-001",
+		"journal-001-second-reversal",
+		"command-001-second-reversal",
+		"event-001-second-reversal",
+		"duplicate",
+		time.Unix(1_700_000_200, 0).UTC(),
+	); !errors.Is(err, ErrAlreadyReversed) {
+		t.Fatalf("expected duplicate reversal rejection, got %v", err)
+	}
+}
+
+func TestBatchFailureCommitsNothing(t *testing.T) {
+	book := New()
+	first := balancedJournal()
+	second := balancedJournal()
+	second.IdempotencyKey = "command-002"
+	if _, err := book.PostBatch([]Journal{first, second}); !errors.Is(err, ErrInvalidJournal) {
+		t.Fatalf("expected duplicate journal rejection, got %v", err)
+	}
+	if len(book.List()) != 0 {
+		t.Fatal("failed batch left a partial posting")
+	}
+}

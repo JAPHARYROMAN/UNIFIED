@@ -16,4 +16,5 @@ interface ILoanRegistry {
     function protocolVersionOf(bytes32 loanId) external view returns (uint32);
     function exists(bytes32 loanId) external view returns (bool);
     function isTerminal(bytes32 loanId) external view returns (bool);
+    function markTerminal(bytes32 loanId) external;
 }
