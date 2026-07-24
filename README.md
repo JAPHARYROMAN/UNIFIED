@@ -1,13 +1,14 @@
 # Unified
 
 Unified is a governed, multi-language foundation for a decentralized credit and
-financial coordination protocol. This repository currently implements the
-foundation milestone only: specifications, shared schemas, generated language
-bindings, compile-tested skeletons, engineering controls, and a reproducible
-local environment.
+financial coordination protocol. This repository implements the reviewed
+foundation baseline and the Phase 2 protocol-kernel/UFT engineering milestone:
+shared schemas and bindings, append-only registries, scoped authority, a
+fixed-supply token, genesis allocation and vesting controls, a fee-router
+skeleton, engineering gates, and a reproducible local environment.
 
-No production loan logic, UFT issuance path, real funds, production keys, or
-mainnet integration is included.
+No production loan behavior, real token deployment, real funds, production keys,
+external provider, bridge, oracle, or mainnet integration is included.
 
 ## Repository map
 
@@ -15,7 +16,8 @@ mainnet integration is included.
 - `docs/specifications/` — subordinate architecture and delivery specifications.
 - `adr/` and `rfcs/` — accepted decisions and proposed cross-domain changes.
 - `schemas/` — canonical Protobuf interfaces and frozen compatibility baselines.
-- `protocol/` — Solidity foundation skeletons.
+- `protocol/` — Solidity foundation, Phase 2 kernel, UFT, tests, ABIs, and local
+  deployment script.
 - `services/` — Go financial-service skeletons and database migrations.
 - `apps/` — TypeScript experience-layer skeletons.
 - `models/` — Python model and simulation skeletons.
@@ -55,3 +57,8 @@ foundation. They are not production ratification, legal approval, an economic
 promise, or an independent security audit. See
 `docs/reviews/baseline-review-v0.1.md` and `docs/specifications/registry.yaml`.
 
+The Phase 2 boundary and storage layouts are documented in
+`docs/architecture/phase-2-kernel.md` and
+`docs/architecture/phase-2-storage-layouts.md`. Its internal security review
+authorizes local and testnet engineering only; it does not authorize production
+funds or token distribution.

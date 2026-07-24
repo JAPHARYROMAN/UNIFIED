@@ -1,0 +1,513 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "roleManager_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidPolicy",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "PolicyAlreadyRegistered",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "PolicyNotFound",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unauthorized",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "PolicyDeprecated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "policyId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "implementation",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "major",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "minor",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "patch",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "codeHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "activeFrom",
+        "type": "uint64"
+      }
+    ],
+    "name": "PolicyRegistered",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
+      }
+    ],
+    "name": "activeFrom",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "timestamp",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "implementation",
+        "type": "address"
+      }
+    ],
+    "name": "codeHashOf",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "policyId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "major",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "minor",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "patch",
+        "type": "uint32"
+      }
+    ],
+    "name": "deprecatePolicy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "policyId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "implementation",
+            "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "major",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "minor",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "patch",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "interfaceId",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "configurationSchemaHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct ProtocolTypes.PolicyRef",
+        "name": "policy",
+        "type": "tuple"
+      }
+    ],
+    "name": "isApproved",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "policyId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "major",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "minor",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "patch",
+        "type": "uint32"
+      }
+    ],
+    "name": "isDeprecated",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "policyId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "major",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "minor",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "patch",
+        "type": "uint32"
+      }
+    ],
+    "name": "policyKey",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "policyId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "implementation",
+            "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "major",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "minor",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "patch",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "interfaceId",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "configurationSchemaHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct ProtocolTypes.PolicyRef",
+        "name": "policy",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "codeHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "registerPolicy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "policyId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "implementation",
+            "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "major",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "minor",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "patch",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "interfaceId",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "configurationSchemaHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct ProtocolTypes.PolicyRef",
+        "name": "policy",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "codeHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "activationTime",
+        "type": "uint64"
+      }
+    ],
+    "name": "registerPolicyWithActivation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "policyId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "major",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "minor",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "patch",
+        "type": "uint32"
+      }
+    ],
+    "name": "resolvePolicy",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "policyId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "implementation",
+            "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "major",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "minor",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "patch",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "interfaceId",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "configurationSchemaHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct ProtocolTypes.PolicyRef",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "roleManager",
+    "outputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

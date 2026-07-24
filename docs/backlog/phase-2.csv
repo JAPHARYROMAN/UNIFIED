@@ -1,0 +1,15 @@
+id,workstream,title,status,owner,acceptance
+UNI-ADR-002,WS-SPEC,Accept Phase 2 kernel and UFT boundary,DONE,Protocol Architecture Authority,ADR 0007 accepted with cross-authority review
+UNI-KERNEL-002,WS-PROTOCOL,Implement immutable protocol directory,DONE,Protocol Architecture Authority,Identity chain configuration and component addresses compile and test
+UNI-AUTH-001,WS-SECURITY,Implement expiring canonical role manager,DONE,Security Authority,Administrator and governance separation test passes
+UNI-EMERG-001,WS-SECURITY,Implement scoped emergency controller,DONE,Security Authority,Repayment protection and expiry tests pass
+UNI-LOAN-001,WS-PROTOCOL,Implement append-only loan registry and deterministic factory,DONE,Protocol Architecture Authority,Uniqueness version and terminal tests pass
+UNI-POLICY-001,WS-PROTOCOL,Implement semantic policy registry,DONE,Protocol Architecture Authority,Code hash interface activation immutability and deprecation tests pass
+UNI-UFT-001,WS-PROTOCOL,Implement fixed-supply permit-enabled UFT,DONE,Security Authority,Supply cap equation and no-mint gates pass
+UNI-UFT-002,WS-PROTOCOL,Implement nine genesis allocation vaults,DONE,Accounting and Economic Risk Authority,Allocation conservation and one-time token binding pass
+UNI-UFT-003,WS-PROTOCOL,Implement contributor investor and partner vesting pools,DONE,Accounting and Economic Risk Authority,Cliff duration release and cancellation bounds pass
+UNI-UFT-004,WS-PROTOCOL,Implement UFT burner and fee-router skeleton,DONE,Accounting and Economic Risk Authority,Split bounds receipt conservation burn accounting and suspension pass
+UNI-VERIFY-001,WS-SECURITY,Add stateful UFT supply invariants,DONE,Security Authority,Foundry invariant suite completes without revert
+UNI-DEPLOY-001,WS-PLATFORM,Add reproducible Phase 2 deployment script,DONE,Release Authority,Clean local EVM dry run succeeds
+UNI-SEC-002,WS-SECURITY,Complete Phase 2 internal security review,DONE,Security Authority,No unresolved critical or existential finding
+UNI-DIST-001,WS-PROTOCOL,Implement allocation-specific distribution envelopes,DEFERRED,Accounting and Economic Risk Authority,Required before any real token distribution

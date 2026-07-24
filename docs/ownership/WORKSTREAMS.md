@@ -33,14 +33,16 @@ approval is mandatory before public testnet.
 - **Acceptance:** Buf lint/build/breaking and generated-code freshness pass.
 - **Accountable:** Protocol Architecture Authority.
 
-## WS-PROTOCOL — Solidity foundation
+## WS-PROTOCOL — Solidity protocol
 
 - **Owns:** `protocol/`.
-- **Produces:** interface and contract skeletons only in this milestone.
+- **Produces:** foundation interfaces, Phase 2 kernel and registries, fixed-supply
+  UFT, allocation and vesting controls, and fee-router skeleton.
 - **Consumes:** generated Solidity types and protocol invariants.
 - **Invariants:** no mint path; no hidden superuser; checked authority.
 - **Threats:** unsafe privilege; ABI or storage drift.
-- **Acceptance:** Foundry and Solidity compiler checks pass.
+- **Acceptance:** Foundry unit and stateful invariant tests, ABI compatibility,
+  runtime-size, storage-layout, and Solidity compiler checks pass.
 - **Accountable:** Protocol Architecture Authority.
 
 ## WS-LEDGER — Accounting foundation
@@ -72,4 +74,3 @@ approval is mandatory before public testnet.
 - **Threats:** unowned risk; narrative-only security claims.
 - **Acceptance:** traceability and risk-owner checks pass.
 - **Accountable:** Security Authority.
-

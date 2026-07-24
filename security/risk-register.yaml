@@ -55,4 +55,39 @@ risks:
     downstream_impact: Real financial loss without audits or ratification
     validation: No production configuration, real providers, or deployment jobs
     status: CONTROLLED
-
+  - id: RISK-PHASE2-001
+    severity: CRITICAL
+    title: UFT supply exceeds the constitutional cap
+    owner: Security Authority
+    evidence: protocol/test/UFTSupplyInvariant.t.sol
+    expiry: 2026-10-24
+    downstream_impact: Irreversible dilution and broken economic accounting
+    validation: Constructor allocation assertion plus stateful supply equation and cap invariants
+    status: CONTROLLED
+  - id: RISK-PHASE2-002
+    severity: CRITICAL
+    title: Privileged role concentration
+    owner: Security Authority
+    evidence: protocol/script/DeployPhase2.s.sol
+    expiry: 2026-10-24
+    downstream_impact: Unauthorized registry allocation emergency or revenue action
+    validation: Separate administrator and governance plus seven distinct deployment operators
+    status: CONTROLLED
+  - id: RISK-PHASE2-003
+    severity: CRITICAL
+    title: Allocation released before product-specific envelopes exist
+    owner: Accounting and Economic Risk Authority
+    evidence: security/reviews/phase-2-internal-review.md
+    expiry: 2026-10-24
+    downstream_impact: Token distribution outside approved schedules or mandates
+    validation: No production deployment and UNI-DIST-001 required before real distribution
+    status: CONTROLLED
+  - id: RISK-PHASE2-004
+    severity: EXISTENTIAL
+    title: Emergency authority blocks borrower repayment
+    owner: Security Authority
+    evidence: protocol/test/Phase2Kernel.t.sol
+    expiry: 2026-10-24
+    downstream_impact: Borrower harm insolvency escalation and protocol deadlock
+    validation: Repayment and collateral top-up capabilities are unpausable and tested
+    status: CONTROLLED

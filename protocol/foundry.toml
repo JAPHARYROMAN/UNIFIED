@@ -3,11 +3,16 @@ src = "src"
 test = "test"
 out = "out"
 cache_path = "cache"
+libs = ["lib"]
+remappings = ["@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/"]
 solc_version = "0.8.36"
 evm_version = "prague"
 optimizer = true
 optimizer_runs = 200
 deny = "warnings"
+# 3860/5574 arise only from test/script harnesses that embed many deployment bytecodes.
+# Production deployed-size limits are checked separately in scripts/check-contract-sizes.py.
+ignored_error_codes = [3860, 5574, 6335]
 
 [fmt]
 line_length = 100
