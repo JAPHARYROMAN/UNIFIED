@@ -4,20 +4,40 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      npm-compatible:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
   - package-ecosystem: gomod
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 5
   - package-ecosystem: pip
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      python-development-tools:
+        patterns: ["mypy", "pip-audit", "pytest", "ruff"]
+        update-types: ["minor", "patch"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      actions-compatible:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
   - package-ecosystem: docker
     directory: /infrastructure/local
     schedule:
       interval: weekly
-
+    open-pull-requests-limit: 5
+    groups:
+      local-images-compatible:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
