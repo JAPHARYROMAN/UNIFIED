@@ -17,7 +17,7 @@ UNI-SCHEMA-008,WS-SCHEMA,Define underwritten activation evidence,DONE,Protocol A
 UNI-ACCOUNTING-007,WS-LEDGER,Record activation and terminal-release evidence,DONE,Accounting and Economic Risk Authority,Final linked records reconcile decision reservation loan funding and release
 UNI-SIM-003,WS-RISK,Simulate activation atomicity and rollback,DONE,Accounting and Economic Risk Authority,Funding revocation mismatch replay pause repayment and release vectors conserve state
 UNI-SEC-009,WS-SECURITY,Complete Phase 6B internal review,DONE,Security Authority,No unresolved critical or existential activation finding
-UNI-REVIEW-007,WS-SPEC,Complete bounded Phase 6B engineering exit,TODO,Program Authority,Exit separates synthetic activation proof from production lending approval
+UNI-REVIEW-007,WS-SPEC,Complete bounded Phase 6B engineering exit,DONE,Program Authority,Exit separates synthetic activation proof from production lending approval
 UNI-CONSENT-001,WS-IDENTITY,Implement restricted consent and data vault,DEFERRED,Security Authority,Requires privacy legal retention encryption and access-audit approval
 UNI-ZK-001,WS-IDENTITY,Implement zero-knowledge credentials and nullifiers,DEFERRED,Security Authority,Requires circuit threat model trusted setup decision and independent cryptographic review
 UNI-REPUTATION-001,WS-RISK,Implement public reputation scoring,DEFERRED,Accounting and Economic Risk Authority,Requires manipulation bias privacy appeals and version-governance review
