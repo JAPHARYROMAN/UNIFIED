@@ -36,8 +36,9 @@ approval is mandatory before public testnet.
 ## WS-PROTOCOL — Solidity protocol
 
 - **Owns:** `protocol/`.
-- **Produces:** foundation interfaces, Phase 2 kernel and registries, fixed-supply
-  UFT, allocation and vesting controls, and fee-router skeleton.
+- **Produces:** foundation interfaces, kernel and registries, fixed-supply UFT,
+  allocation and vesting controls, fee-router skeleton, signed offers, atomic
+  funding, and versioned core loan accounts.
 - **Consumes:** generated Solidity types and protocol invariants.
 - **Invariants:** no mint path; no hidden superuser; checked authority.
 - **Threats:** unsafe privilege; ABI or storage drift.
@@ -48,12 +49,35 @@ approval is mandatory before public testnet.
 ## WS-LEDGER — Accounting foundation
 
 - **Owns:** `services/foundation-ledger/`.
-- **Produces:** balanced posting kernel and migration skeleton.
+- **Produces:** balanced posting kernel, loan subledger, linked reversals,
+  finality-gated loan accounting, and migrations.
 - **Consumes:** finance schemas and accounting rules.
 - **Invariants:** balanced entries; idempotency; immutable posted history.
 - **Threats:** duplicate posting; unbalanced journals; currency mixing.
 - **Acceptance:** unit tests and local PostgreSQL smoke test pass.
 - **Accountable:** Accounting and Economic Risk Authority.
+
+## WS-INDEX — Chain events and projections
+
+- **Owns:** `services/chain-indexer/`.
+- **Produces:** canonical event ingestion, finality labels, tender and loan
+  projections, reorg handling, replay, and rebuild.
+- **Consumes:** reviewed contract ABIs and canonical event schemas.
+- **Invariants:** projections are reproducible; orphaned events cannot remain canonical.
+- **Threats:** reorg corruption; duplicate events; projection authority confusion.
+- **Acceptance:** parent, replacement, finality, payment uniqueness, and rebuild tests pass.
+- **Accountable:** Protocol Architecture Authority.
+
+## WS-API — Core application boundary
+
+- **Owns:** `services/core-api/`.
+- **Produces:** authenticated tender, offer, loan, portfolio, and unsigned
+  transaction-preparation boundaries.
+- **Consumes:** canonical schemas and rebuildable projections.
+- **Invariants:** deny by default; attributable commands; no private signing material.
+- **Threats:** identity spoofing; command replay; signing-key exposure.
+- **Acceptance:** authentication, attribution, validation, and preparation tests pass.
+- **Accountable:** Security Authority.
 
 ## WS-PLATFORM — Toolchain and delivery
 

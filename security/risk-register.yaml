@@ -91,3 +91,39 @@ risks:
     downstream_impact: Borrower harm insolvency escalation and protocol deadlock
     validation: Repayment and collateral top-up capabilities are unpausable and tested
     status: CONTROLLED
+  - id: RISK-PHASE3-001
+    severity: CRITICAL
+    title: Offer or payment replay creates duplicate obligation
+    owner: Security Authority
+    evidence: protocol/test/Phase3CoreLoan.t.sol
+    expiry: 2026-10-24
+    downstream_impact: Duplicate loan funding or debt reduction and direct financial loss
+    validation: Immutable offer IDs nonce consumption payment IDs and idempotency conflict tests
+    status: CONTROLLED
+  - id: RISK-PHASE3-002
+    severity: CRITICAL
+    title: Partial activation separates funding from canonical loan state
+    owner: Protocol Architecture Authority
+    evidence: protocol/src/loan/CoreLoanFactory.sol
+    expiry: 2026-10-24
+    downstream_impact: Funded but inactive loan or active but unfunded obligation
+    validation: Single-transaction orchestration and forced funding-failure rollback test
+    status: CONTROLLED
+  - id: RISK-PHASE3-003
+    severity: CRITICAL
+    title: Provisional or orphaned chain event corrupts accounting
+    owner: Accounting and Economic Risk Authority
+    evidence: services/foundation-ledger/internal/loanaccounting/accounting_test.go
+    expiry: 2026-10-24
+    downstream_impact: Authoritative ledger diverges from canonical settlement
+    validation: Finality gate transactional reorg replacement deterministic rebuild and linked reversal controls
+    status: CONTROLLED
+  - id: RISK-PHASE3-004
+    severity: CRITICAL
+    title: Unsupported token mechanics break exact principal settlement
+    owner: Security Authority
+    evidence: protocol/src/loan/FundingManager.sol
+    expiry: 2026-10-24
+    downstream_impact: Borrower lender or protocol receives a different amount than recorded
+    validation: Active asset registry gate plus exact sender recipient and fee-receiver balance deltas
+    status: CONTROLLED

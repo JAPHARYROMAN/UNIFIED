@@ -1,0 +1,737 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "roleManager_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ILoanRegistry",
+        "name": "loanRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract TenderRegistry",
+        "name": "tenderRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract OfferManager",
+        "name": "offerManager_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract FundingManager",
+        "name": "fundingManager_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract AssetRegistry",
+        "name": "assetRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract PolicyRegistry",
+        "name": "policyRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IEmergencyController",
+        "name": "emergencyController_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "implementation_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "FailedDeployment",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "balance",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "needed",
+        "type": "uint256"
+      }
+    ],
+    "name": "InsufficientBalance",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidOrigination",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MissingZeroInterestPolicy",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NewLoanActivationPaused",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "UnapprovedPolicy",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unauthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "assetId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnsupportedAsset",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "loanAccount",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "lender",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "tenderId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "offerId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "principalAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "journalRef",
+        "type": "bytes32"
+      }
+    ],
+    "name": "CoreLoanActivated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "agreementHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "LoanCreated",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "CAPABILITY_NEW_LOANS",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "IMPLEMENTATION_VERSION",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "assetRegistry",
+    "outputs": [
+      {
+        "internalType": "contract AssetRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "tenderId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "offerId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      }
+    ],
+    "name": "calculateLoanId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "tenderId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "acceptedOfferId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "agreementHash",
+            "type": "bytes32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "borrower",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "arranger",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "servicer",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "collateralAgent",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "paymentAgent",
+                "type": "address"
+              }
+            ],
+            "internalType": "struct LoanTypes.AgreementParties",
+            "name": "parties",
+            "type": "tuple"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "assetId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct LoanTypes.MonetaryAmount",
+            "name": "principal",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint64",
+            "name": "fundingDeadline",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "activationDeadline",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "commencementTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "finalMaturityTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "gracePeriod",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "protocolVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policySetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "metadataHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct LoanTypes.UniversalLoanTerms",
+        "name": "proposedTerms",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "policyId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "implementation",
+            "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "major",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "minor",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "patch",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "interfaceId",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "configurationSchemaHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct ProtocolTypes.PolicyRef[]",
+        "name": "policies",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "offerId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "tenderId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "parentOfferId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "lender",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "assetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "principalAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "originationFee",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "fundingDeadline",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "activationDeadline",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "finalMaturityTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "gracePeriod",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "protocolVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policySetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "agreementHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "metadataHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nonce",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiry",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct LoanTypes.Offer",
+        "name": "offer",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "offerSignature",
+        "type": "bytes"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "journalRef",
+        "type": "bytes32"
+      }
+    ],
+    "name": "createAndActivate",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "loanAccount",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "emergencyController",
+    "outputs": [
+      {
+        "internalType": "contract IEmergencyController",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "fundingManager",
+    "outputs": [
+      {
+        "internalType": "contract FundingManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "implementation",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "loanRegistry",
+    "outputs": [
+      {
+        "internalType": "contract ILoanRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "offerManager",
+    "outputs": [
+      {
+        "internalType": "contract OfferManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "policyRegistry",
+    "outputs": [
+      {
+        "internalType": "contract PolicyRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "policyId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "implementation",
+            "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "major",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "minor",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "patch",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes4",
+            "name": "interfaceId",
+            "type": "bytes4"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "configurationSchemaHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct ProtocolTypes.PolicyRef[]",
+        "name": "policies",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "policySetHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "predictLoanAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "roleManager",
+    "outputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tenderRegistry",
+    "outputs": [
+      {
+        "internalType": "contract TenderRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

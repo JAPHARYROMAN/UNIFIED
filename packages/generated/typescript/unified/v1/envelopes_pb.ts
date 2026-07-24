@@ -169,4 +169,3 @@ export type EventEnvelope = Message<"unified.v1.EventEnvelope"> & {
  */
 export const EventEnvelopeSchema: GenMessage<EventEnvelope> = /*@__PURE__*/
   messageDesc(file_unified_v1_envelopes, 1);
-

@@ -29,4 +29,17 @@ assumptions:
     expiry: 2026-10-24
     downstream_impact: Ledger dimensions and reporting models
     validation: No journal may convert or net original denomination implicitly
-
+  - id: ASM-005
+    assumption: Phase 3 settlement assets are reviewed standard ERC-20 tokens without transfer fees rebasing callbacks or nonstandard balance behavior.
+    owner: Security Authority
+    evidence: adr/0008-phase-3-core-loan-and-accounting-boundary.md
+    expiry: 2026-10-24
+    downstream_impact: Funding disbursement repayment and accounting evidence
+    validation: Registry admission review and exact balance-delta checks on every transfer
+  - id: ASM-006
+    assumption: Phase 3 chain events reach configured finality before authoritative ledger posting.
+    owner: Accounting and Economic Risk Authority
+    evidence: services/foundation-ledger/internal/loanaccounting/accounting.go
+    expiry: 2026-10-24
+    downstream_impact: Loan obligation fee and repayment journals
+    validation: Accounting event adapters reject any finality other than FINAL

@@ -69,4 +69,3 @@ export type GovernanceAction = Message<"unified.v1.GovernanceAction"> & {
  */
 export const GovernanceActionSchema: GenMessage<GovernanceAction> = /*@__PURE__*/
   messageDesc(file_unified_v1_governance, 0);
-

@@ -1,0 +1,14 @@
+id,workstream,title,status,owner,acceptance
+UNI-ADR-003,WS-SPEC,Accept Phase 3 loan and accounting boundary,DONE,Protocol Architecture Authority,ADR 0008 accepted with cross-authority review
+UNI-TENDER-001,WS-PROTOCOL,Implement tender lifecycle,DONE,Protocol Architecture Authority,Borrower publication cancellation expiry selection and fulfillment tests pass
+UNI-OFFER-001,WS-PROTOCOL,Implement signed offer and counteroffer lifecycle,DONE,Security Authority,EIP-712 terms nonce expiry cancellation lineage and one-time consumption tests pass
+UNI-LOAN-002,WS-PROTOCOL,Implement universal core loan account version 2,DONE,Protocol Architecture Authority,Immutable snapshot exact principal repayment and terminal closure tests pass
+UNI-FUND-001,WS-PROTOCOL,Implement atomic single-lender funding,DONE,Accounting and Economic Risk Authority,Exact principal fee transfer and complete failure rollback tests pass
+UNI-SCHEMA-002,WS-DATA,Define origination and servicing schemas,DONE,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
+UNI-LEDGER-002,WS-ACCOUNTING,Implement core loan accounting postings,DONE,Accounting and Economic Risk Authority,Activation fee repayment balance idempotency finality and reversal tests pass
+UNI-INDEX-001,WS-DATA,Implement canonical chain projection,DONE,Protocol Architecture Authority,Parent reorg finality replay and rebuild tests pass
+UNI-API-001,WS-APPLICATION,Implement core authenticated API boundary,DONE,Security Authority,Query command auth and unsigned transaction preparation tests pass
+UNI-DEPLOY-002,WS-PLATFORM,Add reproducible Phase 3 attachment deployment,DONE,Release Authority,Clean local EVM compilation and contract test suite pass
+UNI-SEC-003,WS-SECURITY,Complete Phase 3 internal security review,DONE,Security Authority,No unresolved critical or existential finding
+UNI-SIGN-001,WS-PROTOCOL,Support ERC-1271 smart-contract lender signatures,DEFERRED,Protocol Architecture Authority,Required before contract-wallet lenders are admitted
+UNI-PERSIST-001,WS-PLATFORM,Replace demonstration service stores with production persistence,DEFERRED,Release Authority,Required before production authorization
