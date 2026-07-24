@@ -1,11 +1,12 @@
 id,workstream,title,status,owner,acceptance
 UNI-ADR-007,WS-SPEC,Accept Phase 5 syndication and position boundary,DONE,Protocol Architecture Authority,ADR 0012 accepted with security accounting and risk review
-UNI-FUND-001,WS-PROTOCOL,Implement bounded funding rounds,READY,Protocol Architecture Authority,Minimum target maximum deadline cancellation exact escrow and refund tests pass
-UNI-SYNDICATE-001,WS-PROTOCOL,Implement canonical syndicate vault,READY,Protocol Architecture Authority,Funding disbursement debt repayment and recovery conservation tests pass
-UNI-TRANCHE-001,WS-PROTOCOL,Implement deterministic tranche waterfalls,READY,Accounting and Economic Risk Authority,Senior-first payment junior-first loss and remainder simulations pass
-UNI-POSITION-001,WS-PROTOCOL,Implement lender-position lifecycle,READY,Security Authority,Issue split merge transfer pledge freeze claim redeem and share invariants pass
-UNI-VOTE-001,WS-PROTOCOL,Checkpoint position voting rights,READY,Security Authority,Historical snapshots and transfer no-duplicate tests pass
-UNI-ACCOUNTING-005,WS-LEDGER,Implement syndicate and position accounting,READY,Accounting and Economic Risk Authority,Commitment disbursement transfer distribution refund and loss journals reconcile
-UNI-SCHEMA-006,WS-SCHEMA,Define funding tranche and position schemas,READY,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
-UNI-SIM-001,WS-RISK,Add tranche loss simulations,READY,Accounting and Economic Risk Authority,Priority conservation and boundary scenarios pass
-UNI-SEC-007,WS-SECURITY,Complete Phase 5 internal review,READY,Security Authority,No unresolved critical or existential finding
+UNI-FUND-001,WS-PROTOCOL,Implement bounded funding rounds,DONE,Protocol Architecture Authority,Minimum target maximum deadline cancellation exact escrow and refund tests pass
+UNI-SYNDICATE-001,WS-PROTOCOL,Implement canonical syndicate vault,DONE,Protocol Architecture Authority,Funding disbursement debt repayment and recovery conservation tests pass
+UNI-TRANCHE-001,WS-PROTOCOL,Implement deterministic tranche waterfalls,DONE,Accounting and Economic Risk Authority,Senior-first payment junior-first loss preview and remainder simulations pass
+UNI-POSITION-001,WS-PROTOCOL,Implement lender-position lifecycle,DONE,Security Authority,Issue split merge transfer pledge freeze claim redeem and share invariants pass
+UNI-VOTE-001,WS-PROTOCOL,Checkpoint position voting rights,DONE,Security Authority,Historical snapshots and transfer no-duplicate tests pass
+UNI-ACCOUNTING-005,WS-LEDGER,Implement syndicate and position accounting,DONE,Accounting and Economic Risk Authority,Commitment disbursement transfer distribution and refund journals reconcile
+UNI-SCHEMA-006,WS-SCHEMA,Define funding tranche and position schemas,DONE,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
+UNI-SIM-001,WS-RISK,Add tranche loss simulations,DONE,Accounting and Economic Risk Authority,Priority conservation and boundary scenarios pass
+UNI-SEC-007,WS-SECURITY,Complete Phase 5 internal review,DONE,Security Authority,No unresolved critical or existential finding
+UNI-LOSS-001,WS-PROTOCOL,Authorize recognized loss and legal write-off,DEFERRED,Accounting and Economic Risk Authority,Requires versioned debt mutation authority accounting and borrower protection policy

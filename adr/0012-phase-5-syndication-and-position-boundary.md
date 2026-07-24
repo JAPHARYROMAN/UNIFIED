@@ -31,7 +31,7 @@ misallocating accrued payments, and violating tranche priority.
 7. Tranche seniority and transfer policy are immutable after funding opens. Principal
    repayment and recovery distribute senior-first; recognized loss absorbs junior-first.
    Within a tranche, allocations are deterministic and pro rata with an explicit residual
-   rule. At most eight tranches and 64 positions per tranche bound settlement work.
+   rule. At most eight tranches and 64 positions in total bound settlement work.
 8. A position may be issued, split, merged, freely transferred where its immutable policy
    permits, pledged, frozen, released, claimed, and redeemed. Share conservation is
    checked on every mutation.

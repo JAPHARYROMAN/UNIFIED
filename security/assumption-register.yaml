@@ -71,3 +71,17 @@ assumptions:
     expiry: 2026-10-24
     downstream_impact: Bid escrow lender recovery execution costs refunds and borrower surplus
     validation: Asset admission plus exact balance deltas and atomic settlement rollback tests
+  - id: ASM-011
+    assumption: Phase 5 commitments and distributions use one reviewed exact-transfer ERC20 settlement asset per syndicated loan.
+    owner: Security Authority
+    evidence: adr/0012-phase-5-syndication-and-position-boundary.md
+    expiry: 2026-10-24
+    downstream_impact: Escrow disbursement refund repayment and position distribution conservation
+    validation: Active asset admission and exact sender recipient and vault balance-delta checks
+  - id: ASM-012
+    assumption: A bounded maximum of eight tranches and 64 lifetime position identifiers is acceptable for the first syndication implementation.
+    owner: Protocol Architecture Authority
+    evidence: docs/architecture/phase-5-syndication.md
+    expiry: 2026-10-24
+    downstream_impact: Activation distribution gas cost and supported syndicate size
+    validation: Contract constants capacity rejections optimized runtime-size gate and full-capacity testing before public testnet

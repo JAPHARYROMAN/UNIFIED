@@ -217,3 +217,39 @@ risks:
     downstream_impact: Collateral sold below an authorized reproducible price
     validation: Exact canonical observation revalidation blocks execution and refunds expired English bids
     status: CONTROLLED
+  - id: RISK-PHASE5-001
+    severity: EXISTENTIAL
+    title: Lender rights exceed funded borrower principal
+    owner: Security Authority
+    evidence: protocol/test/Phase5Syndicate.t.sol
+    expiry: 2026-10-24
+    downstream_impact: Duplicate claims insolvency and unreconcilable borrower debt
+    validation: Exact commitment escrow one pending position per commitment atomic activation and aggregate share conservation tests
+    status: CONTROLLED
+  - id: RISK-PHASE5-002
+    severity: CRITICAL
+    title: Tranche waterfall violates contractual priority
+    owner: Accounting and Economic Risk Authority
+    evidence: models/foundation_model/tests/test_tranche.py
+    expiry: 2026-10-24
+    downstream_impact: Senior or junior lenders receive an unauthorized distribution or loss
+    validation: Independent senior-first payment junior-first loss preview boundary vectors and fixed residual tests
+    status: CONTROLLED
+  - id: RISK-PHASE5-003
+    severity: CRITICAL
+    title: Position transfer duplicates accrued cash or voting rights
+    owner: Security Authority
+    evidence: security/reviews/phase-5-internal-review.md
+    expiry: 2026-10-24
+    downstream_impact: Seller and buyer exercise the same economic or governance right
+    validation: Same-block accrual cut-off stored voting power historical checkpoints and transfer conservation tests
+    status: CONTROLLED
+  - id: RISK-PHASE5-004
+    severity: CRITICAL
+    title: Failed or cancelled funding traps lender escrow
+    owner: Protocol Architecture Authority
+    evidence: protocol/src/syndicate/SyndicateVault.sol
+    expiry: 2026-10-24
+    downstream_impact: Permanent lender loss without an activated borrower obligation
+    validation: Terminal failed and cancelled states exact pull refunds immutable recipient and no-double-refund tests
+    status: CONTROLLED

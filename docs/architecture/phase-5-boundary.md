@@ -1,6 +1,6 @@
 # Phase 5 Syndication, Tranches, and Lender Positions
 
-Status: accepted implementation boundary; contracts not yet implemented
+Status: accepted boundary; implemented for local and testnet engineering
 
 ## Aggregate boundary
 
@@ -40,8 +40,8 @@ requires accepted commitments to equal borrower disbursement exactly.
 - Principal payments and collateral recoveries apply by ascending seniority rank.
 - Losses apply by descending seniority rank.
 - Allocations inside one tranche are pro rata by current share units.
-- Integer remainder goes to the final eligible position in the immutable iteration order
-  so every payment is fully allocated and reproducible.
+- Integer remainder goes to the tranche's first issued position. That residual identity
+  follows an authorized merge, so splitting or iteration order cannot redirect rounding.
 - A distribution belongs to the position owner at the distribution block. Transfer first
   checkpoints already accrued amounts to the seller, then moves future rights.
 

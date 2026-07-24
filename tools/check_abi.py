@@ -141,6 +141,27 @@ ABI_PAIRS = {
         / "protocol_src_collateral_LiquidationEngine_sol_LiquidationEngine.abi",
         ROOT / "protocol" / "abi" / "phase4" / "LiquidationEngine.abi.json",
     ),
+    "PositionManager": (
+        ROOT
+        / ".cache"
+        / "solc"
+        / "protocol_src_syndicate_PositionManager_sol_PositionManager.abi",
+        ROOT / "protocol" / "abi" / "phase5" / "PositionManager.abi.json",
+    ),
+    "SyndicateFactory": (
+        ROOT
+        / ".cache"
+        / "solc"
+        / "protocol_src_syndicate_SyndicateFactory_sol_SyndicateFactory.abi",
+        ROOT / "protocol" / "abi" / "phase5" / "SyndicateFactory.abi.json",
+    ),
+    "SyndicateVault": (
+        ROOT
+        / ".cache"
+        / "solc"
+        / "protocol_src_syndicate_SyndicateVault_sol_SyndicateVault.abi",
+        ROOT / "protocol" / "abi" / "phase5" / "SyndicateVault.abi.json",
+    ),
 }
 
 

@@ -14,6 +14,7 @@ NON_PRODUCTION = {
     "DeployPhase4A",
     "DeployPhase4B1",
     "DeployPhase4B2",
+    "DeployPhase5",
     "FoundationProbeTest",
     "FeeSettlementToken",
     "Phase2KernelTest",
@@ -21,6 +22,7 @@ NON_PRODUCTION = {
     "Phase4RiskEnginesTest",
     "Phase4CollateralTest",
     "Phase4LiquidationTest",
+    "Phase5SyndicateTest",
     "UFTSupplyInvariantTest",
     "BurnHandler",
     "TestSettlementToken",
@@ -36,6 +38,8 @@ NON_PRODUCTION = {
     "LiquidationNFT",
     "LiquidationOracleAdapter",
     "LiquidationToken",
+    "SyndicateTestPolicy",
+    "SyndicateTestToken",
     "ZeroInterestPolicy",
 }
 
