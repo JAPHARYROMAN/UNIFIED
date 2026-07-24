@@ -2,7 +2,7 @@
 pragma solidity 0.8.36;
 
 // Code generated from schemas/proto/unified/v1. DO NOT EDIT.
-// Source SHA-256: c8f4113249589591a1423da65f031587056f2c25141a3e5d55ca910852c6e771
+// Source SHA-256: 5a7030da225aacd625688d9edeeb5a1065792e4cc9332cbea8c59cbc29739860
 library FoundationTypes {
     enum CollateralKind { UNSPECIFIED, NATIVE, ERC20, ERC721, ERC1155 }
 
@@ -296,6 +296,37 @@ library FoundationTypes {
         bytes valueCommitment;
         bytes evidenceHash;
         int64 observedAt;
+    }
+
+    struct UnderwrittenActivationEvidence {
+        LoanId loanId;
+        Identifier decisionId;
+        bytes subjectCommitment;
+        PartyId borrowerAccountId;
+        PartyId lenderAccountId;
+        PartyId loanAccountId;
+        Identifier tenderId;
+        Identifier offerId;
+        AssetId settlementAssetId;
+        bytes productHash;
+        Money principal;
+        uint64 durationSeconds;
+        bytes agreementHash;
+        bytes consentEvidenceHash;
+        bytes activationEvidenceHash;
+        bytes journalReference;
+        uint32 protocolVersion;
+        int64 activatedAt;
+    }
+
+    struct UnderwrittenExposureReleaseEvidence {
+        LoanId loanId;
+        Identifier decisionId;
+        bytes subjectCommitment;
+        AssetId settlementAssetId;
+        Money releasedPrincipal;
+        bytes terminalEvidenceHash;
+        int64 releasedAt;
     }
 
     struct LoanTerms {

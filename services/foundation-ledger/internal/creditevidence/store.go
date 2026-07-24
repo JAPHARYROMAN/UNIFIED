@@ -1,4 +1,4 @@
-// Package creditevidence stores final, immutable Phase 6A control evidence.
+// Package creditevidence stores final, immutable Phase 6 control evidence.
 // It intentionally contains no raw identity or underwriting feature values.
 package creditevidence
 
@@ -27,6 +27,8 @@ const (
 	ExposureActivated       RecordType = "CREDIT_EXPOSURE_ACTIVATED"
 	ExposureReleased        RecordType = "CREDIT_EXPOSURE_RELEASED"
 	ExposureCancelled       RecordType = "CREDIT_EXPOSURE_CANCELLED"
+	UnderwrittenActivated   RecordType = "UNDERWRITTEN_LOAN_ACTIVATED"
+	UnderwrittenReleased    RecordType = "UNDERWRITTEN_EXPOSURE_RELEASED"
 )
 
 var (
@@ -44,9 +46,19 @@ type Evidence struct {
 	CredentialID      string     `json:"credential_id,omitempty"`
 	DecisionID        string     `json:"decision_id,omitempty"`
 	LoanID            string     `json:"loan_id,omitempty"`
+	TenderID          string     `json:"tender_id,omitempty"`
+	OfferID           string     `json:"offer_id,omitempty"`
 	SubjectCommitment string     `json:"subject_commitment,omitempty"`
+	BorrowerAccount   string     `json:"borrower_account,omitempty"`
+	LenderAccount     string     `json:"lender_account,omitempty"`
+	LoanAccount       string     `json:"loan_account,omitempty"`
 	AssetID           string     `json:"asset_id,omitempty"`
+	ProductHash       string     `json:"product_hash,omitempty"`
 	Units             string     `json:"units,omitempty"`
+	DurationSeconds   uint64     `json:"duration_seconds,omitempty"`
+	AgreementHash     string     `json:"agreement_hash,omitempty"`
+	ConsentEvidence   string     `json:"consent_evidence_hash,omitempty"`
+	JournalReference  string     `json:"journal_reference,omitempty"`
 	EvidenceHash      string     `json:"evidence_hash"`
 	Finality          string     `json:"finality"`
 	OccurredAt        time.Time  `json:"occurred_at"`
@@ -149,6 +161,25 @@ func validateAndHash(evidence Evidence) (string, error) {
 			!ok || units.Sign() <= 0 {
 			return "", ErrInvalidEvidence
 		}
+	case UnderwrittenActivated:
+		units, ok := new(big.Int).SetString(evidence.Units, 10)
+		if evidence.DecisionID == "" || evidence.LoanID == "" ||
+			evidence.TenderID == "" || evidence.OfferID == "" ||
+			evidence.SubjectCommitment == "" || evidence.BorrowerAccount == "" ||
+			evidence.LenderAccount == "" || evidence.LoanAccount == "" ||
+			evidence.AssetID == "" || evidence.ProductHash == "" ||
+			evidence.DurationSeconds == 0 || evidence.AgreementHash == "" ||
+			evidence.ConsentEvidence == "" || evidence.JournalReference == "" ||
+			!ok || units.Sign() <= 0 {
+			return "", ErrInvalidEvidence
+		}
+	case UnderwrittenReleased:
+		units, ok := new(big.Int).SetString(evidence.Units, 10)
+		if evidence.DecisionID == "" || evidence.LoanID == "" ||
+			evidence.SubjectCommitment == "" || evidence.AssetID == "" ||
+			!ok || units.Sign() <= 0 {
+			return "", ErrInvalidEvidence
+		}
 	}
 	payload, err := json.Marshal(evidence)
 	if err != nil {
@@ -163,7 +194,7 @@ func knownType(recordType RecordType) bool {
 	case ProviderRegistered, ProviderStatusChanged, CredentialSchemaAdded,
 		CredentialSchemaChanged, CredentialIssued, CredentialRevoked, DecisionIssued,
 		DecisionRevoked, ExposureReserved, ExposureActivated, ExposureReleased,
-		ExposureCancelled:
+		ExposureCancelled, UnderwrittenActivated, UnderwrittenReleased:
 		return true
 	default:
 		return false

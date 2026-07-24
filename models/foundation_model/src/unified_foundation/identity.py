@@ -1,6 +1,6 @@
-"""Synthetic identity and exact-asset exposure simulations for Phase 6A."""
+"""Synthetic identity, exposure, and atomic-activation simulations for Phase 6."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 
 
@@ -123,3 +123,81 @@ def scoped_uniqueness_key(
     if not provider_id or not scope_id or epoch <= 0 or not subject_commitment:
         raise ValueError("invalid scoped uniqueness evidence")
     return provider_id, scope_id, epoch, subject_commitment
+
+
+@dataclass(frozen=True)
+class AtomicActivationState:
+    """Synthetic Phase 6B state used to prove all-or-nothing activation."""
+
+    reserved: int
+    active: int
+    loan_registered: bool
+    offer_consumed: bool
+    tender_fulfilled: bool
+    funding_units: int
+    lender_units: int
+    borrower_units: int
+    fee_units: int
+
+
+ACTIVATION_STEPS = (
+    "reserve",
+    "consume_offer",
+    "register_loan",
+    "fund",
+    "activate",
+    "fulfill_tender",
+)
+
+
+def simulate_atomic_activation(
+    initial: AtomicActivationState,
+    *,
+    principal: int,
+    fee: int,
+    fail_at: str | None = None,
+) -> AtomicActivationState:
+    """Return the committed state, or the exact initial state on a synthetic revert."""
+    if (
+        principal <= 0
+        or fee < 0
+        or fee >= principal
+        or initial.loan_registered
+        or initial.offer_consumed
+        or initial.tender_fulfilled
+        or initial.funding_units != 0
+        or fail_at not in (*ACTIVATION_STEPS, None)
+    ):
+        raise ValueError("invalid atomic activation")
+
+    staged = replace(initial, reserved=initial.reserved + principal)
+    if fail_at == "reserve":
+        return initial
+    staged = replace(staged, offer_consumed=True)
+    if fail_at == "consume_offer":
+        return initial
+    staged = replace(staged, loan_registered=True)
+    if fail_at == "register_loan":
+        return initial
+    if initial.lender_units < principal:
+        return initial
+    staged = replace(
+        staged,
+        funding_units=principal,
+        lender_units=initial.lender_units - principal,
+        borrower_units=initial.borrower_units + principal - fee,
+        fee_units=initial.fee_units + fee,
+    )
+    if fail_at == "fund":
+        return initial
+    staged = replace(
+        staged,
+        reserved=staged.reserved - principal,
+        active=staged.active + principal,
+    )
+    if fail_at == "activate":
+        return initial
+    staged = replace(staged, tender_fulfilled=True)
+    if fail_at == "fulfill_tender":
+        return initial
+    return staged

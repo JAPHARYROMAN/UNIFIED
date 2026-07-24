@@ -1013,6 +1013,280 @@ func (x *UnderwritingFeatureEvidence) GetObservedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+// Final public linkage for the synthetic Phase 6B atomic activation transaction.
+// consent_evidence_hash is an opaque commitment, never the underlying disclosure.
+type UnderwrittenActivationEvidence struct {
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	LoanId                 *LoanId                `protobuf:"bytes,1,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	DecisionId             *Identifier            `protobuf:"bytes,2,opt,name=decision_id,json=decisionId,proto3" json:"decision_id,omitempty"`
+	SubjectCommitment      []byte                 `protobuf:"bytes,3,opt,name=subject_commitment,json=subjectCommitment,proto3" json:"subject_commitment,omitempty"`
+	BorrowerAccountId      *PartyId               `protobuf:"bytes,4,opt,name=borrower_account_id,json=borrowerAccountId,proto3" json:"borrower_account_id,omitempty"`
+	LenderAccountId        *PartyId               `protobuf:"bytes,5,opt,name=lender_account_id,json=lenderAccountId,proto3" json:"lender_account_id,omitempty"`
+	LoanAccountId          *PartyId               `protobuf:"bytes,6,opt,name=loan_account_id,json=loanAccountId,proto3" json:"loan_account_id,omitempty"`
+	TenderId               *Identifier            `protobuf:"bytes,7,opt,name=tender_id,json=tenderId,proto3" json:"tender_id,omitempty"`
+	OfferId                *Identifier            `protobuf:"bytes,8,opt,name=offer_id,json=offerId,proto3" json:"offer_id,omitempty"`
+	SettlementAssetId      *AssetId               `protobuf:"bytes,9,opt,name=settlement_asset_id,json=settlementAssetId,proto3" json:"settlement_asset_id,omitempty"`
+	ProductHash            []byte                 `protobuf:"bytes,10,opt,name=product_hash,json=productHash,proto3" json:"product_hash,omitempty"`
+	Principal              *Money                 `protobuf:"bytes,11,opt,name=principal,proto3" json:"principal,omitempty"`
+	DurationSeconds        uint64                 `protobuf:"varint,12,opt,name=duration_seconds,json=durationSeconds,proto3" json:"duration_seconds,omitempty"`
+	AgreementHash          []byte                 `protobuf:"bytes,13,opt,name=agreement_hash,json=agreementHash,proto3" json:"agreement_hash,omitempty"`
+	ConsentEvidenceHash    []byte                 `protobuf:"bytes,14,opt,name=consent_evidence_hash,json=consentEvidenceHash,proto3" json:"consent_evidence_hash,omitempty"`
+	ActivationEvidenceHash []byte                 `protobuf:"bytes,15,opt,name=activation_evidence_hash,json=activationEvidenceHash,proto3" json:"activation_evidence_hash,omitempty"`
+	JournalReference       []byte                 `protobuf:"bytes,16,opt,name=journal_reference,json=journalReference,proto3" json:"journal_reference,omitempty"`
+	ProtocolVersion        uint32                 `protobuf:"varint,17,opt,name=protocol_version,json=protocolVersion,proto3" json:"protocol_version,omitempty"`
+	ActivatedAt            *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=activated_at,json=activatedAt,proto3" json:"activated_at,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *UnderwrittenActivationEvidence) Reset() {
+	*x = UnderwrittenActivationEvidence{}
+	mi := &file_unified_v1_identity_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnderwrittenActivationEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnderwrittenActivationEvidence) ProtoMessage() {}
+
+func (x *UnderwrittenActivationEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_identity_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnderwrittenActivationEvidence.ProtoReflect.Descriptor instead.
+func (*UnderwrittenActivationEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_identity_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *UnderwrittenActivationEvidence) GetLoanId() *LoanId {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetDecisionId() *Identifier {
+	if x != nil {
+		return x.DecisionId
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetSubjectCommitment() []byte {
+	if x != nil {
+		return x.SubjectCommitment
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetBorrowerAccountId() *PartyId {
+	if x != nil {
+		return x.BorrowerAccountId
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetLenderAccountId() *PartyId {
+	if x != nil {
+		return x.LenderAccountId
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetLoanAccountId() *PartyId {
+	if x != nil {
+		return x.LoanAccountId
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetTenderId() *Identifier {
+	if x != nil {
+		return x.TenderId
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetOfferId() *Identifier {
+	if x != nil {
+		return x.OfferId
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetSettlementAssetId() *AssetId {
+	if x != nil {
+		return x.SettlementAssetId
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetProductHash() []byte {
+	if x != nil {
+		return x.ProductHash
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetPrincipal() *Money {
+	if x != nil {
+		return x.Principal
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetDurationSeconds() uint64 {
+	if x != nil {
+		return x.DurationSeconds
+	}
+	return 0
+}
+
+func (x *UnderwrittenActivationEvidence) GetAgreementHash() []byte {
+	if x != nil {
+		return x.AgreementHash
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetConsentEvidenceHash() []byte {
+	if x != nil {
+		return x.ConsentEvidenceHash
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetActivationEvidenceHash() []byte {
+	if x != nil {
+		return x.ActivationEvidenceHash
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetJournalReference() []byte {
+	if x != nil {
+		return x.JournalReference
+	}
+	return nil
+}
+
+func (x *UnderwrittenActivationEvidence) GetProtocolVersion() uint32 {
+	if x != nil {
+		return x.ProtocolVersion
+	}
+	return 0
+}
+
+func (x *UnderwrittenActivationEvidence) GetActivatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ActivatedAt
+	}
+	return nil
+}
+
+type UnderwrittenExposureReleaseEvidence struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	LoanId               *LoanId                `protobuf:"bytes,1,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	DecisionId           *Identifier            `protobuf:"bytes,2,opt,name=decision_id,json=decisionId,proto3" json:"decision_id,omitempty"`
+	SubjectCommitment    []byte                 `protobuf:"bytes,3,opt,name=subject_commitment,json=subjectCommitment,proto3" json:"subject_commitment,omitempty"`
+	SettlementAssetId    *AssetId               `protobuf:"bytes,4,opt,name=settlement_asset_id,json=settlementAssetId,proto3" json:"settlement_asset_id,omitempty"`
+	ReleasedPrincipal    *Money                 `protobuf:"bytes,5,opt,name=released_principal,json=releasedPrincipal,proto3" json:"released_principal,omitempty"`
+	TerminalEvidenceHash []byte                 `protobuf:"bytes,6,opt,name=terminal_evidence_hash,json=terminalEvidenceHash,proto3" json:"terminal_evidence_hash,omitempty"`
+	ReleasedAt           *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=released_at,json=releasedAt,proto3" json:"released_at,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *UnderwrittenExposureReleaseEvidence) Reset() {
+	*x = UnderwrittenExposureReleaseEvidence{}
+	mi := &file_unified_v1_identity_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UnderwrittenExposureReleaseEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnderwrittenExposureReleaseEvidence) ProtoMessage() {}
+
+func (x *UnderwrittenExposureReleaseEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_identity_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnderwrittenExposureReleaseEvidence.ProtoReflect.Descriptor instead.
+func (*UnderwrittenExposureReleaseEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_identity_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *UnderwrittenExposureReleaseEvidence) GetLoanId() *LoanId {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *UnderwrittenExposureReleaseEvidence) GetDecisionId() *Identifier {
+	if x != nil {
+		return x.DecisionId
+	}
+	return nil
+}
+
+func (x *UnderwrittenExposureReleaseEvidence) GetSubjectCommitment() []byte {
+	if x != nil {
+		return x.SubjectCommitment
+	}
+	return nil
+}
+
+func (x *UnderwrittenExposureReleaseEvidence) GetSettlementAssetId() *AssetId {
+	if x != nil {
+		return x.SettlementAssetId
+	}
+	return nil
+}
+
+func (x *UnderwrittenExposureReleaseEvidence) GetReleasedPrincipal() *Money {
+	if x != nil {
+		return x.ReleasedPrincipal
+	}
+	return nil
+}
+
+func (x *UnderwrittenExposureReleaseEvidence) GetTerminalEvidenceHash() []byte {
+	if x != nil {
+		return x.TerminalEvidenceHash
+	}
+	return nil
+}
+
+func (x *UnderwrittenExposureReleaseEvidence) GetReleasedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ReleasedAt
+	}
+	return nil
+}
+
 var File_unified_v1_identity_proto protoreflect.FileDescriptor
 
 const file_unified_v1_identity_proto_rawDesc = "" +
@@ -1115,7 +1389,38 @@ const file_unified_v1_identity_proto_rawDesc = "" +
 	"\x10value_commitment\x18\x04 \x01(\fR\x0fvalueCommitment\x12#\n" +
 	"\revidence_hash\x18\x05 \x01(\fR\fevidenceHash\x12;\n" +
 	"\vobserved_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"observedAt*\xb5\x01\n" +
+	"observedAt\"\xd0\a\n" +
+	"\x1eUnderwrittenActivationEvidence\x12+\n" +
+	"\aloan_id\x18\x01 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x127\n" +
+	"\vdecision_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\n" +
+	"decisionId\x12-\n" +
+	"\x12subject_commitment\x18\x03 \x01(\fR\x11subjectCommitment\x12C\n" +
+	"\x13borrower_account_id\x18\x04 \x01(\v2\x13.unified.v1.PartyIdR\x11borrowerAccountId\x12?\n" +
+	"\x11lender_account_id\x18\x05 \x01(\v2\x13.unified.v1.PartyIdR\x0flenderAccountId\x12;\n" +
+	"\x0floan_account_id\x18\x06 \x01(\v2\x13.unified.v1.PartyIdR\rloanAccountId\x123\n" +
+	"\ttender_id\x18\a \x01(\v2\x16.unified.v1.IdentifierR\btenderId\x121\n" +
+	"\boffer_id\x18\b \x01(\v2\x16.unified.v1.IdentifierR\aofferId\x12C\n" +
+	"\x13settlement_asset_id\x18\t \x01(\v2\x13.unified.v1.AssetIdR\x11settlementAssetId\x12!\n" +
+	"\fproduct_hash\x18\n" +
+	" \x01(\fR\vproductHash\x12/\n" +
+	"\tprincipal\x18\v \x01(\v2\x11.unified.v1.MoneyR\tprincipal\x12)\n" +
+	"\x10duration_seconds\x18\f \x01(\x04R\x0fdurationSeconds\x12%\n" +
+	"\x0eagreement_hash\x18\r \x01(\fR\ragreementHash\x122\n" +
+	"\x15consent_evidence_hash\x18\x0e \x01(\fR\x13consentEvidenceHash\x128\n" +
+	"\x18activation_evidence_hash\x18\x0f \x01(\fR\x16activationEvidenceHash\x12+\n" +
+	"\x11journal_reference\x18\x10 \x01(\fR\x10journalReference\x12)\n" +
+	"\x10protocol_version\x18\x11 \x01(\rR\x0fprotocolVersion\x12=\n" +
+	"\factivated_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\vactivatedAt\"\xb4\x03\n" +
+	"#UnderwrittenExposureReleaseEvidence\x12+\n" +
+	"\aloan_id\x18\x01 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x127\n" +
+	"\vdecision_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\n" +
+	"decisionId\x12-\n" +
+	"\x12subject_commitment\x18\x03 \x01(\fR\x11subjectCommitment\x12C\n" +
+	"\x13settlement_asset_id\x18\x04 \x01(\v2\x13.unified.v1.AssetIdR\x11settlementAssetId\x12@\n" +
+	"\x12released_principal\x18\x05 \x01(\v2\x11.unified.v1.MoneyR\x11releasedPrincipal\x124\n" +
+	"\x16terminal_evidence_hash\x18\x06 \x01(\fR\x14terminalEvidenceHash\x12;\n" +
+	"\vreleased_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"releasedAt*\xb5\x01\n" +
 	"\x16IdentityProviderStatus\x12(\n" +
 	"$IDENTITY_PROVIDER_STATUS_UNSPECIFIED\x10\x00\x12#\n" +
 	"\x1fIDENTITY_PROVIDER_STATUS_ACTIVE\x10\x01\x12&\n" +
@@ -1149,74 +1454,91 @@ func file_unified_v1_identity_proto_rawDescGZIP() []byte {
 }
 
 var file_unified_v1_identity_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_unified_v1_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_unified_v1_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_unified_v1_identity_proto_goTypes = []any{
-	(IdentityProviderStatus)(0),         // 0: unified.v1.IdentityProviderStatus
-	(IdentityCredentialStatus)(0),       // 1: unified.v1.IdentityCredentialStatus
-	(CreditDecisionStatus)(0),           // 2: unified.v1.CreditDecisionStatus
-	(ExposureReservationStatus)(0),      // 3: unified.v1.ExposureReservationStatus
-	(*IdentityProvider)(nil),            // 4: unified.v1.IdentityProvider
-	(*IdentityCredentialSchema)(nil),    // 5: unified.v1.IdentityCredentialSchema
-	(*IdentityCredential)(nil),          // 6: unified.v1.IdentityCredential
-	(*CreditDecision)(nil),              // 7: unified.v1.CreditDecision
-	(*ExposureReservation)(nil),         // 8: unified.v1.ExposureReservation
-	(*UnderwritingFeatureEvidence)(nil), // 9: unified.v1.UnderwritingFeatureEvidence
-	(*Identifier)(nil),                  // 10: unified.v1.Identifier
-	(*PartyId)(nil),                     // 11: unified.v1.PartyId
-	(*timestamppb.Timestamp)(nil),       // 12: google.protobuf.Timestamp
-	(*PolicyReference)(nil),             // 13: unified.v1.PolicyReference
-	(*AssetId)(nil),                     // 14: unified.v1.AssetId
-	(*Money)(nil),                       // 15: unified.v1.Money
-	(*LoanId)(nil),                      // 16: unified.v1.LoanId
+	(IdentityProviderStatus)(0),                 // 0: unified.v1.IdentityProviderStatus
+	(IdentityCredentialStatus)(0),               // 1: unified.v1.IdentityCredentialStatus
+	(CreditDecisionStatus)(0),                   // 2: unified.v1.CreditDecisionStatus
+	(ExposureReservationStatus)(0),              // 3: unified.v1.ExposureReservationStatus
+	(*IdentityProvider)(nil),                    // 4: unified.v1.IdentityProvider
+	(*IdentityCredentialSchema)(nil),            // 5: unified.v1.IdentityCredentialSchema
+	(*IdentityCredential)(nil),                  // 6: unified.v1.IdentityCredential
+	(*CreditDecision)(nil),                      // 7: unified.v1.CreditDecision
+	(*ExposureReservation)(nil),                 // 8: unified.v1.ExposureReservation
+	(*UnderwritingFeatureEvidence)(nil),         // 9: unified.v1.UnderwritingFeatureEvidence
+	(*UnderwrittenActivationEvidence)(nil),      // 10: unified.v1.UnderwrittenActivationEvidence
+	(*UnderwrittenExposureReleaseEvidence)(nil), // 11: unified.v1.UnderwrittenExposureReleaseEvidence
+	(*Identifier)(nil),                          // 12: unified.v1.Identifier
+	(*PartyId)(nil),                             // 13: unified.v1.PartyId
+	(*timestamppb.Timestamp)(nil),               // 14: google.protobuf.Timestamp
+	(*PolicyReference)(nil),                     // 15: unified.v1.PolicyReference
+	(*AssetId)(nil),                             // 16: unified.v1.AssetId
+	(*Money)(nil),                               // 17: unified.v1.Money
+	(*LoanId)(nil),                              // 18: unified.v1.LoanId
 }
 var file_unified_v1_identity_proto_depIdxs = []int32{
-	10, // 0: unified.v1.IdentityProvider.provider_id:type_name -> unified.v1.Identifier
-	11, // 1: unified.v1.IdentityProvider.operator_id:type_name -> unified.v1.PartyId
-	12, // 2: unified.v1.IdentityProvider.registered_at:type_name -> google.protobuf.Timestamp
+	12, // 0: unified.v1.IdentityProvider.provider_id:type_name -> unified.v1.Identifier
+	13, // 1: unified.v1.IdentityProvider.operator_id:type_name -> unified.v1.PartyId
+	14, // 2: unified.v1.IdentityProvider.registered_at:type_name -> google.protobuf.Timestamp
 	0,  // 3: unified.v1.IdentityProvider.status:type_name -> unified.v1.IdentityProviderStatus
-	10, // 4: unified.v1.IdentityCredentialSchema.schema_id:type_name -> unified.v1.Identifier
-	10, // 5: unified.v1.IdentityCredentialSchema.provider_id:type_name -> unified.v1.Identifier
-	12, // 6: unified.v1.IdentityCredentialSchema.registered_at:type_name -> google.protobuf.Timestamp
-	10, // 7: unified.v1.IdentityCredential.credential_id:type_name -> unified.v1.Identifier
-	11, // 8: unified.v1.IdentityCredential.bound_account_id:type_name -> unified.v1.PartyId
-	10, // 9: unified.v1.IdentityCredential.provider_id:type_name -> unified.v1.Identifier
-	10, // 10: unified.v1.IdentityCredential.schema_id:type_name -> unified.v1.Identifier
-	12, // 11: unified.v1.IdentityCredential.valid_from:type_name -> google.protobuf.Timestamp
-	12, // 12: unified.v1.IdentityCredential.valid_until:type_name -> google.protobuf.Timestamp
-	12, // 13: unified.v1.IdentityCredential.issued_at:type_name -> google.protobuf.Timestamp
-	12, // 14: unified.v1.IdentityCredential.revoked_at:type_name -> google.protobuf.Timestamp
-	11, // 15: unified.v1.IdentityCredential.issuer_id:type_name -> unified.v1.PartyId
+	12, // 4: unified.v1.IdentityCredentialSchema.schema_id:type_name -> unified.v1.Identifier
+	12, // 5: unified.v1.IdentityCredentialSchema.provider_id:type_name -> unified.v1.Identifier
+	14, // 6: unified.v1.IdentityCredentialSchema.registered_at:type_name -> google.protobuf.Timestamp
+	12, // 7: unified.v1.IdentityCredential.credential_id:type_name -> unified.v1.Identifier
+	13, // 8: unified.v1.IdentityCredential.bound_account_id:type_name -> unified.v1.PartyId
+	12, // 9: unified.v1.IdentityCredential.provider_id:type_name -> unified.v1.Identifier
+	12, // 10: unified.v1.IdentityCredential.schema_id:type_name -> unified.v1.Identifier
+	14, // 11: unified.v1.IdentityCredential.valid_from:type_name -> google.protobuf.Timestamp
+	14, // 12: unified.v1.IdentityCredential.valid_until:type_name -> google.protobuf.Timestamp
+	14, // 13: unified.v1.IdentityCredential.issued_at:type_name -> google.protobuf.Timestamp
+	14, // 14: unified.v1.IdentityCredential.revoked_at:type_name -> google.protobuf.Timestamp
+	13, // 15: unified.v1.IdentityCredential.issuer_id:type_name -> unified.v1.PartyId
 	1,  // 16: unified.v1.IdentityCredential.status:type_name -> unified.v1.IdentityCredentialStatus
-	10, // 17: unified.v1.CreditDecision.decision_id:type_name -> unified.v1.Identifier
-	10, // 18: unified.v1.CreditDecision.credential_id:type_name -> unified.v1.Identifier
-	11, // 19: unified.v1.CreditDecision.borrower_account_id:type_name -> unified.v1.PartyId
-	13, // 20: unified.v1.CreditDecision.policy:type_name -> unified.v1.PolicyReference
-	12, // 21: unified.v1.CreditDecision.features_as_of:type_name -> google.protobuf.Timestamp
-	14, // 22: unified.v1.CreditDecision.settlement_asset_id:type_name -> unified.v1.AssetId
-	15, // 23: unified.v1.CreditDecision.maximum_exposure:type_name -> unified.v1.Money
-	12, // 24: unified.v1.CreditDecision.issued_at:type_name -> google.protobuf.Timestamp
-	12, // 25: unified.v1.CreditDecision.expires_at:type_name -> google.protobuf.Timestamp
-	11, // 26: unified.v1.CreditDecision.underwriter_id:type_name -> unified.v1.PartyId
-	12, // 27: unified.v1.CreditDecision.revoked_at:type_name -> google.protobuf.Timestamp
+	12, // 17: unified.v1.CreditDecision.decision_id:type_name -> unified.v1.Identifier
+	12, // 18: unified.v1.CreditDecision.credential_id:type_name -> unified.v1.Identifier
+	13, // 19: unified.v1.CreditDecision.borrower_account_id:type_name -> unified.v1.PartyId
+	15, // 20: unified.v1.CreditDecision.policy:type_name -> unified.v1.PolicyReference
+	14, // 21: unified.v1.CreditDecision.features_as_of:type_name -> google.protobuf.Timestamp
+	16, // 22: unified.v1.CreditDecision.settlement_asset_id:type_name -> unified.v1.AssetId
+	17, // 23: unified.v1.CreditDecision.maximum_exposure:type_name -> unified.v1.Money
+	14, // 24: unified.v1.CreditDecision.issued_at:type_name -> google.protobuf.Timestamp
+	14, // 25: unified.v1.CreditDecision.expires_at:type_name -> google.protobuf.Timestamp
+	13, // 26: unified.v1.CreditDecision.underwriter_id:type_name -> unified.v1.PartyId
+	14, // 27: unified.v1.CreditDecision.revoked_at:type_name -> google.protobuf.Timestamp
 	2,  // 28: unified.v1.CreditDecision.status:type_name -> unified.v1.CreditDecisionStatus
-	10, // 29: unified.v1.CreditDecision.previous_decision_id:type_name -> unified.v1.Identifier
-	16, // 30: unified.v1.ExposureReservation.loan_id:type_name -> unified.v1.LoanId
-	10, // 31: unified.v1.ExposureReservation.decision_id:type_name -> unified.v1.Identifier
-	11, // 32: unified.v1.ExposureReservation.borrower_account_id:type_name -> unified.v1.PartyId
-	14, // 33: unified.v1.ExposureReservation.settlement_asset_id:type_name -> unified.v1.AssetId
-	15, // 34: unified.v1.ExposureReservation.amount:type_name -> unified.v1.Money
-	12, // 35: unified.v1.ExposureReservation.reserved_at:type_name -> google.protobuf.Timestamp
-	12, // 36: unified.v1.ExposureReservation.reservation_expires_at:type_name -> google.protobuf.Timestamp
-	11, // 37: unified.v1.ExposureReservation.factory_id:type_name -> unified.v1.PartyId
+	12, // 29: unified.v1.CreditDecision.previous_decision_id:type_name -> unified.v1.Identifier
+	18, // 30: unified.v1.ExposureReservation.loan_id:type_name -> unified.v1.LoanId
+	12, // 31: unified.v1.ExposureReservation.decision_id:type_name -> unified.v1.Identifier
+	13, // 32: unified.v1.ExposureReservation.borrower_account_id:type_name -> unified.v1.PartyId
+	16, // 33: unified.v1.ExposureReservation.settlement_asset_id:type_name -> unified.v1.AssetId
+	17, // 34: unified.v1.ExposureReservation.amount:type_name -> unified.v1.Money
+	14, // 35: unified.v1.ExposureReservation.reserved_at:type_name -> google.protobuf.Timestamp
+	14, // 36: unified.v1.ExposureReservation.reservation_expires_at:type_name -> google.protobuf.Timestamp
+	13, // 37: unified.v1.ExposureReservation.factory_id:type_name -> unified.v1.PartyId
 	3,  // 38: unified.v1.ExposureReservation.status:type_name -> unified.v1.ExposureReservationStatus
-	10, // 39: unified.v1.UnderwritingFeatureEvidence.feature_id:type_name -> unified.v1.Identifier
-	10, // 40: unified.v1.UnderwritingFeatureEvidence.source_id:type_name -> unified.v1.Identifier
-	12, // 41: unified.v1.UnderwritingFeatureEvidence.observed_at:type_name -> google.protobuf.Timestamp
-	42, // [42:42] is the sub-list for method output_type
-	42, // [42:42] is the sub-list for method input_type
-	42, // [42:42] is the sub-list for extension type_name
-	42, // [42:42] is the sub-list for extension extendee
-	0,  // [0:42] is the sub-list for field type_name
+	12, // 39: unified.v1.UnderwritingFeatureEvidence.feature_id:type_name -> unified.v1.Identifier
+	12, // 40: unified.v1.UnderwritingFeatureEvidence.source_id:type_name -> unified.v1.Identifier
+	14, // 41: unified.v1.UnderwritingFeatureEvidence.observed_at:type_name -> google.protobuf.Timestamp
+	18, // 42: unified.v1.UnderwrittenActivationEvidence.loan_id:type_name -> unified.v1.LoanId
+	12, // 43: unified.v1.UnderwrittenActivationEvidence.decision_id:type_name -> unified.v1.Identifier
+	13, // 44: unified.v1.UnderwrittenActivationEvidence.borrower_account_id:type_name -> unified.v1.PartyId
+	13, // 45: unified.v1.UnderwrittenActivationEvidence.lender_account_id:type_name -> unified.v1.PartyId
+	13, // 46: unified.v1.UnderwrittenActivationEvidence.loan_account_id:type_name -> unified.v1.PartyId
+	12, // 47: unified.v1.UnderwrittenActivationEvidence.tender_id:type_name -> unified.v1.Identifier
+	12, // 48: unified.v1.UnderwrittenActivationEvidence.offer_id:type_name -> unified.v1.Identifier
+	16, // 49: unified.v1.UnderwrittenActivationEvidence.settlement_asset_id:type_name -> unified.v1.AssetId
+	17, // 50: unified.v1.UnderwrittenActivationEvidence.principal:type_name -> unified.v1.Money
+	14, // 51: unified.v1.UnderwrittenActivationEvidence.activated_at:type_name -> google.protobuf.Timestamp
+	18, // 52: unified.v1.UnderwrittenExposureReleaseEvidence.loan_id:type_name -> unified.v1.LoanId
+	12, // 53: unified.v1.UnderwrittenExposureReleaseEvidence.decision_id:type_name -> unified.v1.Identifier
+	16, // 54: unified.v1.UnderwrittenExposureReleaseEvidence.settlement_asset_id:type_name -> unified.v1.AssetId
+	17, // 55: unified.v1.UnderwrittenExposureReleaseEvidence.released_principal:type_name -> unified.v1.Money
+	14, // 56: unified.v1.UnderwrittenExposureReleaseEvidence.released_at:type_name -> google.protobuf.Timestamp
+	57, // [57:57] is the sub-list for method output_type
+	57, // [57:57] is the sub-list for method input_type
+	57, // [57:57] is the sub-list for extension type_name
+	57, // [57:57] is the sub-list for extension extendee
+	0,  // [0:57] is the sub-list for field type_name
 }
 
 func init() { file_unified_v1_identity_proto_init() }
@@ -1231,7 +1553,7 @@ func file_unified_v1_identity_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_unified_v1_identity_proto_rawDesc), len(file_unified_v1_identity_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   6,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
