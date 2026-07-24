@@ -1,5 +1,13 @@
+from dataclasses import replace
+
 import pytest
-from unified_foundation.identity import ExposureBook, scoped_uniqueness_key
+from unified_foundation.identity import (
+    ACTIVATION_STEPS,
+    AtomicActivationState,
+    ExposureBook,
+    scoped_uniqueness_key,
+    simulate_atomic_activation,
+)
 
 NOW = 1_900_000_000
 SUBJECT = "commitment:randomized:subject-1"
@@ -83,3 +91,57 @@ def test_uniqueness_claim_is_explicitly_scoped() -> None:
     another_provider = scoped_uniqueness_key("provider-2", "scope-1", 1, SUBJECT)
     assert first != next_epoch
     assert first != another_provider
+
+
+def test_underwritten_activation_commits_every_step_or_none() -> None:
+    initial = AtomicActivationState(
+        reserved=20,
+        active=30,
+        loan_registered=False,
+        offer_consumed=False,
+        tender_fulfilled=False,
+        funding_units=0,
+        lender_units=2_000,
+        borrower_units=100,
+        fee_units=0,
+    )
+    for step in ACTIVATION_STEPS:
+        assert (
+            simulate_atomic_activation(initial, principal=1_000, fee=10, fail_at=step)
+            == initial
+        )
+
+    activated = simulate_atomic_activation(initial, principal=1_000, fee=10)
+    assert activated.reserved == 20
+    assert activated.active == 1_030
+    assert activated.loan_registered
+    assert activated.offer_consumed
+    assert activated.tender_fulfilled
+    assert activated.funding_units == 1_000
+    assert activated.lender_units == 1_000
+    assert activated.borrower_units == 1_090
+    assert activated.fee_units == 10
+    assert (
+        activated.lender_units + activated.borrower_units + activated.fee_units
+        == initial.lender_units + initial.borrower_units + initial.fee_units
+    )
+
+
+def test_underwritten_activation_replay_and_short_funding_fail_closed() -> None:
+    initial = AtomicActivationState(
+        reserved=0,
+        active=0,
+        loan_registered=False,
+        offer_consumed=False,
+        tender_fulfilled=False,
+        funding_units=0,
+        lender_units=999,
+        borrower_units=0,
+        fee_units=0,
+    )
+    assert simulate_atomic_activation(initial, principal=1_000, fee=10) == initial
+    activated = simulate_atomic_activation(
+        replace(initial, lender_units=2_000), principal=1_000, fee=10
+    )
+    with pytest.raises(ValueError, match="invalid"):
+        simulate_atomic_activation(activated, principal=1_000, fee=10)

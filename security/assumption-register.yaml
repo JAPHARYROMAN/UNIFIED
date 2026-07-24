@@ -106,3 +106,17 @@ assumptions:
     expiry: 2026-10-24
     downstream_impact: Exposure conservation underwriting capacity and portfolio reporting
     validation: Exact asset equality in decisions reservations simulations and contract tests
+  - id: ASM-016
+    assumption: A direct Phase 6B borrower transaction represents consent only for synthetic local engineering and is not a production legal-consent determination.
+    owner: Security Authority
+    evidence: adr/0014-phase-6b-underwritten-activation-boundary.md
+    expiry: 2026-10-24
+    downstream_impact: Tender acceptance activation agreement evidence and borrower authorization
+    validation: Exact caller tender agreement and consent-commitment binding with delegated activation unavailable
+  - id: ASM-017
+    assumption: Phase 6B reservation registration funding and activation execute synchronously in one same-chain EVM transaction.
+    owner: Protocol Architecture Authority
+    evidence: protocol/src/loan/UnderwrittenLoanFactory.sol
+    expiry: 2026-10-24
+    downstream_impact: Rollback conservation lender balances exposure totals offer state and loan identity
+    validation: Contract and independent Python failure injection at every activation step

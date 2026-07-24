@@ -190,6 +190,13 @@ ABI_PAIRS = {
         / "protocol_src_identity_ExposureManager_sol_ExposureManager.abi",
         ROOT / "protocol" / "abi" / "phase6" / "ExposureManager.abi.json",
     ),
+    "UnderwrittenLoanFactory": (
+        ROOT
+        / ".cache"
+        / "solc"
+        / "protocol_src_loan_UnderwrittenLoanFactory_sol_UnderwrittenLoanFactory.abi",
+        ROOT / "protocol" / "abi" / "phase6" / "UnderwrittenLoanFactory.abi.json",
+    ),
 }
 
 

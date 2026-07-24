@@ -110,3 +110,40 @@ func TestControlEventsAndRecordSequenceConflicts(t *testing.T) {
 		t.Fatalf("expected incomplete schema evidence to fail, got %v", err)
 	}
 }
+
+func TestUnderwrittenActivationAndReleaseEvidenceIsComplete(t *testing.T) {
+	store := New()
+	activated := Evidence{
+		EventID: "event-underwritten-activation", RecordType: UnderwrittenActivated,
+		RecordID: "loan-6b", Sequence: 1, DecisionID: "decision-6b", LoanID: "loan-6b",
+		TenderID: "tender-6b", OfferID: "offer-6b",
+		SubjectCommitment: "8f1c-randomized-commitment",
+		BorrowerAccount:   "borrower-6b", LenderAccount: "lender-6b",
+		LoanAccount: "account-6b", AssetID: "asset:synthetic",
+		ProductHash: "product:synthetic", Units: "1000", DurationSeconds: 15_552_000,
+		AgreementHash: "agreement:6b", ConsentEvidence: "consent:6b",
+		JournalReference: "journal:6b", EvidenceHash: "block:5:tx:1",
+		Finality: "FINAL", OccurredAt: time.Unix(1_900_000_300, 0).UTC(),
+	}
+	if _, err := store.Record(activated); err != nil {
+		t.Fatalf("record underwritten activation: %v", err)
+	}
+	released := Evidence{
+		EventID: "event-underwritten-release", RecordType: UnderwrittenReleased,
+		RecordID: "loan-6b", Sequence: 1, DecisionID: "decision-6b", LoanID: "loan-6b",
+		SubjectCommitment: "8f1c-randomized-commitment", AssetID: "asset:synthetic",
+		Units: "1000", EvidenceHash: "block:6:tx:1", Finality: "FINAL",
+		OccurredAt: time.Unix(1_900_000_400, 0).UTC(),
+	}
+	if _, err := store.Record(released); err != nil {
+		t.Fatalf("record underwritten release: %v", err)
+	}
+	incomplete := activated
+	incomplete.EventID = "event-underwritten-incomplete"
+	incomplete.RecordID = "loan-incomplete"
+	incomplete.LoanID = "loan-incomplete"
+	incomplete.ConsentEvidence = ""
+	if _, err := store.Record(incomplete); !errors.Is(err, ErrInvalidEvidence) {
+		t.Fatalf("expected incomplete activation to fail, got %v", err)
+	}
+}

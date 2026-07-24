@@ -298,3 +298,39 @@ risks:
     downstream_impact: Unsafe inexplicable or non-reproducible credit decisions
     validation: Versioned rules schema and evidence roots with freshness source transform duplicate and unknown-feature rejection
     status: CONTROLLED
+  - id: RISK-PHASE6B-001
+    severity: EXISTENTIAL
+    title: Principal is disbursed without an equal canonical obligation and active exposure
+    owner: Accounting and Economic Risk Authority
+    evidence: protocol/test/Phase6UnderwrittenLoan.t.sol
+    expiry: 2026-10-24
+    downstream_impact: Unrecognized unsecured loss insolvent lender claims and false portfolio capacity
+    validation: One-transaction reserve register exact-fund loan-activate exposure-activate sequence and rollback tests
+    status: CONTROLLED
+  - id: RISK-PHASE6B-002
+    severity: CRITICAL
+    title: Failed activation leaves partial state or token movement
+    owner: Security Authority
+    evidence: models/foundation_model/tests/test_identity.py
+    expiry: 2026-10-24
+    downstream_impact: Trapped reservation consumed offer orphan loan or unreconciled lender and borrower balances
+    validation: Funding failure contract test plus independent failure injection at all six activation stages
+    status: CONTROLLED
+  - id: RISK-PHASE6B-003
+    severity: CRITICAL
+    title: Borrower or lender authorizes terms different from the active credit decision
+    owner: Security Authority
+    evidence: docs/architecture/phase-6b-underwritten-activation.md
+    expiry: 2026-10-24
+    downstream_impact: Unauthorized asset product amount duration policy or consent activation
+    validation: Direct tender owner call EIP-712 offer current decision and domain-separated agreement equality
+    status: CONTROLLED
+  - id: RISK-PHASE6B-004
+    severity: CRITICAL
+    title: Underwritten product bypasses exposure controls through the legacy factory
+    owner: Protocol Architecture Authority
+    evidence: protocol/src/loan/CoreLoanFactory.sol
+    expiry: 2026-10-24
+    downstream_impact: Policy-governed unsecured debt activates without subject exposure recognition
+    validation: Version 2 rejects the underwritten policy interface and version 3 requires exact decision policy and product
+    status: CONTROLLED

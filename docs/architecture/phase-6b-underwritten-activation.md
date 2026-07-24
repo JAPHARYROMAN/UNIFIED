@@ -1,6 +1,6 @@
 # Phase 6B Underwritten Activation Boundary
 
-Status: accepted implementation boundary; not approved for production funds
+Status: implemented for synthetic local/testnet engineering; not approved for production funds
 
 ## Atomic activation
 
@@ -91,9 +91,9 @@ The factory checks both:
 Either pause blocks only new version-3 activation. Repayment, loan closure, lender receipt,
 and terminal exposure release remain available.
 
-## Implementation slice
+## Implemented slice
 
-Phase 6B may implement:
+Phase 6B implements:
 
 - `IUnderwrittenCreditPolicy` and legacy-factory marker rejection;
 - a stateless, non-upgradeable version-3 `UnderwrittenLoanFactory`;

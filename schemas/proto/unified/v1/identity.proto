@@ -124,3 +124,36 @@ message UnderwritingFeatureEvidence {
   bytes evidence_hash = 5;
   google.protobuf.Timestamp observed_at = 6;
 }
+
+// Final public linkage for the synthetic Phase 6B atomic activation transaction.
+// consent_evidence_hash is an opaque commitment, never the underlying disclosure.
+message UnderwrittenActivationEvidence {
+  LoanId loan_id = 1;
+  Identifier decision_id = 2;
+  bytes subject_commitment = 3;
+  PartyId borrower_account_id = 4;
+  PartyId lender_account_id = 5;
+  PartyId loan_account_id = 6;
+  Identifier tender_id = 7;
+  Identifier offer_id = 8;
+  AssetId settlement_asset_id = 9;
+  bytes product_hash = 10;
+  Money principal = 11;
+  uint64 duration_seconds = 12;
+  bytes agreement_hash = 13;
+  bytes consent_evidence_hash = 14;
+  bytes activation_evidence_hash = 15;
+  bytes journal_reference = 16;
+  uint32 protocol_version = 17;
+  google.protobuf.Timestamp activated_at = 18;
+}
+
+message UnderwrittenExposureReleaseEvidence {
+  LoanId loan_id = 1;
+  Identifier decision_id = 2;
+  bytes subject_commitment = 3;
+  AssetId settlement_asset_id = 4;
+  Money released_principal = 5;
+  bytes terminal_evidence_hash = 6;
+  google.protobuf.Timestamp released_at = 7;
+}

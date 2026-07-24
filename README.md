@@ -99,6 +99,7 @@ and exposure controls plus synthetic underwriting and audit evidence. Its archit
 and layouts are documented in `docs/architecture/phase-6a-identity-underwriting.md` and
 `docs/architecture/phase-6a-storage-layouts.md`; its bounded engineering exit is recorded
 in `docs/reviews/phase-6a-exit-review.md`. It is not a production identity, underwriting,
-or unsecured-credit system. The accepted next integration boundary is ADR 0014 and
-`docs/architecture/phase-6b-underwritten-activation.md`: an atomic, synthetic,
-principal-only version-3 loan activation path. It does not authorize real unsecured funds.
+or unsecured-credit system. ADR 0014 and
+`docs/architecture/phase-6b-underwritten-activation.md` now govern the bounded Phase 6B
+implementation: an atomic, synthetic, principal-only version-3 loan activation path with
+policy-isolated exposure controls. It does not authorize real unsecured funds.

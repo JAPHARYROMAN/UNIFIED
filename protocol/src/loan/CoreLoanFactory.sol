@@ -6,6 +6,7 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.s
 import { IEmergencyController } from "../interfaces/IEmergencyController.sol";
 import { ILoanRegistry } from "../interfaces/ILoanRegistry.sol";
 import { IRoleManager } from "../interfaces/IRoleManager.sol";
+import { IUnderwrittenCreditPolicy } from "../interfaces/IUnderwrittenCreditPolicy.sol";
 import { AssetRegistry } from "../kernel/AssetRegistry.sol";
 import { PolicyRegistry } from "../kernel/PolicyRegistry.sol";
 import { ProtocolTypes } from "../kernel/ProtocolTypes.sol";
@@ -141,6 +142,9 @@ contract CoreLoanFactory is RoleControlled, ReentrancyGuard {
         if (policies.length == 0) revert InvalidOrigination();
         bool hasZeroInterestPolicy;
         for (uint256 index = 0; index < policies.length; ++index) {
+            if (policies[index].interfaceId == type(IUnderwrittenCreditPolicy).interfaceId) {
+                revert UnapprovedPolicy(index);
+            }
             if (!policyRegistry.isApproved(policies[index])) {
                 revert UnapprovedPolicy(index);
             }
