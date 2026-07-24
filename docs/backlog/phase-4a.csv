@@ -8,5 +8,5 @@ UNI-RISK-001,WS-SERVICE,Implement independent Go calculation parity,DONE,Account
 UNI-SCHEMA-003,WS-DATA,Define risk servicing schemas,DONE,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
 UNI-DEPLOY-003,WS-PLATFORM,Add reproducible Phase 4A deployment,DONE,Release Authority,Deployment compiles without keys feeds or configuration side effects
 UNI-SEC-004,WS-SECURITY,Complete Phase 4A internal review,DONE,Security Authority,No unresolved critical or existential finding
-UNI-COLLATERAL-001,WS-PROTOCOL,Implement multi-asset collateral custody,IN_PROGRESS,Security Authority,Required for Phase 4B exit
-UNI-LIQUIDATION-001,WS-PROTOCOL,Implement reproducible liquidation and auction routes,IN_PROGRESS,Accounting and Economic Risk Authority,Required for Phase 4B exit
+UNI-COLLATERAL-001,WS-PROTOCOL,Implement multi-asset collateral custody,DONE,Security Authority,Phase 4B1 exact custody release and UFT control evidence accepted
+UNI-LIQUIDATION-001,WS-PROTOCOL,Implement reproducible liquidation and auction routes,DONE,Accounting and Economic Risk Authority,Phase 4B2 route finality waterfall and accounting evidence accepted
