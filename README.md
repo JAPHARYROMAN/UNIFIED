@@ -97,5 +97,6 @@ providers, and live unsecured lending remain prohibited.
 The bounded Phase 6A implementation adds commitment-only provider, credential, decision,
 and exposure controls plus synthetic underwriting and audit evidence. Its architecture
 and layouts are documented in `docs/architecture/phase-6a-identity-underwriting.md` and
-`docs/architecture/phase-6a-storage-layouts.md`. It is not a production identity or
+`docs/architecture/phase-6a-storage-layouts.md`; its bounded engineering exit is recorded
+in `docs/reviews/phase-6a-exit-review.md`. It is not a production identity or
 unsecured-credit system.
