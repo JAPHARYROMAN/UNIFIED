@@ -9,4 +9,4 @@ UNI-QUARANTINE-001,WS-SECURITY,Quarantine unknown invalid and conflicting callba
 UNI-SCHEMA-009,WS-SCHEMA,Define payment callback and reconciliation schemas,DONE,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
 UNI-SIM-004,WS-RISK,Simulate callback delivery and reconciliation faults,DONE,Accounting and Economic Risk Authority,Duplicate reordered forged stale outage and mismatch scenarios conserve effects
 UNI-SEC-010,WS-SECURITY,Complete Phase 7A internal review,DONE,Security Authority,No unresolved critical or existential payment-ingress finding
-UNI-REVIEW-008,WS-SPEC,Complete bounded Phase 7A engineering exit,TODO,Program Authority,Exit separates synthetic ingress proof from live payment and loan-allocation approval
+UNI-REVIEW-008,WS-SPEC,Complete bounded Phase 7A engineering exit,DONE,Program Authority,Exit separates synthetic ingress proof from live payment and loan-allocation approval

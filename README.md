@@ -110,5 +110,6 @@ The Phase 7A boundary and bounded implementation are recorded in
 `docs/architecture/phase-7a-payment-ingress-reconciliation.md`, with data layouts in
 `docs/architecture/phase-7a-data-layouts.md`. The implementation is limited to synthetic,
 local payment ingress, provisional/final accounting, quarantine, and reconciliation.
-Live providers, real financial data, loan allocation, refunds, payouts, collateral
-release, and real funds remain prohibited.
+Its bounded engineering exit is recorded in `docs/reviews/phase-7a-exit-review.md`. Live
+providers, real financial data, loan allocation, refunds, payouts, collateral release,
+and real funds remain prohibited.
