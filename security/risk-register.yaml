@@ -334,3 +334,48 @@ risks:
     downstream_impact: Policy-governed unsecured debt activates without subject exposure recognition
     validation: Version 2 rejects the underwritten policy interface and version 3 requires exact decision policy and product
     status: CONTROLLED
+  - id: RISK-PHASE7A-001
+    severity: EXISTENTIAL
+    title: Forged or replayed provider evidence creates duplicate settlement value
+    owner: Security Authority
+    evidence: services/payment-orchestrator/payment/payment_test.go
+    expiry: 2026-10-24
+    downstream_impact: False cash recognition duplicate allocation and unsafe collateral or treasury decisions
+    validation: Pinned Ed25519 exact canonical payload provider-event uniqueness replay return and conflict quarantine
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE7A-002
+    severity: CRITICAL
+    title: Provisional evidence is mistaken for final settlement
+    owner: Accounting and Economic Risk Authority
+    evidence: services/foundation-ledger/internal/paymentaccounting/accounting_test.go
+    expiry: 2026-10-24
+    downstream_impact: Premature debt reduction collateral release payout or available-cash recognition
+    validation: Explicit states distinct pending and final accounts and no loan collateral refund or payout integration
+    status: CONTROLLED
+  - id: RISK-PHASE7A-003
+    severity: CRITICAL
+    title: Provider reversal leaves recognized settlement or partial accounting
+    owner: Accounting and Economic Risk Authority
+    evidence: services/foundation-ledger/internal/paymentaccounting/accounting.go
+    expiry: 2026-10-24
+    downstream_impact: Overstated cash understated suspense and unreconciled economic obligations
+    validation: Atomic batch of linked opposite final and provisional journals with immutable originals
+    status: CONTROLLED
+  - id: RISK-PHASE7A-004
+    severity: CRITICAL
+    title: Offsetting or unmatched provider entries hide a reconciliation difference
+    owner: Accounting and Economic Risk Authority
+    evidence: services/foundation-ledger/internal/paymentaccounting/accounting_test.go
+    expiry: 2026-10-24
+    downstream_impact: Unknown settlement is silently netted cleared or treated as available value
+    validation: Per-payment and provider-reference matching plus total difference owner deadline aging exception and resolution evidence
+    status: CONTROLLED
+  - id: RISK-PHASE7A-005
+    severity: CRITICAL
+    title: Raw provider financial data leaks through public schemas logs or fixtures
+    owner: Security Authority
+    evidence: tools/check_payment_privacy_surface.py
+    expiry: 2026-10-24
+    downstream_impact: Privacy breach regulatory exposure credential compromise and irreversible public disclosure
+    validation: Synthetic-only bounded raw store hash-only public schemas forbidden-field gate and no live provider integration
+    status: CONSTRAINED_LOCAL_ONLY

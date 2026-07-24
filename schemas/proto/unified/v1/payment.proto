@@ -1,0 +1,155 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+enum PaymentRail {
+  PAYMENT_RAIL_UNSPECIFIED = 0;
+  PAYMENT_RAIL_BANK = 1;
+  PAYMENT_RAIL_CARD = 2;
+}
+
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  PAYMENT_STATUS_CREATED = 1;
+  PAYMENT_STATUS_PROCESSING = 2;
+  PAYMENT_STATUS_PROVISIONAL = 3;
+  PAYMENT_STATUS_FINAL = 4;
+  PAYMENT_STATUS_FAILED = 5;
+  PAYMENT_STATUS_REVERSED = 6;
+  PAYMENT_STATUS_DISPUTED = 7;
+}
+
+enum ProviderStatementKind {
+  PROVIDER_STATEMENT_KIND_UNSPECIFIED = 0;
+  PROVIDER_STATEMENT_KIND_SETTLED = 1;
+  PROVIDER_STATEMENT_KIND_REVERSED = 2;
+}
+
+enum ReconciliationStatus {
+  RECONCILIATION_STATUS_UNSPECIFIED = 0;
+  RECONCILIATION_STATUS_MATCHED = 1;
+  RECONCILIATION_STATUS_EXCEPTION = 2;
+  RECONCILIATION_STATUS_RESOLVED = 3;
+}
+
+// PaymentIntentRecord contains opaque references only. It must not contain raw bank,
+// cardholder, identity, or provider credentials.
+message PaymentIntentRecord {
+  Identifier payment_id = 1;
+  string legal_entity_id = 2;
+  string idempotency_key = 3;
+  Identifier correlation_id = 4;
+  PartyId payer_reference = 5;
+  LoanId loan_id = 6;
+  string provider_id = 7;
+  PaymentRail rail = 8;
+  string purpose = 9;
+  Money amount = 10;
+  google.protobuf.Timestamp expires_at = 11;
+  PaymentStatus status = 12;
+  uint64 aggregate_version = 13;
+  uint32 schema_version = 14;
+}
+
+// ProviderPaymentCallback is the normalized, signed Phase 7A callback content.
+message ProviderPaymentCallback {
+  string provider_id = 1;
+  Identifier provider_event_id = 2;
+  Identifier payment_id = 3;
+  string provider_reference = 4;
+  PaymentStatus status = 5;
+  Money amount = 6;
+  google.protobuf.Timestamp occurred_at = 7;
+  google.protobuf.Timestamp expires_at = 8;
+  bytes evidence_hash = 9;
+}
+
+// ProviderCallbackReceipt proves retain-before-normalize ingress without publishing the
+// restricted raw payload.
+message ProviderCallbackReceipt {
+  Identifier ingress_id = 1;
+  string provider_id = 2;
+  Identifier provider_event_id = 3;
+  bytes raw_payload_hash = 4;
+  bytes signature_hash = 5;
+  google.protobuf.Timestamp received_at = 6;
+}
+
+message PaymentTransitionEvidence {
+  Identifier payment_id = 1;
+  string provider_id = 2;
+  Identifier provider_event_id = 3;
+  PaymentStatus from_status = 4;
+  PaymentStatus to_status = 5;
+  Money amount = 6;
+  repeated Identifier journal_ids = 7;
+  bytes evidence_hash = 8;
+  google.protobuf.Timestamp occurred_at = 9;
+  google.protobuf.Timestamp received_at = 10;
+}
+
+message PaymentQuarantineEvidence {
+  Identifier quarantine_id = 1;
+  string provider_id = 2;
+  Identifier provider_event_id = 3;
+  Identifier payment_id = 4;
+  bytes raw_payload_hash = 5;
+  bytes evidence_hash = 6;
+  string reason_code = 7;
+  string owner = 8;
+  google.protobuf.Timestamp received_at = 9;
+  google.protobuf.Timestamp resolution_deadline = 10;
+}
+
+message ProviderStatementEntry {
+  Identifier entry_id = 1;
+  string provider_id = 2;
+  string provider_reference = 3;
+  Identifier payment_id = 4;
+  Money amount = 5;
+  ProviderStatementKind kind = 6;
+  google.protobuf.Timestamp occurred_at = 7;
+}
+
+message PaymentReconciliationRunEvidence {
+  Identifier run_id = 1;
+  string provider_id = 2;
+  AssetId asset_id = 3;
+  google.protobuf.Timestamp as_of = 4;
+  bytes provider_snapshot_hash = 5;
+  bytes ledger_snapshot_hash = 6;
+  string expected_units = 7;
+  string observed_units = 8;
+  string difference_units = 9;
+  ReconciliationStatus status = 10;
+  string owner = 11;
+  google.protobuf.Timestamp resolution_deadline = 12;
+  uint32 unmatched_items = 13;
+}
+
+message PaymentReconciliationExceptionEvidence {
+  Identifier exception_id = 1;
+  Identifier run_id = 2;
+  string provider_id = 3;
+  AssetId asset_id = 4;
+  string difference_units = 5;
+  string reason_code = 6;
+  string owner = 7;
+  google.protobuf.Timestamp detected_at = 8;
+  google.protobuf.Timestamp resolution_deadline = 9;
+  uint32 unmatched_items = 10;
+}
+
+message PaymentReconciliationResolutionEvidence {
+  Identifier resolution_id = 1;
+  Identifier exception_id = 2;
+  bytes evidence_hash = 3;
+  Identifier resolution_journal_id = 4;
+  string resolved_by = 5;
+  google.protobuf.Timestamp resolved_at = 6;
+}
