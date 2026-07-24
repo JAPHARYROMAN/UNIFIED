@@ -236,6 +236,211 @@ func (ReconciliationStatus) EnumDescriptor() ([]byte, []int) {
 	return file_unified_v1_payment_proto_rawDescGZIP(), []int{3}
 }
 
+type PaymentAllocationMode int32
+
+const (
+	PaymentAllocationMode_PAYMENT_ALLOCATION_MODE_UNSPECIFIED          PaymentAllocationMode = 0
+	PaymentAllocationMode_PAYMENT_ALLOCATION_MODE_SYNTHETIC_PROJECTION PaymentAllocationMode = 1
+	PaymentAllocationMode_PAYMENT_ALLOCATION_MODE_CANONICAL_GATEWAY    PaymentAllocationMode = 2
+)
+
+// Enum value maps for PaymentAllocationMode.
+var (
+	PaymentAllocationMode_name = map[int32]string{
+		0: "PAYMENT_ALLOCATION_MODE_UNSPECIFIED",
+		1: "PAYMENT_ALLOCATION_MODE_SYNTHETIC_PROJECTION",
+		2: "PAYMENT_ALLOCATION_MODE_CANONICAL_GATEWAY",
+	}
+	PaymentAllocationMode_value = map[string]int32{
+		"PAYMENT_ALLOCATION_MODE_UNSPECIFIED":          0,
+		"PAYMENT_ALLOCATION_MODE_SYNTHETIC_PROJECTION": 1,
+		"PAYMENT_ALLOCATION_MODE_CANONICAL_GATEWAY":    2,
+	}
+)
+
+func (x PaymentAllocationMode) Enum() *PaymentAllocationMode {
+	p := new(PaymentAllocationMode)
+	*p = x
+	return p
+}
+
+func (x PaymentAllocationMode) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PaymentAllocationMode) Descriptor() protoreflect.EnumDescriptor {
+	return file_unified_v1_payment_proto_enumTypes[4].Descriptor()
+}
+
+func (PaymentAllocationMode) Type() protoreflect.EnumType {
+	return &file_unified_v1_payment_proto_enumTypes[4]
+}
+
+func (x PaymentAllocationMode) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PaymentAllocationMode.Descriptor instead.
+func (PaymentAllocationMode) EnumDescriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{4}
+}
+
+type CanonicalizationState int32
+
+const (
+	CanonicalizationState_CANONICALIZATION_STATE_UNSPECIFIED CanonicalizationState = 0
+	CanonicalizationState_CANONICALIZATION_STATE_PREPARED    CanonicalizationState = 1
+	CanonicalizationState_CANONICALIZATION_STATE_SUBMITTED   CanonicalizationState = 2
+	CanonicalizationState_CANONICALIZATION_STATE_CONFIRMED   CanonicalizationState = 3
+	CanonicalizationState_CANONICALIZATION_STATE_FAILED      CanonicalizationState = 4
+	CanonicalizationState_CANONICALIZATION_STATE_QUARANTINED CanonicalizationState = 5
+	CanonicalizationState_CANONICALIZATION_STATE_INCIDENT    CanonicalizationState = 6
+)
+
+// Enum value maps for CanonicalizationState.
+var (
+	CanonicalizationState_name = map[int32]string{
+		0: "CANONICALIZATION_STATE_UNSPECIFIED",
+		1: "CANONICALIZATION_STATE_PREPARED",
+		2: "CANONICALIZATION_STATE_SUBMITTED",
+		3: "CANONICALIZATION_STATE_CONFIRMED",
+		4: "CANONICALIZATION_STATE_FAILED",
+		5: "CANONICALIZATION_STATE_QUARANTINED",
+		6: "CANONICALIZATION_STATE_INCIDENT",
+	}
+	CanonicalizationState_value = map[string]int32{
+		"CANONICALIZATION_STATE_UNSPECIFIED": 0,
+		"CANONICALIZATION_STATE_PREPARED":    1,
+		"CANONICALIZATION_STATE_SUBMITTED":   2,
+		"CANONICALIZATION_STATE_CONFIRMED":   3,
+		"CANONICALIZATION_STATE_FAILED":      4,
+		"CANONICALIZATION_STATE_QUARANTINED": 5,
+		"CANONICALIZATION_STATE_INCIDENT":    6,
+	}
+)
+
+func (x CanonicalizationState) Enum() *CanonicalizationState {
+	p := new(CanonicalizationState)
+	*p = x
+	return p
+}
+
+func (x CanonicalizationState) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CanonicalizationState) Descriptor() protoreflect.EnumDescriptor {
+	return file_unified_v1_payment_proto_enumTypes[5].Descriptor()
+}
+
+func (CanonicalizationState) Type() protoreflect.EnumType {
+	return &file_unified_v1_payment_proto_enumTypes[5]
+}
+
+func (x CanonicalizationState) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CanonicalizationState.Descriptor instead.
+func (CanonicalizationState) EnumDescriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{5}
+}
+
+type CanonicalSettlementReorgKind int32
+
+const (
+	CanonicalSettlementReorgKind_CANONICAL_SETTLEMENT_REORG_KIND_UNSPECIFIED CanonicalSettlementReorgKind = 0
+	CanonicalSettlementReorgKind_CANONICAL_SETTLEMENT_REORG_KIND_SHALLOW     CanonicalSettlementReorgKind = 1
+	CanonicalSettlementReorgKind_CANONICAL_SETTLEMENT_REORG_KIND_DEEP        CanonicalSettlementReorgKind = 2
+)
+
+// Enum value maps for CanonicalSettlementReorgKind.
+var (
+	CanonicalSettlementReorgKind_name = map[int32]string{
+		0: "CANONICAL_SETTLEMENT_REORG_KIND_UNSPECIFIED",
+		1: "CANONICAL_SETTLEMENT_REORG_KIND_SHALLOW",
+		2: "CANONICAL_SETTLEMENT_REORG_KIND_DEEP",
+	}
+	CanonicalSettlementReorgKind_value = map[string]int32{
+		"CANONICAL_SETTLEMENT_REORG_KIND_UNSPECIFIED": 0,
+		"CANONICAL_SETTLEMENT_REORG_KIND_SHALLOW":     1,
+		"CANONICAL_SETTLEMENT_REORG_KIND_DEEP":        2,
+	}
+)
+
+func (x CanonicalSettlementReorgKind) Enum() *CanonicalSettlementReorgKind {
+	p := new(CanonicalSettlementReorgKind)
+	*p = x
+	return p
+}
+
+func (x CanonicalSettlementReorgKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CanonicalSettlementReorgKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_unified_v1_payment_proto_enumTypes[6].Descriptor()
+}
+
+func (CanonicalSettlementReorgKind) Type() protoreflect.EnumType {
+	return &file_unified_v1_payment_proto_enumTypes[6]
+}
+
+func (x CanonicalSettlementReorgKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CanonicalSettlementReorgKind.Descriptor instead.
+func (CanonicalSettlementReorgKind) EnumDescriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{6}
+}
+
+type CanonicalTransactionReceiptStatus int32
+
+const (
+	CanonicalTransactionReceiptStatus_CANONICAL_TRANSACTION_RECEIPT_STATUS_UNSPECIFIED CanonicalTransactionReceiptStatus = 0
+	CanonicalTransactionReceiptStatus_CANONICAL_TRANSACTION_RECEIPT_STATUS_REVERTED    CanonicalTransactionReceiptStatus = 1
+)
+
+// Enum value maps for CanonicalTransactionReceiptStatus.
+var (
+	CanonicalTransactionReceiptStatus_name = map[int32]string{
+		0: "CANONICAL_TRANSACTION_RECEIPT_STATUS_UNSPECIFIED",
+		1: "CANONICAL_TRANSACTION_RECEIPT_STATUS_REVERTED",
+	}
+	CanonicalTransactionReceiptStatus_value = map[string]int32{
+		"CANONICAL_TRANSACTION_RECEIPT_STATUS_UNSPECIFIED": 0,
+		"CANONICAL_TRANSACTION_RECEIPT_STATUS_REVERTED":    1,
+	}
+)
+
+func (x CanonicalTransactionReceiptStatus) Enum() *CanonicalTransactionReceiptStatus {
+	p := new(CanonicalTransactionReceiptStatus)
+	*p = x
+	return p
+}
+
+func (x CanonicalTransactionReceiptStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (CanonicalTransactionReceiptStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_unified_v1_payment_proto_enumTypes[7].Descriptor()
+}
+
+func (CanonicalTransactionReceiptStatus) Type() protoreflect.EnumType {
+	return &file_unified_v1_payment_proto_enumTypes[7]
+}
+
+func (x CanonicalTransactionReceiptStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use CanonicalTransactionReceiptStatus.Descriptor instead.
+func (CanonicalTransactionReceiptStatus) EnumDescriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{7}
+}
+
 // PaymentIntentRecord contains opaque references only. It must not contain raw bank,
 // cardholder, identity, or provider credentials.
 type PaymentIntentRecord struct {
@@ -1806,6 +2011,3212 @@ func (x *CollateralReleaseEligibilityEvidence) GetEvaluatedAt() *timestamppb.Tim
 	return nil
 }
 
+// PaymentAllocationModeClaimEvidence proves the exclusive compare-and-set claim that
+// prevents Phase 7B and Phase 7C from economically allocating the same payment.
+type PaymentAllocationModeClaimEvidence struct {
+	state                       protoimpl.MessageState `protogen:"open.v1"`
+	ClaimId                     *Identifier            `protobuf:"bytes,1,opt,name=claim_id,json=claimId,proto3" json:"claim_id,omitempty"`
+	PaymentId                   *Identifier            `protobuf:"bytes,2,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	Mode                        PaymentAllocationMode  `protobuf:"varint,3,opt,name=mode,proto3,enum=unified.v1.PaymentAllocationMode" json:"mode,omitempty"`
+	ExpectedVersion             uint64                 `protobuf:"varint,4,opt,name=expected_version,json=expectedVersion,proto3" json:"expected_version,omitempty"`
+	ClaimedVersion              uint64                 `protobuf:"varint,5,opt,name=claimed_version,json=claimedVersion,proto3" json:"claimed_version,omitempty"`
+	PriorAllocationAbsent       bool                   `protobuf:"varint,6,opt,name=prior_allocation_absent,json=priorAllocationAbsent,proto3" json:"prior_allocation_absent,omitempty"`
+	PriorAllocationJournalCount uint32                 `protobuf:"varint,7,opt,name=prior_allocation_journal_count,json=priorAllocationJournalCount,proto3" json:"prior_allocation_journal_count,omitempty"`
+	EvidenceHash                []byte                 `protobuf:"bytes,8,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	ClaimedAt                   *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=claimed_at,json=claimedAt,proto3" json:"claimed_at,omitempty"`
+	AllocationId                *Identifier            `protobuf:"bytes,10,opt,name=allocation_id,json=allocationId,proto3" json:"allocation_id,omitempty"`
+	InstructionDigest           []byte                 `protobuf:"bytes,11,opt,name=instruction_digest,json=instructionDigest,proto3" json:"instruction_digest,omitempty"`
+	ClaimDigest                 []byte                 `protobuf:"bytes,12,opt,name=claim_digest,json=claimDigest,proto3" json:"claim_digest,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
+}
+
+func (x *PaymentAllocationModeClaimEvidence) Reset() {
+	*x = PaymentAllocationModeClaimEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PaymentAllocationModeClaimEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PaymentAllocationModeClaimEvidence) ProtoMessage() {}
+
+func (x *PaymentAllocationModeClaimEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PaymentAllocationModeClaimEvidence.ProtoReflect.Descriptor instead.
+func (*PaymentAllocationModeClaimEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *PaymentAllocationModeClaimEvidence) GetClaimId() *Identifier {
+	if x != nil {
+		return x.ClaimId
+	}
+	return nil
+}
+
+func (x *PaymentAllocationModeClaimEvidence) GetPaymentId() *Identifier {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *PaymentAllocationModeClaimEvidence) GetMode() PaymentAllocationMode {
+	if x != nil {
+		return x.Mode
+	}
+	return PaymentAllocationMode_PAYMENT_ALLOCATION_MODE_UNSPECIFIED
+}
+
+func (x *PaymentAllocationModeClaimEvidence) GetExpectedVersion() uint64 {
+	if x != nil {
+		return x.ExpectedVersion
+	}
+	return 0
+}
+
+func (x *PaymentAllocationModeClaimEvidence) GetClaimedVersion() uint64 {
+	if x != nil {
+		return x.ClaimedVersion
+	}
+	return 0
+}
+
+func (x *PaymentAllocationModeClaimEvidence) GetPriorAllocationAbsent() bool {
+	if x != nil {
+		return x.PriorAllocationAbsent
+	}
+	return false
+}
+
+func (x *PaymentAllocationModeClaimEvidence) GetPriorAllocationJournalCount() uint32 {
+	if x != nil {
+		return x.PriorAllocationJournalCount
+	}
+	return 0
+}
+
+func (x *PaymentAllocationModeClaimEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *PaymentAllocationModeClaimEvidence) GetClaimedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ClaimedAt
+	}
+	return nil
+}
+
+func (x *PaymentAllocationModeClaimEvidence) GetAllocationId() *Identifier {
+	if x != nil {
+		return x.AllocationId
+	}
+	return nil
+}
+
+func (x *PaymentAllocationModeClaimEvidence) GetInstructionDigest() []byte {
+	if x != nil {
+		return x.InstructionDigest
+	}
+	return nil
+}
+
+func (x *PaymentAllocationModeClaimEvidence) GetClaimDigest() []byte {
+	if x != nil {
+		return x.ClaimDigest
+	}
+	return nil
+}
+
+// CanonicalizationEligibilityEvidence binds mature provider finality, reconciliation,
+// policy, original journals, and the exact one-to-one conversion boundary.
+type CanonicalizationEligibilityEvidence struct {
+	state                    protoimpl.MessageState `protogen:"open.v1"`
+	EligibilityId            *Identifier            `protobuf:"bytes,1,opt,name=eligibility_id,json=eligibilityId,proto3" json:"eligibility_id,omitempty"`
+	AllocationModeClaimId    *Identifier            `protobuf:"bytes,2,opt,name=allocation_mode_claim_id,json=allocationModeClaimId,proto3" json:"allocation_mode_claim_id,omitempty"`
+	PaymentId                *Identifier            `protobuf:"bytes,3,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	LoanId                   *LoanId                `protobuf:"bytes,4,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	ProviderId               string                 `protobuf:"bytes,5,opt,name=provider_id,json=providerId,proto3" json:"provider_id,omitempty"`
+	ProviderReference        string                 `protobuf:"bytes,6,opt,name=provider_reference,json=providerReference,proto3" json:"provider_reference,omitempty"`
+	SourcePayment            *Money                 `protobuf:"bytes,7,opt,name=source_payment,json=sourcePayment,proto3" json:"source_payment,omitempty"`
+	TargetTokens             *Money                 `protobuf:"bytes,8,opt,name=target_tokens,json=targetTokens,proto3" json:"target_tokens,omitempty"`
+	ReconciliationId         *Identifier            `protobuf:"bytes,9,opt,name=reconciliation_id,json=reconciliationId,proto3" json:"reconciliation_id,omitempty"`
+	OriginalJournalIds       []*Identifier          `protobuf:"bytes,10,rep,name=original_journal_ids,json=originalJournalIds,proto3" json:"original_journal_ids,omitempty"`
+	FinalityPolicyHash       []byte                 `protobuf:"bytes,11,opt,name=finality_policy_hash,json=finalityPolicyHash,proto3" json:"finality_policy_hash,omitempty"`
+	ConversionPolicyHash     []byte                 `protobuf:"bytes,12,opt,name=conversion_policy_hash,json=conversionPolicyHash,proto3" json:"conversion_policy_hash,omitempty"`
+	WaterfallPolicyHash      []byte                 `protobuf:"bytes,13,opt,name=waterfall_policy_hash,json=waterfallPolicyHash,proto3" json:"waterfall_policy_hash,omitempty"`
+	PolicySetHash            []byte                 `protobuf:"bytes,14,opt,name=policy_set_hash,json=policySetHash,proto3" json:"policy_set_hash,omitempty"`
+	ReversalDeadline         *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=reversal_deadline,json=reversalDeadline,proto3" json:"reversal_deadline,omitempty"`
+	Eligible                 bool                   `protobuf:"varint,16,opt,name=eligible,proto3" json:"eligible,omitempty"`
+	EvidenceHash             []byte                 `protobuf:"bytes,17,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	EvaluatedAt              *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=evaluated_at,json=evaluatedAt,proto3" json:"evaluated_at,omitempty"`
+	PaymentFinalEventId      *Identifier            `protobuf:"bytes,19,opt,name=payment_final_event_id,json=paymentFinalEventId,proto3" json:"payment_final_event_id,omitempty"`
+	ProviderStatementEntryId *Identifier            `protobuf:"bytes,20,opt,name=provider_statement_entry_id,json=providerStatementEntryId,proto3" json:"provider_statement_entry_id,omitempty"`
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
+}
+
+func (x *CanonicalizationEligibilityEvidence) Reset() {
+	*x = CanonicalizationEligibilityEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalizationEligibilityEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalizationEligibilityEvidence) ProtoMessage() {}
+
+func (x *CanonicalizationEligibilityEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalizationEligibilityEvidence.ProtoReflect.Descriptor instead.
+func (*CanonicalizationEligibilityEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetEligibilityId() *Identifier {
+	if x != nil {
+		return x.EligibilityId
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetAllocationModeClaimId() *Identifier {
+	if x != nil {
+		return x.AllocationModeClaimId
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetPaymentId() *Identifier {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetLoanId() *LoanId {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetProviderId() string {
+	if x != nil {
+		return x.ProviderId
+	}
+	return ""
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetProviderReference() string {
+	if x != nil {
+		return x.ProviderReference
+	}
+	return ""
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetSourcePayment() *Money {
+	if x != nil {
+		return x.SourcePayment
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetTargetTokens() *Money {
+	if x != nil {
+		return x.TargetTokens
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetReconciliationId() *Identifier {
+	if x != nil {
+		return x.ReconciliationId
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetOriginalJournalIds() []*Identifier {
+	if x != nil {
+		return x.OriginalJournalIds
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetFinalityPolicyHash() []byte {
+	if x != nil {
+		return x.FinalityPolicyHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetConversionPolicyHash() []byte {
+	if x != nil {
+		return x.ConversionPolicyHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetWaterfallPolicyHash() []byte {
+	if x != nil {
+		return x.WaterfallPolicyHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetPolicySetHash() []byte {
+	if x != nil {
+		return x.PolicySetHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetReversalDeadline() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ReversalDeadline
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetEligible() bool {
+	if x != nil {
+		return x.Eligible
+	}
+	return false
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetEvaluatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.EvaluatedAt
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetPaymentFinalEventId() *Identifier {
+	if x != nil {
+		return x.PaymentFinalEventId
+	}
+	return nil
+}
+
+func (x *CanonicalizationEligibilityEvidence) GetProviderStatementEntryId() *Identifier {
+	if x != nil {
+		return x.ProviderStatementEntryId
+	}
+	return nil
+}
+
+// CanonicalizationPlanEvidence is a non-posting waterfall and gateway instruction plan.
+type CanonicalizationPlanEvidence struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	CanonicalizationId    *Identifier            `protobuf:"bytes,1,opt,name=canonicalization_id,json=canonicalizationId,proto3" json:"canonicalization_id,omitempty"`
+	AllocationModeClaimId *Identifier            `protobuf:"bytes,2,opt,name=allocation_mode_claim_id,json=allocationModeClaimId,proto3" json:"allocation_mode_claim_id,omitempty"`
+	AllocationId          *Identifier            `protobuf:"bytes,3,opt,name=allocation_id,json=allocationId,proto3" json:"allocation_id,omitempty"`
+	PaymentId             *Identifier            `protobuf:"bytes,4,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	LoanId                *LoanId                `protobuf:"bytes,5,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	SourcePayment         *Money                 `protobuf:"bytes,6,opt,name=source_payment,json=sourcePayment,proto3" json:"source_payment,omitempty"`
+	TargetTokens          *Money                 `protobuf:"bytes,7,opt,name=target_tokens,json=targetTokens,proto3" json:"target_tokens,omitempty"`
+	ExpectedDebt          *Money                 `protobuf:"bytes,8,opt,name=expected_debt,json=expectedDebt,proto3" json:"expected_debt,omitempty"`
+	PrincipalAllocation   *Money                 `protobuf:"bytes,9,opt,name=principal_allocation,json=principalAllocation,proto3" json:"principal_allocation,omitempty"`
+	RefundableExcess      *Money                 `protobuf:"bytes,10,opt,name=refundable_excess,json=refundableExcess,proto3" json:"refundable_excess,omitempty"`
+	ExpectedStateNonce    uint64                 `protobuf:"varint,11,opt,name=expected_state_nonce,json=expectedStateNonce,proto3" json:"expected_state_nonce,omitempty"`
+	FinalizerId           *PartyId               `protobuf:"bytes,12,opt,name=finalizer_id,json=finalizerId,proto3" json:"finalizer_id,omitempty"`
+	TargetChainDomain     string                 `protobuf:"bytes,13,opt,name=target_chain_domain,json=targetChainDomain,proto3" json:"target_chain_domain,omitempty"`
+	GatewayAddress        string                 `protobuf:"bytes,14,opt,name=gateway_address,json=gatewayAddress,proto3" json:"gateway_address,omitempty"`
+	InstructionDigest     []byte                 `protobuf:"bytes,15,opt,name=instruction_digest,json=instructionDigest,proto3" json:"instruction_digest,omitempty"`
+	AccountingAttestation []byte                 `protobuf:"bytes,16,opt,name=accounting_attestation,json=accountingAttestation,proto3" json:"accounting_attestation,omitempty"`
+	EvidenceHash          []byte                 `protobuf:"bytes,17,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	PreparedAt            *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=prepared_at,json=preparedAt,proto3" json:"prepared_at,omitempty"`
+	BorrowerId            *PartyId               `protobuf:"bytes,19,opt,name=borrower_id,json=borrowerId,proto3" json:"borrower_id,omitempty"`
+	LenderId              *PartyId               `protobuf:"bytes,20,opt,name=lender_id,json=lenderId,proto3" json:"lender_id,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *CanonicalizationPlanEvidence) Reset() {
+	*x = CanonicalizationPlanEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalizationPlanEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalizationPlanEvidence) ProtoMessage() {}
+
+func (x *CanonicalizationPlanEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalizationPlanEvidence.ProtoReflect.Descriptor instead.
+func (*CanonicalizationPlanEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *CanonicalizationPlanEvidence) GetCanonicalizationId() *Identifier {
+	if x != nil {
+		return x.CanonicalizationId
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetAllocationModeClaimId() *Identifier {
+	if x != nil {
+		return x.AllocationModeClaimId
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetAllocationId() *Identifier {
+	if x != nil {
+		return x.AllocationId
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetPaymentId() *Identifier {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetLoanId() *LoanId {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetSourcePayment() *Money {
+	if x != nil {
+		return x.SourcePayment
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetTargetTokens() *Money {
+	if x != nil {
+		return x.TargetTokens
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetExpectedDebt() *Money {
+	if x != nil {
+		return x.ExpectedDebt
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetPrincipalAllocation() *Money {
+	if x != nil {
+		return x.PrincipalAllocation
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetRefundableExcess() *Money {
+	if x != nil {
+		return x.RefundableExcess
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetExpectedStateNonce() uint64 {
+	if x != nil {
+		return x.ExpectedStateNonce
+	}
+	return 0
+}
+
+func (x *CanonicalizationPlanEvidence) GetFinalizerId() *PartyId {
+	if x != nil {
+		return x.FinalizerId
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetTargetChainDomain() string {
+	if x != nil {
+		return x.TargetChainDomain
+	}
+	return ""
+}
+
+func (x *CanonicalizationPlanEvidence) GetGatewayAddress() string {
+	if x != nil {
+		return x.GatewayAddress
+	}
+	return ""
+}
+
+func (x *CanonicalizationPlanEvidence) GetInstructionDigest() []byte {
+	if x != nil {
+		return x.InstructionDigest
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetAccountingAttestation() []byte {
+	if x != nil {
+		return x.AccountingAttestation
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetPreparedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.PreparedAt
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetBorrowerId() *PartyId {
+	if x != nil {
+		return x.BorrowerId
+	}
+	return nil
+}
+
+func (x *CanonicalizationPlanEvidence) GetLenderId() *PartyId {
+	if x != nil {
+		return x.LenderId
+	}
+	return nil
+}
+
+type CanonicalizationSubmissionEvidence struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	CanonicalizationId *Identifier            `protobuf:"bytes,1,opt,name=canonicalization_id,json=canonicalizationId,proto3" json:"canonicalization_id,omitempty"`
+	State              CanonicalizationState  `protobuf:"varint,2,opt,name=state,proto3,enum=unified.v1.CanonicalizationState" json:"state,omitempty"`
+	TargetChainDomain  string                 `protobuf:"bytes,3,opt,name=target_chain_domain,json=targetChainDomain,proto3" json:"target_chain_domain,omitempty"`
+	GatewayAddress     string                 `protobuf:"bytes,4,opt,name=gateway_address,json=gatewayAddress,proto3" json:"gateway_address,omitempty"`
+	SenderId           *PartyId               `protobuf:"bytes,5,opt,name=sender_id,json=senderId,proto3" json:"sender_id,omitempty"`
+	SenderNonce        uint64                 `protobuf:"varint,6,opt,name=sender_nonce,json=senderNonce,proto3" json:"sender_nonce,omitempty"`
+	CalldataHash       []byte                 `protobuf:"bytes,7,opt,name=calldata_hash,json=calldataHash,proto3" json:"calldata_hash,omitempty"`
+	TransactionHash    []byte                 `protobuf:"bytes,8,opt,name=transaction_hash,json=transactionHash,proto3" json:"transaction_hash,omitempty"`
+	EvidenceHash       []byte                 `protobuf:"bytes,9,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	SubmittedAt        *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=submitted_at,json=submittedAt,proto3" json:"submitted_at,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *CanonicalizationSubmissionEvidence) Reset() {
+	*x = CanonicalizationSubmissionEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalizationSubmissionEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalizationSubmissionEvidence) ProtoMessage() {}
+
+func (x *CanonicalizationSubmissionEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalizationSubmissionEvidence.ProtoReflect.Descriptor instead.
+func (*CanonicalizationSubmissionEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *CanonicalizationSubmissionEvidence) GetCanonicalizationId() *Identifier {
+	if x != nil {
+		return x.CanonicalizationId
+	}
+	return nil
+}
+
+func (x *CanonicalizationSubmissionEvidence) GetState() CanonicalizationState {
+	if x != nil {
+		return x.State
+	}
+	return CanonicalizationState_CANONICALIZATION_STATE_UNSPECIFIED
+}
+
+func (x *CanonicalizationSubmissionEvidence) GetTargetChainDomain() string {
+	if x != nil {
+		return x.TargetChainDomain
+	}
+	return ""
+}
+
+func (x *CanonicalizationSubmissionEvidence) GetGatewayAddress() string {
+	if x != nil {
+		return x.GatewayAddress
+	}
+	return ""
+}
+
+func (x *CanonicalizationSubmissionEvidence) GetSenderId() *PartyId {
+	if x != nil {
+		return x.SenderId
+	}
+	return nil
+}
+
+func (x *CanonicalizationSubmissionEvidence) GetSenderNonce() uint64 {
+	if x != nil {
+		return x.SenderNonce
+	}
+	return 0
+}
+
+func (x *CanonicalizationSubmissionEvidence) GetCalldataHash() []byte {
+	if x != nil {
+		return x.CalldataHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationSubmissionEvidence) GetTransactionHash() []byte {
+	if x != nil {
+		return x.TransactionHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationSubmissionEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationSubmissionEvidence) GetSubmittedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.SubmittedAt
+	}
+	return nil
+}
+
+// CanonicalSettlementConversionEvidence proves the finalizer acquired or discharged the
+// provider asset and delivered the distinct, same-denomination target token.
+type CanonicalSettlementConversionEvidence struct {
+	state                            protoimpl.MessageState `protogen:"open.v1"`
+	ConversionId                     *Identifier            `protobuf:"bytes,1,opt,name=conversion_id,json=conversionId,proto3" json:"conversion_id,omitempty"`
+	CanonicalizationId               *Identifier            `protobuf:"bytes,2,opt,name=canonicalization_id,json=canonicalizationId,proto3" json:"canonicalization_id,omitempty"`
+	PaymentId                        *Identifier            `protobuf:"bytes,3,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	ProviderId                       string                 `protobuf:"bytes,4,opt,name=provider_id,json=providerId,proto3" json:"provider_id,omitempty"`
+	ProviderReference                string                 `protobuf:"bytes,5,opt,name=provider_reference,json=providerReference,proto3" json:"provider_reference,omitempty"`
+	SourcePayment                    *Money                 `protobuf:"bytes,6,opt,name=source_payment,json=sourcePayment,proto3" json:"source_payment,omitempty"`
+	TargetTokens                     *Money                 `protobuf:"bytes,7,opt,name=target_tokens,json=targetTokens,proto3" json:"target_tokens,omitempty"`
+	RateNumerator                    string                 `protobuf:"bytes,8,opt,name=rate_numerator,json=rateNumerator,proto3" json:"rate_numerator,omitempty"`
+	RateDenominator                  string                 `protobuf:"bytes,9,opt,name=rate_denominator,json=rateDenominator,proto3" json:"rate_denominator,omitempty"`
+	SourceAccountCode                string                 `protobuf:"bytes,10,opt,name=source_account_code,json=sourceAccountCode,proto3" json:"source_account_code,omitempty"`
+	OriginalJournalIds               []*Identifier          `protobuf:"bytes,11,rep,name=original_journal_ids,json=originalJournalIds,proto3" json:"original_journal_ids,omitempty"`
+	FinalizerId                      *PartyId               `protobuf:"bytes,12,opt,name=finalizer_id,json=finalizerId,proto3" json:"finalizer_id,omitempty"`
+	GatewayTransactionHash           []byte                 `protobuf:"bytes,13,opt,name=gateway_transaction_hash,json=gatewayTransactionHash,proto3" json:"gateway_transaction_hash,omitempty"`
+	ProviderAssetIrrevocablyAcquired bool                   `protobuf:"varint,14,opt,name=provider_asset_irrevocably_acquired,json=providerAssetIrrevocablyAcquired,proto3" json:"provider_asset_irrevocably_acquired,omitempty"`
+	LaterReversalRiskAssumed         bool                   `protobuf:"varint,15,opt,name=later_reversal_risk_assumed,json=laterReversalRiskAssumed,proto3" json:"later_reversal_risk_assumed,omitempty"`
+	EvidenceHash                     []byte                 `protobuf:"bytes,16,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	ConvertedAt                      *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=converted_at,json=convertedAt,proto3" json:"converted_at,omitempty"`
+	unknownFields                    protoimpl.UnknownFields
+	sizeCache                        protoimpl.SizeCache
+}
+
+func (x *CanonicalSettlementConversionEvidence) Reset() {
+	*x = CanonicalSettlementConversionEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalSettlementConversionEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalSettlementConversionEvidence) ProtoMessage() {}
+
+func (x *CanonicalSettlementConversionEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalSettlementConversionEvidence.ProtoReflect.Descriptor instead.
+func (*CanonicalSettlementConversionEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetConversionId() *Identifier {
+	if x != nil {
+		return x.ConversionId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetCanonicalizationId() *Identifier {
+	if x != nil {
+		return x.CanonicalizationId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetPaymentId() *Identifier {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetProviderId() string {
+	if x != nil {
+		return x.ProviderId
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetProviderReference() string {
+	if x != nil {
+		return x.ProviderReference
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetSourcePayment() *Money {
+	if x != nil {
+		return x.SourcePayment
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetTargetTokens() *Money {
+	if x != nil {
+		return x.TargetTokens
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetRateNumerator() string {
+	if x != nil {
+		return x.RateNumerator
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetRateDenominator() string {
+	if x != nil {
+		return x.RateDenominator
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetSourceAccountCode() string {
+	if x != nil {
+		return x.SourceAccountCode
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetOriginalJournalIds() []*Identifier {
+	if x != nil {
+		return x.OriginalJournalIds
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetFinalizerId() *PartyId {
+	if x != nil {
+		return x.FinalizerId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetGatewayTransactionHash() []byte {
+	if x != nil {
+		return x.GatewayTransactionHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetProviderAssetIrrevocablyAcquired() bool {
+	if x != nil {
+		return x.ProviderAssetIrrevocablyAcquired
+	}
+	return false
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetLaterReversalRiskAssumed() bool {
+	if x != nil {
+		return x.LaterReversalRiskAssumed
+	}
+	return false
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementConversionEvidence) GetConvertedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ConvertedAt
+	}
+	return nil
+}
+
+type CanonicalizationConfirmationEvidence struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	CanonicalizationId   *Identifier            `protobuf:"bytes,1,opt,name=canonicalization_id,json=canonicalizationId,proto3" json:"canonicalization_id,omitempty"`
+	AllocationId         *Identifier            `protobuf:"bytes,2,opt,name=allocation_id,json=allocationId,proto3" json:"allocation_id,omitempty"`
+	PaymentId            *Identifier            `protobuf:"bytes,3,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	LoanId               *LoanId                `protobuf:"bytes,4,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	State                CanonicalizationState  `protobuf:"varint,5,opt,name=state,proto3,enum=unified.v1.CanonicalizationState" json:"state,omitempty"`
+	TargetChainDomain    string                 `protobuf:"bytes,6,opt,name=target_chain_domain,json=targetChainDomain,proto3" json:"target_chain_domain,omitempty"`
+	GatewayAddress       string                 `protobuf:"bytes,7,opt,name=gateway_address,json=gatewayAddress,proto3" json:"gateway_address,omitempty"`
+	TransactionHash      []byte                 `protobuf:"bytes,8,opt,name=transaction_hash,json=transactionHash,proto3" json:"transaction_hash,omitempty"`
+	GatewayEventId       *Identifier            `protobuf:"bytes,9,opt,name=gateway_event_id,json=gatewayEventId,proto3" json:"gateway_event_id,omitempty"`
+	BlockHash            []byte                 `protobuf:"bytes,10,opt,name=block_hash,json=blockHash,proto3" json:"block_hash,omitempty"`
+	BlockNumber          uint64                 `protobuf:"varint,11,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
+	LogIndex             uint32                 `protobuf:"varint,12,opt,name=log_index,json=logIndex,proto3" json:"log_index,omitempty"`
+	TargetTokens         *Money                 `protobuf:"bytes,13,opt,name=target_tokens,json=targetTokens,proto3" json:"target_tokens,omitempty"`
+	PrincipalAllocation  *Money                 `protobuf:"bytes,14,opt,name=principal_allocation,json=principalAllocation,proto3" json:"principal_allocation,omitempty"`
+	RefundableExcess     *Money                 `protobuf:"bytes,15,opt,name=refundable_excess,json=refundableExcess,proto3" json:"refundable_excess,omitempty"`
+	DebtBefore           *Money                 `protobuf:"bytes,16,opt,name=debt_before,json=debtBefore,proto3" json:"debt_before,omitempty"`
+	DebtAfter            *Money                 `protobuf:"bytes,17,opt,name=debt_after,json=debtAfter,proto3" json:"debt_after,omitempty"`
+	JournalIds           []*Identifier          `protobuf:"bytes,18,rep,name=journal_ids,json=journalIds,proto3" json:"journal_ids,omitempty"`
+	EvidenceHash         []byte                 `protobuf:"bytes,19,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	ConfirmedAt          *timestamppb.Timestamp `protobuf:"bytes,20,opt,name=confirmed_at,json=confirmedAt,proto3" json:"confirmed_at,omitempty"`
+	InstructionDigest    []byte                 `protobuf:"bytes,21,opt,name=instruction_digest,json=instructionDigest,proto3" json:"instruction_digest,omitempty"`
+	BorrowerId           *PartyId               `protobuf:"bytes,22,opt,name=borrower_id,json=borrowerId,proto3" json:"borrower_id,omitempty"`
+	LenderId             *PartyId               `protobuf:"bytes,23,opt,name=lender_id,json=lenderId,proto3" json:"lender_id,omitempty"`
+	ConfirmationDepth    uint64                 `protobuf:"varint,24,opt,name=confirmation_depth,json=confirmationDepth,proto3" json:"confirmation_depth,omitempty"`
+	FinalityHeadBlock    uint64                 `protobuf:"varint,25,opt,name=finality_head_block,json=finalityHeadBlock,proto3" json:"finality_head_block,omitempty"`
+	FinalityHeadHash     []byte                 `protobuf:"bytes,26,opt,name=finality_head_hash,json=finalityHeadHash,proto3" json:"finality_head_hash,omitempty"`
+	FinalityEvidenceHash []byte                 `protobuf:"bytes,27,opt,name=finality_evidence_hash,json=finalityEvidenceHash,proto3" json:"finality_evidence_hash,omitempty"`
+	// The nested authoritative envelope is mandatory for Phase 7C confirmation.
+	// Its payment, allocation, loan, transaction, event, block, log, head, depth,
+	// and evidence identities MUST exactly equal the duplicated fields above.
+	FinalizedSettlement *FinalizedCanonicalSettlementEvidence `protobuf:"bytes,28,opt,name=finalized_settlement,json=finalizedSettlement,proto3" json:"finalized_settlement,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *CanonicalizationConfirmationEvidence) Reset() {
+	*x = CanonicalizationConfirmationEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalizationConfirmationEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalizationConfirmationEvidence) ProtoMessage() {}
+
+func (x *CanonicalizationConfirmationEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalizationConfirmationEvidence.ProtoReflect.Descriptor instead.
+func (*CanonicalizationConfirmationEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetCanonicalizationId() *Identifier {
+	if x != nil {
+		return x.CanonicalizationId
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetAllocationId() *Identifier {
+	if x != nil {
+		return x.AllocationId
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetPaymentId() *Identifier {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetLoanId() *LoanId {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetState() CanonicalizationState {
+	if x != nil {
+		return x.State
+	}
+	return CanonicalizationState_CANONICALIZATION_STATE_UNSPECIFIED
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetTargetChainDomain() string {
+	if x != nil {
+		return x.TargetChainDomain
+	}
+	return ""
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetGatewayAddress() string {
+	if x != nil {
+		return x.GatewayAddress
+	}
+	return ""
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetTransactionHash() []byte {
+	if x != nil {
+		return x.TransactionHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetGatewayEventId() *Identifier {
+	if x != nil {
+		return x.GatewayEventId
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetBlockHash() []byte {
+	if x != nil {
+		return x.BlockHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetBlockNumber() uint64 {
+	if x != nil {
+		return x.BlockNumber
+	}
+	return 0
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetLogIndex() uint32 {
+	if x != nil {
+		return x.LogIndex
+	}
+	return 0
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetTargetTokens() *Money {
+	if x != nil {
+		return x.TargetTokens
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetPrincipalAllocation() *Money {
+	if x != nil {
+		return x.PrincipalAllocation
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetRefundableExcess() *Money {
+	if x != nil {
+		return x.RefundableExcess
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetDebtBefore() *Money {
+	if x != nil {
+		return x.DebtBefore
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetDebtAfter() *Money {
+	if x != nil {
+		return x.DebtAfter
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetJournalIds() []*Identifier {
+	if x != nil {
+		return x.JournalIds
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetConfirmedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ConfirmedAt
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetInstructionDigest() []byte {
+	if x != nil {
+		return x.InstructionDigest
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetBorrowerId() *PartyId {
+	if x != nil {
+		return x.BorrowerId
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetLenderId() *PartyId {
+	if x != nil {
+		return x.LenderId
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetConfirmationDepth() uint64 {
+	if x != nil {
+		return x.ConfirmationDepth
+	}
+	return 0
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetFinalityHeadBlock() uint64 {
+	if x != nil {
+		return x.FinalityHeadBlock
+	}
+	return 0
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetFinalityHeadHash() []byte {
+	if x != nil {
+		return x.FinalityHeadHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetFinalityEvidenceHash() []byte {
+	if x != nil {
+		return x.FinalityEvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalizationConfirmationEvidence) GetFinalizedSettlement() *FinalizedCanonicalSettlementEvidence {
+	if x != nil {
+		return x.FinalizedSettlement
+	}
+	return nil
+}
+
+type CanonicalLenderPayoutEvidence struct {
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	PayoutId               *Identifier            `protobuf:"bytes,1,opt,name=payout_id,json=payoutId,proto3" json:"payout_id,omitempty"`
+	CanonicalizationId     *Identifier            `protobuf:"bytes,2,opt,name=canonicalization_id,json=canonicalizationId,proto3" json:"canonicalization_id,omitempty"`
+	LoanId                 *LoanId                `protobuf:"bytes,3,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	LenderId               *PartyId               `protobuf:"bytes,4,opt,name=lender_id,json=lenderId,proto3" json:"lender_id,omitempty"`
+	Amount                 *Money                 `protobuf:"bytes,5,opt,name=amount,proto3" json:"amount,omitempty"`
+	GatewayTransactionHash []byte                 `protobuf:"bytes,6,opt,name=gateway_transaction_hash,json=gatewayTransactionHash,proto3" json:"gateway_transaction_hash,omitempty"`
+	GatewayEventId         *Identifier            `protobuf:"bytes,7,opt,name=gateway_event_id,json=gatewayEventId,proto3" json:"gateway_event_id,omitempty"`
+	JournalId              *Identifier            `protobuf:"bytes,8,opt,name=journal_id,json=journalId,proto3" json:"journal_id,omitempty"`
+	EvidenceHash           []byte                 `protobuf:"bytes,9,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	PaidAt                 *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=paid_at,json=paidAt,proto3" json:"paid_at,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *CanonicalLenderPayoutEvidence) Reset() {
+	*x = CanonicalLenderPayoutEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalLenderPayoutEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalLenderPayoutEvidence) ProtoMessage() {}
+
+func (x *CanonicalLenderPayoutEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalLenderPayoutEvidence.ProtoReflect.Descriptor instead.
+func (*CanonicalLenderPayoutEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *CanonicalLenderPayoutEvidence) GetPayoutId() *Identifier {
+	if x != nil {
+		return x.PayoutId
+	}
+	return nil
+}
+
+func (x *CanonicalLenderPayoutEvidence) GetCanonicalizationId() *Identifier {
+	if x != nil {
+		return x.CanonicalizationId
+	}
+	return nil
+}
+
+func (x *CanonicalLenderPayoutEvidence) GetLoanId() *LoanId {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *CanonicalLenderPayoutEvidence) GetLenderId() *PartyId {
+	if x != nil {
+		return x.LenderId
+	}
+	return nil
+}
+
+func (x *CanonicalLenderPayoutEvidence) GetAmount() *Money {
+	if x != nil {
+		return x.Amount
+	}
+	return nil
+}
+
+func (x *CanonicalLenderPayoutEvidence) GetGatewayTransactionHash() []byte {
+	if x != nil {
+		return x.GatewayTransactionHash
+	}
+	return nil
+}
+
+func (x *CanonicalLenderPayoutEvidence) GetGatewayEventId() *Identifier {
+	if x != nil {
+		return x.GatewayEventId
+	}
+	return nil
+}
+
+func (x *CanonicalLenderPayoutEvidence) GetJournalId() *Identifier {
+	if x != nil {
+		return x.JournalId
+	}
+	return nil
+}
+
+func (x *CanonicalLenderPayoutEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalLenderPayoutEvidence) GetPaidAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.PaidAt
+	}
+	return nil
+}
+
+type CanonicalBorrowerRefundEvidence struct {
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	RefundId               *Identifier            `protobuf:"bytes,1,opt,name=refund_id,json=refundId,proto3" json:"refund_id,omitempty"`
+	CanonicalizationId     *Identifier            `protobuf:"bytes,2,opt,name=canonicalization_id,json=canonicalizationId,proto3" json:"canonicalization_id,omitempty"`
+	LoanId                 *LoanId                `protobuf:"bytes,3,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	BorrowerId             *PartyId               `protobuf:"bytes,4,opt,name=borrower_id,json=borrowerId,proto3" json:"borrower_id,omitempty"`
+	Amount                 *Money                 `protobuf:"bytes,5,opt,name=amount,proto3" json:"amount,omitempty"`
+	GatewayTransactionHash []byte                 `protobuf:"bytes,6,opt,name=gateway_transaction_hash,json=gatewayTransactionHash,proto3" json:"gateway_transaction_hash,omitempty"`
+	GatewayEventId         *Identifier            `protobuf:"bytes,7,opt,name=gateway_event_id,json=gatewayEventId,proto3" json:"gateway_event_id,omitempty"`
+	JournalId              *Identifier            `protobuf:"bytes,8,opt,name=journal_id,json=journalId,proto3" json:"journal_id,omitempty"`
+	EvidenceHash           []byte                 `protobuf:"bytes,9,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	RefundedAt             *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=refunded_at,json=refundedAt,proto3" json:"refunded_at,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *CanonicalBorrowerRefundEvidence) Reset() {
+	*x = CanonicalBorrowerRefundEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalBorrowerRefundEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalBorrowerRefundEvidence) ProtoMessage() {}
+
+func (x *CanonicalBorrowerRefundEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalBorrowerRefundEvidence.ProtoReflect.Descriptor instead.
+func (*CanonicalBorrowerRefundEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *CanonicalBorrowerRefundEvidence) GetRefundId() *Identifier {
+	if x != nil {
+		return x.RefundId
+	}
+	return nil
+}
+
+func (x *CanonicalBorrowerRefundEvidence) GetCanonicalizationId() *Identifier {
+	if x != nil {
+		return x.CanonicalizationId
+	}
+	return nil
+}
+
+func (x *CanonicalBorrowerRefundEvidence) GetLoanId() *LoanId {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *CanonicalBorrowerRefundEvidence) GetBorrowerId() *PartyId {
+	if x != nil {
+		return x.BorrowerId
+	}
+	return nil
+}
+
+func (x *CanonicalBorrowerRefundEvidence) GetAmount() *Money {
+	if x != nil {
+		return x.Amount
+	}
+	return nil
+}
+
+func (x *CanonicalBorrowerRefundEvidence) GetGatewayTransactionHash() []byte {
+	if x != nil {
+		return x.GatewayTransactionHash
+	}
+	return nil
+}
+
+func (x *CanonicalBorrowerRefundEvidence) GetGatewayEventId() *Identifier {
+	if x != nil {
+		return x.GatewayEventId
+	}
+	return nil
+}
+
+func (x *CanonicalBorrowerRefundEvidence) GetJournalId() *Identifier {
+	if x != nil {
+		return x.JournalId
+	}
+	return nil
+}
+
+func (x *CanonicalBorrowerRefundEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalBorrowerRefundEvidence) GetRefundedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.RefundedAt
+	}
+	return nil
+}
+
+// CanonicalSettlementIncidentEvidence retains contradictory provider evidence without
+// changing the confirmed payment state or inferring an economic reversal.
+type CanonicalSettlementIncidentEvidence struct {
+	state                      protoimpl.MessageState `protogen:"open.v1"`
+	IncidentId                 *Identifier            `protobuf:"bytes,1,opt,name=incident_id,json=incidentId,proto3" json:"incident_id,omitempty"`
+	CanonicalizationId         *Identifier            `protobuf:"bytes,2,opt,name=canonicalization_id,json=canonicalizationId,proto3" json:"canonicalization_id,omitempty"`
+	PaymentId                  *Identifier            `protobuf:"bytes,3,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	ProviderId                 string                 `protobuf:"bytes,4,opt,name=provider_id,json=providerId,proto3" json:"provider_id,omitempty"`
+	ProviderEventId            *Identifier            `protobuf:"bytes,5,opt,name=provider_event_id,json=providerEventId,proto3" json:"provider_event_id,omitempty"`
+	ReportedStatus             PaymentStatus          `protobuf:"varint,6,opt,name=reported_status,json=reportedStatus,proto3,enum=unified.v1.PaymentStatus" json:"reported_status,omitempty"`
+	CanonicalizationState      CanonicalizationState  `protobuf:"varint,7,opt,name=canonicalization_state,json=canonicalizationState,proto3,enum=unified.v1.CanonicalizationState" json:"canonicalization_state,omitempty"`
+	ReasonCode                 string                 `protobuf:"bytes,8,opt,name=reason_code,json=reasonCode,proto3" json:"reason_code,omitempty"`
+	Owner                      string                 `protobuf:"bytes,9,opt,name=owner,proto3" json:"owner,omitempty"`
+	PaymentStateUnchanged      bool                   `protobuf:"varint,10,opt,name=payment_state_unchanged,json=paymentStateUnchanged,proto3" json:"payment_state_unchanged,omitempty"`
+	EconomicJournalsSuppressed bool                   `protobuf:"varint,11,opt,name=economic_journals_suppressed,json=economicJournalsSuppressed,proto3" json:"economic_journals_suppressed,omitempty"`
+	RawPayloadHash             []byte                 `protobuf:"bytes,12,opt,name=raw_payload_hash,json=rawPayloadHash,proto3" json:"raw_payload_hash,omitempty"`
+	EvidenceHash               []byte                 `protobuf:"bytes,13,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	ObservedAt                 *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=observed_at,json=observedAt,proto3" json:"observed_at,omitempty"`
+	ResolutionDeadline         *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=resolution_deadline,json=resolutionDeadline,proto3" json:"resolution_deadline,omitempty"`
+	// Set for a serialized late-success race that consumes a submitted reversal
+	// quarantine without executing reversal accounting.
+	QuarantineId *Identifier `protobuf:"bytes,16,opt,name=quarantine_id,json=quarantineId,proto3" json:"quarantine_id,omitempty"`
+	ResolutionId *Identifier `protobuf:"bytes,17,opt,name=resolution_id,json=resolutionId,proto3" json:"resolution_id,omitempty"`
+	// When present, this is the winning authenticated chain result. Its payment
+	// and canonicalization identities MUST match this incident; payment state
+	// remains FINAL and no reversal journal may be posted.
+	FinalizedSettlement *FinalizedCanonicalSettlementEvidence `protobuf:"bytes,18,opt,name=finalized_settlement,json=finalizedSettlement,proto3" json:"finalized_settlement,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *CanonicalSettlementIncidentEvidence) Reset() {
+	*x = CanonicalSettlementIncidentEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalSettlementIncidentEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalSettlementIncidentEvidence) ProtoMessage() {}
+
+func (x *CanonicalSettlementIncidentEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalSettlementIncidentEvidence.ProtoReflect.Descriptor instead.
+func (*CanonicalSettlementIncidentEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetIncidentId() *Identifier {
+	if x != nil {
+		return x.IncidentId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetCanonicalizationId() *Identifier {
+	if x != nil {
+		return x.CanonicalizationId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetPaymentId() *Identifier {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetProviderId() string {
+	if x != nil {
+		return x.ProviderId
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetProviderEventId() *Identifier {
+	if x != nil {
+		return x.ProviderEventId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetReportedStatus() PaymentStatus {
+	if x != nil {
+		return x.ReportedStatus
+	}
+	return PaymentStatus_PAYMENT_STATUS_UNSPECIFIED
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetCanonicalizationState() CanonicalizationState {
+	if x != nil {
+		return x.CanonicalizationState
+	}
+	return CanonicalizationState_CANONICALIZATION_STATE_UNSPECIFIED
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetReasonCode() string {
+	if x != nil {
+		return x.ReasonCode
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetPaymentStateUnchanged() bool {
+	if x != nil {
+		return x.PaymentStateUnchanged
+	}
+	return false
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetEconomicJournalsSuppressed() bool {
+	if x != nil {
+		return x.EconomicJournalsSuppressed
+	}
+	return false
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetRawPayloadHash() []byte {
+	if x != nil {
+		return x.RawPayloadHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetObservedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ObservedAt
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetResolutionDeadline() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ResolutionDeadline
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetQuarantineId() *Identifier {
+	if x != nil {
+		return x.QuarantineId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetResolutionId() *Identifier {
+	if x != nil {
+		return x.ResolutionId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementIncidentEvidence) GetFinalizedSettlement() *FinalizedCanonicalSettlementEvidence {
+	if x != nil {
+		return x.FinalizedSettlement
+	}
+	return nil
+}
+
+// CanonicalSettlementReorgEvidence records every observed reorganization. Shallow
+// evidence removes provisional state only; deep evidence requires linked compensation
+// and an owned incident.
+type CanonicalSettlementReorgEvidence struct {
+	state                              protoimpl.MessageState       `protogen:"open.v1"`
+	ReorgId                            *Identifier                  `protobuf:"bytes,1,opt,name=reorg_id,json=reorgId,proto3" json:"reorg_id,omitempty"`
+	CanonicalizationId                 *Identifier                  `protobuf:"bytes,2,opt,name=canonicalization_id,json=canonicalizationId,proto3" json:"canonicalization_id,omitempty"`
+	OrphanedTransactionHash            []byte                       `protobuf:"bytes,3,opt,name=orphaned_transaction_hash,json=orphanedTransactionHash,proto3" json:"orphaned_transaction_hash,omitempty"`
+	OrphanedGatewayEventId             *Identifier                  `protobuf:"bytes,4,opt,name=orphaned_gateway_event_id,json=orphanedGatewayEventId,proto3" json:"orphaned_gateway_event_id,omitempty"`
+	OrphanedBlockHash                  []byte                       `protobuf:"bytes,5,opt,name=orphaned_block_hash,json=orphanedBlockHash,proto3" json:"orphaned_block_hash,omitempty"`
+	OrphanedBlockNumber                uint64                       `protobuf:"varint,6,opt,name=orphaned_block_number,json=orphanedBlockNumber,proto3" json:"orphaned_block_number,omitempty"`
+	ReplacementBlockNumber             uint64                       `protobuf:"varint,7,opt,name=replacement_block_number,json=replacementBlockNumber,proto3" json:"replacement_block_number,omitempty"`
+	Kind                               CanonicalSettlementReorgKind `protobuf:"varint,8,opt,name=kind,proto3,enum=unified.v1.CanonicalSettlementReorgKind" json:"kind,omitempty"`
+	CompensationRequired               bool                         `protobuf:"varint,9,opt,name=compensation_required,json=compensationRequired,proto3" json:"compensation_required,omitempty"`
+	OrphanedEventEvidenceHash          []byte                       `protobuf:"bytes,10,opt,name=orphaned_event_evidence_hash,json=orphanedEventEvidenceHash,proto3" json:"orphaned_event_evidence_hash,omitempty"`
+	EvidenceHash                       []byte                       `protobuf:"bytes,11,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	DetectedAt                         *timestamppb.Timestamp       `protobuf:"bytes,12,opt,name=detected_at,json=detectedAt,proto3" json:"detected_at,omitempty"`
+	PaymentId                          []byte                       `protobuf:"bytes,13,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	AllocationId                       []byte                       `protobuf:"bytes,14,opt,name=allocation_id,json=allocationId,proto3" json:"allocation_id,omitempty"`
+	InstructionDigest                  []byte                       `protobuf:"bytes,15,opt,name=instruction_digest,json=instructionDigest,proto3" json:"instruction_digest,omitempty"`
+	ReplacementBlockHash               []byte                       `protobuf:"bytes,16,opt,name=replacement_block_hash,json=replacementBlockHash,proto3" json:"replacement_block_hash,omitempty"`
+	ConfirmationDepth                  uint64                       `protobuf:"varint,17,opt,name=confirmation_depth,json=confirmationDepth,proto3" json:"confirmation_depth,omitempty"`
+	DetectedHeadBlockNumber            uint64                       `protobuf:"varint,18,opt,name=detected_head_block_number,json=detectedHeadBlockNumber,proto3" json:"detected_head_block_number,omitempty"`
+	DetectedHeadBlockHash              []byte                       `protobuf:"bytes,19,opt,name=detected_head_block_hash,json=detectedHeadBlockHash,proto3" json:"detected_head_block_hash,omitempty"`
+	OrphanedRawPayloadHash             []byte                       `protobuf:"bytes,20,opt,name=orphaned_raw_payload_hash,json=orphanedRawPayloadHash,proto3" json:"orphaned_raw_payload_hash,omitempty"`
+	ChainId                            string                       `protobuf:"bytes,21,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	GatewayAddress                     string                       `protobuf:"bytes,22,opt,name=gateway_address,json=gatewayAddress,proto3" json:"gateway_address,omitempty"`
+	OrphanedTransactionIndex           uint64                       `protobuf:"varint,23,opt,name=orphaned_transaction_index,json=orphanedTransactionIndex,proto3" json:"orphaned_transaction_index,omitempty"`
+	OrphanedReceiptsRoot               []byte                       `protobuf:"bytes,24,opt,name=orphaned_receipts_root,json=orphanedReceiptsRoot,proto3" json:"orphaned_receipts_root,omitempty"`
+	OrphanedInclusionProofHash         []byte                       `protobuf:"bytes,25,opt,name=orphaned_inclusion_proof_hash,json=orphanedInclusionProofHash,proto3" json:"orphaned_inclusion_proof_hash,omitempty"`
+	OrphanedReceiptHeaderSignatureHash []byte                       `protobuf:"bytes,26,opt,name=orphaned_receipt_header_signature_hash,json=orphanedReceiptHeaderSignatureHash,proto3" json:"orphaned_receipt_header_signature_hash,omitempty"`
+	FinalityPolicyHash                 []byte                       `protobuf:"bytes,27,opt,name=finality_policy_hash,json=finalityPolicyHash,proto3" json:"finality_policy_hash,omitempty"`
+	HeaderAuthorityHash                []byte                       `protobuf:"bytes,28,opt,name=header_authority_hash,json=headerAuthorityHash,proto3" json:"header_authority_hash,omitempty"`
+	ReplacementHeaderSignatureHash     []byte                       `protobuf:"bytes,29,opt,name=replacement_header_signature_hash,json=replacementHeaderSignatureHash,proto3" json:"replacement_header_signature_hash,omitempty"`
+	DetectedHeadHeaderSignatureHash    []byte                       `protobuf:"bytes,30,opt,name=detected_head_header_signature_hash,json=detectedHeadHeaderSignatureHash,proto3" json:"detected_head_header_signature_hash,omitempty"`
+	unknownFields                      protoimpl.UnknownFields
+	sizeCache                          protoimpl.SizeCache
+}
+
+func (x *CanonicalSettlementReorgEvidence) Reset() {
+	*x = CanonicalSettlementReorgEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalSettlementReorgEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalSettlementReorgEvidence) ProtoMessage() {}
+
+func (x *CanonicalSettlementReorgEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalSettlementReorgEvidence.ProtoReflect.Descriptor instead.
+func (*CanonicalSettlementReorgEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetReorgId() *Identifier {
+	if x != nil {
+		return x.ReorgId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetCanonicalizationId() *Identifier {
+	if x != nil {
+		return x.CanonicalizationId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetOrphanedTransactionHash() []byte {
+	if x != nil {
+		return x.OrphanedTransactionHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetOrphanedGatewayEventId() *Identifier {
+	if x != nil {
+		return x.OrphanedGatewayEventId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetOrphanedBlockHash() []byte {
+	if x != nil {
+		return x.OrphanedBlockHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetOrphanedBlockNumber() uint64 {
+	if x != nil {
+		return x.OrphanedBlockNumber
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetReplacementBlockNumber() uint64 {
+	if x != nil {
+		return x.ReplacementBlockNumber
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetKind() CanonicalSettlementReorgKind {
+	if x != nil {
+		return x.Kind
+	}
+	return CanonicalSettlementReorgKind_CANONICAL_SETTLEMENT_REORG_KIND_UNSPECIFIED
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetCompensationRequired() bool {
+	if x != nil {
+		return x.CompensationRequired
+	}
+	return false
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetOrphanedEventEvidenceHash() []byte {
+	if x != nil {
+		return x.OrphanedEventEvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetDetectedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.DetectedAt
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetPaymentId() []byte {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetAllocationId() []byte {
+	if x != nil {
+		return x.AllocationId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetInstructionDigest() []byte {
+	if x != nil {
+		return x.InstructionDigest
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetReplacementBlockHash() []byte {
+	if x != nil {
+		return x.ReplacementBlockHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetConfirmationDepth() uint64 {
+	if x != nil {
+		return x.ConfirmationDepth
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetDetectedHeadBlockNumber() uint64 {
+	if x != nil {
+		return x.DetectedHeadBlockNumber
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetDetectedHeadBlockHash() []byte {
+	if x != nil {
+		return x.DetectedHeadBlockHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetOrphanedRawPayloadHash() []byte {
+	if x != nil {
+		return x.OrphanedRawPayloadHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetChainId() string {
+	if x != nil {
+		return x.ChainId
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetGatewayAddress() string {
+	if x != nil {
+		return x.GatewayAddress
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetOrphanedTransactionIndex() uint64 {
+	if x != nil {
+		return x.OrphanedTransactionIndex
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetOrphanedReceiptsRoot() []byte {
+	if x != nil {
+		return x.OrphanedReceiptsRoot
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetOrphanedInclusionProofHash() []byte {
+	if x != nil {
+		return x.OrphanedInclusionProofHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetOrphanedReceiptHeaderSignatureHash() []byte {
+	if x != nil {
+		return x.OrphanedReceiptHeaderSignatureHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetFinalityPolicyHash() []byte {
+	if x != nil {
+		return x.FinalityPolicyHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetHeaderAuthorityHash() []byte {
+	if x != nil {
+		return x.HeaderAuthorityHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetReplacementHeaderSignatureHash() []byte {
+	if x != nil {
+		return x.ReplacementHeaderSignatureHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgEvidence) GetDetectedHeadHeaderSignatureHash() []byte {
+	if x != nil {
+		return x.DetectedHeadHeaderSignatureHash
+	}
+	return nil
+}
+
+type CanonicalSettlementReorgCompensationEvidence struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	CompensationId          *Identifier            `protobuf:"bytes,1,opt,name=compensation_id,json=compensationId,proto3" json:"compensation_id,omitempty"`
+	CanonicalizationId      *Identifier            `protobuf:"bytes,2,opt,name=canonicalization_id,json=canonicalizationId,proto3" json:"canonicalization_id,omitempty"`
+	OrphanedTransactionHash []byte                 `protobuf:"bytes,3,opt,name=orphaned_transaction_hash,json=orphanedTransactionHash,proto3" json:"orphaned_transaction_hash,omitempty"`
+	OrphanedGatewayEventId  *Identifier            `protobuf:"bytes,4,opt,name=orphaned_gateway_event_id,json=orphanedGatewayEventId,proto3" json:"orphaned_gateway_event_id,omitempty"`
+	OrphanedBlockHash       []byte                 `protobuf:"bytes,5,opt,name=orphaned_block_hash,json=orphanedBlockHash,proto3" json:"orphaned_block_hash,omitempty"`
+	OriginalJournalIds      []*Identifier          `protobuf:"bytes,6,rep,name=original_journal_ids,json=originalJournalIds,proto3" json:"original_journal_ids,omitempty"`
+	ReversalJournalIds      []*Identifier          `protobuf:"bytes,7,rep,name=reversal_journal_ids,json=reversalJournalIds,proto3" json:"reversal_journal_ids,omitempty"`
+	EvidenceHash            []byte                 `protobuf:"bytes,8,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	DetectedAt              *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=detected_at,json=detectedAt,proto3" json:"detected_at,omitempty"`
+	ReorgId                 *Identifier            `protobuf:"bytes,10,opt,name=reorg_id,json=reorgId,proto3" json:"reorg_id,omitempty"`
+	IncidentId              *Identifier            `protobuf:"bytes,11,opt,name=incident_id,json=incidentId,proto3" json:"incident_id,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) Reset() {
+	*x = CanonicalSettlementReorgCompensationEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalSettlementReorgCompensationEvidence) ProtoMessage() {}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalSettlementReorgCompensationEvidence.ProtoReflect.Descriptor instead.
+func (*CanonicalSettlementReorgCompensationEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) GetCompensationId() *Identifier {
+	if x != nil {
+		return x.CompensationId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) GetCanonicalizationId() *Identifier {
+	if x != nil {
+		return x.CanonicalizationId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) GetOrphanedTransactionHash() []byte {
+	if x != nil {
+		return x.OrphanedTransactionHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) GetOrphanedGatewayEventId() *Identifier {
+	if x != nil {
+		return x.OrphanedGatewayEventId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) GetOrphanedBlockHash() []byte {
+	if x != nil {
+		return x.OrphanedBlockHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) GetOriginalJournalIds() []*Identifier {
+	if x != nil {
+		return x.OriginalJournalIds
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) GetReversalJournalIds() []*Identifier {
+	if x != nil {
+		return x.ReversalJournalIds
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) GetDetectedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.DetectedAt
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) GetReorgId() *Identifier {
+	if x != nil {
+		return x.ReorgId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementReorgCompensationEvidence) GetIncidentId() *Identifier {
+	if x != nil {
+		return x.IncidentId
+	}
+	return nil
+}
+
+// CanonicalSettlementInstruction is the exact 21-field static Solidity tuple signed by
+// the accounting attester. bytes fields are exactly bytes32, address fields are
+// canonical EVM addresses, and uint256 values use canonical unsigned decimal strings.
+type CanonicalSettlementInstruction struct {
+	state                       protoimpl.MessageState `protogen:"open.v1"`
+	PaymentId                   []byte                 `protobuf:"bytes,1,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	AllocationId                []byte                 `protobuf:"bytes,2,opt,name=allocation_id,json=allocationId,proto3" json:"allocation_id,omitempty"`
+	LoanId                      []byte                 `protobuf:"bytes,3,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	SourceAssetId               []byte                 `protobuf:"bytes,4,opt,name=source_asset_id,json=sourceAssetId,proto3" json:"source_asset_id,omitempty"`
+	TargetAssetId               []byte                 `protobuf:"bytes,5,opt,name=target_asset_id,json=targetAssetId,proto3" json:"target_asset_id,omitempty"`
+	SourceUnits                 string                 `protobuf:"bytes,6,opt,name=source_units,json=sourceUnits,proto3" json:"source_units,omitempty"`
+	TargetUnits                 string                 `protobuf:"bytes,7,opt,name=target_units,json=targetUnits,proto3" json:"target_units,omitempty"`
+	ProviderIdHash              []byte                 `protobuf:"bytes,8,opt,name=provider_id_hash,json=providerIdHash,proto3" json:"provider_id_hash,omitempty"`
+	ProviderReferenceHash       []byte                 `protobuf:"bytes,9,opt,name=provider_reference_hash,json=providerReferenceHash,proto3" json:"provider_reference_hash,omitempty"`
+	ReconciliationId            []byte                 `protobuf:"bytes,10,opt,name=reconciliation_id,json=reconciliationId,proto3" json:"reconciliation_id,omitempty"`
+	ReconciliationCommitment    []byte                 `protobuf:"bytes,11,opt,name=reconciliation_commitment,json=reconciliationCommitment,proto3" json:"reconciliation_commitment,omitempty"`
+	OriginalJournalSetHash      []byte                 `protobuf:"bytes,12,opt,name=original_journal_set_hash,json=originalJournalSetHash,proto3" json:"original_journal_set_hash,omitempty"`
+	ConversionPolicyHash        []byte                 `protobuf:"bytes,13,opt,name=conversion_policy_hash,json=conversionPolicyHash,proto3" json:"conversion_policy_hash,omitempty"`
+	FinalityPolicyHash          []byte                 `protobuf:"bytes,14,opt,name=finality_policy_hash,json=finalityPolicyHash,proto3" json:"finality_policy_hash,omitempty"`
+	EvidenceHash                []byte                 `protobuf:"bytes,15,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	JournalRef                  []byte                 `protobuf:"bytes,16,opt,name=journal_ref,json=journalRef,proto3" json:"journal_ref,omitempty"`
+	FinalizedAtUnixSeconds      uint64                 `protobuf:"varint,17,opt,name=finalized_at_unix_seconds,json=finalizedAtUnixSeconds,proto3" json:"finalized_at_unix_seconds,omitempty"`
+	ReversalDeadlineUnixSeconds uint64                 `protobuf:"varint,18,opt,name=reversal_deadline_unix_seconds,json=reversalDeadlineUnixSeconds,proto3" json:"reversal_deadline_unix_seconds,omitempty"`
+	ExpectedDebtUnits           string                 `protobuf:"bytes,19,opt,name=expected_debt_units,json=expectedDebtUnits,proto3" json:"expected_debt_units,omitempty"`
+	ExpectedStateNonce          uint64                 `protobuf:"varint,20,opt,name=expected_state_nonce,json=expectedStateNonce,proto3" json:"expected_state_nonce,omitempty"`
+	AttesterAddress             string                 `protobuf:"bytes,21,opt,name=attester_address,json=attesterAddress,proto3" json:"attester_address,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
+}
+
+func (x *CanonicalSettlementInstruction) Reset() {
+	*x = CanonicalSettlementInstruction{}
+	mi := &file_unified_v1_payment_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalSettlementInstruction) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalSettlementInstruction) ProtoMessage() {}
+
+func (x *CanonicalSettlementInstruction) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalSettlementInstruction.ProtoReflect.Descriptor instead.
+func (*CanonicalSettlementInstruction) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *CanonicalSettlementInstruction) GetPaymentId() []byte {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetAllocationId() []byte {
+	if x != nil {
+		return x.AllocationId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetLoanId() []byte {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetSourceAssetId() []byte {
+	if x != nil {
+		return x.SourceAssetId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetTargetAssetId() []byte {
+	if x != nil {
+		return x.TargetAssetId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetSourceUnits() string {
+	if x != nil {
+		return x.SourceUnits
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementInstruction) GetTargetUnits() string {
+	if x != nil {
+		return x.TargetUnits
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementInstruction) GetProviderIdHash() []byte {
+	if x != nil {
+		return x.ProviderIdHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetProviderReferenceHash() []byte {
+	if x != nil {
+		return x.ProviderReferenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetReconciliationId() []byte {
+	if x != nil {
+		return x.ReconciliationId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetReconciliationCommitment() []byte {
+	if x != nil {
+		return x.ReconciliationCommitment
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetOriginalJournalSetHash() []byte {
+	if x != nil {
+		return x.OriginalJournalSetHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetConversionPolicyHash() []byte {
+	if x != nil {
+		return x.ConversionPolicyHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetFinalityPolicyHash() []byte {
+	if x != nil {
+		return x.FinalityPolicyHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetJournalRef() []byte {
+	if x != nil {
+		return x.JournalRef
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementInstruction) GetFinalizedAtUnixSeconds() uint64 {
+	if x != nil {
+		return x.FinalizedAtUnixSeconds
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementInstruction) GetReversalDeadlineUnixSeconds() uint64 {
+	if x != nil {
+		return x.ReversalDeadlineUnixSeconds
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementInstruction) GetExpectedDebtUnits() string {
+	if x != nil {
+		return x.ExpectedDebtUnits
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementInstruction) GetExpectedStateNonce() uint64 {
+	if x != nil {
+		return x.ExpectedStateNonce
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementInstruction) GetAttesterAddress() string {
+	if x != nil {
+		return x.AttesterAddress
+	}
+	return ""
+}
+
+// CanonicalSettlementDigestContext is the exact static abi.encode input:
+// (ELIGIBILITY_DOMAIN, chainid, gateway, finalizer, policySetHash, instruction).
+// chain_id is a canonical uint256 decimal string so the schema does not narrow
+// Solidity's uint256.
+type CanonicalSettlementDigestContext struct {
+	state                 protoimpl.MessageState          `protogen:"open.v1"`
+	EligibilityDomainHash []byte                          `protobuf:"bytes,1,opt,name=eligibility_domain_hash,json=eligibilityDomainHash,proto3" json:"eligibility_domain_hash,omitempty"`
+	ChainId               string                          `protobuf:"bytes,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	GatewayAddress        string                          `protobuf:"bytes,3,opt,name=gateway_address,json=gatewayAddress,proto3" json:"gateway_address,omitempty"`
+	FinalizerAddress      string                          `protobuf:"bytes,4,opt,name=finalizer_address,json=finalizerAddress,proto3" json:"finalizer_address,omitempty"`
+	PolicySetHash         []byte                          `protobuf:"bytes,5,opt,name=policy_set_hash,json=policySetHash,proto3" json:"policy_set_hash,omitempty"`
+	Instruction           *CanonicalSettlementInstruction `protobuf:"bytes,6,opt,name=instruction,proto3" json:"instruction,omitempty"`
+	InstructionDigest     []byte                          `protobuf:"bytes,7,opt,name=instruction_digest,json=instructionDigest,proto3" json:"instruction_digest,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *CanonicalSettlementDigestContext) Reset() {
+	*x = CanonicalSettlementDigestContext{}
+	mi := &file_unified_v1_payment_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalSettlementDigestContext) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalSettlementDigestContext) ProtoMessage() {}
+
+func (x *CanonicalSettlementDigestContext) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalSettlementDigestContext.ProtoReflect.Descriptor instead.
+func (*CanonicalSettlementDigestContext) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *CanonicalSettlementDigestContext) GetEligibilityDomainHash() []byte {
+	if x != nil {
+		return x.EligibilityDomainHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementDigestContext) GetChainId() string {
+	if x != nil {
+		return x.ChainId
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementDigestContext) GetGatewayAddress() string {
+	if x != nil {
+		return x.GatewayAddress
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementDigestContext) GetFinalizerAddress() string {
+	if x != nil {
+		return x.FinalizerAddress
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementDigestContext) GetPolicySetHash() []byte {
+	if x != nil {
+		return x.PolicySetHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementDigestContext) GetInstruction() *CanonicalSettlementInstruction {
+	if x != nil {
+		return x.Instruction
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementDigestContext) GetInstructionDigest() []byte {
+	if x != nil {
+		return x.InstructionDigest
+	}
+	return nil
+}
+
+// CanonicalSettlementExecutedEventData is the exact 29-word unindexed Solidity event
+// tuple, in ABI order.
+type CanonicalSettlementExecutedEventData struct {
+	state                       protoimpl.MessageState `protogen:"open.v1"`
+	InstructionDigest           []byte                 `protobuf:"bytes,1,opt,name=instruction_digest,json=instructionDigest,proto3" json:"instruction_digest,omitempty"`
+	PolicySetHash               []byte                 `protobuf:"bytes,2,opt,name=policy_set_hash,json=policySetHash,proto3" json:"policy_set_hash,omitempty"`
+	LoanAccountAddress          string                 `protobuf:"bytes,3,opt,name=loan_account_address,json=loanAccountAddress,proto3" json:"loan_account_address,omitempty"`
+	FinalizerAddress            string                 `protobuf:"bytes,4,opt,name=finalizer_address,json=finalizerAddress,proto3" json:"finalizer_address,omitempty"`
+	AttesterAddress             string                 `protobuf:"bytes,5,opt,name=attester_address,json=attesterAddress,proto3" json:"attester_address,omitempty"`
+	SourceAssetId               []byte                 `protobuf:"bytes,6,opt,name=source_asset_id,json=sourceAssetId,proto3" json:"source_asset_id,omitempty"`
+	TargetAssetId               []byte                 `protobuf:"bytes,7,opt,name=target_asset_id,json=targetAssetId,proto3" json:"target_asset_id,omitempty"`
+	TargetTokenAddress          string                 `protobuf:"bytes,8,opt,name=target_token_address,json=targetTokenAddress,proto3" json:"target_token_address,omitempty"`
+	SourceUnits                 string                 `protobuf:"bytes,9,opt,name=source_units,json=sourceUnits,proto3" json:"source_units,omitempty"`
+	GrossUnits                  string                 `protobuf:"bytes,10,opt,name=gross_units,json=grossUnits,proto3" json:"gross_units,omitempty"`
+	ProviderIdHash              []byte                 `protobuf:"bytes,11,opt,name=provider_id_hash,json=providerIdHash,proto3" json:"provider_id_hash,omitempty"`
+	ProviderReferenceHash       []byte                 `protobuf:"bytes,12,opt,name=provider_reference_hash,json=providerReferenceHash,proto3" json:"provider_reference_hash,omitempty"`
+	ReconciliationId            []byte                 `protobuf:"bytes,13,opt,name=reconciliation_id,json=reconciliationId,proto3" json:"reconciliation_id,omitempty"`
+	ReconciliationCommitment    []byte                 `protobuf:"bytes,14,opt,name=reconciliation_commitment,json=reconciliationCommitment,proto3" json:"reconciliation_commitment,omitempty"`
+	OriginalJournalSetHash      []byte                 `protobuf:"bytes,15,opt,name=original_journal_set_hash,json=originalJournalSetHash,proto3" json:"original_journal_set_hash,omitempty"`
+	ConversionPolicyHash        []byte                 `protobuf:"bytes,16,opt,name=conversion_policy_hash,json=conversionPolicyHash,proto3" json:"conversion_policy_hash,omitempty"`
+	FinalityPolicyHash          []byte                 `protobuf:"bytes,17,opt,name=finality_policy_hash,json=finalityPolicyHash,proto3" json:"finality_policy_hash,omitempty"`
+	InstructionEvidenceHash     []byte                 `protobuf:"bytes,18,opt,name=instruction_evidence_hash,json=instructionEvidenceHash,proto3" json:"instruction_evidence_hash,omitempty"`
+	JournalRef                  []byte                 `protobuf:"bytes,19,opt,name=journal_ref,json=journalRef,proto3" json:"journal_ref,omitempty"`
+	FinalizedAtUnixSeconds      uint64                 `protobuf:"varint,20,opt,name=finalized_at_unix_seconds,json=finalizedAtUnixSeconds,proto3" json:"finalized_at_unix_seconds,omitempty"`
+	ReversalDeadlineUnixSeconds uint64                 `protobuf:"varint,21,opt,name=reversal_deadline_unix_seconds,json=reversalDeadlineUnixSeconds,proto3" json:"reversal_deadline_unix_seconds,omitempty"`
+	DebtBeforeUnits             string                 `protobuf:"bytes,22,opt,name=debt_before_units,json=debtBeforeUnits,proto3" json:"debt_before_units,omitempty"`
+	PrincipalUnits              string                 `protobuf:"bytes,23,opt,name=principal_units,json=principalUnits,proto3" json:"principal_units,omitempty"`
+	RefundableExcessUnits       string                 `protobuf:"bytes,24,opt,name=refundable_excess_units,json=refundableExcessUnits,proto3" json:"refundable_excess_units,omitempty"`
+	DebtAfterUnits              string                 `protobuf:"bytes,25,opt,name=debt_after_units,json=debtAfterUnits,proto3" json:"debt_after_units,omitempty"`
+	StateNonceBefore            uint64                 `protobuf:"varint,26,opt,name=state_nonce_before,json=stateNonceBefore,proto3" json:"state_nonce_before,omitempty"`
+	StateNonceAfter             uint64                 `protobuf:"varint,27,opt,name=state_nonce_after,json=stateNonceAfter,proto3" json:"state_nonce_after,omitempty"`
+	LenderAddress               string                 `protobuf:"bytes,28,opt,name=lender_address,json=lenderAddress,proto3" json:"lender_address,omitempty"`
+	BorrowerAddress             string                 `protobuf:"bytes,29,opt,name=borrower_address,json=borrowerAddress,proto3" json:"borrower_address,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
+}
+
+func (x *CanonicalSettlementExecutedEventData) Reset() {
+	*x = CanonicalSettlementExecutedEventData{}
+	mi := &file_unified_v1_payment_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalSettlementExecutedEventData) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalSettlementExecutedEventData) ProtoMessage() {}
+
+func (x *CanonicalSettlementExecutedEventData) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalSettlementExecutedEventData.ProtoReflect.Descriptor instead.
+func (*CanonicalSettlementExecutedEventData) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetInstructionDigest() []byte {
+	if x != nil {
+		return x.InstructionDigest
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetPolicySetHash() []byte {
+	if x != nil {
+		return x.PolicySetHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetLoanAccountAddress() string {
+	if x != nil {
+		return x.LoanAccountAddress
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetFinalizerAddress() string {
+	if x != nil {
+		return x.FinalizerAddress
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetAttesterAddress() string {
+	if x != nil {
+		return x.AttesterAddress
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetSourceAssetId() []byte {
+	if x != nil {
+		return x.SourceAssetId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetTargetAssetId() []byte {
+	if x != nil {
+		return x.TargetAssetId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetTargetTokenAddress() string {
+	if x != nil {
+		return x.TargetTokenAddress
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetSourceUnits() string {
+	if x != nil {
+		return x.SourceUnits
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetGrossUnits() string {
+	if x != nil {
+		return x.GrossUnits
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetProviderIdHash() []byte {
+	if x != nil {
+		return x.ProviderIdHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetProviderReferenceHash() []byte {
+	if x != nil {
+		return x.ProviderReferenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetReconciliationId() []byte {
+	if x != nil {
+		return x.ReconciliationId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetReconciliationCommitment() []byte {
+	if x != nil {
+		return x.ReconciliationCommitment
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetOriginalJournalSetHash() []byte {
+	if x != nil {
+		return x.OriginalJournalSetHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetConversionPolicyHash() []byte {
+	if x != nil {
+		return x.ConversionPolicyHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetFinalityPolicyHash() []byte {
+	if x != nil {
+		return x.FinalityPolicyHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetInstructionEvidenceHash() []byte {
+	if x != nil {
+		return x.InstructionEvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetJournalRef() []byte {
+	if x != nil {
+		return x.JournalRef
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetFinalizedAtUnixSeconds() uint64 {
+	if x != nil {
+		return x.FinalizedAtUnixSeconds
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetReversalDeadlineUnixSeconds() uint64 {
+	if x != nil {
+		return x.ReversalDeadlineUnixSeconds
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetDebtBeforeUnits() string {
+	if x != nil {
+		return x.DebtBeforeUnits
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetPrincipalUnits() string {
+	if x != nil {
+		return x.PrincipalUnits
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetRefundableExcessUnits() string {
+	if x != nil {
+		return x.RefundableExcessUnits
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetDebtAfterUnits() string {
+	if x != nil {
+		return x.DebtAfterUnits
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetStateNonceBefore() uint64 {
+	if x != nil {
+		return x.StateNonceBefore
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetStateNonceAfter() uint64 {
+	if x != nil {
+		return x.StateNonceAfter
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetLenderAddress() string {
+	if x != nil {
+		return x.LenderAddress
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementExecutedEventData) GetBorrowerAddress() string {
+	if x != nil {
+		return x.BorrowerAddress
+	}
+	return ""
+}
+
+// CanonicalSettlementLogEnvelope preserves the three indexed topics and the complete
+// EVM receipt/log identity separately from the raw topics-and-data payload hash.
+type CanonicalSettlementLogEnvelope struct {
+	state                      protoimpl.MessageState                `protogen:"open.v1"`
+	ChainId                    string                                `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	GatewayAddress             string                                `protobuf:"bytes,2,opt,name=gateway_address,json=gatewayAddress,proto3" json:"gateway_address,omitempty"`
+	TransactionHash            []byte                                `protobuf:"bytes,3,opt,name=transaction_hash,json=transactionHash,proto3" json:"transaction_hash,omitempty"`
+	GatewayEventId             []byte                                `protobuf:"bytes,4,opt,name=gateway_event_id,json=gatewayEventId,proto3" json:"gateway_event_id,omitempty"`
+	LogIndex                   uint32                                `protobuf:"varint,5,opt,name=log_index,json=logIndex,proto3" json:"log_index,omitempty"`
+	BlockNumber                uint64                                `protobuf:"varint,6,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
+	BlockHash                  []byte                                `protobuf:"bytes,7,opt,name=block_hash,json=blockHash,proto3" json:"block_hash,omitempty"`
+	RawPayloadHash             []byte                                `protobuf:"bytes,8,opt,name=raw_payload_hash,json=rawPayloadHash,proto3" json:"raw_payload_hash,omitempty"`
+	PaymentId                  []byte                                `protobuf:"bytes,9,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	AllocationId               []byte                                `protobuf:"bytes,10,opt,name=allocation_id,json=allocationId,proto3" json:"allocation_id,omitempty"`
+	LoanId                     []byte                                `protobuf:"bytes,11,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	Settlement                 *CanonicalSettlementExecutedEventData `protobuf:"bytes,12,opt,name=settlement,proto3" json:"settlement,omitempty"`
+	TransactionIndex           uint64                                `protobuf:"varint,13,opt,name=transaction_index,json=transactionIndex,proto3" json:"transaction_index,omitempty"`
+	ReceiptsRoot               []byte                                `protobuf:"bytes,14,opt,name=receipts_root,json=receiptsRoot,proto3" json:"receipts_root,omitempty"`
+	InclusionProofHash         []byte                                `protobuf:"bytes,15,opt,name=inclusion_proof_hash,json=inclusionProofHash,proto3" json:"inclusion_proof_hash,omitempty"`
+	ReceiptHeaderSignatureHash []byte                                `protobuf:"bytes,16,opt,name=receipt_header_signature_hash,json=receiptHeaderSignatureHash,proto3" json:"receipt_header_signature_hash,omitempty"`
+	unknownFields              protoimpl.UnknownFields
+	sizeCache                  protoimpl.SizeCache
+}
+
+func (x *CanonicalSettlementLogEnvelope) Reset() {
+	*x = CanonicalSettlementLogEnvelope{}
+	mi := &file_unified_v1_payment_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalSettlementLogEnvelope) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalSettlementLogEnvelope) ProtoMessage() {}
+
+func (x *CanonicalSettlementLogEnvelope) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalSettlementLogEnvelope.ProtoReflect.Descriptor instead.
+func (*CanonicalSettlementLogEnvelope) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetChainId() string {
+	if x != nil {
+		return x.ChainId
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetGatewayAddress() string {
+	if x != nil {
+		return x.GatewayAddress
+	}
+	return ""
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetTransactionHash() []byte {
+	if x != nil {
+		return x.TransactionHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetGatewayEventId() []byte {
+	if x != nil {
+		return x.GatewayEventId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetLogIndex() uint32 {
+	if x != nil {
+		return x.LogIndex
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetBlockNumber() uint64 {
+	if x != nil {
+		return x.BlockNumber
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetBlockHash() []byte {
+	if x != nil {
+		return x.BlockHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetRawPayloadHash() []byte {
+	if x != nil {
+		return x.RawPayloadHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetPaymentId() []byte {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetAllocationId() []byte {
+	if x != nil {
+		return x.AllocationId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetLoanId() []byte {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetSettlement() *CanonicalSettlementExecutedEventData {
+	if x != nil {
+		return x.Settlement
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetTransactionIndex() uint64 {
+	if x != nil {
+		return x.TransactionIndex
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetReceiptsRoot() []byte {
+	if x != nil {
+		return x.ReceiptsRoot
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetInclusionProofHash() []byte {
+	if x != nil {
+		return x.InclusionProofHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementLogEnvelope) GetReceiptHeaderSignatureHash() []byte {
+	if x != nil {
+		return x.ReceiptHeaderSignatureHash
+	}
+	return nil
+}
+
+type CanonicalSettlementFinalityProof struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	ConfirmationDepth       uint64                 `protobuf:"varint,1,opt,name=confirmation_depth,json=confirmationDepth,proto3" json:"confirmation_depth,omitempty"`
+	HeadBlockNumber         uint64                 `protobuf:"varint,2,opt,name=head_block_number,json=headBlockNumber,proto3" json:"head_block_number,omitempty"`
+	HeadBlockHash           []byte                 `protobuf:"bytes,3,opt,name=head_block_hash,json=headBlockHash,proto3" json:"head_block_hash,omitempty"`
+	EvidenceHash            []byte                 `protobuf:"bytes,4,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	ObservedAt              *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=observed_at,json=observedAt,proto3" json:"observed_at,omitempty"`
+	FinalityPolicyHash      []byte                 `protobuf:"bytes,6,opt,name=finality_policy_hash,json=finalityPolicyHash,proto3" json:"finality_policy_hash,omitempty"`
+	HeaderAuthorityHash     []byte                 `protobuf:"bytes,7,opt,name=header_authority_hash,json=headerAuthorityHash,proto3" json:"header_authority_hash,omitempty"`
+	HeadHeaderSignatureHash []byte                 `protobuf:"bytes,8,opt,name=head_header_signature_hash,json=headHeaderSignatureHash,proto3" json:"head_header_signature_hash,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *CanonicalSettlementFinalityProof) Reset() {
+	*x = CanonicalSettlementFinalityProof{}
+	mi := &file_unified_v1_payment_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalSettlementFinalityProof) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalSettlementFinalityProof) ProtoMessage() {}
+
+func (x *CanonicalSettlementFinalityProof) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalSettlementFinalityProof.ProtoReflect.Descriptor instead.
+func (*CanonicalSettlementFinalityProof) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *CanonicalSettlementFinalityProof) GetConfirmationDepth() uint64 {
+	if x != nil {
+		return x.ConfirmationDepth
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementFinalityProof) GetHeadBlockNumber() uint64 {
+	if x != nil {
+		return x.HeadBlockNumber
+	}
+	return 0
+}
+
+func (x *CanonicalSettlementFinalityProof) GetHeadBlockHash() []byte {
+	if x != nil {
+		return x.HeadBlockHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementFinalityProof) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementFinalityProof) GetObservedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ObservedAt
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementFinalityProof) GetFinalityPolicyHash() []byte {
+	if x != nil {
+		return x.FinalityPolicyHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementFinalityProof) GetHeaderAuthorityHash() []byte {
+	if x != nil {
+		return x.HeaderAuthorityHash
+	}
+	return nil
+}
+
+func (x *CanonicalSettlementFinalityProof) GetHeadHeaderSignatureHash() []byte {
+	if x != nil {
+		return x.HeadHeaderSignatureHash
+	}
+	return nil
+}
+
+type FinalizedCanonicalSettlementEvidence struct {
+	state         protoimpl.MessageState            `protogen:"open.v1"`
+	EventEnvelope *CanonicalSettlementLogEnvelope   `protobuf:"bytes,1,opt,name=event_envelope,json=eventEnvelope,proto3" json:"event_envelope,omitempty"`
+	Finality      *CanonicalSettlementFinalityProof `protobuf:"bytes,2,opt,name=finality,proto3" json:"finality,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FinalizedCanonicalSettlementEvidence) Reset() {
+	*x = FinalizedCanonicalSettlementEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FinalizedCanonicalSettlementEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FinalizedCanonicalSettlementEvidence) ProtoMessage() {}
+
+func (x *FinalizedCanonicalSettlementEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FinalizedCanonicalSettlementEvidence.ProtoReflect.Descriptor instead.
+func (*FinalizedCanonicalSettlementEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *FinalizedCanonicalSettlementEvidence) GetEventEnvelope() *CanonicalSettlementLogEnvelope {
+	if x != nil {
+		return x.EventEnvelope
+	}
+	return nil
+}
+
+func (x *FinalizedCanonicalSettlementEvidence) GetFinality() *CanonicalSettlementFinalityProof {
+	if x != nil {
+		return x.Finality
+	}
+	return nil
+}
+
+// CanonicalSubmittedTransactionFailureEvidence can be emitted only after an
+// indexer-owned verified REVERTED receipt reaches the configured confirmation depth.
+type CanonicalSubmittedTransactionFailureEvidence struct {
+	state                      protoimpl.MessageState            `protogen:"open.v1"`
+	CanonicalizationId         *Identifier                       `protobuf:"bytes,1,opt,name=canonicalization_id,json=canonicalizationId,proto3" json:"canonicalization_id,omitempty"`
+	PaymentId                  []byte                            `protobuf:"bytes,2,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	AllocationId               []byte                            `protobuf:"bytes,3,opt,name=allocation_id,json=allocationId,proto3" json:"allocation_id,omitempty"`
+	InstructionDigest          []byte                            `protobuf:"bytes,4,opt,name=instruction_digest,json=instructionDigest,proto3" json:"instruction_digest,omitempty"`
+	ChainId                    string                            `protobuf:"bytes,5,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	GatewayAddress             string                            `protobuf:"bytes,6,opt,name=gateway_address,json=gatewayAddress,proto3" json:"gateway_address,omitempty"`
+	TransactionHash            []byte                            `protobuf:"bytes,7,opt,name=transaction_hash,json=transactionHash,proto3" json:"transaction_hash,omitempty"`
+	ReceiptStatus              CanonicalTransactionReceiptStatus `protobuf:"varint,8,opt,name=receipt_status,json=receiptStatus,proto3,enum=unified.v1.CanonicalTransactionReceiptStatus" json:"receipt_status,omitempty"`
+	ReceiptPayloadHash         []byte                            `protobuf:"bytes,9,opt,name=receipt_payload_hash,json=receiptPayloadHash,proto3" json:"receipt_payload_hash,omitempty"`
+	BlockNumber                uint64                            `protobuf:"varint,10,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
+	BlockHash                  []byte                            `protobuf:"bytes,11,opt,name=block_hash,json=blockHash,proto3" json:"block_hash,omitempty"`
+	ConfirmationDepth          uint64                            `protobuf:"varint,12,opt,name=confirmation_depth,json=confirmationDepth,proto3" json:"confirmation_depth,omitempty"`
+	HeadBlockNumber            uint64                            `protobuf:"varint,13,opt,name=head_block_number,json=headBlockNumber,proto3" json:"head_block_number,omitempty"`
+	HeadBlockHash              []byte                            `protobuf:"bytes,14,opt,name=head_block_hash,json=headBlockHash,proto3" json:"head_block_hash,omitempty"`
+	EvidenceHash               []byte                            `protobuf:"bytes,15,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	ObservedAt                 *timestamppb.Timestamp            `protobuf:"bytes,16,opt,name=observed_at,json=observedAt,proto3" json:"observed_at,omitempty"`
+	TransactionIndex           uint64                            `protobuf:"varint,17,opt,name=transaction_index,json=transactionIndex,proto3" json:"transaction_index,omitempty"`
+	ReceiptsRoot               []byte                            `protobuf:"bytes,18,opt,name=receipts_root,json=receiptsRoot,proto3" json:"receipts_root,omitempty"`
+	InclusionProofHash         []byte                            `protobuf:"bytes,19,opt,name=inclusion_proof_hash,json=inclusionProofHash,proto3" json:"inclusion_proof_hash,omitempty"`
+	FinalityPolicyHash         []byte                            `protobuf:"bytes,20,opt,name=finality_policy_hash,json=finalityPolicyHash,proto3" json:"finality_policy_hash,omitempty"`
+	HeaderAuthorityHash        []byte                            `protobuf:"bytes,21,opt,name=header_authority_hash,json=headerAuthorityHash,proto3" json:"header_authority_hash,omitempty"`
+	ReceiptHeaderSignatureHash []byte                            `protobuf:"bytes,22,opt,name=receipt_header_signature_hash,json=receiptHeaderSignatureHash,proto3" json:"receipt_header_signature_hash,omitempty"`
+	HeadHeaderSignatureHash    []byte                            `protobuf:"bytes,23,opt,name=head_header_signature_hash,json=headHeaderSignatureHash,proto3" json:"head_header_signature_hash,omitempty"`
+	unknownFields              protoimpl.UnknownFields
+	sizeCache                  protoimpl.SizeCache
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) Reset() {
+	*x = CanonicalSubmittedTransactionFailureEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalSubmittedTransactionFailureEvidence) ProtoMessage() {}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalSubmittedTransactionFailureEvidence.ProtoReflect.Descriptor instead.
+func (*CanonicalSubmittedTransactionFailureEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetCanonicalizationId() *Identifier {
+	if x != nil {
+		return x.CanonicalizationId
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetPaymentId() []byte {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetAllocationId() []byte {
+	if x != nil {
+		return x.AllocationId
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetInstructionDigest() []byte {
+	if x != nil {
+		return x.InstructionDigest
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetChainId() string {
+	if x != nil {
+		return x.ChainId
+	}
+	return ""
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetGatewayAddress() string {
+	if x != nil {
+		return x.GatewayAddress
+	}
+	return ""
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetTransactionHash() []byte {
+	if x != nil {
+		return x.TransactionHash
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetReceiptStatus() CanonicalTransactionReceiptStatus {
+	if x != nil {
+		return x.ReceiptStatus
+	}
+	return CanonicalTransactionReceiptStatus_CANONICAL_TRANSACTION_RECEIPT_STATUS_UNSPECIFIED
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetReceiptPayloadHash() []byte {
+	if x != nil {
+		return x.ReceiptPayloadHash
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetBlockNumber() uint64 {
+	if x != nil {
+		return x.BlockNumber
+	}
+	return 0
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetBlockHash() []byte {
+	if x != nil {
+		return x.BlockHash
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetConfirmationDepth() uint64 {
+	if x != nil {
+		return x.ConfirmationDepth
+	}
+	return 0
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetHeadBlockNumber() uint64 {
+	if x != nil {
+		return x.HeadBlockNumber
+	}
+	return 0
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetHeadBlockHash() []byte {
+	if x != nil {
+		return x.HeadBlockHash
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetObservedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ObservedAt
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetTransactionIndex() uint64 {
+	if x != nil {
+		return x.TransactionIndex
+	}
+	return 0
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetReceiptsRoot() []byte {
+	if x != nil {
+		return x.ReceiptsRoot
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetInclusionProofHash() []byte {
+	if x != nil {
+		return x.InclusionProofHash
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetFinalityPolicyHash() []byte {
+	if x != nil {
+		return x.FinalityPolicyHash
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetHeaderAuthorityHash() []byte {
+	if x != nil {
+		return x.HeaderAuthorityHash
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetReceiptHeaderSignatureHash() []byte {
+	if x != nil {
+		return x.ReceiptHeaderSignatureHash
+	}
+	return nil
+}
+
+func (x *CanonicalSubmittedTransactionFailureEvidence) GetHeadHeaderSignatureHash() []byte {
+	if x != nil {
+		return x.HeadHeaderSignatureHash
+	}
+	return nil
+}
+
+// CanonicalReversalResolutionEvidence is the immutable proof for resolving a
+// provider-reversal quarantine into Phase 7A reversal accounting and a permanent
+// canonical-allocation tombstone. submitted_transaction_failure MUST be present when
+// origin_state is SUBMITTED and MUST be absent for a pre-submission origin. When
+// present, its canonicalization, payment, allocation, and instruction identities MUST
+// exactly match this envelope. provider_reversal_event MUST report REVERSED, and its
+// provider, event, and payment identities MUST match provider_reversal_receipt and this
+// envelope. coordinator_version_after MUST equal coordinator_version_before + 1 and
+// permanent_tombstone MUST be true.
+type CanonicalReversalResolutionEvidence struct {
+	state                       protoimpl.MessageState                        `protogen:"open.v1"`
+	ResolutionId                *Identifier                                   `protobuf:"bytes,1,opt,name=resolution_id,json=resolutionId,proto3" json:"resolution_id,omitempty"`
+	QuarantineId                *Identifier                                   `protobuf:"bytes,2,opt,name=quarantine_id,json=quarantineId,proto3" json:"quarantine_id,omitempty"`
+	CanonicalizationId          *Identifier                                   `protobuf:"bytes,3,opt,name=canonicalization_id,json=canonicalizationId,proto3" json:"canonicalization_id,omitempty"`
+	PaymentId                   []byte                                        `protobuf:"bytes,4,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	AllocationId                []byte                                        `protobuf:"bytes,5,opt,name=allocation_id,json=allocationId,proto3" json:"allocation_id,omitempty"`
+	InstructionDigest           []byte                                        `protobuf:"bytes,6,opt,name=instruction_digest,json=instructionDigest,proto3" json:"instruction_digest,omitempty"`
+	OriginState                 CanonicalizationState                         `protobuf:"varint,7,opt,name=origin_state,json=originState,proto3,enum=unified.v1.CanonicalizationState" json:"origin_state,omitempty"`
+	SubmittedTransactionFailure *CanonicalSubmittedTransactionFailureEvidence `protobuf:"bytes,8,opt,name=submitted_transaction_failure,json=submittedTransactionFailure,proto3" json:"submitted_transaction_failure,omitempty"`
+	ProviderReversalEvent       *ProviderPaymentCallback                      `protobuf:"bytes,9,opt,name=provider_reversal_event,json=providerReversalEvent,proto3" json:"provider_reversal_event,omitempty"`
+	ProviderReversalReceipt     *ProviderCallbackReceipt                      `protobuf:"bytes,10,opt,name=provider_reversal_receipt,json=providerReversalReceipt,proto3" json:"provider_reversal_receipt,omitempty"`
+	Phase7AReversalEventId      *Identifier                                   `protobuf:"bytes,11,opt,name=phase7a_reversal_event_id,json=phase7aReversalEventId,proto3" json:"phase7a_reversal_event_id,omitempty"`
+	Phase7AReversalJournalIds   []*Identifier                                 `protobuf:"bytes,12,rep,name=phase7a_reversal_journal_ids,json=phase7aReversalJournalIds,proto3" json:"phase7a_reversal_journal_ids,omitempty"`
+	CoordinatorVersionBefore    uint64                                        `protobuf:"varint,13,opt,name=coordinator_version_before,json=coordinatorVersionBefore,proto3" json:"coordinator_version_before,omitempty"`
+	CoordinatorVersionAfter     uint64                                        `protobuf:"varint,14,opt,name=coordinator_version_after,json=coordinatorVersionAfter,proto3" json:"coordinator_version_after,omitempty"`
+	PermanentTombstone          bool                                          `protobuf:"varint,15,opt,name=permanent_tombstone,json=permanentTombstone,proto3" json:"permanent_tombstone,omitempty"`
+	ResolvedBy                  string                                        `protobuf:"bytes,16,opt,name=resolved_by,json=resolvedBy,proto3" json:"resolved_by,omitempty"`
+	EvidenceHash                []byte                                        `protobuf:"bytes,17,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	ResolvedAt                  *timestamppb.Timestamp                        `protobuf:"bytes,18,opt,name=resolved_at,json=resolvedAt,proto3" json:"resolved_at,omitempty"`
+	unknownFields               protoimpl.UnknownFields
+	sizeCache                   protoimpl.SizeCache
+}
+
+func (x *CanonicalReversalResolutionEvidence) Reset() {
+	*x = CanonicalReversalResolutionEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CanonicalReversalResolutionEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanonicalReversalResolutionEvidence) ProtoMessage() {}
+
+func (x *CanonicalReversalResolutionEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanonicalReversalResolutionEvidence.ProtoReflect.Descriptor instead.
+func (*CanonicalReversalResolutionEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetResolutionId() *Identifier {
+	if x != nil {
+		return x.ResolutionId
+	}
+	return nil
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetQuarantineId() *Identifier {
+	if x != nil {
+		return x.QuarantineId
+	}
+	return nil
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetCanonicalizationId() *Identifier {
+	if x != nil {
+		return x.CanonicalizationId
+	}
+	return nil
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetPaymentId() []byte {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetAllocationId() []byte {
+	if x != nil {
+		return x.AllocationId
+	}
+	return nil
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetInstructionDigest() []byte {
+	if x != nil {
+		return x.InstructionDigest
+	}
+	return nil
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetOriginState() CanonicalizationState {
+	if x != nil {
+		return x.OriginState
+	}
+	return CanonicalizationState_CANONICALIZATION_STATE_UNSPECIFIED
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetSubmittedTransactionFailure() *CanonicalSubmittedTransactionFailureEvidence {
+	if x != nil {
+		return x.SubmittedTransactionFailure
+	}
+	return nil
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetProviderReversalEvent() *ProviderPaymentCallback {
+	if x != nil {
+		return x.ProviderReversalEvent
+	}
+	return nil
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetProviderReversalReceipt() *ProviderCallbackReceipt {
+	if x != nil {
+		return x.ProviderReversalReceipt
+	}
+	return nil
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetPhase7AReversalEventId() *Identifier {
+	if x != nil {
+		return x.Phase7AReversalEventId
+	}
+	return nil
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetPhase7AReversalJournalIds() []*Identifier {
+	if x != nil {
+		return x.Phase7AReversalJournalIds
+	}
+	return nil
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetCoordinatorVersionBefore() uint64 {
+	if x != nil {
+		return x.CoordinatorVersionBefore
+	}
+	return 0
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetCoordinatorVersionAfter() uint64 {
+	if x != nil {
+		return x.CoordinatorVersionAfter
+	}
+	return 0
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetPermanentTombstone() bool {
+	if x != nil {
+		return x.PermanentTombstone
+	}
+	return false
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetResolvedBy() string {
+	if x != nil {
+		return x.ResolvedBy
+	}
+	return ""
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CanonicalReversalResolutionEvidence) GetResolvedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ResolvedAt
+	}
+	return nil
+}
+
 var File_unified_v1_payment_proto protoreflect.FileDescriptor
 
 const file_unified_v1_payment_proto_rawDesc = "" +
@@ -2012,7 +5423,396 @@ const file_unified_v1_payment_proto_rawDesc = "" +
 	"\x13allocation_reversed\x18\t \x01(\bR\x12allocationReversed\x12#\n" +
 	"\revidence_hash\x18\n" +
 	" \x01(\fR\fevidenceHash\x12=\n" +
-	"\fevaluated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\vevaluatedAt*Y\n" +
+	"\fevaluated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\vevaluatedAt\"\x85\x05\n" +
+	"\"PaymentAllocationModeClaimEvidence\x121\n" +
+	"\bclaim_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\aclaimId\x125\n" +
+	"\n" +
+	"payment_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\tpaymentId\x125\n" +
+	"\x04mode\x18\x03 \x01(\x0e2!.unified.v1.PaymentAllocationModeR\x04mode\x12)\n" +
+	"\x10expected_version\x18\x04 \x01(\x04R\x0fexpectedVersion\x12'\n" +
+	"\x0fclaimed_version\x18\x05 \x01(\x04R\x0eclaimedVersion\x126\n" +
+	"\x17prior_allocation_absent\x18\x06 \x01(\bR\x15priorAllocationAbsent\x12C\n" +
+	"\x1eprior_allocation_journal_count\x18\a \x01(\rR\x1bpriorAllocationJournalCount\x12#\n" +
+	"\revidence_hash\x18\b \x01(\fR\fevidenceHash\x129\n" +
+	"\n" +
+	"claimed_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\tclaimedAt\x12;\n" +
+	"\rallocation_id\x18\n" +
+	" \x01(\v2\x16.unified.v1.IdentifierR\fallocationId\x12-\n" +
+	"\x12instruction_digest\x18\v \x01(\fR\x11instructionDigest\x12!\n" +
+	"\fclaim_digest\x18\f \x01(\fR\vclaimDigest\"\x9b\t\n" +
+	"#CanonicalizationEligibilityEvidence\x12=\n" +
+	"\x0eeligibility_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\religibilityId\x12O\n" +
+	"\x18allocation_mode_claim_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\x15allocationModeClaimId\x125\n" +
+	"\n" +
+	"payment_id\x18\x03 \x01(\v2\x16.unified.v1.IdentifierR\tpaymentId\x12+\n" +
+	"\aloan_id\x18\x04 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x12\x1f\n" +
+	"\vprovider_id\x18\x05 \x01(\tR\n" +
+	"providerId\x12-\n" +
+	"\x12provider_reference\x18\x06 \x01(\tR\x11providerReference\x128\n" +
+	"\x0esource_payment\x18\a \x01(\v2\x11.unified.v1.MoneyR\rsourcePayment\x126\n" +
+	"\rtarget_tokens\x18\b \x01(\v2\x11.unified.v1.MoneyR\ftargetTokens\x12C\n" +
+	"\x11reconciliation_id\x18\t \x01(\v2\x16.unified.v1.IdentifierR\x10reconciliationId\x12H\n" +
+	"\x14original_journal_ids\x18\n" +
+	" \x03(\v2\x16.unified.v1.IdentifierR\x12originalJournalIds\x120\n" +
+	"\x14finality_policy_hash\x18\v \x01(\fR\x12finalityPolicyHash\x124\n" +
+	"\x16conversion_policy_hash\x18\f \x01(\fR\x14conversionPolicyHash\x122\n" +
+	"\x15waterfall_policy_hash\x18\r \x01(\fR\x13waterfallPolicyHash\x12&\n" +
+	"\x0fpolicy_set_hash\x18\x0e \x01(\fR\rpolicySetHash\x12G\n" +
+	"\x11reversal_deadline\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\x10reversalDeadline\x12\x1a\n" +
+	"\beligible\x18\x10 \x01(\bR\beligible\x12#\n" +
+	"\revidence_hash\x18\x11 \x01(\fR\fevidenceHash\x12=\n" +
+	"\fevaluated_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\vevaluatedAt\x12K\n" +
+	"\x16payment_final_event_id\x18\x13 \x01(\v2\x16.unified.v1.IdentifierR\x13paymentFinalEventId\x12U\n" +
+	"\x1bprovider_statement_entry_id\x18\x14 \x01(\v2\x16.unified.v1.IdentifierR\x18providerStatementEntryId\"\xfc\b\n" +
+	"\x1cCanonicalizationPlanEvidence\x12G\n" +
+	"\x13canonicalization_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\x12canonicalizationId\x12O\n" +
+	"\x18allocation_mode_claim_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\x15allocationModeClaimId\x12;\n" +
+	"\rallocation_id\x18\x03 \x01(\v2\x16.unified.v1.IdentifierR\fallocationId\x125\n" +
+	"\n" +
+	"payment_id\x18\x04 \x01(\v2\x16.unified.v1.IdentifierR\tpaymentId\x12+\n" +
+	"\aloan_id\x18\x05 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x128\n" +
+	"\x0esource_payment\x18\x06 \x01(\v2\x11.unified.v1.MoneyR\rsourcePayment\x126\n" +
+	"\rtarget_tokens\x18\a \x01(\v2\x11.unified.v1.MoneyR\ftargetTokens\x126\n" +
+	"\rexpected_debt\x18\b \x01(\v2\x11.unified.v1.MoneyR\fexpectedDebt\x12D\n" +
+	"\x14principal_allocation\x18\t \x01(\v2\x11.unified.v1.MoneyR\x13principalAllocation\x12>\n" +
+	"\x11refundable_excess\x18\n" +
+	" \x01(\v2\x11.unified.v1.MoneyR\x10refundableExcess\x120\n" +
+	"\x14expected_state_nonce\x18\v \x01(\x04R\x12expectedStateNonce\x126\n" +
+	"\ffinalizer_id\x18\f \x01(\v2\x13.unified.v1.PartyIdR\vfinalizerId\x12.\n" +
+	"\x13target_chain_domain\x18\r \x01(\tR\x11targetChainDomain\x12'\n" +
+	"\x0fgateway_address\x18\x0e \x01(\tR\x0egatewayAddress\x12-\n" +
+	"\x12instruction_digest\x18\x0f \x01(\fR\x11instructionDigest\x125\n" +
+	"\x16accounting_attestation\x18\x10 \x01(\fR\x15accountingAttestation\x12#\n" +
+	"\revidence_hash\x18\x11 \x01(\fR\fevidenceHash\x12;\n" +
+	"\vprepared_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"preparedAt\x124\n" +
+	"\vborrower_id\x18\x13 \x01(\v2\x13.unified.v1.PartyIdR\n" +
+	"borrowerId\x120\n" +
+	"\tlender_id\x18\x14 \x01(\v2\x13.unified.v1.PartyIdR\blenderId\"\x88\x04\n" +
+	"\"CanonicalizationSubmissionEvidence\x12G\n" +
+	"\x13canonicalization_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\x12canonicalizationId\x127\n" +
+	"\x05state\x18\x02 \x01(\x0e2!.unified.v1.CanonicalizationStateR\x05state\x12.\n" +
+	"\x13target_chain_domain\x18\x03 \x01(\tR\x11targetChainDomain\x12'\n" +
+	"\x0fgateway_address\x18\x04 \x01(\tR\x0egatewayAddress\x120\n" +
+	"\tsender_id\x18\x05 \x01(\v2\x13.unified.v1.PartyIdR\bsenderId\x12!\n" +
+	"\fsender_nonce\x18\x06 \x01(\x04R\vsenderNonce\x12#\n" +
+	"\rcalldata_hash\x18\a \x01(\fR\fcalldataHash\x12)\n" +
+	"\x10transaction_hash\x18\b \x01(\fR\x0ftransactionHash\x12#\n" +
+	"\revidence_hash\x18\t \x01(\fR\fevidenceHash\x12=\n" +
+	"\fsubmitted_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\vsubmittedAt\"\xd6\a\n" +
+	"%CanonicalSettlementConversionEvidence\x12;\n" +
+	"\rconversion_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\fconversionId\x12G\n" +
+	"\x13canonicalization_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\x12canonicalizationId\x125\n" +
+	"\n" +
+	"payment_id\x18\x03 \x01(\v2\x16.unified.v1.IdentifierR\tpaymentId\x12\x1f\n" +
+	"\vprovider_id\x18\x04 \x01(\tR\n" +
+	"providerId\x12-\n" +
+	"\x12provider_reference\x18\x05 \x01(\tR\x11providerReference\x128\n" +
+	"\x0esource_payment\x18\x06 \x01(\v2\x11.unified.v1.MoneyR\rsourcePayment\x126\n" +
+	"\rtarget_tokens\x18\a \x01(\v2\x11.unified.v1.MoneyR\ftargetTokens\x12%\n" +
+	"\x0erate_numerator\x18\b \x01(\tR\rrateNumerator\x12)\n" +
+	"\x10rate_denominator\x18\t \x01(\tR\x0frateDenominator\x12.\n" +
+	"\x13source_account_code\x18\n" +
+	" \x01(\tR\x11sourceAccountCode\x12H\n" +
+	"\x14original_journal_ids\x18\v \x03(\v2\x16.unified.v1.IdentifierR\x12originalJournalIds\x126\n" +
+	"\ffinalizer_id\x18\f \x01(\v2\x13.unified.v1.PartyIdR\vfinalizerId\x128\n" +
+	"\x18gateway_transaction_hash\x18\r \x01(\fR\x16gatewayTransactionHash\x12M\n" +
+	"#provider_asset_irrevocably_acquired\x18\x0e \x01(\bR providerAssetIrrevocablyAcquired\x12=\n" +
+	"\x1blater_reversal_risk_assumed\x18\x0f \x01(\bR\x18laterReversalRiskAssumed\x12#\n" +
+	"\revidence_hash\x18\x10 \x01(\fR\fevidenceHash\x12=\n" +
+	"\fconverted_at\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampR\vconvertedAt\"\xee\v\n" +
+	"$CanonicalizationConfirmationEvidence\x12G\n" +
+	"\x13canonicalization_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\x12canonicalizationId\x12;\n" +
+	"\rallocation_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\fallocationId\x125\n" +
+	"\n" +
+	"payment_id\x18\x03 \x01(\v2\x16.unified.v1.IdentifierR\tpaymentId\x12+\n" +
+	"\aloan_id\x18\x04 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x127\n" +
+	"\x05state\x18\x05 \x01(\x0e2!.unified.v1.CanonicalizationStateR\x05state\x12.\n" +
+	"\x13target_chain_domain\x18\x06 \x01(\tR\x11targetChainDomain\x12'\n" +
+	"\x0fgateway_address\x18\a \x01(\tR\x0egatewayAddress\x12)\n" +
+	"\x10transaction_hash\x18\b \x01(\fR\x0ftransactionHash\x12@\n" +
+	"\x10gateway_event_id\x18\t \x01(\v2\x16.unified.v1.IdentifierR\x0egatewayEventId\x12\x1d\n" +
+	"\n" +
+	"block_hash\x18\n" +
+	" \x01(\fR\tblockHash\x12!\n" +
+	"\fblock_number\x18\v \x01(\x04R\vblockNumber\x12\x1b\n" +
+	"\tlog_index\x18\f \x01(\rR\blogIndex\x126\n" +
+	"\rtarget_tokens\x18\r \x01(\v2\x11.unified.v1.MoneyR\ftargetTokens\x12D\n" +
+	"\x14principal_allocation\x18\x0e \x01(\v2\x11.unified.v1.MoneyR\x13principalAllocation\x12>\n" +
+	"\x11refundable_excess\x18\x0f \x01(\v2\x11.unified.v1.MoneyR\x10refundableExcess\x122\n" +
+	"\vdebt_before\x18\x10 \x01(\v2\x11.unified.v1.MoneyR\n" +
+	"debtBefore\x120\n" +
+	"\n" +
+	"debt_after\x18\x11 \x01(\v2\x11.unified.v1.MoneyR\tdebtAfter\x127\n" +
+	"\vjournal_ids\x18\x12 \x03(\v2\x16.unified.v1.IdentifierR\n" +
+	"journalIds\x12#\n" +
+	"\revidence_hash\x18\x13 \x01(\fR\fevidenceHash\x12=\n" +
+	"\fconfirmed_at\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\vconfirmedAt\x12-\n" +
+	"\x12instruction_digest\x18\x15 \x01(\fR\x11instructionDigest\x124\n" +
+	"\vborrower_id\x18\x16 \x01(\v2\x13.unified.v1.PartyIdR\n" +
+	"borrowerId\x120\n" +
+	"\tlender_id\x18\x17 \x01(\v2\x13.unified.v1.PartyIdR\blenderId\x12-\n" +
+	"\x12confirmation_depth\x18\x18 \x01(\x04R\x11confirmationDepth\x12.\n" +
+	"\x13finality_head_block\x18\x19 \x01(\x04R\x11finalityHeadBlock\x12,\n" +
+	"\x12finality_head_hash\x18\x1a \x01(\fR\x10finalityHeadHash\x124\n" +
+	"\x16finality_evidence_hash\x18\x1b \x01(\fR\x14finalityEvidenceHash\x12c\n" +
+	"\x14finalized_settlement\x18\x1c \x01(\v20.unified.v1.FinalizedCanonicalSettlementEvidenceR\x13finalizedSettlement\"\xb4\x04\n" +
+	"\x1dCanonicalLenderPayoutEvidence\x123\n" +
+	"\tpayout_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\bpayoutId\x12G\n" +
+	"\x13canonicalization_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\x12canonicalizationId\x12+\n" +
+	"\aloan_id\x18\x03 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x120\n" +
+	"\tlender_id\x18\x04 \x01(\v2\x13.unified.v1.PartyIdR\blenderId\x12)\n" +
+	"\x06amount\x18\x05 \x01(\v2\x11.unified.v1.MoneyR\x06amount\x128\n" +
+	"\x18gateway_transaction_hash\x18\x06 \x01(\fR\x16gatewayTransactionHash\x12@\n" +
+	"\x10gateway_event_id\x18\a \x01(\v2\x16.unified.v1.IdentifierR\x0egatewayEventId\x125\n" +
+	"\n" +
+	"journal_id\x18\b \x01(\v2\x16.unified.v1.IdentifierR\tjournalId\x12#\n" +
+	"\revidence_hash\x18\t \x01(\fR\fevidenceHash\x123\n" +
+	"\apaid_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\x06paidAt\"\xc2\x04\n" +
+	"\x1fCanonicalBorrowerRefundEvidence\x123\n" +
+	"\trefund_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\brefundId\x12G\n" +
+	"\x13canonicalization_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\x12canonicalizationId\x12+\n" +
+	"\aloan_id\x18\x03 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x124\n" +
+	"\vborrower_id\x18\x04 \x01(\v2\x13.unified.v1.PartyIdR\n" +
+	"borrowerId\x12)\n" +
+	"\x06amount\x18\x05 \x01(\v2\x11.unified.v1.MoneyR\x06amount\x128\n" +
+	"\x18gateway_transaction_hash\x18\x06 \x01(\fR\x16gatewayTransactionHash\x12@\n" +
+	"\x10gateway_event_id\x18\a \x01(\v2\x16.unified.v1.IdentifierR\x0egatewayEventId\x125\n" +
+	"\n" +
+	"journal_id\x18\b \x01(\v2\x16.unified.v1.IdentifierR\tjournalId\x12#\n" +
+	"\revidence_hash\x18\t \x01(\fR\fevidenceHash\x12;\n" +
+	"\vrefunded_at\x18\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"refundedAt\"\xca\b\n" +
+	"#CanonicalSettlementIncidentEvidence\x127\n" +
+	"\vincident_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\n" +
+	"incidentId\x12G\n" +
+	"\x13canonicalization_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\x12canonicalizationId\x125\n" +
+	"\n" +
+	"payment_id\x18\x03 \x01(\v2\x16.unified.v1.IdentifierR\tpaymentId\x12\x1f\n" +
+	"\vprovider_id\x18\x04 \x01(\tR\n" +
+	"providerId\x12B\n" +
+	"\x11provider_event_id\x18\x05 \x01(\v2\x16.unified.v1.IdentifierR\x0fproviderEventId\x12B\n" +
+	"\x0freported_status\x18\x06 \x01(\x0e2\x19.unified.v1.PaymentStatusR\x0ereportedStatus\x12X\n" +
+	"\x16canonicalization_state\x18\a \x01(\x0e2!.unified.v1.CanonicalizationStateR\x15canonicalizationState\x12\x1f\n" +
+	"\vreason_code\x18\b \x01(\tR\n" +
+	"reasonCode\x12\x14\n" +
+	"\x05owner\x18\t \x01(\tR\x05owner\x126\n" +
+	"\x17payment_state_unchanged\x18\n" +
+	" \x01(\bR\x15paymentStateUnchanged\x12@\n" +
+	"\x1ceconomic_journals_suppressed\x18\v \x01(\bR\x1aeconomicJournalsSuppressed\x12(\n" +
+	"\x10raw_payload_hash\x18\f \x01(\fR\x0erawPayloadHash\x12#\n" +
+	"\revidence_hash\x18\r \x01(\fR\fevidenceHash\x12;\n" +
+	"\vobserved_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"observedAt\x12K\n" +
+	"\x13resolution_deadline\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampR\x12resolutionDeadline\x12;\n" +
+	"\rquarantine_id\x18\x10 \x01(\v2\x16.unified.v1.IdentifierR\fquarantineId\x12;\n" +
+	"\rresolution_id\x18\x11 \x01(\v2\x16.unified.v1.IdentifierR\fresolutionId\x12c\n" +
+	"\x14finalized_settlement\x18\x12 \x01(\v20.unified.v1.FinalizedCanonicalSettlementEvidenceR\x13finalizedSettlement\"\xb8\r\n" +
+	" CanonicalSettlementReorgEvidence\x121\n" +
+	"\breorg_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\areorgId\x12G\n" +
+	"\x13canonicalization_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\x12canonicalizationId\x12:\n" +
+	"\x19orphaned_transaction_hash\x18\x03 \x01(\fR\x17orphanedTransactionHash\x12Q\n" +
+	"\x19orphaned_gateway_event_id\x18\x04 \x01(\v2\x16.unified.v1.IdentifierR\x16orphanedGatewayEventId\x12.\n" +
+	"\x13orphaned_block_hash\x18\x05 \x01(\fR\x11orphanedBlockHash\x122\n" +
+	"\x15orphaned_block_number\x18\x06 \x01(\x04R\x13orphanedBlockNumber\x128\n" +
+	"\x18replacement_block_number\x18\a \x01(\x04R\x16replacementBlockNumber\x12<\n" +
+	"\x04kind\x18\b \x01(\x0e2(.unified.v1.CanonicalSettlementReorgKindR\x04kind\x123\n" +
+	"\x15compensation_required\x18\t \x01(\bR\x14compensationRequired\x12?\n" +
+	"\x1corphaned_event_evidence_hash\x18\n" +
+	" \x01(\fR\x19orphanedEventEvidenceHash\x12#\n" +
+	"\revidence_hash\x18\v \x01(\fR\fevidenceHash\x12;\n" +
+	"\vdetected_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"detectedAt\x12\x1d\n" +
+	"\n" +
+	"payment_id\x18\r \x01(\fR\tpaymentId\x12#\n" +
+	"\rallocation_id\x18\x0e \x01(\fR\fallocationId\x12-\n" +
+	"\x12instruction_digest\x18\x0f \x01(\fR\x11instructionDigest\x124\n" +
+	"\x16replacement_block_hash\x18\x10 \x01(\fR\x14replacementBlockHash\x12-\n" +
+	"\x12confirmation_depth\x18\x11 \x01(\x04R\x11confirmationDepth\x12;\n" +
+	"\x1adetected_head_block_number\x18\x12 \x01(\x04R\x17detectedHeadBlockNumber\x127\n" +
+	"\x18detected_head_block_hash\x18\x13 \x01(\fR\x15detectedHeadBlockHash\x129\n" +
+	"\x19orphaned_raw_payload_hash\x18\x14 \x01(\fR\x16orphanedRawPayloadHash\x12\x19\n" +
+	"\bchain_id\x18\x15 \x01(\tR\achainId\x12'\n" +
+	"\x0fgateway_address\x18\x16 \x01(\tR\x0egatewayAddress\x12<\n" +
+	"\x1aorphaned_transaction_index\x18\x17 \x01(\x04R\x18orphanedTransactionIndex\x124\n" +
+	"\x16orphaned_receipts_root\x18\x18 \x01(\fR\x14orphanedReceiptsRoot\x12A\n" +
+	"\x1dorphaned_inclusion_proof_hash\x18\x19 \x01(\fR\x1aorphanedInclusionProofHash\x12R\n" +
+	"&orphaned_receipt_header_signature_hash\x18\x1a \x01(\fR\"orphanedReceiptHeaderSignatureHash\x120\n" +
+	"\x14finality_policy_hash\x18\x1b \x01(\fR\x12finalityPolicyHash\x122\n" +
+	"\x15header_authority_hash\x18\x1c \x01(\fR\x13headerAuthorityHash\x12I\n" +
+	"!replacement_header_signature_hash\x18\x1d \x01(\fR\x1ereplacementHeaderSignatureHash\x12L\n" +
+	"#detected_head_header_signature_hash\x18\x1e \x01(\fR\x1fdetectedHeadHeaderSignatureHash\"\xd9\x05\n" +
+	",CanonicalSettlementReorgCompensationEvidence\x12?\n" +
+	"\x0fcompensation_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\x0ecompensationId\x12G\n" +
+	"\x13canonicalization_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\x12canonicalizationId\x12:\n" +
+	"\x19orphaned_transaction_hash\x18\x03 \x01(\fR\x17orphanedTransactionHash\x12Q\n" +
+	"\x19orphaned_gateway_event_id\x18\x04 \x01(\v2\x16.unified.v1.IdentifierR\x16orphanedGatewayEventId\x12.\n" +
+	"\x13orphaned_block_hash\x18\x05 \x01(\fR\x11orphanedBlockHash\x12H\n" +
+	"\x14original_journal_ids\x18\x06 \x03(\v2\x16.unified.v1.IdentifierR\x12originalJournalIds\x12H\n" +
+	"\x14reversal_journal_ids\x18\a \x03(\v2\x16.unified.v1.IdentifierR\x12reversalJournalIds\x12#\n" +
+	"\revidence_hash\x18\b \x01(\fR\fevidenceHash\x12;\n" +
+	"\vdetected_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"detectedAt\x121\n" +
+	"\breorg_id\x18\n" +
+	" \x01(\v2\x16.unified.v1.IdentifierR\areorgId\x127\n" +
+	"\vincident_id\x18\v \x01(\v2\x16.unified.v1.IdentifierR\n" +
+	"incidentId\"\xd5\a\n" +
+	"\x1eCanonicalSettlementInstruction\x12\x1d\n" +
+	"\n" +
+	"payment_id\x18\x01 \x01(\fR\tpaymentId\x12#\n" +
+	"\rallocation_id\x18\x02 \x01(\fR\fallocationId\x12\x17\n" +
+	"\aloan_id\x18\x03 \x01(\fR\x06loanId\x12&\n" +
+	"\x0fsource_asset_id\x18\x04 \x01(\fR\rsourceAssetId\x12&\n" +
+	"\x0ftarget_asset_id\x18\x05 \x01(\fR\rtargetAssetId\x12!\n" +
+	"\fsource_units\x18\x06 \x01(\tR\vsourceUnits\x12!\n" +
+	"\ftarget_units\x18\a \x01(\tR\vtargetUnits\x12(\n" +
+	"\x10provider_id_hash\x18\b \x01(\fR\x0eproviderIdHash\x126\n" +
+	"\x17provider_reference_hash\x18\t \x01(\fR\x15providerReferenceHash\x12+\n" +
+	"\x11reconciliation_id\x18\n" +
+	" \x01(\fR\x10reconciliationId\x12;\n" +
+	"\x19reconciliation_commitment\x18\v \x01(\fR\x18reconciliationCommitment\x129\n" +
+	"\x19original_journal_set_hash\x18\f \x01(\fR\x16originalJournalSetHash\x124\n" +
+	"\x16conversion_policy_hash\x18\r \x01(\fR\x14conversionPolicyHash\x120\n" +
+	"\x14finality_policy_hash\x18\x0e \x01(\fR\x12finalityPolicyHash\x12#\n" +
+	"\revidence_hash\x18\x0f \x01(\fR\fevidenceHash\x12\x1f\n" +
+	"\vjournal_ref\x18\x10 \x01(\fR\n" +
+	"journalRef\x129\n" +
+	"\x19finalized_at_unix_seconds\x18\x11 \x01(\x04R\x16finalizedAtUnixSeconds\x12C\n" +
+	"\x1ereversal_deadline_unix_seconds\x18\x12 \x01(\x04R\x1breversalDeadlineUnixSeconds\x12.\n" +
+	"\x13expected_debt_units\x18\x13 \x01(\tR\x11expectedDebtUnits\x120\n" +
+	"\x14expected_state_nonce\x18\x14 \x01(\x04R\x12expectedStateNonce\x12)\n" +
+	"\x10attester_address\x18\x15 \x01(\tR\x0fattesterAddress\"\xf0\x02\n" +
+	" CanonicalSettlementDigestContext\x126\n" +
+	"\x17eligibility_domain_hash\x18\x01 \x01(\fR\x15eligibilityDomainHash\x12\x19\n" +
+	"\bchain_id\x18\x02 \x01(\tR\achainId\x12'\n" +
+	"\x0fgateway_address\x18\x03 \x01(\tR\x0egatewayAddress\x12+\n" +
+	"\x11finalizer_address\x18\x04 \x01(\tR\x10finalizerAddress\x12&\n" +
+	"\x0fpolicy_set_hash\x18\x05 \x01(\fR\rpolicySetHash\x12L\n" +
+	"\vinstruction\x18\x06 \x01(\v2*.unified.v1.CanonicalSettlementInstructionR\vinstruction\x12-\n" +
+	"\x12instruction_digest\x18\a \x01(\fR\x11instructionDigest\"\xfc\n" +
+	"\n" +
+	"$CanonicalSettlementExecutedEventData\x12-\n" +
+	"\x12instruction_digest\x18\x01 \x01(\fR\x11instructionDigest\x12&\n" +
+	"\x0fpolicy_set_hash\x18\x02 \x01(\fR\rpolicySetHash\x120\n" +
+	"\x14loan_account_address\x18\x03 \x01(\tR\x12loanAccountAddress\x12+\n" +
+	"\x11finalizer_address\x18\x04 \x01(\tR\x10finalizerAddress\x12)\n" +
+	"\x10attester_address\x18\x05 \x01(\tR\x0fattesterAddress\x12&\n" +
+	"\x0fsource_asset_id\x18\x06 \x01(\fR\rsourceAssetId\x12&\n" +
+	"\x0ftarget_asset_id\x18\a \x01(\fR\rtargetAssetId\x120\n" +
+	"\x14target_token_address\x18\b \x01(\tR\x12targetTokenAddress\x12!\n" +
+	"\fsource_units\x18\t \x01(\tR\vsourceUnits\x12\x1f\n" +
+	"\vgross_units\x18\n" +
+	" \x01(\tR\n" +
+	"grossUnits\x12(\n" +
+	"\x10provider_id_hash\x18\v \x01(\fR\x0eproviderIdHash\x126\n" +
+	"\x17provider_reference_hash\x18\f \x01(\fR\x15providerReferenceHash\x12+\n" +
+	"\x11reconciliation_id\x18\r \x01(\fR\x10reconciliationId\x12;\n" +
+	"\x19reconciliation_commitment\x18\x0e \x01(\fR\x18reconciliationCommitment\x129\n" +
+	"\x19original_journal_set_hash\x18\x0f \x01(\fR\x16originalJournalSetHash\x124\n" +
+	"\x16conversion_policy_hash\x18\x10 \x01(\fR\x14conversionPolicyHash\x120\n" +
+	"\x14finality_policy_hash\x18\x11 \x01(\fR\x12finalityPolicyHash\x12:\n" +
+	"\x19instruction_evidence_hash\x18\x12 \x01(\fR\x17instructionEvidenceHash\x12\x1f\n" +
+	"\vjournal_ref\x18\x13 \x01(\fR\n" +
+	"journalRef\x129\n" +
+	"\x19finalized_at_unix_seconds\x18\x14 \x01(\x04R\x16finalizedAtUnixSeconds\x12C\n" +
+	"\x1ereversal_deadline_unix_seconds\x18\x15 \x01(\x04R\x1breversalDeadlineUnixSeconds\x12*\n" +
+	"\x11debt_before_units\x18\x16 \x01(\tR\x0fdebtBeforeUnits\x12'\n" +
+	"\x0fprincipal_units\x18\x17 \x01(\tR\x0eprincipalUnits\x126\n" +
+	"\x17refundable_excess_units\x18\x18 \x01(\tR\x15refundableExcessUnits\x12(\n" +
+	"\x10debt_after_units\x18\x19 \x01(\tR\x0edebtAfterUnits\x12,\n" +
+	"\x12state_nonce_before\x18\x1a \x01(\x04R\x10stateNonceBefore\x12*\n" +
+	"\x11state_nonce_after\x18\x1b \x01(\x04R\x0fstateNonceAfter\x12%\n" +
+	"\x0elender_address\x18\x1c \x01(\tR\rlenderAddress\x12)\n" +
+	"\x10borrower_address\x18\x1d \x01(\tR\x0fborrowerAddress\"\xb8\x05\n" +
+	"\x1eCanonicalSettlementLogEnvelope\x12\x19\n" +
+	"\bchain_id\x18\x01 \x01(\tR\achainId\x12'\n" +
+	"\x0fgateway_address\x18\x02 \x01(\tR\x0egatewayAddress\x12)\n" +
+	"\x10transaction_hash\x18\x03 \x01(\fR\x0ftransactionHash\x12(\n" +
+	"\x10gateway_event_id\x18\x04 \x01(\fR\x0egatewayEventId\x12\x1b\n" +
+	"\tlog_index\x18\x05 \x01(\rR\blogIndex\x12!\n" +
+	"\fblock_number\x18\x06 \x01(\x04R\vblockNumber\x12\x1d\n" +
+	"\n" +
+	"block_hash\x18\a \x01(\fR\tblockHash\x12(\n" +
+	"\x10raw_payload_hash\x18\b \x01(\fR\x0erawPayloadHash\x12\x1d\n" +
+	"\n" +
+	"payment_id\x18\t \x01(\fR\tpaymentId\x12#\n" +
+	"\rallocation_id\x18\n" +
+	" \x01(\fR\fallocationId\x12\x17\n" +
+	"\aloan_id\x18\v \x01(\fR\x06loanId\x12P\n" +
+	"\n" +
+	"settlement\x18\f \x01(\v20.unified.v1.CanonicalSettlementExecutedEventDataR\n" +
+	"settlement\x12+\n" +
+	"\x11transaction_index\x18\r \x01(\x04R\x10transactionIndex\x12#\n" +
+	"\rreceipts_root\x18\x0e \x01(\fR\freceiptsRoot\x120\n" +
+	"\x14inclusion_proof_hash\x18\x0f \x01(\fR\x12inclusionProofHash\x12A\n" +
+	"\x1dreceipt_header_signature_hash\x18\x10 \x01(\fR\x1areceiptHeaderSignatureHash\"\xaa\x03\n" +
+	" CanonicalSettlementFinalityProof\x12-\n" +
+	"\x12confirmation_depth\x18\x01 \x01(\x04R\x11confirmationDepth\x12*\n" +
+	"\x11head_block_number\x18\x02 \x01(\x04R\x0fheadBlockNumber\x12&\n" +
+	"\x0fhead_block_hash\x18\x03 \x01(\fR\rheadBlockHash\x12#\n" +
+	"\revidence_hash\x18\x04 \x01(\fR\fevidenceHash\x12;\n" +
+	"\vobserved_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"observedAt\x120\n" +
+	"\x14finality_policy_hash\x18\x06 \x01(\fR\x12finalityPolicyHash\x122\n" +
+	"\x15header_authority_hash\x18\a \x01(\fR\x13headerAuthorityHash\x12;\n" +
+	"\x1ahead_header_signature_hash\x18\b \x01(\fR\x17headHeaderSignatureHash\"\xc3\x01\n" +
+	"$FinalizedCanonicalSettlementEvidence\x12Q\n" +
+	"\x0eevent_envelope\x18\x01 \x01(\v2*.unified.v1.CanonicalSettlementLogEnvelopeR\reventEnvelope\x12H\n" +
+	"\bfinality\x18\x02 \x01(\v2,.unified.v1.CanonicalSettlementFinalityProofR\bfinality\"\xf2\b\n" +
+	",CanonicalSubmittedTransactionFailureEvidence\x12G\n" +
+	"\x13canonicalization_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\x12canonicalizationId\x12\x1d\n" +
+	"\n" +
+	"payment_id\x18\x02 \x01(\fR\tpaymentId\x12#\n" +
+	"\rallocation_id\x18\x03 \x01(\fR\fallocationId\x12-\n" +
+	"\x12instruction_digest\x18\x04 \x01(\fR\x11instructionDigest\x12\x19\n" +
+	"\bchain_id\x18\x05 \x01(\tR\achainId\x12'\n" +
+	"\x0fgateway_address\x18\x06 \x01(\tR\x0egatewayAddress\x12)\n" +
+	"\x10transaction_hash\x18\a \x01(\fR\x0ftransactionHash\x12T\n" +
+	"\x0ereceipt_status\x18\b \x01(\x0e2-.unified.v1.CanonicalTransactionReceiptStatusR\rreceiptStatus\x120\n" +
+	"\x14receipt_payload_hash\x18\t \x01(\fR\x12receiptPayloadHash\x12!\n" +
+	"\fblock_number\x18\n" +
+	" \x01(\x04R\vblockNumber\x12\x1d\n" +
+	"\n" +
+	"block_hash\x18\v \x01(\fR\tblockHash\x12-\n" +
+	"\x12confirmation_depth\x18\f \x01(\x04R\x11confirmationDepth\x12*\n" +
+	"\x11head_block_number\x18\r \x01(\x04R\x0fheadBlockNumber\x12&\n" +
+	"\x0fhead_block_hash\x18\x0e \x01(\fR\rheadBlockHash\x12#\n" +
+	"\revidence_hash\x18\x0f \x01(\fR\fevidenceHash\x12;\n" +
+	"\vobserved_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"observedAt\x12+\n" +
+	"\x11transaction_index\x18\x11 \x01(\x04R\x10transactionIndex\x12#\n" +
+	"\rreceipts_root\x18\x12 \x01(\fR\freceiptsRoot\x120\n" +
+	"\x14inclusion_proof_hash\x18\x13 \x01(\fR\x12inclusionProofHash\x120\n" +
+	"\x14finality_policy_hash\x18\x14 \x01(\fR\x12finalityPolicyHash\x122\n" +
+	"\x15header_authority_hash\x18\x15 \x01(\fR\x13headerAuthorityHash\x12A\n" +
+	"\x1dreceipt_header_signature_hash\x18\x16 \x01(\fR\x1areceiptHeaderSignatureHash\x12;\n" +
+	"\x1ahead_header_signature_hash\x18\x17 \x01(\fR\x17headHeaderSignatureHash\"\xb7\t\n" +
+	"#CanonicalReversalResolutionEvidence\x12;\n" +
+	"\rresolution_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\fresolutionId\x12;\n" +
+	"\rquarantine_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\fquarantineId\x12G\n" +
+	"\x13canonicalization_id\x18\x03 \x01(\v2\x16.unified.v1.IdentifierR\x12canonicalizationId\x12\x1d\n" +
+	"\n" +
+	"payment_id\x18\x04 \x01(\fR\tpaymentId\x12#\n" +
+	"\rallocation_id\x18\x05 \x01(\fR\fallocationId\x12-\n" +
+	"\x12instruction_digest\x18\x06 \x01(\fR\x11instructionDigest\x12D\n" +
+	"\forigin_state\x18\a \x01(\x0e2!.unified.v1.CanonicalizationStateR\voriginState\x12|\n" +
+	"\x1dsubmitted_transaction_failure\x18\b \x01(\v28.unified.v1.CanonicalSubmittedTransactionFailureEvidenceR\x1bsubmittedTransactionFailure\x12[\n" +
+	"\x17provider_reversal_event\x18\t \x01(\v2#.unified.v1.ProviderPaymentCallbackR\x15providerReversalEvent\x12_\n" +
+	"\x19provider_reversal_receipt\x18\n" +
+	" \x01(\v2#.unified.v1.ProviderCallbackReceiptR\x17providerReversalReceipt\x12Q\n" +
+	"\x19phase7a_reversal_event_id\x18\v \x01(\v2\x16.unified.v1.IdentifierR\x16phase7aReversalEventId\x12W\n" +
+	"\x1cphase7a_reversal_journal_ids\x18\f \x03(\v2\x16.unified.v1.IdentifierR\x19phase7aReversalJournalIds\x12<\n" +
+	"\x1acoordinator_version_before\x18\r \x01(\x04R\x18coordinatorVersionBefore\x12:\n" +
+	"\x19coordinator_version_after\x18\x0e \x01(\x04R\x17coordinatorVersionAfter\x12/\n" +
+	"\x13permanent_tombstone\x18\x0f \x01(\bR\x12permanentTombstone\x12\x1f\n" +
+	"\vresolved_by\x18\x10 \x01(\tR\n" +
+	"resolvedBy\x12#\n" +
+	"\revidence_hash\x18\x11 \x01(\fR\fevidenceHash\x12;\n" +
+	"\vresolved_at\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"resolvedAt*Y\n" +
 	"\vPaymentRail\x12\x1c\n" +
 	"\x18PAYMENT_RAIL_UNSPECIFIED\x10\x00\x12\x15\n" +
 	"\x11PAYMENT_RAIL_BANK\x10\x01\x12\x15\n" +
@@ -2034,7 +5834,26 @@ const file_unified_v1_payment_proto_rawDesc = "" +
 	"!RECONCILIATION_STATUS_UNSPECIFIED\x10\x00\x12!\n" +
 	"\x1dRECONCILIATION_STATUS_MATCHED\x10\x01\x12#\n" +
 	"\x1fRECONCILIATION_STATUS_EXCEPTION\x10\x02\x12\"\n" +
-	"\x1eRECONCILIATION_STATUS_RESOLVED\x10\x03BOZMgithub.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1b\x06proto3"
+	"\x1eRECONCILIATION_STATUS_RESOLVED\x10\x03*\xa1\x01\n" +
+	"\x15PaymentAllocationMode\x12'\n" +
+	"#PAYMENT_ALLOCATION_MODE_UNSPECIFIED\x10\x00\x120\n" +
+	",PAYMENT_ALLOCATION_MODE_SYNTHETIC_PROJECTION\x10\x01\x12-\n" +
+	")PAYMENT_ALLOCATION_MODE_CANONICAL_GATEWAY\x10\x02*\xa0\x02\n" +
+	"\x15CanonicalizationState\x12&\n" +
+	"\"CANONICALIZATION_STATE_UNSPECIFIED\x10\x00\x12#\n" +
+	"\x1fCANONICALIZATION_STATE_PREPARED\x10\x01\x12$\n" +
+	" CANONICALIZATION_STATE_SUBMITTED\x10\x02\x12$\n" +
+	" CANONICALIZATION_STATE_CONFIRMED\x10\x03\x12!\n" +
+	"\x1dCANONICALIZATION_STATE_FAILED\x10\x04\x12&\n" +
+	"\"CANONICALIZATION_STATE_QUARANTINED\x10\x05\x12#\n" +
+	"\x1fCANONICALIZATION_STATE_INCIDENT\x10\x06*\xa6\x01\n" +
+	"\x1cCanonicalSettlementReorgKind\x12/\n" +
+	"+CANONICAL_SETTLEMENT_REORG_KIND_UNSPECIFIED\x10\x00\x12+\n" +
+	"'CANONICAL_SETTLEMENT_REORG_KIND_SHALLOW\x10\x01\x12(\n" +
+	"$CANONICAL_SETTLEMENT_REORG_KIND_DEEP\x10\x02*\x8c\x01\n" +
+	"!CanonicalTransactionReceiptStatus\x124\n" +
+	"0CANONICAL_TRANSACTION_RECEIPT_STATUS_UNSPECIFIED\x10\x00\x121\n" +
+	"-CANONICAL_TRANSACTION_RECEIPT_STATUS_REVERTED\x10\x01BOZMgithub.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1b\x06proto3"
 
 var (
 	file_unified_v1_payment_proto_rawDescOnce sync.Once
@@ -2048,120 +5867,260 @@ func file_unified_v1_payment_proto_rawDescGZIP() []byte {
 	return file_unified_v1_payment_proto_rawDescData
 }
 
-var file_unified_v1_payment_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_unified_v1_payment_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_unified_v1_payment_proto_enumTypes = make([]protoimpl.EnumInfo, 8)
+var file_unified_v1_payment_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
 var file_unified_v1_payment_proto_goTypes = []any{
-	(PaymentRail)(0),                                // 0: unified.v1.PaymentRail
-	(PaymentStatus)(0),                              // 1: unified.v1.PaymentStatus
-	(ProviderStatementKind)(0),                      // 2: unified.v1.ProviderStatementKind
-	(ReconciliationStatus)(0),                       // 3: unified.v1.ReconciliationStatus
-	(*PaymentIntentRecord)(nil),                     // 4: unified.v1.PaymentIntentRecord
-	(*ProviderPaymentCallback)(nil),                 // 5: unified.v1.ProviderPaymentCallback
-	(*ProviderCallbackReceipt)(nil),                 // 6: unified.v1.ProviderCallbackReceipt
-	(*PaymentTransitionEvidence)(nil),               // 7: unified.v1.PaymentTransitionEvidence
-	(*PaymentQuarantineEvidence)(nil),               // 8: unified.v1.PaymentQuarantineEvidence
-	(*ProviderStatementEntry)(nil),                  // 9: unified.v1.ProviderStatementEntry
-	(*PaymentReconciliationRunEvidence)(nil),        // 10: unified.v1.PaymentReconciliationRunEvidence
-	(*PaymentReconciliationExceptionEvidence)(nil),  // 11: unified.v1.PaymentReconciliationExceptionEvidence
-	(*PaymentReconciliationResolutionEvidence)(nil), // 12: unified.v1.PaymentReconciliationResolutionEvidence
-	(*LoanObligationSnapshotEvidence)(nil),          // 13: unified.v1.LoanObligationSnapshotEvidence
-	(*FinalPaymentAllocationEvidence)(nil),          // 14: unified.v1.FinalPaymentAllocationEvidence
-	(*PaymentAllocationReversalEvidence)(nil),       // 15: unified.v1.PaymentAllocationReversalEvidence
-	(*CollateralReleaseEligibilityEvidence)(nil),    // 16: unified.v1.CollateralReleaseEligibilityEvidence
-	(*Identifier)(nil),                              // 17: unified.v1.Identifier
-	(*PartyId)(nil),                                 // 18: unified.v1.PartyId
-	(*LoanId)(nil),                                  // 19: unified.v1.LoanId
-	(*Money)(nil),                                   // 20: unified.v1.Money
-	(*timestamppb.Timestamp)(nil),                   // 21: google.protobuf.Timestamp
-	(*AssetId)(nil),                                 // 22: unified.v1.AssetId
+	(PaymentRail)(0),                                     // 0: unified.v1.PaymentRail
+	(PaymentStatus)(0),                                   // 1: unified.v1.PaymentStatus
+	(ProviderStatementKind)(0),                           // 2: unified.v1.ProviderStatementKind
+	(ReconciliationStatus)(0),                            // 3: unified.v1.ReconciliationStatus
+	(PaymentAllocationMode)(0),                           // 4: unified.v1.PaymentAllocationMode
+	(CanonicalizationState)(0),                           // 5: unified.v1.CanonicalizationState
+	(CanonicalSettlementReorgKind)(0),                    // 6: unified.v1.CanonicalSettlementReorgKind
+	(CanonicalTransactionReceiptStatus)(0),               // 7: unified.v1.CanonicalTransactionReceiptStatus
+	(*PaymentIntentRecord)(nil),                          // 8: unified.v1.PaymentIntentRecord
+	(*ProviderPaymentCallback)(nil),                      // 9: unified.v1.ProviderPaymentCallback
+	(*ProviderCallbackReceipt)(nil),                      // 10: unified.v1.ProviderCallbackReceipt
+	(*PaymentTransitionEvidence)(nil),                    // 11: unified.v1.PaymentTransitionEvidence
+	(*PaymentQuarantineEvidence)(nil),                    // 12: unified.v1.PaymentQuarantineEvidence
+	(*ProviderStatementEntry)(nil),                       // 13: unified.v1.ProviderStatementEntry
+	(*PaymentReconciliationRunEvidence)(nil),             // 14: unified.v1.PaymentReconciliationRunEvidence
+	(*PaymentReconciliationExceptionEvidence)(nil),       // 15: unified.v1.PaymentReconciliationExceptionEvidence
+	(*PaymentReconciliationResolutionEvidence)(nil),      // 16: unified.v1.PaymentReconciliationResolutionEvidence
+	(*LoanObligationSnapshotEvidence)(nil),               // 17: unified.v1.LoanObligationSnapshotEvidence
+	(*FinalPaymentAllocationEvidence)(nil),               // 18: unified.v1.FinalPaymentAllocationEvidence
+	(*PaymentAllocationReversalEvidence)(nil),            // 19: unified.v1.PaymentAllocationReversalEvidence
+	(*CollateralReleaseEligibilityEvidence)(nil),         // 20: unified.v1.CollateralReleaseEligibilityEvidence
+	(*PaymentAllocationModeClaimEvidence)(nil),           // 21: unified.v1.PaymentAllocationModeClaimEvidence
+	(*CanonicalizationEligibilityEvidence)(nil),          // 22: unified.v1.CanonicalizationEligibilityEvidence
+	(*CanonicalizationPlanEvidence)(nil),                 // 23: unified.v1.CanonicalizationPlanEvidence
+	(*CanonicalizationSubmissionEvidence)(nil),           // 24: unified.v1.CanonicalizationSubmissionEvidence
+	(*CanonicalSettlementConversionEvidence)(nil),        // 25: unified.v1.CanonicalSettlementConversionEvidence
+	(*CanonicalizationConfirmationEvidence)(nil),         // 26: unified.v1.CanonicalizationConfirmationEvidence
+	(*CanonicalLenderPayoutEvidence)(nil),                // 27: unified.v1.CanonicalLenderPayoutEvidence
+	(*CanonicalBorrowerRefundEvidence)(nil),              // 28: unified.v1.CanonicalBorrowerRefundEvidence
+	(*CanonicalSettlementIncidentEvidence)(nil),          // 29: unified.v1.CanonicalSettlementIncidentEvidence
+	(*CanonicalSettlementReorgEvidence)(nil),             // 30: unified.v1.CanonicalSettlementReorgEvidence
+	(*CanonicalSettlementReorgCompensationEvidence)(nil), // 31: unified.v1.CanonicalSettlementReorgCompensationEvidence
+	(*CanonicalSettlementInstruction)(nil),               // 32: unified.v1.CanonicalSettlementInstruction
+	(*CanonicalSettlementDigestContext)(nil),             // 33: unified.v1.CanonicalSettlementDigestContext
+	(*CanonicalSettlementExecutedEventData)(nil),         // 34: unified.v1.CanonicalSettlementExecutedEventData
+	(*CanonicalSettlementLogEnvelope)(nil),               // 35: unified.v1.CanonicalSettlementLogEnvelope
+	(*CanonicalSettlementFinalityProof)(nil),             // 36: unified.v1.CanonicalSettlementFinalityProof
+	(*FinalizedCanonicalSettlementEvidence)(nil),         // 37: unified.v1.FinalizedCanonicalSettlementEvidence
+	(*CanonicalSubmittedTransactionFailureEvidence)(nil), // 38: unified.v1.CanonicalSubmittedTransactionFailureEvidence
+	(*CanonicalReversalResolutionEvidence)(nil),          // 39: unified.v1.CanonicalReversalResolutionEvidence
+	(*Identifier)(nil),                                   // 40: unified.v1.Identifier
+	(*PartyId)(nil),                                      // 41: unified.v1.PartyId
+	(*LoanId)(nil),                                       // 42: unified.v1.LoanId
+	(*Money)(nil),                                        // 43: unified.v1.Money
+	(*timestamppb.Timestamp)(nil),                        // 44: google.protobuf.Timestamp
+	(*AssetId)(nil),                                      // 45: unified.v1.AssetId
 }
 var file_unified_v1_payment_proto_depIdxs = []int32{
-	17, // 0: unified.v1.PaymentIntentRecord.payment_id:type_name -> unified.v1.Identifier
-	17, // 1: unified.v1.PaymentIntentRecord.correlation_id:type_name -> unified.v1.Identifier
-	18, // 2: unified.v1.PaymentIntentRecord.payer_reference:type_name -> unified.v1.PartyId
-	19, // 3: unified.v1.PaymentIntentRecord.loan_id:type_name -> unified.v1.LoanId
-	0,  // 4: unified.v1.PaymentIntentRecord.rail:type_name -> unified.v1.PaymentRail
-	20, // 5: unified.v1.PaymentIntentRecord.amount:type_name -> unified.v1.Money
-	21, // 6: unified.v1.PaymentIntentRecord.expires_at:type_name -> google.protobuf.Timestamp
-	1,  // 7: unified.v1.PaymentIntentRecord.status:type_name -> unified.v1.PaymentStatus
-	17, // 8: unified.v1.ProviderPaymentCallback.provider_event_id:type_name -> unified.v1.Identifier
-	17, // 9: unified.v1.ProviderPaymentCallback.payment_id:type_name -> unified.v1.Identifier
-	1,  // 10: unified.v1.ProviderPaymentCallback.status:type_name -> unified.v1.PaymentStatus
-	20, // 11: unified.v1.ProviderPaymentCallback.amount:type_name -> unified.v1.Money
-	21, // 12: unified.v1.ProviderPaymentCallback.occurred_at:type_name -> google.protobuf.Timestamp
-	21, // 13: unified.v1.ProviderPaymentCallback.expires_at:type_name -> google.protobuf.Timestamp
-	17, // 14: unified.v1.ProviderCallbackReceipt.ingress_id:type_name -> unified.v1.Identifier
-	17, // 15: unified.v1.ProviderCallbackReceipt.provider_event_id:type_name -> unified.v1.Identifier
-	21, // 16: unified.v1.ProviderCallbackReceipt.received_at:type_name -> google.protobuf.Timestamp
-	17, // 17: unified.v1.PaymentTransitionEvidence.payment_id:type_name -> unified.v1.Identifier
-	17, // 18: unified.v1.PaymentTransitionEvidence.provider_event_id:type_name -> unified.v1.Identifier
-	1,  // 19: unified.v1.PaymentTransitionEvidence.from_status:type_name -> unified.v1.PaymentStatus
-	1,  // 20: unified.v1.PaymentTransitionEvidence.to_status:type_name -> unified.v1.PaymentStatus
-	20, // 21: unified.v1.PaymentTransitionEvidence.amount:type_name -> unified.v1.Money
-	17, // 22: unified.v1.PaymentTransitionEvidence.journal_ids:type_name -> unified.v1.Identifier
-	21, // 23: unified.v1.PaymentTransitionEvidence.occurred_at:type_name -> google.protobuf.Timestamp
-	21, // 24: unified.v1.PaymentTransitionEvidence.received_at:type_name -> google.protobuf.Timestamp
-	17, // 25: unified.v1.PaymentQuarantineEvidence.quarantine_id:type_name -> unified.v1.Identifier
-	17, // 26: unified.v1.PaymentQuarantineEvidence.provider_event_id:type_name -> unified.v1.Identifier
-	17, // 27: unified.v1.PaymentQuarantineEvidence.payment_id:type_name -> unified.v1.Identifier
-	21, // 28: unified.v1.PaymentQuarantineEvidence.received_at:type_name -> google.protobuf.Timestamp
-	21, // 29: unified.v1.PaymentQuarantineEvidence.resolution_deadline:type_name -> google.protobuf.Timestamp
-	17, // 30: unified.v1.ProviderStatementEntry.entry_id:type_name -> unified.v1.Identifier
-	17, // 31: unified.v1.ProviderStatementEntry.payment_id:type_name -> unified.v1.Identifier
-	20, // 32: unified.v1.ProviderStatementEntry.amount:type_name -> unified.v1.Money
-	2,  // 33: unified.v1.ProviderStatementEntry.kind:type_name -> unified.v1.ProviderStatementKind
-	21, // 34: unified.v1.ProviderStatementEntry.occurred_at:type_name -> google.protobuf.Timestamp
-	17, // 35: unified.v1.PaymentReconciliationRunEvidence.run_id:type_name -> unified.v1.Identifier
-	22, // 36: unified.v1.PaymentReconciliationRunEvidence.asset_id:type_name -> unified.v1.AssetId
-	21, // 37: unified.v1.PaymentReconciliationRunEvidence.as_of:type_name -> google.protobuf.Timestamp
-	3,  // 38: unified.v1.PaymentReconciliationRunEvidence.status:type_name -> unified.v1.ReconciliationStatus
-	21, // 39: unified.v1.PaymentReconciliationRunEvidence.resolution_deadline:type_name -> google.protobuf.Timestamp
-	17, // 40: unified.v1.PaymentReconciliationExceptionEvidence.exception_id:type_name -> unified.v1.Identifier
-	17, // 41: unified.v1.PaymentReconciliationExceptionEvidence.run_id:type_name -> unified.v1.Identifier
-	22, // 42: unified.v1.PaymentReconciliationExceptionEvidence.asset_id:type_name -> unified.v1.AssetId
-	21, // 43: unified.v1.PaymentReconciliationExceptionEvidence.detected_at:type_name -> google.protobuf.Timestamp
-	21, // 44: unified.v1.PaymentReconciliationExceptionEvidence.resolution_deadline:type_name -> google.protobuf.Timestamp
-	17, // 45: unified.v1.PaymentReconciliationResolutionEvidence.resolution_id:type_name -> unified.v1.Identifier
-	17, // 46: unified.v1.PaymentReconciliationResolutionEvidence.exception_id:type_name -> unified.v1.Identifier
-	17, // 47: unified.v1.PaymentReconciliationResolutionEvidence.resolution_journal_id:type_name -> unified.v1.Identifier
-	21, // 48: unified.v1.PaymentReconciliationResolutionEvidence.resolved_at:type_name -> google.protobuf.Timestamp
-	19, // 49: unified.v1.LoanObligationSnapshotEvidence.loan_id:type_name -> unified.v1.LoanId
-	18, // 50: unified.v1.LoanObligationSnapshotEvidence.borrower_id:type_name -> unified.v1.PartyId
-	18, // 51: unified.v1.LoanObligationSnapshotEvidence.lender_id:type_name -> unified.v1.PartyId
-	20, // 52: unified.v1.LoanObligationSnapshotEvidence.outstanding_principal:type_name -> unified.v1.Money
-	21, // 53: unified.v1.LoanObligationSnapshotEvidence.as_of:type_name -> google.protobuf.Timestamp
-	17, // 54: unified.v1.FinalPaymentAllocationEvidence.allocation_id:type_name -> unified.v1.Identifier
-	17, // 55: unified.v1.FinalPaymentAllocationEvidence.payment_id:type_name -> unified.v1.Identifier
-	19, // 56: unified.v1.FinalPaymentAllocationEvidence.loan_id:type_name -> unified.v1.LoanId
-	20, // 57: unified.v1.FinalPaymentAllocationEvidence.gross_payment:type_name -> unified.v1.Money
-	20, // 58: unified.v1.FinalPaymentAllocationEvidence.principal_allocation:type_name -> unified.v1.Money
-	20, // 59: unified.v1.FinalPaymentAllocationEvidence.refundable_excess:type_name -> unified.v1.Money
-	20, // 60: unified.v1.FinalPaymentAllocationEvidence.debt_before:type_name -> unified.v1.Money
-	20, // 61: unified.v1.FinalPaymentAllocationEvidence.debt_after:type_name -> unified.v1.Money
-	17, // 62: unified.v1.FinalPaymentAllocationEvidence.reconciliation_id:type_name -> unified.v1.Identifier
-	17, // 63: unified.v1.FinalPaymentAllocationEvidence.journal_ids:type_name -> unified.v1.Identifier
-	21, // 64: unified.v1.FinalPaymentAllocationEvidence.reversal_deadline:type_name -> google.protobuf.Timestamp
-	21, // 65: unified.v1.FinalPaymentAllocationEvidence.allocated_at:type_name -> google.protobuf.Timestamp
-	17, // 66: unified.v1.PaymentAllocationReversalEvidence.reversal_id:type_name -> unified.v1.Identifier
-	17, // 67: unified.v1.PaymentAllocationReversalEvidence.allocation_id:type_name -> unified.v1.Identifier
-	17, // 68: unified.v1.PaymentAllocationReversalEvidence.payment_id:type_name -> unified.v1.Identifier
-	19, // 69: unified.v1.PaymentAllocationReversalEvidence.loan_id:type_name -> unified.v1.LoanId
-	20, // 70: unified.v1.PaymentAllocationReversalEvidence.restored_principal:type_name -> unified.v1.Money
-	20, // 71: unified.v1.PaymentAllocationReversalEvidence.removed_refundable_excess:type_name -> unified.v1.Money
-	20, // 72: unified.v1.PaymentAllocationReversalEvidence.debt_before:type_name -> unified.v1.Money
-	20, // 73: unified.v1.PaymentAllocationReversalEvidence.debt_after:type_name -> unified.v1.Money
-	17, // 74: unified.v1.PaymentAllocationReversalEvidence.journal_ids:type_name -> unified.v1.Identifier
-	21, // 75: unified.v1.PaymentAllocationReversalEvidence.reversed_at:type_name -> google.protobuf.Timestamp
-	17, // 76: unified.v1.CollateralReleaseEligibilityEvidence.evidence_id:type_name -> unified.v1.Identifier
-	17, // 77: unified.v1.CollateralReleaseEligibilityEvidence.allocation_id:type_name -> unified.v1.Identifier
-	19, // 78: unified.v1.CollateralReleaseEligibilityEvidence.loan_id:type_name -> unified.v1.LoanId
-	20, // 79: unified.v1.CollateralReleaseEligibilityEvidence.projected_outstanding_principal:type_name -> unified.v1.Money
-	21, // 80: unified.v1.CollateralReleaseEligibilityEvidence.evaluated_at:type_name -> google.protobuf.Timestamp
-	81, // [81:81] is the sub-list for method output_type
-	81, // [81:81] is the sub-list for method input_type
-	81, // [81:81] is the sub-list for extension type_name
-	81, // [81:81] is the sub-list for extension extendee
-	0,  // [0:81] is the sub-list for field type_name
+	40,  // 0: unified.v1.PaymentIntentRecord.payment_id:type_name -> unified.v1.Identifier
+	40,  // 1: unified.v1.PaymentIntentRecord.correlation_id:type_name -> unified.v1.Identifier
+	41,  // 2: unified.v1.PaymentIntentRecord.payer_reference:type_name -> unified.v1.PartyId
+	42,  // 3: unified.v1.PaymentIntentRecord.loan_id:type_name -> unified.v1.LoanId
+	0,   // 4: unified.v1.PaymentIntentRecord.rail:type_name -> unified.v1.PaymentRail
+	43,  // 5: unified.v1.PaymentIntentRecord.amount:type_name -> unified.v1.Money
+	44,  // 6: unified.v1.PaymentIntentRecord.expires_at:type_name -> google.protobuf.Timestamp
+	1,   // 7: unified.v1.PaymentIntentRecord.status:type_name -> unified.v1.PaymentStatus
+	40,  // 8: unified.v1.ProviderPaymentCallback.provider_event_id:type_name -> unified.v1.Identifier
+	40,  // 9: unified.v1.ProviderPaymentCallback.payment_id:type_name -> unified.v1.Identifier
+	1,   // 10: unified.v1.ProviderPaymentCallback.status:type_name -> unified.v1.PaymentStatus
+	43,  // 11: unified.v1.ProviderPaymentCallback.amount:type_name -> unified.v1.Money
+	44,  // 12: unified.v1.ProviderPaymentCallback.occurred_at:type_name -> google.protobuf.Timestamp
+	44,  // 13: unified.v1.ProviderPaymentCallback.expires_at:type_name -> google.protobuf.Timestamp
+	40,  // 14: unified.v1.ProviderCallbackReceipt.ingress_id:type_name -> unified.v1.Identifier
+	40,  // 15: unified.v1.ProviderCallbackReceipt.provider_event_id:type_name -> unified.v1.Identifier
+	44,  // 16: unified.v1.ProviderCallbackReceipt.received_at:type_name -> google.protobuf.Timestamp
+	40,  // 17: unified.v1.PaymentTransitionEvidence.payment_id:type_name -> unified.v1.Identifier
+	40,  // 18: unified.v1.PaymentTransitionEvidence.provider_event_id:type_name -> unified.v1.Identifier
+	1,   // 19: unified.v1.PaymentTransitionEvidence.from_status:type_name -> unified.v1.PaymentStatus
+	1,   // 20: unified.v1.PaymentTransitionEvidence.to_status:type_name -> unified.v1.PaymentStatus
+	43,  // 21: unified.v1.PaymentTransitionEvidence.amount:type_name -> unified.v1.Money
+	40,  // 22: unified.v1.PaymentTransitionEvidence.journal_ids:type_name -> unified.v1.Identifier
+	44,  // 23: unified.v1.PaymentTransitionEvidence.occurred_at:type_name -> google.protobuf.Timestamp
+	44,  // 24: unified.v1.PaymentTransitionEvidence.received_at:type_name -> google.protobuf.Timestamp
+	40,  // 25: unified.v1.PaymentQuarantineEvidence.quarantine_id:type_name -> unified.v1.Identifier
+	40,  // 26: unified.v1.PaymentQuarantineEvidence.provider_event_id:type_name -> unified.v1.Identifier
+	40,  // 27: unified.v1.PaymentQuarantineEvidence.payment_id:type_name -> unified.v1.Identifier
+	44,  // 28: unified.v1.PaymentQuarantineEvidence.received_at:type_name -> google.protobuf.Timestamp
+	44,  // 29: unified.v1.PaymentQuarantineEvidence.resolution_deadline:type_name -> google.protobuf.Timestamp
+	40,  // 30: unified.v1.ProviderStatementEntry.entry_id:type_name -> unified.v1.Identifier
+	40,  // 31: unified.v1.ProviderStatementEntry.payment_id:type_name -> unified.v1.Identifier
+	43,  // 32: unified.v1.ProviderStatementEntry.amount:type_name -> unified.v1.Money
+	2,   // 33: unified.v1.ProviderStatementEntry.kind:type_name -> unified.v1.ProviderStatementKind
+	44,  // 34: unified.v1.ProviderStatementEntry.occurred_at:type_name -> google.protobuf.Timestamp
+	40,  // 35: unified.v1.PaymentReconciliationRunEvidence.run_id:type_name -> unified.v1.Identifier
+	45,  // 36: unified.v1.PaymentReconciliationRunEvidence.asset_id:type_name -> unified.v1.AssetId
+	44,  // 37: unified.v1.PaymentReconciliationRunEvidence.as_of:type_name -> google.protobuf.Timestamp
+	3,   // 38: unified.v1.PaymentReconciliationRunEvidence.status:type_name -> unified.v1.ReconciliationStatus
+	44,  // 39: unified.v1.PaymentReconciliationRunEvidence.resolution_deadline:type_name -> google.protobuf.Timestamp
+	40,  // 40: unified.v1.PaymentReconciliationExceptionEvidence.exception_id:type_name -> unified.v1.Identifier
+	40,  // 41: unified.v1.PaymentReconciliationExceptionEvidence.run_id:type_name -> unified.v1.Identifier
+	45,  // 42: unified.v1.PaymentReconciliationExceptionEvidence.asset_id:type_name -> unified.v1.AssetId
+	44,  // 43: unified.v1.PaymentReconciliationExceptionEvidence.detected_at:type_name -> google.protobuf.Timestamp
+	44,  // 44: unified.v1.PaymentReconciliationExceptionEvidence.resolution_deadline:type_name -> google.protobuf.Timestamp
+	40,  // 45: unified.v1.PaymentReconciliationResolutionEvidence.resolution_id:type_name -> unified.v1.Identifier
+	40,  // 46: unified.v1.PaymentReconciliationResolutionEvidence.exception_id:type_name -> unified.v1.Identifier
+	40,  // 47: unified.v1.PaymentReconciliationResolutionEvidence.resolution_journal_id:type_name -> unified.v1.Identifier
+	44,  // 48: unified.v1.PaymentReconciliationResolutionEvidence.resolved_at:type_name -> google.protobuf.Timestamp
+	42,  // 49: unified.v1.LoanObligationSnapshotEvidence.loan_id:type_name -> unified.v1.LoanId
+	41,  // 50: unified.v1.LoanObligationSnapshotEvidence.borrower_id:type_name -> unified.v1.PartyId
+	41,  // 51: unified.v1.LoanObligationSnapshotEvidence.lender_id:type_name -> unified.v1.PartyId
+	43,  // 52: unified.v1.LoanObligationSnapshotEvidence.outstanding_principal:type_name -> unified.v1.Money
+	44,  // 53: unified.v1.LoanObligationSnapshotEvidence.as_of:type_name -> google.protobuf.Timestamp
+	40,  // 54: unified.v1.FinalPaymentAllocationEvidence.allocation_id:type_name -> unified.v1.Identifier
+	40,  // 55: unified.v1.FinalPaymentAllocationEvidence.payment_id:type_name -> unified.v1.Identifier
+	42,  // 56: unified.v1.FinalPaymentAllocationEvidence.loan_id:type_name -> unified.v1.LoanId
+	43,  // 57: unified.v1.FinalPaymentAllocationEvidence.gross_payment:type_name -> unified.v1.Money
+	43,  // 58: unified.v1.FinalPaymentAllocationEvidence.principal_allocation:type_name -> unified.v1.Money
+	43,  // 59: unified.v1.FinalPaymentAllocationEvidence.refundable_excess:type_name -> unified.v1.Money
+	43,  // 60: unified.v1.FinalPaymentAllocationEvidence.debt_before:type_name -> unified.v1.Money
+	43,  // 61: unified.v1.FinalPaymentAllocationEvidence.debt_after:type_name -> unified.v1.Money
+	40,  // 62: unified.v1.FinalPaymentAllocationEvidence.reconciliation_id:type_name -> unified.v1.Identifier
+	40,  // 63: unified.v1.FinalPaymentAllocationEvidence.journal_ids:type_name -> unified.v1.Identifier
+	44,  // 64: unified.v1.FinalPaymentAllocationEvidence.reversal_deadline:type_name -> google.protobuf.Timestamp
+	44,  // 65: unified.v1.FinalPaymentAllocationEvidence.allocated_at:type_name -> google.protobuf.Timestamp
+	40,  // 66: unified.v1.PaymentAllocationReversalEvidence.reversal_id:type_name -> unified.v1.Identifier
+	40,  // 67: unified.v1.PaymentAllocationReversalEvidence.allocation_id:type_name -> unified.v1.Identifier
+	40,  // 68: unified.v1.PaymentAllocationReversalEvidence.payment_id:type_name -> unified.v1.Identifier
+	42,  // 69: unified.v1.PaymentAllocationReversalEvidence.loan_id:type_name -> unified.v1.LoanId
+	43,  // 70: unified.v1.PaymentAllocationReversalEvidence.restored_principal:type_name -> unified.v1.Money
+	43,  // 71: unified.v1.PaymentAllocationReversalEvidence.removed_refundable_excess:type_name -> unified.v1.Money
+	43,  // 72: unified.v1.PaymentAllocationReversalEvidence.debt_before:type_name -> unified.v1.Money
+	43,  // 73: unified.v1.PaymentAllocationReversalEvidence.debt_after:type_name -> unified.v1.Money
+	40,  // 74: unified.v1.PaymentAllocationReversalEvidence.journal_ids:type_name -> unified.v1.Identifier
+	44,  // 75: unified.v1.PaymentAllocationReversalEvidence.reversed_at:type_name -> google.protobuf.Timestamp
+	40,  // 76: unified.v1.CollateralReleaseEligibilityEvidence.evidence_id:type_name -> unified.v1.Identifier
+	40,  // 77: unified.v1.CollateralReleaseEligibilityEvidence.allocation_id:type_name -> unified.v1.Identifier
+	42,  // 78: unified.v1.CollateralReleaseEligibilityEvidence.loan_id:type_name -> unified.v1.LoanId
+	43,  // 79: unified.v1.CollateralReleaseEligibilityEvidence.projected_outstanding_principal:type_name -> unified.v1.Money
+	44,  // 80: unified.v1.CollateralReleaseEligibilityEvidence.evaluated_at:type_name -> google.protobuf.Timestamp
+	40,  // 81: unified.v1.PaymentAllocationModeClaimEvidence.claim_id:type_name -> unified.v1.Identifier
+	40,  // 82: unified.v1.PaymentAllocationModeClaimEvidence.payment_id:type_name -> unified.v1.Identifier
+	4,   // 83: unified.v1.PaymentAllocationModeClaimEvidence.mode:type_name -> unified.v1.PaymentAllocationMode
+	44,  // 84: unified.v1.PaymentAllocationModeClaimEvidence.claimed_at:type_name -> google.protobuf.Timestamp
+	40,  // 85: unified.v1.PaymentAllocationModeClaimEvidence.allocation_id:type_name -> unified.v1.Identifier
+	40,  // 86: unified.v1.CanonicalizationEligibilityEvidence.eligibility_id:type_name -> unified.v1.Identifier
+	40,  // 87: unified.v1.CanonicalizationEligibilityEvidence.allocation_mode_claim_id:type_name -> unified.v1.Identifier
+	40,  // 88: unified.v1.CanonicalizationEligibilityEvidence.payment_id:type_name -> unified.v1.Identifier
+	42,  // 89: unified.v1.CanonicalizationEligibilityEvidence.loan_id:type_name -> unified.v1.LoanId
+	43,  // 90: unified.v1.CanonicalizationEligibilityEvidence.source_payment:type_name -> unified.v1.Money
+	43,  // 91: unified.v1.CanonicalizationEligibilityEvidence.target_tokens:type_name -> unified.v1.Money
+	40,  // 92: unified.v1.CanonicalizationEligibilityEvidence.reconciliation_id:type_name -> unified.v1.Identifier
+	40,  // 93: unified.v1.CanonicalizationEligibilityEvidence.original_journal_ids:type_name -> unified.v1.Identifier
+	44,  // 94: unified.v1.CanonicalizationEligibilityEvidence.reversal_deadline:type_name -> google.protobuf.Timestamp
+	44,  // 95: unified.v1.CanonicalizationEligibilityEvidence.evaluated_at:type_name -> google.protobuf.Timestamp
+	40,  // 96: unified.v1.CanonicalizationEligibilityEvidence.payment_final_event_id:type_name -> unified.v1.Identifier
+	40,  // 97: unified.v1.CanonicalizationEligibilityEvidence.provider_statement_entry_id:type_name -> unified.v1.Identifier
+	40,  // 98: unified.v1.CanonicalizationPlanEvidence.canonicalization_id:type_name -> unified.v1.Identifier
+	40,  // 99: unified.v1.CanonicalizationPlanEvidence.allocation_mode_claim_id:type_name -> unified.v1.Identifier
+	40,  // 100: unified.v1.CanonicalizationPlanEvidence.allocation_id:type_name -> unified.v1.Identifier
+	40,  // 101: unified.v1.CanonicalizationPlanEvidence.payment_id:type_name -> unified.v1.Identifier
+	42,  // 102: unified.v1.CanonicalizationPlanEvidence.loan_id:type_name -> unified.v1.LoanId
+	43,  // 103: unified.v1.CanonicalizationPlanEvidence.source_payment:type_name -> unified.v1.Money
+	43,  // 104: unified.v1.CanonicalizationPlanEvidence.target_tokens:type_name -> unified.v1.Money
+	43,  // 105: unified.v1.CanonicalizationPlanEvidence.expected_debt:type_name -> unified.v1.Money
+	43,  // 106: unified.v1.CanonicalizationPlanEvidence.principal_allocation:type_name -> unified.v1.Money
+	43,  // 107: unified.v1.CanonicalizationPlanEvidence.refundable_excess:type_name -> unified.v1.Money
+	41,  // 108: unified.v1.CanonicalizationPlanEvidence.finalizer_id:type_name -> unified.v1.PartyId
+	44,  // 109: unified.v1.CanonicalizationPlanEvidence.prepared_at:type_name -> google.protobuf.Timestamp
+	41,  // 110: unified.v1.CanonicalizationPlanEvidence.borrower_id:type_name -> unified.v1.PartyId
+	41,  // 111: unified.v1.CanonicalizationPlanEvidence.lender_id:type_name -> unified.v1.PartyId
+	40,  // 112: unified.v1.CanonicalizationSubmissionEvidence.canonicalization_id:type_name -> unified.v1.Identifier
+	5,   // 113: unified.v1.CanonicalizationSubmissionEvidence.state:type_name -> unified.v1.CanonicalizationState
+	41,  // 114: unified.v1.CanonicalizationSubmissionEvidence.sender_id:type_name -> unified.v1.PartyId
+	44,  // 115: unified.v1.CanonicalizationSubmissionEvidence.submitted_at:type_name -> google.protobuf.Timestamp
+	40,  // 116: unified.v1.CanonicalSettlementConversionEvidence.conversion_id:type_name -> unified.v1.Identifier
+	40,  // 117: unified.v1.CanonicalSettlementConversionEvidence.canonicalization_id:type_name -> unified.v1.Identifier
+	40,  // 118: unified.v1.CanonicalSettlementConversionEvidence.payment_id:type_name -> unified.v1.Identifier
+	43,  // 119: unified.v1.CanonicalSettlementConversionEvidence.source_payment:type_name -> unified.v1.Money
+	43,  // 120: unified.v1.CanonicalSettlementConversionEvidence.target_tokens:type_name -> unified.v1.Money
+	40,  // 121: unified.v1.CanonicalSettlementConversionEvidence.original_journal_ids:type_name -> unified.v1.Identifier
+	41,  // 122: unified.v1.CanonicalSettlementConversionEvidence.finalizer_id:type_name -> unified.v1.PartyId
+	44,  // 123: unified.v1.CanonicalSettlementConversionEvidence.converted_at:type_name -> google.protobuf.Timestamp
+	40,  // 124: unified.v1.CanonicalizationConfirmationEvidence.canonicalization_id:type_name -> unified.v1.Identifier
+	40,  // 125: unified.v1.CanonicalizationConfirmationEvidence.allocation_id:type_name -> unified.v1.Identifier
+	40,  // 126: unified.v1.CanonicalizationConfirmationEvidence.payment_id:type_name -> unified.v1.Identifier
+	42,  // 127: unified.v1.CanonicalizationConfirmationEvidence.loan_id:type_name -> unified.v1.LoanId
+	5,   // 128: unified.v1.CanonicalizationConfirmationEvidence.state:type_name -> unified.v1.CanonicalizationState
+	40,  // 129: unified.v1.CanonicalizationConfirmationEvidence.gateway_event_id:type_name -> unified.v1.Identifier
+	43,  // 130: unified.v1.CanonicalizationConfirmationEvidence.target_tokens:type_name -> unified.v1.Money
+	43,  // 131: unified.v1.CanonicalizationConfirmationEvidence.principal_allocation:type_name -> unified.v1.Money
+	43,  // 132: unified.v1.CanonicalizationConfirmationEvidence.refundable_excess:type_name -> unified.v1.Money
+	43,  // 133: unified.v1.CanonicalizationConfirmationEvidence.debt_before:type_name -> unified.v1.Money
+	43,  // 134: unified.v1.CanonicalizationConfirmationEvidence.debt_after:type_name -> unified.v1.Money
+	40,  // 135: unified.v1.CanonicalizationConfirmationEvidence.journal_ids:type_name -> unified.v1.Identifier
+	44,  // 136: unified.v1.CanonicalizationConfirmationEvidence.confirmed_at:type_name -> google.protobuf.Timestamp
+	41,  // 137: unified.v1.CanonicalizationConfirmationEvidence.borrower_id:type_name -> unified.v1.PartyId
+	41,  // 138: unified.v1.CanonicalizationConfirmationEvidence.lender_id:type_name -> unified.v1.PartyId
+	37,  // 139: unified.v1.CanonicalizationConfirmationEvidence.finalized_settlement:type_name -> unified.v1.FinalizedCanonicalSettlementEvidence
+	40,  // 140: unified.v1.CanonicalLenderPayoutEvidence.payout_id:type_name -> unified.v1.Identifier
+	40,  // 141: unified.v1.CanonicalLenderPayoutEvidence.canonicalization_id:type_name -> unified.v1.Identifier
+	42,  // 142: unified.v1.CanonicalLenderPayoutEvidence.loan_id:type_name -> unified.v1.LoanId
+	41,  // 143: unified.v1.CanonicalLenderPayoutEvidence.lender_id:type_name -> unified.v1.PartyId
+	43,  // 144: unified.v1.CanonicalLenderPayoutEvidence.amount:type_name -> unified.v1.Money
+	40,  // 145: unified.v1.CanonicalLenderPayoutEvidence.gateway_event_id:type_name -> unified.v1.Identifier
+	40,  // 146: unified.v1.CanonicalLenderPayoutEvidence.journal_id:type_name -> unified.v1.Identifier
+	44,  // 147: unified.v1.CanonicalLenderPayoutEvidence.paid_at:type_name -> google.protobuf.Timestamp
+	40,  // 148: unified.v1.CanonicalBorrowerRefundEvidence.refund_id:type_name -> unified.v1.Identifier
+	40,  // 149: unified.v1.CanonicalBorrowerRefundEvidence.canonicalization_id:type_name -> unified.v1.Identifier
+	42,  // 150: unified.v1.CanonicalBorrowerRefundEvidence.loan_id:type_name -> unified.v1.LoanId
+	41,  // 151: unified.v1.CanonicalBorrowerRefundEvidence.borrower_id:type_name -> unified.v1.PartyId
+	43,  // 152: unified.v1.CanonicalBorrowerRefundEvidence.amount:type_name -> unified.v1.Money
+	40,  // 153: unified.v1.CanonicalBorrowerRefundEvidence.gateway_event_id:type_name -> unified.v1.Identifier
+	40,  // 154: unified.v1.CanonicalBorrowerRefundEvidence.journal_id:type_name -> unified.v1.Identifier
+	44,  // 155: unified.v1.CanonicalBorrowerRefundEvidence.refunded_at:type_name -> google.protobuf.Timestamp
+	40,  // 156: unified.v1.CanonicalSettlementIncidentEvidence.incident_id:type_name -> unified.v1.Identifier
+	40,  // 157: unified.v1.CanonicalSettlementIncidentEvidence.canonicalization_id:type_name -> unified.v1.Identifier
+	40,  // 158: unified.v1.CanonicalSettlementIncidentEvidence.payment_id:type_name -> unified.v1.Identifier
+	40,  // 159: unified.v1.CanonicalSettlementIncidentEvidence.provider_event_id:type_name -> unified.v1.Identifier
+	1,   // 160: unified.v1.CanonicalSettlementIncidentEvidence.reported_status:type_name -> unified.v1.PaymentStatus
+	5,   // 161: unified.v1.CanonicalSettlementIncidentEvidence.canonicalization_state:type_name -> unified.v1.CanonicalizationState
+	44,  // 162: unified.v1.CanonicalSettlementIncidentEvidence.observed_at:type_name -> google.protobuf.Timestamp
+	44,  // 163: unified.v1.CanonicalSettlementIncidentEvidence.resolution_deadline:type_name -> google.protobuf.Timestamp
+	40,  // 164: unified.v1.CanonicalSettlementIncidentEvidence.quarantine_id:type_name -> unified.v1.Identifier
+	40,  // 165: unified.v1.CanonicalSettlementIncidentEvidence.resolution_id:type_name -> unified.v1.Identifier
+	37,  // 166: unified.v1.CanonicalSettlementIncidentEvidence.finalized_settlement:type_name -> unified.v1.FinalizedCanonicalSettlementEvidence
+	40,  // 167: unified.v1.CanonicalSettlementReorgEvidence.reorg_id:type_name -> unified.v1.Identifier
+	40,  // 168: unified.v1.CanonicalSettlementReorgEvidence.canonicalization_id:type_name -> unified.v1.Identifier
+	40,  // 169: unified.v1.CanonicalSettlementReorgEvidence.orphaned_gateway_event_id:type_name -> unified.v1.Identifier
+	6,   // 170: unified.v1.CanonicalSettlementReorgEvidence.kind:type_name -> unified.v1.CanonicalSettlementReorgKind
+	44,  // 171: unified.v1.CanonicalSettlementReorgEvidence.detected_at:type_name -> google.protobuf.Timestamp
+	40,  // 172: unified.v1.CanonicalSettlementReorgCompensationEvidence.compensation_id:type_name -> unified.v1.Identifier
+	40,  // 173: unified.v1.CanonicalSettlementReorgCompensationEvidence.canonicalization_id:type_name -> unified.v1.Identifier
+	40,  // 174: unified.v1.CanonicalSettlementReorgCompensationEvidence.orphaned_gateway_event_id:type_name -> unified.v1.Identifier
+	40,  // 175: unified.v1.CanonicalSettlementReorgCompensationEvidence.original_journal_ids:type_name -> unified.v1.Identifier
+	40,  // 176: unified.v1.CanonicalSettlementReorgCompensationEvidence.reversal_journal_ids:type_name -> unified.v1.Identifier
+	44,  // 177: unified.v1.CanonicalSettlementReorgCompensationEvidence.detected_at:type_name -> google.protobuf.Timestamp
+	40,  // 178: unified.v1.CanonicalSettlementReorgCompensationEvidence.reorg_id:type_name -> unified.v1.Identifier
+	40,  // 179: unified.v1.CanonicalSettlementReorgCompensationEvidence.incident_id:type_name -> unified.v1.Identifier
+	32,  // 180: unified.v1.CanonicalSettlementDigestContext.instruction:type_name -> unified.v1.CanonicalSettlementInstruction
+	34,  // 181: unified.v1.CanonicalSettlementLogEnvelope.settlement:type_name -> unified.v1.CanonicalSettlementExecutedEventData
+	44,  // 182: unified.v1.CanonicalSettlementFinalityProof.observed_at:type_name -> google.protobuf.Timestamp
+	35,  // 183: unified.v1.FinalizedCanonicalSettlementEvidence.event_envelope:type_name -> unified.v1.CanonicalSettlementLogEnvelope
+	36,  // 184: unified.v1.FinalizedCanonicalSettlementEvidence.finality:type_name -> unified.v1.CanonicalSettlementFinalityProof
+	40,  // 185: unified.v1.CanonicalSubmittedTransactionFailureEvidence.canonicalization_id:type_name -> unified.v1.Identifier
+	7,   // 186: unified.v1.CanonicalSubmittedTransactionFailureEvidence.receipt_status:type_name -> unified.v1.CanonicalTransactionReceiptStatus
+	44,  // 187: unified.v1.CanonicalSubmittedTransactionFailureEvidence.observed_at:type_name -> google.protobuf.Timestamp
+	40,  // 188: unified.v1.CanonicalReversalResolutionEvidence.resolution_id:type_name -> unified.v1.Identifier
+	40,  // 189: unified.v1.CanonicalReversalResolutionEvidence.quarantine_id:type_name -> unified.v1.Identifier
+	40,  // 190: unified.v1.CanonicalReversalResolutionEvidence.canonicalization_id:type_name -> unified.v1.Identifier
+	5,   // 191: unified.v1.CanonicalReversalResolutionEvidence.origin_state:type_name -> unified.v1.CanonicalizationState
+	38,  // 192: unified.v1.CanonicalReversalResolutionEvidence.submitted_transaction_failure:type_name -> unified.v1.CanonicalSubmittedTransactionFailureEvidence
+	9,   // 193: unified.v1.CanonicalReversalResolutionEvidence.provider_reversal_event:type_name -> unified.v1.ProviderPaymentCallback
+	10,  // 194: unified.v1.CanonicalReversalResolutionEvidence.provider_reversal_receipt:type_name -> unified.v1.ProviderCallbackReceipt
+	40,  // 195: unified.v1.CanonicalReversalResolutionEvidence.phase7a_reversal_event_id:type_name -> unified.v1.Identifier
+	40,  // 196: unified.v1.CanonicalReversalResolutionEvidence.phase7a_reversal_journal_ids:type_name -> unified.v1.Identifier
+	44,  // 197: unified.v1.CanonicalReversalResolutionEvidence.resolved_at:type_name -> google.protobuf.Timestamp
+	198, // [198:198] is the sub-list for method output_type
+	198, // [198:198] is the sub-list for method input_type
+	198, // [198:198] is the sub-list for extension type_name
+	198, // [198:198] is the sub-list for extension extendee
+	0,   // [0:198] is the sub-list for field type_name
 }
 
 func init() { file_unified_v1_payment_proto_init() }
@@ -2175,8 +6134,8 @@ func file_unified_v1_payment_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_unified_v1_payment_proto_rawDesc), len(file_unified_v1_payment_proto_rawDesc)),
-			NumEnums:      4,
-			NumMessages:   13,
+			NumEnums:      8,
+			NumMessages:   32,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

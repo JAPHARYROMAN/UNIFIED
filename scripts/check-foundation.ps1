@@ -32,7 +32,7 @@ if (Get-Command forge -ErrorAction SilentlyContinue) {
     try {
         forge fmt --check src/FoundationProbe.sol src/ProtocolCompilation.sol `
             src/collateral src/identity src/interfaces src/kernel src/loan src/risk `
-            src/token test script
+            src/payment src/token test script
         forge test
         uv run python ../scripts/check-contract-sizes.py
     } finally {

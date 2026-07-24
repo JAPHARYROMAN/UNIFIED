@@ -36,3 +36,9 @@ import { IdentityProviderRegistry } from "./identity/IdentityProviderRegistry.so
 import { CredentialRegistry } from "./identity/CredentialRegistry.sol";
 import { CreditDecisionRegistry } from "./identity/CreditDecisionRegistry.sol";
 import { ExposureManager } from "./identity/ExposureManager.sol";
+import {
+    CanonicalExternalSettlementGateway
+} from "./payment/CanonicalExternalSettlementGateway.sol";
+import {
+    FixedMatureExternalSettlementPolicy
+} from "./payment/FixedMatureExternalSettlementPolicy.sol";

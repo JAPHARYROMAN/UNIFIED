@@ -81,21 +81,40 @@ other step idempotently around it.
     journals exist and claims the payment allocation mode as `CANONICAL_GATEWAY`.
     Phase 7B allocation and reversal reject that claim; Phase 7C rejects an existing
     synthetic allocation. Submission remains uncertain until canonical chain finality;
-    confirmation is rebuilt from the gateway event.
-14. A reversal before submission cancels the non-posting canonicalization plan. A
-    reversal while submitted is quarantined without changing the Phase 7A payment or
-    posting any reversal journal. After confirmed mature settlement, a contradictory
-    provider message records `INCIDENT` evidence only: it causes no
+    confirmation is rebuilt from the gateway event. Coordinator evidence time is
+    monotonic from submission through confirmation or reorganization. Every accepted
+    reorganization is bound to the plan's exact finality-policy and header-authority
+    provenance, committed through the coordinator CAS, and restored only as an opaque
+    coordinator-issued authority after restart.
+14. A reversal while the non-posting plan is `PREPARED`, `FAILED`, or `SUBMITTED`
+    first persists `QUARANTINED` without changing the Phase 7A payment or posting any
+    reversal journal. One resolution transaction then posts the linked Phase 7A
+    reversal, moves the coordinator to `FAILED`, and creates a permanent
+    allocation-mode tombstone. A submitted origin additionally requires the exact
+    reverted transaction receipt proven under an authenticated EVM header and at the
+    configured finality depth. No quarantined or tombstoned operation may retry.
+    If an authenticated success reaches serialization first for a submitted quarantine,
+    it consumes that quarantine into `INCIDENT`; the payment remains `FINAL`, no
+    reversal journal is posted, and the successful canonical result is preserved.
+    After confirmed mature settlement, a contradictory provider message records
+    `INCIDENT` evidence only: it causes no
     `FINAL -> REVERSED` transition and no Phase 7A or Phase 7B reversal journal. It
     cannot reopen terminal debt, claw back lender or borrower transfers, or invalidate
     released collateral.
 15. The Phase 7C path uses a new non-posting waterfall plan and never calls the Phase 7B
     economic allocation path. After the gateway event reaches configured chain
-    finality, one idempotent `PostBatch` records separately balanced source conversion,
-    target-token custody, canonical allocation, lender payout, and borrower refund
-    journals. A failed transaction or reorganization before final posting produces none.
-    A deep reorganization after posting creates linked compensating journals and an owned
-    incident; it never edits history.
+    finality, the sole supported durable success entry point is
+    `commit_canonical_external_settlement(...)`. It locks the payment and coordinator,
+    accepts only the exact stored confirmation from either a normal durable `CONFIRMED`
+    snapshot or a submitted-origin late-success `INCIDENT` snapshot with its consumed
+    quarantine authority, and atomically records conversion, gateway projection,
+    confirmation, seven/eight balanced journals and links, lender payout, and optional
+    borrower refund. Exact replay returns the same deterministic identities; a changed
+    request, `SUBMITTED`, or unresolved `QUARANTINED` state fails closed. A failed
+    transaction or reorganization before final posting produces none. A deep
+    reorganization after posting accepts only the coordinator-issued durable reorg
+    authority, creates linked compensating journals and an owned incident, and never
+    edits history.
 16. Immutable conversion evidence binds the original unreversed Phase 7A final journals
     and provider account, provider/payment reference, source asset and units, target
     token asset and units, fixed one-to-one rate, zero fee/slippage/rounding, finalizer,
@@ -110,13 +129,22 @@ other step idempotently around it.
     recovery, expense, or debt journal is inferred without separately approved economic
     evidence.
 19. Protobuf remains the canonical interface source. Eligibility, instruction,
-    submission, confirmation, payout, refund, and incident evidence generate
-    deterministic Solidity, Go, TypeScript, and Python projections.
+    submission, confirmation, payout, refund, incident, failure, and reorganization
+    evidence generate deterministic Solidity, Go, TypeScript, and Python projections.
+    Reorganization evidence includes the orphaned transaction index, receipt root and
+    proof, pinned policy and authority, and orphaned, replacement, and detected-head
+    signature commitments. Deep-reorg authority joins that envelope to the referenced
+    finalized confirmation and its confirmation-head signature. Coordinator
+    state/version and atomic SQL commit authority remain relational source-of-truth facts
+    and are not duplicated as aspirational wire fields.
 20. Tests must cover partial, full, and excess settlement; premature finality; mismatched
     reconciliation; wrong asset, policy, loan, state nonce, or debt; unauthorized and
     disabled finalizers; replay and conflict; direct-repayment races; exact transfer
     rollback; coordinator crashes; reorgs; ledger outages; reversals before, during, and
-    after canonicalization; and collateral release only after successful gateway
+    after canonicalization; strict canonical legacy and typed receipts; canonical
+    Merkle-Patricia child references; aggregate authenticated-input limits; same-header
+    proof enrichment; monotonic append and replacement observations; alternate-authority
+    rejection at every consumer; and collateral release only after successful gateway
     execution has produced terminal zero debt.
 21. Reserve-backed early settlement, cross-denomination FX, interest and fee
     waterfalls, multiple loans or lenders, live payouts, production refund operations,
@@ -138,4 +166,9 @@ other step idempotently around it.
   will require a separately reviewed segregated reserve vault, coverage measurement,
   loss waterfall, and collateral-release interlock.
 - Cross-domain atomicity is expressed honestly as a recoverable saga whose canonical
-  commit is the finalized EVM event.
+  commit is the finalized EVM event. The later database-local success projection is one
+  callable, replay-safe transaction bound to the exact durable coordinator authority.
+- The Ed25519 header observer is a pinned synthetic local/test trust root, not EVM
+  consensus or a light client. Same-header enrichment, strict receipt/trie parsing,
+  monotonic observations, and aggregate bounds harden that bounded trust model but do
+  not authorize production chain use.

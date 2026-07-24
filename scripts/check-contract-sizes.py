@@ -17,6 +17,7 @@ NON_PRODUCTION = {
     "DeployPhase5",
     "DeployPhase6A",
     "DeployPhase6B",
+    "DeployPhase7C",
     "FoundationProbeTest",
     "FeeSettlementToken",
     "Phase2KernelTest",
@@ -27,6 +28,7 @@ NON_PRODUCTION = {
     "Phase5SyndicateTest",
     "Phase6IdentityTest",
     "Phase6UnderwrittenLoanTest",
+    "Phase7CanonicalSettlementTest",
     "UFTSupplyInvariantTest",
     "BurnHandler",
     "TestSettlementToken",
@@ -49,6 +51,7 @@ NON_PRODUCTION = {
     "Phase6BSettlementToken",
     "Phase6BUnderwrittenPolicy",
     "Phase6BZeroInterestPolicy",
+    "Phase7SettlementToken",
     "ZeroInterestPolicy",
 }
 

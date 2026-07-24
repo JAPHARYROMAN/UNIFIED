@@ -1,6 +1,6 @@
 # Phase 7C Canonical External Settlement
 
-Status: accepted boundary; implementation pending
+Status: implemented for synthetic local engineering
 
 ## Authority and commit flow
 
@@ -28,7 +28,10 @@ one EVM transaction
 configured chain finality
                          |
                          v
-CONFIRMED event projection + one atomic accounting batch
+exact durable CONFIRMED/submitted-origin INCIDENT snapshot
+                         |
+                         v
+one callable, replay-safe SQL success commit
 ```
 
 The provider remains authoritative for its external record. The payment service is
@@ -107,12 +110,15 @@ also record quote and execution rates, rational rounding, fees, slippage, and re
 
 ```text
 ELIGIBLE -> PREPARED -> SUBMITTED -> CONFIRMED
-                |           |
-                v           v
-             FAILED     QUARANTINED
+               ^             |            |
+               |             v            v
+               +-- FAILED  QUARANTINED  INCIDENT
+                    |          |    |
+        exact retry +          |    +-- authenticated late success --> INCIDENT
                                |
-                               v
-                            INCIDENT
+                               +-- reversal resolution --> FAILED + TOMBSTONED
+
+PREPARED | FAILED | SUBMITTED -- provider reversal --> QUARANTINED
 ```
 
 - `PREPARED` atomically proves that no Phase 7B allocation or journals exist and claims
@@ -121,17 +127,53 @@ ELIGIBLE -> PREPARED -> SUBMITTED -> CONFIRMED
 - `SUBMITTED` records the intended chain, gateway, calldata hash, sender, nonce, and
   transaction hash. It is not success.
 - `CONFIRMED` requires the exact gateway event at configured chain finality.
-- A reverted or orphaned transaction releases or retries the lease under one operation
-  identity; it never creates another payment.
+- A finalized reverted receipt or pre-finality orphan moves the same operation to
+  `FAILED` under indexer-owned evidence. Its `CANONICAL_GATEWAY` claim is never released
+  to Phase 7B; only the exact payment, allocation, and instruction may retry when no
+  reversal quarantine or tombstone exists.
 - A crash after broadcast is recovered from chain state and events.
-- A ledger outage after confirmation is recovered by idempotent event replay. It never
-  causes an EVM retry.
+- A ledger outage after confirmation is recovered by exact SQL command replay. It never
+  causes an EVM retry or a second economic batch.
+- If authenticated success wins serialization against a submitted reversal resolution,
+  the payment remains `FINAL`, the quarantine is consumed into an owned `INCIDENT`, and
+  no reversal accounting or tombstone is created.
+
+## Authenticated EVM evidence
+
+The configured indexer accepts raw EVM facts only under a header signed by its pinned
+Ed25519 observer. It derives the header hash, parent, transaction root, receipt root,
+height, and timestamp from canonical RLP; verifies transaction and receipt
+Merkle-Patricia inclusion at one index; and decodes status and gateway logs only from the
+included receipt. Legacy and EIP-2718 typed receipts require a canonical status,
+canonical cumulative gas, an exact 256-byte logs bloom, and bounded canonical logs.
+Trie children are either an embedded RLP list shorter than 32 bytes or an exact 32-byte
+hash; noncanonical short-string references are rejected.
+
+Authenticated input is bounded per node and proof and, across a block, to 4,096 receipt
+proofs, 32 MiB of proof nodes, and 64 MiB total input. Signed observation time is
+non-decreasing across canonical appends and replacements. Re-ingesting the identical
+signed header may only enrich it with additional verified, nonconflicting receipt/event
+proofs under the same observation and signature; it cannot rewrite established facts or
+create a reorganization.
+
+The finality-policy hash binds chain, gateway, confirmation depth, and observer public
+key. Confirmation, failure, reversal, and reorganization consumers compare it with the
+durable plan. Reorganization detection also cannot predate submission or the confirmed
+projection it contradicts. This Ed25519 observer is an explicit synthetic local/test
+trust root, not an EVM consensus or light-client proof.
 
 ## Reversal semantics
 
-Before submission, reversal cancels the non-posting Phase 7C plan. While submitted,
-reversal evidence is quarantined without a payment-state change or economic journal until
-the chain outcome is known.
+A reversal received while the plan is `PREPARED`, `FAILED`, or `SUBMITTED` first creates
+a durable quarantine without changing payment state or posting an economic journal.
+Resolution then performs the Phase 7A reversal, linked opposite journals, failed
+coordinator transition, and permanent allocation-mode tombstone atomically. A submitted
+plan additionally requires the exact reverted receipt and transaction to be proven at
+the same trie index under the receipt and transaction roots of an authenticated EVM
+header. That receipt block and the finality head are separately bound to a pinned header
+authority and an immutable finality-policy hash; caller-authored status, logs, block
+facts, or failure text are never authority. No retry is possible between quarantine and
+that single resolution commit, and the resulting tombstone prevents every later retry.
 
 Confirmed Phase 7C settlement is intentionally mature and irreversible. A provider
 message contradicting it after the reversal deadline is an owned converter incident, not
@@ -151,9 +193,25 @@ as funded or available.
 ## Accounting boundary
 
 The canonical path uses a new non-posting waterfall plan and atomically excludes Phase 7B
-economic posting so allocation cannot be recognized twice. After the finalized gateway
-event, one `PostBatch` commits independently balanced journals for the source clearing,
-target custody, canonical allocation, and executed payout/refund:
+economic posting so allocation cannot be recognized twice. The sole supported callable
+durable success path is
+`commit_canonical_external_settlement(confirmation_projection, conversion_evidence_hash,
+converted_at, target_book_id)`. It locks the payment and coordinator rows and requires
+the input to equal the exact stored `snapshot.Confirmation`. Authority is either:
+
+- durable `CONFIRMED` with a non-incident confirmation; or
+- durable submitted-origin `INCIDENT` with an incident confirmation and the exact
+  consumed pending reversal, submission, quarantine, and resolution authority.
+
+`SUBMITTED`, unresolved `QUARANTINED`, a prepared/failed origin masquerading as late
+success, stale time, changed content, or a partial prior write fails closed. In one SQL
+transaction the function records conversion evidence, the gateway event, confirmation,
+seven/eight independently balanced journals and links, lender payout, and optional
+borrower refund. Exact replay returns the same deterministic identities. The in-memory
+`PostBatch` remains an isolated accounting proof of the same journal conservation; it is
+not a second durable success authority.
+
+The durable journal batch is:
 
 ```text
 Debit  9120 Unallocated Loan Payment [S]      source gross
@@ -190,8 +248,13 @@ assumption. `9160` clears independently in both assets. The original payment-spe
 
 A reorg before configured finality removes the event before posting. A deep reorg after
 posting creates linked opposites for the whole Phase 7C batch, restores the Phase 7A
-provider asset and unallocated liability, and opens an owned incident. History is never
-edited and a ledger failure never retries the EVM action.
+provider asset and unallocated liability, and opens an owned incident. The coordinator
+accepts a reorg only when its finality policy, header authority, orphaned transaction
+index, receipt root/proof, receipt-header signature, confirmation-head signature,
+replacement signature, detected-head signature, and monotonic times match the durable
+plan or confirmation. It persists that full provenance and issues the opaque,
+restart-restored authority required by deep compensation. History is never edited and a
+ledger failure never retries the EVM action.
 
 ## Collateral custody
 
@@ -211,8 +274,9 @@ it can alter this rule.
 
 - `INV-PAY-001` and `INV-PAY-002`: provider finality alone cannot reduce debt.
 - `INV-PAY-003` and `INV-PAY-009`: one payment creates at most one canonical result.
-- `INV-PAY-005`: valid pre-canonical reversal restores the plan; a mature confirmed
-  token settlement has no remaining contractual reversal path.
+- `INV-PAY-005`: a valid pre-canonical reversal is quarantined and then atomically
+  restores Phase 7A economics while permanently tombstoning the canonical plan; a mature
+  confirmed token settlement has no remaining contractual reversal path.
 - `INV-PAY-007`, `INV-PAY-008`, and `INV-PAY-010`: distinct source/target identities,
   exact one-to-one conversion, target-token conservation, and refund bounds hold.
 - `INV-LOAN-004` and `INV-LOAN-006`: the immutable policy set authorizes the route.
@@ -224,13 +288,16 @@ it can alter this rule.
 - `INV-COL-004` through `INV-COL-006`: no adapter release, wrong-recipient release, or
   double release is possible.
 
-## Planned implementation
+## Implemented slice
 
 - a mature-settlement policy interface and synthetic fixed policy;
 - an exact-token canonical repayment gateway and Foundry adversarial tests;
-- a durable Go allocation-mode claim, canonicalization coordinator, and chain-event
-  recovery projection;
-- finalized-event accounting without Phase 7B double posting;
+- an explicit shared durable Go allocation-mode claim, restart-safe CAS coordinator,
+  strict raw-log/receipt/trie decoder, bounded same-header enrichment, monotonic
+  finality/failure/reorg projections, and restart-safe reorg authority;
+- a typed finalized-event accounting adapter, one callable exact-snapshot SQL success
+  transaction, restart-rehydrated evidence, atomic quarantine/resolution, and
+  exact-content single-claim Phase 7B/7C exclusion;
 - additive Protobuf and deterministic four-language bindings;
 - append-only migration 000009, simulations, risk/assumption traceability, ABI snapshot,
   deployment harness, and internal security review.
@@ -244,3 +311,4 @@ it can alter this rule.
 - interest, penalty, cost, multi-loan, or multi-lender waterfalls;
 - automatic collateral release or caller-selected payout/refund recipients;
 - production credentials, public testnet, or mainnet deployment.
+- runtime provider, EVM RPC, broker, or ledger-listener wiring in service executables.

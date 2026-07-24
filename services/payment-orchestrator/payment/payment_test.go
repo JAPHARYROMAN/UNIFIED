@@ -7,6 +7,8 @@ import (
 	"slices"
 	"testing"
 	"time"
+
+	"github.com/unified-finance/unified/services/payment-orchestrator/allocationmode"
 )
 
 type recordingAccounting struct {
@@ -30,13 +32,57 @@ type fixture struct {
 	now          time.Time
 }
 
+func claimModeForPaymentTest(
+	modes *allocationmode.Registry,
+	paymentID string,
+	allocationID string,
+	mode allocationmode.Mode,
+	digest string,
+) (allocationmode.Claim, bool, error) {
+	claimedAt := time.Unix(1_750_000_000, 0).UTC()
+	if mode == allocationmode.ModeCanonicalGateway {
+		claim, err := modes.ClaimModeWithCommit(
+			paymentID,
+			allocationID,
+			mode,
+			digest,
+			4,
+			"canonical-evidence:"+digest,
+			claimedAt,
+			func(allocationmode.Claim) error { return nil },
+		)
+		return claim, false, err
+	}
+	return modes.ClaimMode(
+		paymentID,
+		allocationID,
+		mode,
+		digest,
+		4,
+		digest,
+		claimedAt,
+	)
+}
+
 func newFixture(t *testing.T, supportsReversal bool) fixture {
+	return newFixtureWithModes(t, supportsReversal, allocationmode.NewInMemory())
+}
+
+func newFixtureWithModes(
+	t *testing.T,
+	supportsReversal bool,
+	modes *allocationmode.Registry,
+) fixture {
 	t.Helper()
 	publicKey, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
 		t.Fatalf("generate provider key: %v", err)
 	}
 	accounting := &recordingAccounting{}
+	canonical, err := NewLocalCanonicalReversalCoordinator(modes)
+	if err != nil {
+		t.Fatalf("new canonical reversal coordinator: %v", err)
+	}
 	orchestrator, err := New([]Provider{{
 		ID:               "provider-local",
 		Rail:             RailBank,
@@ -45,7 +91,7 @@ func newFixture(t *testing.T, supportsReversal bool) fixture {
 		AssetID:          "asset:local:usd",
 		SupportsReversal: supportsReversal,
 		Version:          1,
-	}}, accounting)
+	}}, accounting, modes, canonical)
 	if err != nil {
 		t.Fatalf("new orchestrator: %v", err)
 	}
@@ -55,6 +101,31 @@ func newFixture(t *testing.T, supportsReversal bool) fixture {
 		accounting:   accounting,
 		privateKey:   privateKey,
 		now:          now,
+	}
+}
+
+func finalizeFixturePayment(t *testing.T, fixture fixture) {
+	t.Helper()
+	if _, err := fixture.orchestrator.CreateIntent(fixture.intent(), fixture.now); err != nil {
+		t.Fatalf("create intent: %v", err)
+	}
+	steps := []struct {
+		id     string
+		status Status
+		offset time.Duration
+	}{
+		{"event-processing", StatusProcessing, time.Minute},
+		{"event-provisional", StatusProvisional, 3 * time.Minute},
+		{"event-final", StatusFinal, 5 * time.Minute},
+	}
+	for _, step := range steps {
+		if _, err := fixture.ingest(
+			t,
+			fixture.callback(step.id, step.status, step.offset),
+			fixture.now.Add(step.offset+time.Minute),
+		); err != nil {
+			t.Fatalf("ingest %s: %v", step.status, err)
+		}
 	}
 }
 
@@ -318,6 +389,195 @@ func TestReversalCapabilityAndQuarantineResolution(t *testing.T) {
 	); !errors.Is(err, ErrInvalidResolution) {
 		t.Fatalf("expected immutable resolution rejection, got %v", err)
 	}
+}
+
+func TestCanonicalReversalGuardPreparedSubmittedAndConfirmed(t *testing.T) {
+	t.Run("prepared reversal is quarantined before accounting", func(t *testing.T) {
+		modes := allocationmode.NewInMemory()
+		fixture := newFixtureWithModes(t, true, modes)
+		finalizeFixturePayment(t, fixture)
+		if _, _, err := claimModeForPaymentTest(modes,
+			"payment-001",
+			"allocation-canonical",
+			allocationmode.ModeCanonicalGateway,
+			"digest-canonical",
+		); err != nil {
+			t.Fatal(err)
+		}
+		result, err := fixture.ingest(
+			t,
+			fixture.callback("event-reversal-prepared", StatusReversed, 7*time.Minute),
+			fixture.now.Add(8*time.Minute),
+		)
+		if !errors.Is(err, ErrCanonicalPending) ||
+			result.Payment.Status != StatusFinal ||
+			result.Disposition != "QUARANTINED" {
+			t.Fatalf("prepared reversal was not blocked durably: %#v %v", result, err)
+		}
+		retained, exists := modes.Lookup("payment-001")
+		if !exists || retained.State != allocationmode.CanonicalQuarantined {
+			t.Fatalf("prepared canonical claim was not quarantined: %#v", retained)
+		}
+		if len(fixture.accounting.transitions) != 2 {
+			t.Fatal("prepared reversal posted accounting before resolution")
+		}
+	})
+
+	t.Run("submitted reversal is quarantined without mutation", func(t *testing.T) {
+		modes := allocationmode.NewInMemory()
+		fixture := newFixtureWithModes(t, true, modes)
+		finalizeFixturePayment(t, fixture)
+		claim, _, err := claimModeForPaymentTest(modes,
+			"payment-001",
+			"allocation-canonical",
+			allocationmode.ModeCanonicalGateway,
+			"digest-canonical",
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := modes.TransitionWithCommit(
+			claim.PaymentID,
+			claim.AllocationID,
+			claim.Digest,
+			allocationmode.CanonicalPrepared,
+			allocationmode.CanonicalSubmitted,
+			func(allocationmode.Claim) error { return nil },
+		); err != nil {
+			t.Fatal(err)
+		}
+		callback := fixture.callback(
+			"event-reversal-submitted",
+			StatusReversed,
+			7*time.Minute,
+		)
+		first, err := fixture.ingest(t, callback, fixture.now.Add(8*time.Minute))
+		if !errors.Is(err, ErrCanonicalPending) ||
+			first.Payment.Status != StatusFinal ||
+			first.Disposition != "QUARANTINED" ||
+			len(fixture.accounting.transitions) != 2 ||
+			len(fixture.orchestrator.Quarantines()) != 1 {
+			t.Fatalf("submitted guard failed: %#v %v", first, err)
+		}
+		replay, err := fixture.ingest(t, callback, fixture.now.Add(9*time.Minute))
+		if !errors.Is(err, ErrCanonicalPending) || !replay.Replayed ||
+			len(fixture.orchestrator.Quarantines()) != 1 {
+			t.Fatalf("guarded replay duplicated evidence: %#v %v", replay, err)
+		}
+		quarantine := fixture.orchestrator.Quarantines()[0]
+		if _, err := fixture.orchestrator.ResolveQuarantine(
+			quarantine.QuarantineID,
+			"generic-resolution",
+			"generic-evidence",
+			"payment-operator",
+			fixture.now.Add(10*time.Minute),
+		); !errors.Is(err, ErrInvalidResolution) {
+			t.Fatalf("generic resolution bypassed canonical proof: %v", err)
+		}
+		request := CanonicalReversalResolutionRequest{
+			QuarantineID:           quarantine.QuarantineID,
+			ResolutionID:           "canonical-resolution-001",
+			PaymentID:              claim.PaymentID,
+			AllocationID:           claim.AllocationID,
+			InstructionDigest:      claim.Digest,
+			ResolutionEvidenceHash: "resolution-evidence-hash",
+			ResolvedBy:             "payment-operator",
+			ResolvedAt:             fixture.now.Add(10 * time.Minute),
+		}
+		fixture.accounting.failures = 1
+		if _, _, err := fixture.orchestrator.ResolveCanonicalReversal(request); !errors.Is(err, ErrAccounting) {
+			t.Fatalf("expected accounting failure, got %v", err)
+		}
+		retained, exists := modes.Lookup(claim.PaymentID)
+		current, _ := fixture.orchestrator.Payment(claim.PaymentID)
+		if !exists || retained.State != allocationmode.CanonicalQuarantined ||
+			current.Status != StatusFinal || modes.IsReversed(claim.PaymentID) ||
+			len(fixture.accounting.transitions) != 2 {
+			t.Fatalf(
+				"failed resolution released claim or changed economics: %#v %#v",
+				retained,
+				current,
+			)
+		}
+		result, resolution, err := fixture.orchestrator.ResolveCanonicalReversal(request)
+		if err != nil {
+			t.Fatalf("resolve canonical reversal: %v", err)
+		}
+		if result.Payment.Status != StatusReversed ||
+			result.Disposition != "REVERSED" ||
+			len(result.JournalIDs) != 1 ||
+			resolution.CanonicalFailureEvidenceHash != callback.EvidenceHash ||
+			len(fixture.accounting.transitions) != 3 ||
+			!modes.IsReversed(claim.PaymentID) {
+			t.Fatalf("canonical reversal resolution lost effects: %#v %#v", result, resolution)
+		}
+		retained, exists = modes.Lookup(claim.PaymentID)
+		if !exists || retained.State != allocationmode.CanonicalFailed {
+			t.Fatalf("resolved canonical claim was not retained as failed: %#v", retained)
+		}
+		if _, _, err := claimModeForPaymentTest(modes,
+			claim.PaymentID,
+			claim.AllocationID,
+			allocationmode.ModeSyntheticProjection,
+			"stale-provider-evidence",
+		); !errors.Is(err, allocationmode.ErrClaimConflict) {
+			t.Fatalf("reversed payment accepted a new allocation: %v", err)
+		}
+		replayed, err := fixture.ingest(t, callback, fixture.now.Add(11*time.Minute))
+		if err != nil || !replayed.Replayed ||
+			replayed.Payment.Status != StatusReversed ||
+			replayed.Disposition != "REVERSED" ||
+			len(fixture.orchestrator.Quarantines()) != 1 {
+			t.Fatalf("resolved callback replay was not stable: %#v %v", replayed, err)
+		}
+	})
+
+	t.Run("confirmed contradiction becomes incident only", func(t *testing.T) {
+		modes := allocationmode.NewInMemory()
+		fixture := newFixtureWithModes(t, true, modes)
+		finalizeFixturePayment(t, fixture)
+		claim, _, err := claimModeForPaymentTest(modes,
+			"payment-001",
+			"allocation-canonical",
+			allocationmode.ModeCanonicalGateway,
+			"digest-canonical",
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := modes.TransitionWithCommit(
+			claim.PaymentID,
+			claim.AllocationID,
+			claim.Digest,
+			allocationmode.CanonicalPrepared,
+			allocationmode.CanonicalSubmitted,
+			func(allocationmode.Claim) error { return nil },
+		); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := modes.TransitionWithCommit(
+			claim.PaymentID,
+			claim.AllocationID,
+			claim.Digest,
+			allocationmode.CanonicalSubmitted,
+			allocationmode.CanonicalConfirmed,
+			func(allocationmode.Claim) error { return nil },
+		); err != nil {
+			t.Fatal(err)
+		}
+		result, err := fixture.ingest(
+			t,
+			fixture.callback("event-reversal-confirmed", StatusReversed, 7*time.Minute),
+			fixture.now.Add(8*time.Minute),
+		)
+		if !errors.Is(err, ErrCanonicalConfirmed) ||
+			result.Payment.Status != StatusFinal ||
+			result.Disposition != "INCIDENT" ||
+			len(fixture.accounting.transitions) != 2 ||
+			len(fixture.orchestrator.CanonicalIncidents()) != 1 {
+			t.Fatalf("confirmed contradiction changed economics: %#v %v", result, err)
+		}
+	})
 }
 
 func TestOversizeAndNoncanonicalPayloadsRetainOnlySafeEvidence(t *testing.T) {
