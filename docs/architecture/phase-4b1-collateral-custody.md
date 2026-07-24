@@ -1,6 +1,7 @@
 # Phase 4B1 Multi-Asset Collateral Custody
 
-Status: implemented for local and testnet engineering; liquidation authorization blocked
+Status: implemented for local and testnet engineering; liquidation binding is a separate
+Phase 4B2 governance action
 
 ## Custody flow
 
@@ -52,5 +53,6 @@ it does not invent a valuation.
 
 The manager can bind one immutable liquidation-engine address. That address can request
 a bounded partial or full disposition, but Phase 4B1 contains no eligibility or sale
-logic. Until Phase 4B2 is reviewed and binds the engine, deployments must leave this
-address unset.
+logic. Phase 4B2 defines and reviews that logic. Its deployment intentionally remains
+unbound until the governance executor separately approves the deployed dependencies and
+performs the manager's one-time binding.

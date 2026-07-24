@@ -3,6 +3,7 @@ syntax = "proto3";
 package unified.v1;
 
 import "google/protobuf/timestamp.proto";
+import "unified/v1/risk.proto";
 import "unified/v1/types.proto";
 
 option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
@@ -52,4 +53,63 @@ message UftCollateralExposure {
   Money backed_debt_value = 6;
   Money protocol_debt_ceiling = 7;
   bytes policy_evidence_hash = 8;
+}
+
+enum LiquidationRoute {
+  LIQUIDATION_ROUTE_UNSPECIFIED = 0;
+  LIQUIDATION_ROUTE_DIRECT = 1;
+  LIQUIDATION_ROUTE_DUTCH_AUCTION = 2;
+  LIQUIDATION_ROUTE_ENGLISH_AUCTION = 3;
+}
+
+enum LiquidationStatus {
+  LIQUIDATION_STATUS_UNSPECIFIED = 0;
+  LIQUIDATION_STATUS_ACTIVE = 1;
+  LIQUIDATION_STATUS_SETTLED = 2;
+  LIQUIDATION_STATUS_FAILED = 3;
+  LIQUIDATION_STATUS_CANCELLED = 4;
+}
+
+message LiquidationPlan {
+  Identifier liquidation_id = 1;
+  LoanId loan_id = 2;
+  Identifier collateral_id = 3;
+  LiquidationRoute route = 4;
+  string quantity = 5;
+  Money reference_proceeds = 6;
+  Money reserve_price = 7;
+  Money execution_cost_cap = 8;
+  uint32 incentive_basis_points = 9;
+  uint32 minimum_bid_increment_basis_points = 10;
+  google.protobuf.Timestamp starts_at = 11;
+  google.protobuf.Timestamp ends_at = 12;
+  bytes policy_set_hash = 13;
+  bytes trigger_snapshot_hash = 14;
+  OracleObservation pricing_observation = 15;
+  LiquidationStatus status = 16;
+}
+
+message LiquidationBid {
+  Identifier liquidation_id = 1;
+  PartyId bidder_id = 2;
+  Money amount = 3;
+  google.protobuf.Timestamp placed_at = 4;
+  bytes transaction_evidence_hash = 5;
+}
+
+message LiquidationSettlement {
+  Identifier liquidation_id = 1;
+  LoanId loan_id = 2;
+  Money gross_proceeds = 3;
+  Money execution_costs = 4;
+  Money liquidation_incentive = 5;
+  Money secured_claim_paid = 6;
+  Money borrower_surplus = 7;
+  Money residual_bad_debt = 8;
+  PartyId buyer_id = 9;
+  PartyId executor_id = 10;
+  Identifier payment_id = 11;
+  bytes journal_reference = 12;
+  bytes pricing_evidence_hash = 13;
+  google.protobuf.Timestamp settled_at = 14;
 }

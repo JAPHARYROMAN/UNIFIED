@@ -89,6 +89,12 @@ contract Phase4RiskEnginesTest {
             oracle.validateObservation(observation, keccak256("LIQUIDATION")),
             "canonical observation rejected"
         );
+        observation.retrievedAt += 1;
+        require(
+            !oracle.validateObservation(observation, keccak256("LIQUIDATION")),
+            "altered observation metadata accepted"
+        );
+        observation.retrievedAt -= 1;
 
         vm.warp(NOW + 30 minutes + 1);
         require(!oracle.updatePrice(ASSET, QUOTE), "stale sources accepted");

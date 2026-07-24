@@ -1,0 +1,9 @@
+id,workstream,title,status,owner,acceptance
+UNI-ADR-006,WS-SPEC,Accept Phase 4B2 liquidation boundary,DONE,Protocol Architecture Authority,ADR 0011 accepted with security and accounting review
+UNI-LIQUIDATION-001,WS-PROTOCOL,Implement reproducible liquidation routes,DONE,Accounting and Economic Risk Authority,Direct Dutch English partial and NFT failure-path tests pass
+UNI-LIQUIDATION-002,WS-RISK,Bind canonical price and policy evidence,DONE,Security Authority,Fresh observation quote asset policy hash and trigger snapshot gates pass
+UNI-AUCTION-001,WS-PROTOCOL,Implement finality-safe auction escrow,DONE,Security Authority,Outbid pull refund expiry cure stale and final settlement tests pass
+UNI-ACCOUNTING-004,WS-LEDGER,Reconcile liquidation waterfall,DONE,Accounting and Economic Risk Authority,Proceeds debt residual finality idempotency and SQL constraints pass
+UNI-SCHEMA-005,WS-SCHEMA,Define liquidation plan bid and settlement,DONE,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
+UNI-SEC-006,WS-SECURITY,Complete Phase 4B2 internal review,DONE,Security Authority,No unresolved critical or existential finding
+UNI-RECOVERY-001,WS-PROTOCOL,Implement lender claim insurance and legal write-off,DEFERRED,Accounting and Economic Risk Authority,Requires versioned in-kind claim and recovery policy before Phase 17

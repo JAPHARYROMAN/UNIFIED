@@ -181,3 +181,39 @@ risks:
     downstream_impact: Reflexive liquidation cascade and systemic UFT-backed credit loss
     validation: Canonical identity lock supply percentage limits attested debt ceiling and post-burn compliance view
     status: CONTROLLED
+  - id: RISK-PHASE4B2-001
+    severity: EXISTENTIAL
+    title: Collateral is liquidated before objective eligibility
+    owner: Security Authority
+    evidence: protocol/test/Phase4Liquidation.t.sol
+    expiry: 2026-10-24
+    downstream_impact: Irreversible borrower asset loss and protocol insolvency
+    validation: Default debt policy custody and fresh-price gates run at plan creation and execution
+    status: CONTROLLED
+  - id: RISK-PHASE4B2-002
+    severity: CRITICAL
+    title: Auction ownership finalizes without settlement finality
+    owner: Security Authority
+    evidence: protocol/src/collateral/LiquidationEngine.sol
+    expiry: 2026-10-24
+    downstream_impact: Collateral loss unbacked winning bid or blocked auction
+    validation: Exact escrow auction-end gate pull refunds and atomic collateral/proceeds settlement
+    status: CONTROLLED
+  - id: RISK-PHASE4B2-003
+    severity: CRITICAL
+    title: Liquidation proceeds or lender recovery are counted twice
+    owner: Accounting and Economic Risk Authority
+    evidence: services/foundation-ledger/internal/loanaccounting/accounting_test.go
+    expiry: 2026-10-24
+    downstream_impact: Borrower surplus loss lender overpayment or hidden bad debt
+    validation: Canonical loan repayment proceeds equation debt equation idempotency and immutable SQL constraints
+    status: CONTROLLED
+  - id: RISK-PHASE4B2-004
+    severity: CRITICAL
+    title: Stale pricing executes an unsafe liquidation
+    owner: Security Authority
+    evidence: security/reviews/phase-4b2-internal-review.md
+    expiry: 2026-10-24
+    downstream_impact: Collateral sold below an authorized reproducible price
+    validation: Exact canonical observation revalidation blocks execution and refunds expired English bids
+    status: CONTROLLED

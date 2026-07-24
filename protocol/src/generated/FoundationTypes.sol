@@ -2,11 +2,15 @@
 pragma solidity 0.8.36;
 
 // Code generated from schemas/proto/unified/v1. DO NOT EDIT.
-// Source SHA-256: ed6b0be44aeed37d395ae58b7705772137459cd0f0dd20a553879ebeb8c7a9d9
+// Source SHA-256: 254b387e274cf665c0b33d1599665f02a8ecc5329563ddbe07c1861bc7800e2e
 library FoundationTypes {
     enum CollateralKind { UNSPECIFIED, NATIVE, ERC20, ERC721, ERC1155 }
 
     enum CollateralStatus { UNSPECIFIED, LOCKED, RELEASED, LIQUIDATED, CLAIMED }
+
+    enum LiquidationRoute { UNSPECIFIED, DIRECT, DUTCH_AUCTION, ENGLISH_AUCTION }
+
+    enum LiquidationStatus { UNSPECIFIED, ACTIVE, SETTLED, FAILED, CANCELLED }
 
     enum PostingSide { UNSPECIFIED, DEBIT, CREDIT }
 
@@ -61,6 +65,50 @@ library FoundationTypes {
         Money backedDebtValue;
         Money protocolDebtCeiling;
         bytes policyEvidenceHash;
+    }
+
+    struct LiquidationPlan {
+        Identifier liquidationId;
+        LoanId loanId;
+        Identifier collateralId;
+        LiquidationRoute route;
+        string quantity;
+        Money referenceProceeds;
+        Money reservePrice;
+        Money executionCostCap;
+        uint32 incentiveBasisPoints;
+        uint32 minimumBidIncrementBasisPoints;
+        int64 startsAt;
+        int64 endsAt;
+        bytes policySetHash;
+        bytes triggerSnapshotHash;
+        OracleObservation pricingObservation;
+        LiquidationStatus status;
+    }
+
+    struct LiquidationBid {
+        Identifier liquidationId;
+        PartyId bidderId;
+        Money amount;
+        int64 placedAt;
+        bytes transactionEvidenceHash;
+    }
+
+    struct LiquidationSettlement {
+        Identifier liquidationId;
+        LoanId loanId;
+        Money grossProceeds;
+        Money executionCosts;
+        Money liquidationIncentive;
+        Money securedClaimPaid;
+        Money borrowerSurplus;
+        Money residualBadDebt;
+        PartyId buyerId;
+        PartyId executorId;
+        Identifier paymentId;
+        bytes journalReference;
+        bytes pricingEvidenceHash;
+        int64 settledAt;
     }
 
     struct CommandEnvelope {
