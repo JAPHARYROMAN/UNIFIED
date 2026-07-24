@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file unified/v1/payment.proto.
  */
 export const file_unified_v1_payment: GenFile = /*@__PURE__*/
-  fileDesc("Chh1bmlmaWVkL3YxL3BheW1lbnQucHJvdG8SCnVuaWZpZWQudjEi9AMKE1BheW1lbnRJbnRlbnRSZWNvcmQSKgoKcGF5bWVudF9pZBgBIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIXCg9sZWdhbF9lbnRpdHlfaWQYAiABKAkSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJEi4KDmNvcnJlbGF0aW9uX2lkGAQgASgLMhYudW5pZmllZC52MS5JZGVudGlmaWVyEiwKD3BheWVyX3JlZmVyZW5jZRgFIAEoCzITLnVuaWZpZWQudjEuUGFydHlJZBIjCgdsb2FuX2lkGAYgASgLMhIudW5pZmllZC52MS5Mb2FuSWQSEwoLcHJvdmlkZXJfaWQYByABKAkSJQoEcmFpbBgIIAEoDjIXLnVuaWZpZWQudjEuUGF5bWVudFJhaWwSDwoHcHVycG9zZRgJIAEoCRIhCgZhbW91bnQYCiABKAsyES51bmlmaWVkLnYxLk1vbmV5Ei4KCmV4cGlyZXNfYXQYCyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEikKBnN0YXR1cxgMIAEoDjIZLnVuaWZpZWQudjEuUGF5bWVudFN0YXR1cxIZChFhZ2dyZWdhdGVfdmVyc2lvbhgNIAEoBBIWCg5zY2hlbWFfdmVyc2lvbhgOIAEoDSLvAgoXUHJvdmlkZXJQYXltZW50Q2FsbGJhY2sSEwoLcHJvdmlkZXJfaWQYASABKAkSMQoRcHJvdmlkZXJfZXZlbnRfaWQYAiABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISKgoKcGF5bWVudF9pZBgDIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIaChJwcm92aWRlcl9yZWZlcmVuY2UYBCABKAkSKQoGc3RhdHVzGAUgASgOMhkudW5pZmllZC52MS5QYXltZW50U3RhdHVzEiEKBmFtb3VudBgGIAEoCzIRLnVuaWZpZWQudjEuTW9uZXkSLwoLb2NjdXJyZWRfYXQYByABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEi4KCmV4cGlyZXNfYXQYCCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhUKDWV2aWRlbmNlX2hhc2gYCSABKAwi8AEKF1Byb3ZpZGVyQ2FsbGJhY2tSZWNlaXB0EioKCmluZ3Jlc3NfaWQYASABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISEwoLcHJvdmlkZXJfaWQYAiABKAkSMQoRcHJvdmlkZXJfZXZlbnRfaWQYAyABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISGAoQcmF3X3BheWxvYWRfaGFzaBgEIAEoDBIWCg5zaWduYXR1cmVfaGFzaBgFIAEoDBIvCgtyZWNlaXZlZF9hdBgGIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAitgMKGVBheW1lbnRUcmFuc2l0aW9uRXZpZGVuY2USKgoKcGF5bWVudF9pZBgBIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchITCgtwcm92aWRlcl9pZBgCIAEoCRIxChFwcm92aWRlcl9ldmVudF9pZBgDIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIuCgtmcm9tX3N0YXR1cxgEIAEoDjIZLnVuaWZpZWQudjEuUGF5bWVudFN0YXR1cxIsCgl0b19zdGF0dXMYBSABKA4yGS51bmlmaWVkLnYxLlBheW1lbnRTdGF0dXMSIQoGYW1vdW50GAYgASgLMhEudW5pZmllZC52MS5Nb25leRIrCgtqb3VybmFsX2lkcxgHIAMoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIVCg1ldmlkZW5jZV9oYXNoGAggASgMEi8KC29jY3VycmVkX2F0GAkgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIvCgtyZWNlaXZlZF9hdBgKIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAi/QIKGVBheW1lbnRRdWFyYW50aW5lRXZpZGVuY2USLQoNcXVhcmFudGluZV9pZBgBIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchITCgtwcm92aWRlcl9pZBgCIAEoCRIxChFwcm92aWRlcl9ldmVudF9pZBgDIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIqCgpwYXltZW50X2lkGAQgASgLMhYudW5pZmllZC52MS5JZGVudGlmaWVyEhgKEHJhd19wYXlsb2FkX2hhc2gYBSABKAwSFQoNZXZpZGVuY2VfaGFzaBgGIAEoDBITCgtyZWFzb25fY29kZRgHIAEoCRINCgVvd25lchgIIAEoCRIvCgtyZWNlaXZlZF9hdBgJIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASNwoTcmVzb2x1dGlvbl9kZWFkbGluZRgKIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAipAIKFlByb3ZpZGVyU3RhdGVtZW50RW50cnkSKAoIZW50cnlfaWQYASABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISEwoLcHJvdmlkZXJfaWQYAiABKAkSGgoScHJvdmlkZXJfcmVmZXJlbmNlGAMgASgJEioKCnBheW1lbnRfaWQYBCABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISIQoGYW1vdW50GAUgASgLMhEudW5pZmllZC52MS5Nb25leRIvCgRraW5kGAYgASgOMiEudW5pZmllZC52MS5Qcm92aWRlclN0YXRlbWVudEtpbmQSLwoLb2NjdXJyZWRfYXQYByABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIswDCiBQYXltZW50UmVjb25jaWxpYXRpb25SdW5FdmlkZW5jZRImCgZydW5faWQYASABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISEwoLcHJvdmlkZXJfaWQYAiABKAkSJQoIYXNzZXRfaWQYAyABKAsyEy51bmlmaWVkLnYxLkFzc2V0SWQSKQoFYXNfb2YYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEh4KFnByb3ZpZGVyX3NuYXBzaG90X2hhc2gYBSABKAwSHAoUbGVkZ2VyX3NuYXBzaG90X2hhc2gYBiABKAwSFgoOZXhwZWN0ZWRfdW5pdHMYByABKAkSFgoOb2JzZXJ2ZWRfdW5pdHMYCCABKAkSGAoQZGlmZmVyZW5jZV91bml0cxgJIAEoCRIwCgZzdGF0dXMYCiABKA4yIC51bmlmaWVkLnYxLlJlY29uY2lsaWF0aW9uU3RhdHVzEg0KBW93bmVyGAsgASgJEjcKE3Jlc29sdXRpb25fZGVhZGxpbmUYDCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhcKD3VubWF0Y2hlZF9pdGVtcxgNIAEoDSL7AgomUGF5bWVudFJlY29uY2lsaWF0aW9uRXhjZXB0aW9uRXZpZGVuY2USLAoMZXhjZXB0aW9uX2lkGAEgASgLMhYudW5pZmllZC52MS5JZGVudGlmaWVyEiYKBnJ1bl9pZBgCIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchITCgtwcm92aWRlcl9pZBgDIAEoCRIlCghhc3NldF9pZBgEIAEoCzITLnVuaWZpZWQudjEuQXNzZXRJZBIYChBkaWZmZXJlbmNlX3VuaXRzGAUgASgJEhMKC3JlYXNvbl9jb2RlGAYgASgJEg0KBW93bmVyGAcgASgJEi8KC2RldGVjdGVkX2F0GAggASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBI3ChNyZXNvbHV0aW9uX2RlYWRsaW5lGAkgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIXCg91bm1hdGNoZWRfaXRlbXMYCiABKA0imgIKJ1BheW1lbnRSZWNvbmNpbGlhdGlvblJlc29sdXRpb25FdmlkZW5jZRItCg1yZXNvbHV0aW9uX2lkGAEgASgLMhYudW5pZmllZC52MS5JZGVudGlmaWVyEiwKDGV4Y2VwdGlvbl9pZBgCIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIVCg1ldmlkZW5jZV9oYXNoGAMgASgMEjUKFXJlc29sdXRpb25fam91cm5hbF9pZBgEIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchITCgtyZXNvbHZlZF9ieRgFIAEoCRIvCgtyZXNvbHZlZF9hdBgGIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAqWQoLUGF5bWVudFJhaWwSHAoYUEFZTUVOVF9SQUlMX1VOU1BFQ0lGSUVEEAASFQoRUEFZTUVOVF9SQUlMX0JBTksQARIVChFQQVlNRU5UX1JBSUxfQ0FSRBACKvkBCg1QYXltZW50U3RhdHVzEh4KGlBBWU1FTlRfU1RBVFVTX1VOU1BFQ0lGSUVEEAASGgoWUEFZTUVOVF9TVEFUVVNfQ1JFQVRFRBABEh0KGVBBWU1FTlRfU1RBVFVTX1BST0NFU1NJTkcQAhIeChpQQVlNRU5UX1NUQVRVU19QUk9WSVNJT05BTBADEhgKFFBBWU1FTlRfU1RBVFVTX0ZJTkFMEAQSGQoVUEFZTUVOVF9TVEFUVVNfRkFJTEVEEAUSGwoXUEFZTUVOVF9TVEFUVVNfUkVWRVJTRUQQBhIbChdQQVlNRU5UX1NUQVRVU19ESVNQVVRFRBAHKosBChVQcm92aWRlclN0YXRlbWVudEtpbmQSJwojUFJPVklERVJfU1RBVEVNRU5UX0tJTkRfVU5TUEVDSUZJRUQQABIjCh9QUk9WSURFUl9TVEFURU1FTlRfS0lORF9TRVRUTEVEEAESJAogUFJPVklERVJfU1RBVEVNRU5UX0tJTkRfUkVWRVJTRUQQAiqpAQoUUmVjb25jaWxpYXRpb25TdGF0dXMSJQohUkVDT05DSUxJQVRJT05fU1RBVFVTX1VOU1BFQ0lGSUVEEAASIQodUkVDT05DSUxJQVRJT05fU1RBVFVTX01BVENIRUQQARIjCh9SRUNPTkNJTElBVElPTl9TVEFUVVNfRVhDRVBUSU9OEAISIgoeUkVDT05DSUxJQVRJT05fU1RBVFVTX1JFU09MVkVEEANCT1pNZ2l0aHViLmNvbS91bmlmaWVkLWZpbmFuY2UvdW5pZmllZC9wYWNrYWdlcy9nZW5lcmF0ZWQvZ28vdW5pZmllZC92MTt1bmlmaWVkdjFiBnByb3RvMw", [file_google_protobuf_timestamp, file_unified_v1_types]);
+  fileDesc("Chh1bmlmaWVkL3YxL3BheW1lbnQucHJvdG8SCnVuaWZpZWQudjEi9AMKE1BheW1lbnRJbnRlbnRSZWNvcmQSKgoKcGF5bWVudF9pZBgBIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIXCg9sZWdhbF9lbnRpdHlfaWQYAiABKAkSFwoPaWRlbXBvdGVuY3lfa2V5GAMgASgJEi4KDmNvcnJlbGF0aW9uX2lkGAQgASgLMhYudW5pZmllZC52MS5JZGVudGlmaWVyEiwKD3BheWVyX3JlZmVyZW5jZRgFIAEoCzITLnVuaWZpZWQudjEuUGFydHlJZBIjCgdsb2FuX2lkGAYgASgLMhIudW5pZmllZC52MS5Mb2FuSWQSEwoLcHJvdmlkZXJfaWQYByABKAkSJQoEcmFpbBgIIAEoDjIXLnVuaWZpZWQudjEuUGF5bWVudFJhaWwSDwoHcHVycG9zZRgJIAEoCRIhCgZhbW91bnQYCiABKAsyES51bmlmaWVkLnYxLk1vbmV5Ei4KCmV4cGlyZXNfYXQYCyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEikKBnN0YXR1cxgMIAEoDjIZLnVuaWZpZWQudjEuUGF5bWVudFN0YXR1cxIZChFhZ2dyZWdhdGVfdmVyc2lvbhgNIAEoBBIWCg5zY2hlbWFfdmVyc2lvbhgOIAEoDSLvAgoXUHJvdmlkZXJQYXltZW50Q2FsbGJhY2sSEwoLcHJvdmlkZXJfaWQYASABKAkSMQoRcHJvdmlkZXJfZXZlbnRfaWQYAiABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISKgoKcGF5bWVudF9pZBgDIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIaChJwcm92aWRlcl9yZWZlcmVuY2UYBCABKAkSKQoGc3RhdHVzGAUgASgOMhkudW5pZmllZC52MS5QYXltZW50U3RhdHVzEiEKBmFtb3VudBgGIAEoCzIRLnVuaWZpZWQudjEuTW9uZXkSLwoLb2NjdXJyZWRfYXQYByABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEi4KCmV4cGlyZXNfYXQYCCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhUKDWV2aWRlbmNlX2hhc2gYCSABKAwi8AEKF1Byb3ZpZGVyQ2FsbGJhY2tSZWNlaXB0EioKCmluZ3Jlc3NfaWQYASABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISEwoLcHJvdmlkZXJfaWQYAiABKAkSMQoRcHJvdmlkZXJfZXZlbnRfaWQYAyABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISGAoQcmF3X3BheWxvYWRfaGFzaBgEIAEoDBIWCg5zaWduYXR1cmVfaGFzaBgFIAEoDBIvCgtyZWNlaXZlZF9hdBgGIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAitgMKGVBheW1lbnRUcmFuc2l0aW9uRXZpZGVuY2USKgoKcGF5bWVudF9pZBgBIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchITCgtwcm92aWRlcl9pZBgCIAEoCRIxChFwcm92aWRlcl9ldmVudF9pZBgDIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIuCgtmcm9tX3N0YXR1cxgEIAEoDjIZLnVuaWZpZWQudjEuUGF5bWVudFN0YXR1cxIsCgl0b19zdGF0dXMYBSABKA4yGS51bmlmaWVkLnYxLlBheW1lbnRTdGF0dXMSIQoGYW1vdW50GAYgASgLMhEudW5pZmllZC52MS5Nb25leRIrCgtqb3VybmFsX2lkcxgHIAMoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIVCg1ldmlkZW5jZV9oYXNoGAggASgMEi8KC29jY3VycmVkX2F0GAkgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIvCgtyZWNlaXZlZF9hdBgKIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAi/QIKGVBheW1lbnRRdWFyYW50aW5lRXZpZGVuY2USLQoNcXVhcmFudGluZV9pZBgBIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchITCgtwcm92aWRlcl9pZBgCIAEoCRIxChFwcm92aWRlcl9ldmVudF9pZBgDIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIqCgpwYXltZW50X2lkGAQgASgLMhYudW5pZmllZC52MS5JZGVudGlmaWVyEhgKEHJhd19wYXlsb2FkX2hhc2gYBSABKAwSFQoNZXZpZGVuY2VfaGFzaBgGIAEoDBITCgtyZWFzb25fY29kZRgHIAEoCRINCgVvd25lchgIIAEoCRIvCgtyZWNlaXZlZF9hdBgJIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASNwoTcmVzb2x1dGlvbl9kZWFkbGluZRgKIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAipAIKFlByb3ZpZGVyU3RhdGVtZW50RW50cnkSKAoIZW50cnlfaWQYASABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISEwoLcHJvdmlkZXJfaWQYAiABKAkSGgoScHJvdmlkZXJfcmVmZXJlbmNlGAMgASgJEioKCnBheW1lbnRfaWQYBCABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISIQoGYW1vdW50GAUgASgLMhEudW5pZmllZC52MS5Nb25leRIvCgRraW5kGAYgASgOMiEudW5pZmllZC52MS5Qcm92aWRlclN0YXRlbWVudEtpbmQSLwoLb2NjdXJyZWRfYXQYByABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wIswDCiBQYXltZW50UmVjb25jaWxpYXRpb25SdW5FdmlkZW5jZRImCgZydW5faWQYASABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISEwoLcHJvdmlkZXJfaWQYAiABKAkSJQoIYXNzZXRfaWQYAyABKAsyEy51bmlmaWVkLnYxLkFzc2V0SWQSKQoFYXNfb2YYBCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEh4KFnByb3ZpZGVyX3NuYXBzaG90X2hhc2gYBSABKAwSHAoUbGVkZ2VyX3NuYXBzaG90X2hhc2gYBiABKAwSFgoOZXhwZWN0ZWRfdW5pdHMYByABKAkSFgoOb2JzZXJ2ZWRfdW5pdHMYCCABKAkSGAoQZGlmZmVyZW5jZV91bml0cxgJIAEoCRIwCgZzdGF0dXMYCiABKA4yIC51bmlmaWVkLnYxLlJlY29uY2lsaWF0aW9uU3RhdHVzEg0KBW93bmVyGAsgASgJEjcKE3Jlc29sdXRpb25fZGVhZGxpbmUYDCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhcKD3VubWF0Y2hlZF9pdGVtcxgNIAEoDSL7AgomUGF5bWVudFJlY29uY2lsaWF0aW9uRXhjZXB0aW9uRXZpZGVuY2USLAoMZXhjZXB0aW9uX2lkGAEgASgLMhYudW5pZmllZC52MS5JZGVudGlmaWVyEiYKBnJ1bl9pZBgCIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchITCgtwcm92aWRlcl9pZBgDIAEoCRIlCghhc3NldF9pZBgEIAEoCzITLnVuaWZpZWQudjEuQXNzZXRJZBIYChBkaWZmZXJlbmNlX3VuaXRzGAUgASgJEhMKC3JlYXNvbl9jb2RlGAYgASgJEg0KBW93bmVyGAcgASgJEi8KC2RldGVjdGVkX2F0GAggASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBI3ChNyZXNvbHV0aW9uX2RlYWRsaW5lGAkgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIXCg91bm1hdGNoZWRfaXRlbXMYCiABKA0imgIKJ1BheW1lbnRSZWNvbmNpbGlhdGlvblJlc29sdXRpb25FdmlkZW5jZRItCg1yZXNvbHV0aW9uX2lkGAEgASgLMhYudW5pZmllZC52MS5JZGVudGlmaWVyEiwKDGV4Y2VwdGlvbl9pZBgCIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIVCg1ldmlkZW5jZV9oYXNoGAMgASgMEjUKFXJlc29sdXRpb25fam91cm5hbF9pZBgEIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchITCgtyZXNvbHZlZF9ieRgFIAEoCRIvCgtyZXNvbHZlZF9hdBgGIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAixwIKHkxvYW5PYmxpZ2F0aW9uU25hcHNob3RFdmlkZW5jZRIjCgdsb2FuX2lkGAEgASgLMhIudW5pZmllZC52MS5Mb2FuSWQSKAoLYm9ycm93ZXJfaWQYAiABKAsyEy51bmlmaWVkLnYxLlBhcnR5SWQSJgoJbGVuZGVyX2lkGAMgASgLMhMudW5pZmllZC52MS5QYXJ0eUlkEjAKFW91dHN0YW5kaW5nX3ByaW5jaXBhbBgEIAEoCzIRLnVuaWZpZWQudjEuTW9uZXkSGQoRYWdncmVnYXRlX3ZlcnNpb24YBSABKAQSGAoQc291cmNlX2F1dGhvcml0eRgGIAEoCRIcChRzb3VyY2VfZXZpZGVuY2VfaGFzaBgHIAEoDBIpCgVhc19vZhgIIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiiwYKHkZpbmFsUGF5bWVudEFsbG9jYXRpb25FdmlkZW5jZRItCg1hbGxvY2F0aW9uX2lkGAEgASgLMhYudW5pZmllZC52MS5JZGVudGlmaWVyEioKCnBheW1lbnRfaWQYAiABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISIwoHbG9hbl9pZBgDIAEoCzISLnVuaWZpZWQudjEuTG9hbklkEhMKC3Byb3ZpZGVyX2lkGAQgASgJEhoKEnByb3ZpZGVyX3JlZmVyZW5jZRgFIAEoCRIoCg1ncm9zc19wYXltZW50GAYgASgLMhEudW5pZmllZC52MS5Nb25leRIvChRwcmluY2lwYWxfYWxsb2NhdGlvbhgHIAEoCzIRLnVuaWZpZWQudjEuTW9uZXkSLAoRcmVmdW5kYWJsZV9leGNlc3MYCCABKAsyES51bmlmaWVkLnYxLk1vbmV5EiYKC2RlYnRfYmVmb3JlGAkgASgLMhEudW5pZmllZC52MS5Nb25leRIlCgpkZWJ0X2FmdGVyGAogASgLMhEudW5pZmllZC52MS5Nb25leRIhChlvYmxpZ2F0aW9uX3ZlcnNpb25fYmVmb3JlGAsgASgEEiAKGG9ibGlnYXRpb25fdmVyc2lvbl9hZnRlchgMIAEoBBIdChV3YXRlcmZhbGxfcG9saWN5X2hhc2gYDSABKAwSHAoUZmluYWxpdHlfcG9saWN5X2hhc2gYDiABKAwSMQoRcmVjb25jaWxpYXRpb25faWQYDyABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISKwoLam91cm5hbF9pZHMYECADKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISFQoNZXZpZGVuY2VfaGFzaBgRIAEoDBI1ChFyZXZlcnNhbF9kZWFkbGluZRgSIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASMAoMYWxsb2NhdGVkX2F0GBMgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCLTBAohUGF5bWVudEFsbG9jYXRpb25SZXZlcnNhbEV2aWRlbmNlEisKC3JldmVyc2FsX2lkGAEgASgLMhYudW5pZmllZC52MS5JZGVudGlmaWVyEi0KDWFsbG9jYXRpb25faWQYAiABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISKgoKcGF5bWVudF9pZBgDIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIjCgdsb2FuX2lkGAQgASgLMhIudW5pZmllZC52MS5Mb2FuSWQSLQoScmVzdG9yZWRfcHJpbmNpcGFsGAUgASgLMhEudW5pZmllZC52MS5Nb25leRI0ChlyZW1vdmVkX3JlZnVuZGFibGVfZXhjZXNzGAYgASgLMhEudW5pZmllZC52MS5Nb25leRImCgtkZWJ0X2JlZm9yZRgHIAEoCzIRLnVuaWZpZWQudjEuTW9uZXkSJQoKZGVidF9hZnRlchgIIAEoCzIRLnVuaWZpZWQudjEuTW9uZXkSIQoZb2JsaWdhdGlvbl92ZXJzaW9uX2JlZm9yZRgJIAEoBBIgChhvYmxpZ2F0aW9uX3ZlcnNpb25fYWZ0ZXIYCiABKAQSEwoLcmVhc29uX2NvZGUYCyABKAkSKwoLam91cm5hbF9pZHMYDCADKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISFQoNZXZpZGVuY2VfaGFzaBgNIAEoDBIvCgtyZXZlcnNlZF9hdBgOIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAitQMKJENvbGxhdGVyYWxSZWxlYXNlRWxpZ2liaWxpdHlFdmlkZW5jZRIrCgtldmlkZW5jZV9pZBgBIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchItCg1hbGxvY2F0aW9uX2lkGAIgASgLMhYudW5pZmllZC52MS5JZGVudGlmaWVyEiMKB2xvYW5faWQYAyABKAsyEi51bmlmaWVkLnYxLkxvYW5JZBIQCghlbGlnaWJsZRgEIAEoCBI6Ch9wcm9qZWN0ZWRfb3V0c3RhbmRpbmdfcHJpbmNpcGFsGAUgASgLMhEudW5pZmllZC52MS5Nb25leRIVCg1wYXltZW50X2ZpbmFsGAYgASgIEh4KFnJlY29uY2lsaWF0aW9uX21hdGNoZWQYByABKAgSIQoZcmV2ZXJzYWxfZGVhZGxpbmVfZWxhcHNlZBgIIAEoCBIbChNhbGxvY2F0aW9uX3JldmVyc2VkGAkgASgIEhUKDWV2aWRlbmNlX2hhc2gYCiABKAwSMAoMZXZhbHVhdGVkX2F0GAsgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcCpZCgtQYXltZW50UmFpbBIcChhQQVlNRU5UX1JBSUxfVU5TUEVDSUZJRUQQABIVChFQQVlNRU5UX1JBSUxfQkFOSxABEhUKEVBBWU1FTlRfUkFJTF9DQVJEEAIq+QEKDVBheW1lbnRTdGF0dXMSHgoaUEFZTUVOVF9TVEFUVVNfVU5TUEVDSUZJRUQQABIaChZQQVlNRU5UX1NUQVRVU19DUkVBVEVEEAESHQoZUEFZTUVOVF9TVEFUVVNfUFJPQ0VTU0lORxACEh4KGlBBWU1FTlRfU1RBVFVTX1BST1ZJU0lPTkFMEAMSGAoUUEFZTUVOVF9TVEFUVVNfRklOQUwQBBIZChVQQVlNRU5UX1NUQVRVU19GQUlMRUQQBRIbChdQQVlNRU5UX1NUQVRVU19SRVZFUlNFRBAGEhsKF1BBWU1FTlRfU1RBVFVTX0RJU1BVVEVEEAcqiwEKFVByb3ZpZGVyU3RhdGVtZW50S2luZBInCiNQUk9WSURFUl9TVEFURU1FTlRfS0lORF9VTlNQRUNJRklFRBAAEiMKH1BST1ZJREVSX1NUQVRFTUVOVF9LSU5EX1NFVFRMRUQQARIkCiBQUk9WSURFUl9TVEFURU1FTlRfS0lORF9SRVZFUlNFRBACKqkBChRSZWNvbmNpbGlhdGlvblN0YXR1cxIlCiFSRUNPTkNJTElBVElPTl9TVEFUVVNfVU5TUEVDSUZJRUQQABIhCh1SRUNPTkNJTElBVElPTl9TVEFUVVNfTUFUQ0hFRBABEiMKH1JFQ09OQ0lMSUFUSU9OX1NUQVRVU19FWENFUFRJT04QAhIiCh5SRUNPTkNJTElBVElPTl9TVEFUVVNfUkVTT0xWRUQQA0JPWk1naXRodWIuY29tL3VuaWZpZWQtZmluYW5jZS91bmlmaWVkL3BhY2thZ2VzL2dlbmVyYXRlZC9nby91bmlmaWVkL3YxO3VuaWZpZWR2MWIGcHJvdG8z", [file_google_protobuf_timestamp, file_unified_v1_types]);
 
 /**
  * PaymentIntentRecord contains opaque references only. It must not contain raw bank,
@@ -556,6 +556,316 @@ export type PaymentReconciliationResolutionEvidence = Message<"unified.v1.Paymen
  */
 export const PaymentReconciliationResolutionEvidenceSchema: GenMessage<PaymentReconciliationResolutionEvidence> = /*@__PURE__*/
   messageDesc(file_unified_v1_payment, 8);
+
+/**
+ * Synthetic Phase 7B projection evidence. It is not canonical on-chain loan state.
+ *
+ * @generated from message unified.v1.LoanObligationSnapshotEvidence
+ */
+export type LoanObligationSnapshotEvidence = Message<"unified.v1.LoanObligationSnapshotEvidence"> & {
+  /**
+   * @generated from field: unified.v1.LoanId loan_id = 1;
+   */
+  loanId?: LoanId | undefined;
+
+  /**
+   * @generated from field: unified.v1.PartyId borrower_id = 2;
+   */
+  borrowerId?: PartyId | undefined;
+
+  /**
+   * @generated from field: unified.v1.PartyId lender_id = 3;
+   */
+  lenderId?: PartyId | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money outstanding_principal = 4;
+   */
+  outstandingPrincipal?: Money | undefined;
+
+  /**
+   * @generated from field: uint64 aggregate_version = 5;
+   */
+  aggregateVersion: bigint;
+
+  /**
+   * @generated from field: string source_authority = 6;
+   */
+  sourceAuthority: string;
+
+  /**
+   * @generated from field: bytes source_evidence_hash = 7;
+   */
+  sourceEvidenceHash: Uint8Array;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp as_of = 8;
+   */
+  asOf?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message unified.v1.LoanObligationSnapshotEvidence.
+ * Use `create(LoanObligationSnapshotEvidenceSchema)` to create a new message.
+ */
+export const LoanObligationSnapshotEvidenceSchema: GenMessage<LoanObligationSnapshotEvidence> = /*@__PURE__*/
+  messageDesc(file_unified_v1_payment, 9);
+
+/**
+ * @generated from message unified.v1.FinalPaymentAllocationEvidence
+ */
+export type FinalPaymentAllocationEvidence = Message<"unified.v1.FinalPaymentAllocationEvidence"> & {
+  /**
+   * @generated from field: unified.v1.Identifier allocation_id = 1;
+   */
+  allocationId?: Identifier | undefined;
+
+  /**
+   * @generated from field: unified.v1.Identifier payment_id = 2;
+   */
+  paymentId?: Identifier | undefined;
+
+  /**
+   * @generated from field: unified.v1.LoanId loan_id = 3;
+   */
+  loanId?: LoanId | undefined;
+
+  /**
+   * @generated from field: string provider_id = 4;
+   */
+  providerId: string;
+
+  /**
+   * @generated from field: string provider_reference = 5;
+   */
+  providerReference: string;
+
+  /**
+   * @generated from field: unified.v1.Money gross_payment = 6;
+   */
+  grossPayment?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money principal_allocation = 7;
+   */
+  principalAllocation?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money refundable_excess = 8;
+   */
+  refundableExcess?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money debt_before = 9;
+   */
+  debtBefore?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money debt_after = 10;
+   */
+  debtAfter?: Money | undefined;
+
+  /**
+   * @generated from field: uint64 obligation_version_before = 11;
+   */
+  obligationVersionBefore: bigint;
+
+  /**
+   * @generated from field: uint64 obligation_version_after = 12;
+   */
+  obligationVersionAfter: bigint;
+
+  /**
+   * @generated from field: bytes waterfall_policy_hash = 13;
+   */
+  waterfallPolicyHash: Uint8Array;
+
+  /**
+   * @generated from field: bytes finality_policy_hash = 14;
+   */
+  finalityPolicyHash: Uint8Array;
+
+  /**
+   * @generated from field: unified.v1.Identifier reconciliation_id = 15;
+   */
+  reconciliationId?: Identifier | undefined;
+
+  /**
+   * @generated from field: repeated unified.v1.Identifier journal_ids = 16;
+   */
+  journalIds: Identifier[];
+
+  /**
+   * @generated from field: bytes evidence_hash = 17;
+   */
+  evidenceHash: Uint8Array;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp reversal_deadline = 18;
+   */
+  reversalDeadline?: Timestamp | undefined;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp allocated_at = 19;
+   */
+  allocatedAt?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message unified.v1.FinalPaymentAllocationEvidence.
+ * Use `create(FinalPaymentAllocationEvidenceSchema)` to create a new message.
+ */
+export const FinalPaymentAllocationEvidenceSchema: GenMessage<FinalPaymentAllocationEvidence> = /*@__PURE__*/
+  messageDesc(file_unified_v1_payment, 10);
+
+/**
+ * @generated from message unified.v1.PaymentAllocationReversalEvidence
+ */
+export type PaymentAllocationReversalEvidence = Message<"unified.v1.PaymentAllocationReversalEvidence"> & {
+  /**
+   * @generated from field: unified.v1.Identifier reversal_id = 1;
+   */
+  reversalId?: Identifier | undefined;
+
+  /**
+   * @generated from field: unified.v1.Identifier allocation_id = 2;
+   */
+  allocationId?: Identifier | undefined;
+
+  /**
+   * @generated from field: unified.v1.Identifier payment_id = 3;
+   */
+  paymentId?: Identifier | undefined;
+
+  /**
+   * @generated from field: unified.v1.LoanId loan_id = 4;
+   */
+  loanId?: LoanId | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money restored_principal = 5;
+   */
+  restoredPrincipal?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money removed_refundable_excess = 6;
+   */
+  removedRefundableExcess?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money debt_before = 7;
+   */
+  debtBefore?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money debt_after = 8;
+   */
+  debtAfter?: Money | undefined;
+
+  /**
+   * @generated from field: uint64 obligation_version_before = 9;
+   */
+  obligationVersionBefore: bigint;
+
+  /**
+   * @generated from field: uint64 obligation_version_after = 10;
+   */
+  obligationVersionAfter: bigint;
+
+  /**
+   * @generated from field: string reason_code = 11;
+   */
+  reasonCode: string;
+
+  /**
+   * @generated from field: repeated unified.v1.Identifier journal_ids = 12;
+   */
+  journalIds: Identifier[];
+
+  /**
+   * @generated from field: bytes evidence_hash = 13;
+   */
+  evidenceHash: Uint8Array;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp reversed_at = 14;
+   */
+  reversedAt?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message unified.v1.PaymentAllocationReversalEvidence.
+ * Use `create(PaymentAllocationReversalEvidenceSchema)` to create a new message.
+ */
+export const PaymentAllocationReversalEvidenceSchema: GenMessage<PaymentAllocationReversalEvidence> = /*@__PURE__*/
+  messageDesc(file_unified_v1_payment, 11);
+
+/**
+ * @generated from message unified.v1.CollateralReleaseEligibilityEvidence
+ */
+export type CollateralReleaseEligibilityEvidence = Message<"unified.v1.CollateralReleaseEligibilityEvidence"> & {
+  /**
+   * @generated from field: unified.v1.Identifier evidence_id = 1;
+   */
+  evidenceId?: Identifier | undefined;
+
+  /**
+   * @generated from field: unified.v1.Identifier allocation_id = 2;
+   */
+  allocationId?: Identifier | undefined;
+
+  /**
+   * @generated from field: unified.v1.LoanId loan_id = 3;
+   */
+  loanId?: LoanId | undefined;
+
+  /**
+   * @generated from field: bool eligible = 4;
+   */
+  eligible: boolean;
+
+  /**
+   * @generated from field: unified.v1.Money projected_outstanding_principal = 5;
+   */
+  projectedOutstandingPrincipal?: Money | undefined;
+
+  /**
+   * @generated from field: bool payment_final = 6;
+   */
+  paymentFinal: boolean;
+
+  /**
+   * @generated from field: bool reconciliation_matched = 7;
+   */
+  reconciliationMatched: boolean;
+
+  /**
+   * @generated from field: bool reversal_deadline_elapsed = 8;
+   */
+  reversalDeadlineElapsed: boolean;
+
+  /**
+   * @generated from field: bool allocation_reversed = 9;
+   */
+  allocationReversed: boolean;
+
+  /**
+   * @generated from field: bytes evidence_hash = 10;
+   */
+  evidenceHash: Uint8Array;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp evaluated_at = 11;
+   */
+  evaluatedAt?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message unified.v1.CollateralReleaseEligibilityEvidence.
+ * Use `create(CollateralReleaseEligibilityEvidenceSchema)` to create a new message.
+ */
+export const CollateralReleaseEligibilityEvidenceSchema: GenMessage<CollateralReleaseEligibilityEvidence> = /*@__PURE__*/
+  messageDesc(file_unified_v1_payment, 12);
 
 /**
  * @generated from enum unified.v1.PaymentRail

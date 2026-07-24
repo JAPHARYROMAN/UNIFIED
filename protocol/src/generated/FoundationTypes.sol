@@ -2,7 +2,7 @@
 pragma solidity 0.8.36;
 
 // Code generated from schemas/proto/unified/v1. DO NOT EDIT.
-// Source SHA-256: f030d21167ba402ec182438dbf844089c5da826c673c06ecf5770118ab56a6c8
+// Source SHA-256: c9f173d45e49850617762967501010f35e1e8d3aba76ee667c3aafd9330c405b
 library FoundationTypes {
     enum CollateralKind { UNSPECIFIED, NATIVE, ERC20, ERC721, ERC1155 }
 
@@ -540,6 +540,70 @@ library FoundationTypes {
         Identifier resolutionJournalId;
         string resolvedBy;
         int64 resolvedAt;
+    }
+
+    struct LoanObligationSnapshotEvidence {
+        LoanId loanId;
+        PartyId borrowerId;
+        PartyId lenderId;
+        Money outstandingPrincipal;
+        uint64 aggregateVersion;
+        string sourceAuthority;
+        bytes sourceEvidenceHash;
+        int64 asOf;
+    }
+
+    struct FinalPaymentAllocationEvidence {
+        Identifier allocationId;
+        Identifier paymentId;
+        LoanId loanId;
+        string providerId;
+        string providerReference;
+        Money grossPayment;
+        Money principalAllocation;
+        Money refundableExcess;
+        Money debtBefore;
+        Money debtAfter;
+        uint64 obligationVersionBefore;
+        uint64 obligationVersionAfter;
+        bytes waterfallPolicyHash;
+        bytes finalityPolicyHash;
+        Identifier reconciliationId;
+        Identifier[] journalIds;
+        bytes evidenceHash;
+        int64 reversalDeadline;
+        int64 allocatedAt;
+    }
+
+    struct PaymentAllocationReversalEvidence {
+        Identifier reversalId;
+        Identifier allocationId;
+        Identifier paymentId;
+        LoanId loanId;
+        Money restoredPrincipal;
+        Money removedRefundableExcess;
+        Money debtBefore;
+        Money debtAfter;
+        uint64 obligationVersionBefore;
+        uint64 obligationVersionAfter;
+        string reasonCode;
+        Identifier[] journalIds;
+        bytes evidenceHash;
+        int64 reversedAt;
+    }
+
+    struct CollateralReleaseEligibilityEvidence {
+        Identifier evidenceId;
+        Identifier allocationId;
+        LoanId loanId;
+        bool eligible;
+        Money projectedOutstandingPrincipal;
+        bool paymentFinal;
+        bool reconciliationMatched;
+        bool reversalDeadlineElapsed;
+        bool allocationReversed;
+        bytes evidenceHash;
+        int64 evaluatedAt;
     }
 
     struct OracleObservation {

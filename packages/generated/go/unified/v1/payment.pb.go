@@ -1245,6 +1245,567 @@ func (x *PaymentReconciliationResolutionEvidence) GetResolvedAt() *timestamppb.T
 	return nil
 }
 
+// Synthetic Phase 7B projection evidence. It is not canonical on-chain loan state.
+type LoanObligationSnapshotEvidence struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	LoanId               *LoanId                `protobuf:"bytes,1,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	BorrowerId           *PartyId               `protobuf:"bytes,2,opt,name=borrower_id,json=borrowerId,proto3" json:"borrower_id,omitempty"`
+	LenderId             *PartyId               `protobuf:"bytes,3,opt,name=lender_id,json=lenderId,proto3" json:"lender_id,omitempty"`
+	OutstandingPrincipal *Money                 `protobuf:"bytes,4,opt,name=outstanding_principal,json=outstandingPrincipal,proto3" json:"outstanding_principal,omitempty"`
+	AggregateVersion     uint64                 `protobuf:"varint,5,opt,name=aggregate_version,json=aggregateVersion,proto3" json:"aggregate_version,omitempty"`
+	SourceAuthority      string                 `protobuf:"bytes,6,opt,name=source_authority,json=sourceAuthority,proto3" json:"source_authority,omitempty"`
+	SourceEvidenceHash   []byte                 `protobuf:"bytes,7,opt,name=source_evidence_hash,json=sourceEvidenceHash,proto3" json:"source_evidence_hash,omitempty"`
+	AsOf                 *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=as_of,json=asOf,proto3" json:"as_of,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *LoanObligationSnapshotEvidence) Reset() {
+	*x = LoanObligationSnapshotEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoanObligationSnapshotEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoanObligationSnapshotEvidence) ProtoMessage() {}
+
+func (x *LoanObligationSnapshotEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoanObligationSnapshotEvidence.ProtoReflect.Descriptor instead.
+func (*LoanObligationSnapshotEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *LoanObligationSnapshotEvidence) GetLoanId() *LoanId {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *LoanObligationSnapshotEvidence) GetBorrowerId() *PartyId {
+	if x != nil {
+		return x.BorrowerId
+	}
+	return nil
+}
+
+func (x *LoanObligationSnapshotEvidence) GetLenderId() *PartyId {
+	if x != nil {
+		return x.LenderId
+	}
+	return nil
+}
+
+func (x *LoanObligationSnapshotEvidence) GetOutstandingPrincipal() *Money {
+	if x != nil {
+		return x.OutstandingPrincipal
+	}
+	return nil
+}
+
+func (x *LoanObligationSnapshotEvidence) GetAggregateVersion() uint64 {
+	if x != nil {
+		return x.AggregateVersion
+	}
+	return 0
+}
+
+func (x *LoanObligationSnapshotEvidence) GetSourceAuthority() string {
+	if x != nil {
+		return x.SourceAuthority
+	}
+	return ""
+}
+
+func (x *LoanObligationSnapshotEvidence) GetSourceEvidenceHash() []byte {
+	if x != nil {
+		return x.SourceEvidenceHash
+	}
+	return nil
+}
+
+func (x *LoanObligationSnapshotEvidence) GetAsOf() *timestamppb.Timestamp {
+	if x != nil {
+		return x.AsOf
+	}
+	return nil
+}
+
+type FinalPaymentAllocationEvidence struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	AllocationId            *Identifier            `protobuf:"bytes,1,opt,name=allocation_id,json=allocationId,proto3" json:"allocation_id,omitempty"`
+	PaymentId               *Identifier            `protobuf:"bytes,2,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	LoanId                  *LoanId                `protobuf:"bytes,3,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	ProviderId              string                 `protobuf:"bytes,4,opt,name=provider_id,json=providerId,proto3" json:"provider_id,omitempty"`
+	ProviderReference       string                 `protobuf:"bytes,5,opt,name=provider_reference,json=providerReference,proto3" json:"provider_reference,omitempty"`
+	GrossPayment            *Money                 `protobuf:"bytes,6,opt,name=gross_payment,json=grossPayment,proto3" json:"gross_payment,omitempty"`
+	PrincipalAllocation     *Money                 `protobuf:"bytes,7,opt,name=principal_allocation,json=principalAllocation,proto3" json:"principal_allocation,omitempty"`
+	RefundableExcess        *Money                 `protobuf:"bytes,8,opt,name=refundable_excess,json=refundableExcess,proto3" json:"refundable_excess,omitempty"`
+	DebtBefore              *Money                 `protobuf:"bytes,9,opt,name=debt_before,json=debtBefore,proto3" json:"debt_before,omitempty"`
+	DebtAfter               *Money                 `protobuf:"bytes,10,opt,name=debt_after,json=debtAfter,proto3" json:"debt_after,omitempty"`
+	ObligationVersionBefore uint64                 `protobuf:"varint,11,opt,name=obligation_version_before,json=obligationVersionBefore,proto3" json:"obligation_version_before,omitempty"`
+	ObligationVersionAfter  uint64                 `protobuf:"varint,12,opt,name=obligation_version_after,json=obligationVersionAfter,proto3" json:"obligation_version_after,omitempty"`
+	WaterfallPolicyHash     []byte                 `protobuf:"bytes,13,opt,name=waterfall_policy_hash,json=waterfallPolicyHash,proto3" json:"waterfall_policy_hash,omitempty"`
+	FinalityPolicyHash      []byte                 `protobuf:"bytes,14,opt,name=finality_policy_hash,json=finalityPolicyHash,proto3" json:"finality_policy_hash,omitempty"`
+	ReconciliationId        *Identifier            `protobuf:"bytes,15,opt,name=reconciliation_id,json=reconciliationId,proto3" json:"reconciliation_id,omitempty"`
+	JournalIds              []*Identifier          `protobuf:"bytes,16,rep,name=journal_ids,json=journalIds,proto3" json:"journal_ids,omitempty"`
+	EvidenceHash            []byte                 `protobuf:"bytes,17,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	ReversalDeadline        *timestamppb.Timestamp `protobuf:"bytes,18,opt,name=reversal_deadline,json=reversalDeadline,proto3" json:"reversal_deadline,omitempty"`
+	AllocatedAt             *timestamppb.Timestamp `protobuf:"bytes,19,opt,name=allocated_at,json=allocatedAt,proto3" json:"allocated_at,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *FinalPaymentAllocationEvidence) Reset() {
+	*x = FinalPaymentAllocationEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FinalPaymentAllocationEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FinalPaymentAllocationEvidence) ProtoMessage() {}
+
+func (x *FinalPaymentAllocationEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FinalPaymentAllocationEvidence.ProtoReflect.Descriptor instead.
+func (*FinalPaymentAllocationEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *FinalPaymentAllocationEvidence) GetAllocationId() *Identifier {
+	if x != nil {
+		return x.AllocationId
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetPaymentId() *Identifier {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetLoanId() *LoanId {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetProviderId() string {
+	if x != nil {
+		return x.ProviderId
+	}
+	return ""
+}
+
+func (x *FinalPaymentAllocationEvidence) GetProviderReference() string {
+	if x != nil {
+		return x.ProviderReference
+	}
+	return ""
+}
+
+func (x *FinalPaymentAllocationEvidence) GetGrossPayment() *Money {
+	if x != nil {
+		return x.GrossPayment
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetPrincipalAllocation() *Money {
+	if x != nil {
+		return x.PrincipalAllocation
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetRefundableExcess() *Money {
+	if x != nil {
+		return x.RefundableExcess
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetDebtBefore() *Money {
+	if x != nil {
+		return x.DebtBefore
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetDebtAfter() *Money {
+	if x != nil {
+		return x.DebtAfter
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetObligationVersionBefore() uint64 {
+	if x != nil {
+		return x.ObligationVersionBefore
+	}
+	return 0
+}
+
+func (x *FinalPaymentAllocationEvidence) GetObligationVersionAfter() uint64 {
+	if x != nil {
+		return x.ObligationVersionAfter
+	}
+	return 0
+}
+
+func (x *FinalPaymentAllocationEvidence) GetWaterfallPolicyHash() []byte {
+	if x != nil {
+		return x.WaterfallPolicyHash
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetFinalityPolicyHash() []byte {
+	if x != nil {
+		return x.FinalityPolicyHash
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetReconciliationId() *Identifier {
+	if x != nil {
+		return x.ReconciliationId
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetJournalIds() []*Identifier {
+	if x != nil {
+		return x.JournalIds
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetReversalDeadline() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ReversalDeadline
+	}
+	return nil
+}
+
+func (x *FinalPaymentAllocationEvidence) GetAllocatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.AllocatedAt
+	}
+	return nil
+}
+
+type PaymentAllocationReversalEvidence struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	ReversalId              *Identifier            `protobuf:"bytes,1,opt,name=reversal_id,json=reversalId,proto3" json:"reversal_id,omitempty"`
+	AllocationId            *Identifier            `protobuf:"bytes,2,opt,name=allocation_id,json=allocationId,proto3" json:"allocation_id,omitempty"`
+	PaymentId               *Identifier            `protobuf:"bytes,3,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	LoanId                  *LoanId                `protobuf:"bytes,4,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	RestoredPrincipal       *Money                 `protobuf:"bytes,5,opt,name=restored_principal,json=restoredPrincipal,proto3" json:"restored_principal,omitempty"`
+	RemovedRefundableExcess *Money                 `protobuf:"bytes,6,opt,name=removed_refundable_excess,json=removedRefundableExcess,proto3" json:"removed_refundable_excess,omitempty"`
+	DebtBefore              *Money                 `protobuf:"bytes,7,opt,name=debt_before,json=debtBefore,proto3" json:"debt_before,omitempty"`
+	DebtAfter               *Money                 `protobuf:"bytes,8,opt,name=debt_after,json=debtAfter,proto3" json:"debt_after,omitempty"`
+	ObligationVersionBefore uint64                 `protobuf:"varint,9,opt,name=obligation_version_before,json=obligationVersionBefore,proto3" json:"obligation_version_before,omitempty"`
+	ObligationVersionAfter  uint64                 `protobuf:"varint,10,opt,name=obligation_version_after,json=obligationVersionAfter,proto3" json:"obligation_version_after,omitempty"`
+	ReasonCode              string                 `protobuf:"bytes,11,opt,name=reason_code,json=reasonCode,proto3" json:"reason_code,omitempty"`
+	JournalIds              []*Identifier          `protobuf:"bytes,12,rep,name=journal_ids,json=journalIds,proto3" json:"journal_ids,omitempty"`
+	EvidenceHash            []byte                 `protobuf:"bytes,13,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	ReversedAt              *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=reversed_at,json=reversedAt,proto3" json:"reversed_at,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *PaymentAllocationReversalEvidence) Reset() {
+	*x = PaymentAllocationReversalEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PaymentAllocationReversalEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PaymentAllocationReversalEvidence) ProtoMessage() {}
+
+func (x *PaymentAllocationReversalEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PaymentAllocationReversalEvidence.ProtoReflect.Descriptor instead.
+func (*PaymentAllocationReversalEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *PaymentAllocationReversalEvidence) GetReversalId() *Identifier {
+	if x != nil {
+		return x.ReversalId
+	}
+	return nil
+}
+
+func (x *PaymentAllocationReversalEvidence) GetAllocationId() *Identifier {
+	if x != nil {
+		return x.AllocationId
+	}
+	return nil
+}
+
+func (x *PaymentAllocationReversalEvidence) GetPaymentId() *Identifier {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *PaymentAllocationReversalEvidence) GetLoanId() *LoanId {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *PaymentAllocationReversalEvidence) GetRestoredPrincipal() *Money {
+	if x != nil {
+		return x.RestoredPrincipal
+	}
+	return nil
+}
+
+func (x *PaymentAllocationReversalEvidence) GetRemovedRefundableExcess() *Money {
+	if x != nil {
+		return x.RemovedRefundableExcess
+	}
+	return nil
+}
+
+func (x *PaymentAllocationReversalEvidence) GetDebtBefore() *Money {
+	if x != nil {
+		return x.DebtBefore
+	}
+	return nil
+}
+
+func (x *PaymentAllocationReversalEvidence) GetDebtAfter() *Money {
+	if x != nil {
+		return x.DebtAfter
+	}
+	return nil
+}
+
+func (x *PaymentAllocationReversalEvidence) GetObligationVersionBefore() uint64 {
+	if x != nil {
+		return x.ObligationVersionBefore
+	}
+	return 0
+}
+
+func (x *PaymentAllocationReversalEvidence) GetObligationVersionAfter() uint64 {
+	if x != nil {
+		return x.ObligationVersionAfter
+	}
+	return 0
+}
+
+func (x *PaymentAllocationReversalEvidence) GetReasonCode() string {
+	if x != nil {
+		return x.ReasonCode
+	}
+	return ""
+}
+
+func (x *PaymentAllocationReversalEvidence) GetJournalIds() []*Identifier {
+	if x != nil {
+		return x.JournalIds
+	}
+	return nil
+}
+
+func (x *PaymentAllocationReversalEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *PaymentAllocationReversalEvidence) GetReversedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ReversedAt
+	}
+	return nil
+}
+
+type CollateralReleaseEligibilityEvidence struct {
+	state                         protoimpl.MessageState `protogen:"open.v1"`
+	EvidenceId                    *Identifier            `protobuf:"bytes,1,opt,name=evidence_id,json=evidenceId,proto3" json:"evidence_id,omitempty"`
+	AllocationId                  *Identifier            `protobuf:"bytes,2,opt,name=allocation_id,json=allocationId,proto3" json:"allocation_id,omitempty"`
+	LoanId                        *LoanId                `protobuf:"bytes,3,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	Eligible                      bool                   `protobuf:"varint,4,opt,name=eligible,proto3" json:"eligible,omitempty"`
+	ProjectedOutstandingPrincipal *Money                 `protobuf:"bytes,5,opt,name=projected_outstanding_principal,json=projectedOutstandingPrincipal,proto3" json:"projected_outstanding_principal,omitempty"`
+	PaymentFinal                  bool                   `protobuf:"varint,6,opt,name=payment_final,json=paymentFinal,proto3" json:"payment_final,omitempty"`
+	ReconciliationMatched         bool                   `protobuf:"varint,7,opt,name=reconciliation_matched,json=reconciliationMatched,proto3" json:"reconciliation_matched,omitempty"`
+	ReversalDeadlineElapsed       bool                   `protobuf:"varint,8,opt,name=reversal_deadline_elapsed,json=reversalDeadlineElapsed,proto3" json:"reversal_deadline_elapsed,omitempty"`
+	AllocationReversed            bool                   `protobuf:"varint,9,opt,name=allocation_reversed,json=allocationReversed,proto3" json:"allocation_reversed,omitempty"`
+	EvidenceHash                  []byte                 `protobuf:"bytes,10,opt,name=evidence_hash,json=evidenceHash,proto3" json:"evidence_hash,omitempty"`
+	EvaluatedAt                   *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=evaluated_at,json=evaluatedAt,proto3" json:"evaluated_at,omitempty"`
+	unknownFields                 protoimpl.UnknownFields
+	sizeCache                     protoimpl.SizeCache
+}
+
+func (x *CollateralReleaseEligibilityEvidence) Reset() {
+	*x = CollateralReleaseEligibilityEvidence{}
+	mi := &file_unified_v1_payment_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CollateralReleaseEligibilityEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CollateralReleaseEligibilityEvidence) ProtoMessage() {}
+
+func (x *CollateralReleaseEligibilityEvidence) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_payment_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CollateralReleaseEligibilityEvidence.ProtoReflect.Descriptor instead.
+func (*CollateralReleaseEligibilityEvidence) Descriptor() ([]byte, []int) {
+	return file_unified_v1_payment_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *CollateralReleaseEligibilityEvidence) GetEvidenceId() *Identifier {
+	if x != nil {
+		return x.EvidenceId
+	}
+	return nil
+}
+
+func (x *CollateralReleaseEligibilityEvidence) GetAllocationId() *Identifier {
+	if x != nil {
+		return x.AllocationId
+	}
+	return nil
+}
+
+func (x *CollateralReleaseEligibilityEvidence) GetLoanId() *LoanId {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *CollateralReleaseEligibilityEvidence) GetEligible() bool {
+	if x != nil {
+		return x.Eligible
+	}
+	return false
+}
+
+func (x *CollateralReleaseEligibilityEvidence) GetProjectedOutstandingPrincipal() *Money {
+	if x != nil {
+		return x.ProjectedOutstandingPrincipal
+	}
+	return nil
+}
+
+func (x *CollateralReleaseEligibilityEvidence) GetPaymentFinal() bool {
+	if x != nil {
+		return x.PaymentFinal
+	}
+	return false
+}
+
+func (x *CollateralReleaseEligibilityEvidence) GetReconciliationMatched() bool {
+	if x != nil {
+		return x.ReconciliationMatched
+	}
+	return false
+}
+
+func (x *CollateralReleaseEligibilityEvidence) GetReversalDeadlineElapsed() bool {
+	if x != nil {
+		return x.ReversalDeadlineElapsed
+	}
+	return false
+}
+
+func (x *CollateralReleaseEligibilityEvidence) GetAllocationReversed() bool {
+	if x != nil {
+		return x.AllocationReversed
+	}
+	return false
+}
+
+func (x *CollateralReleaseEligibilityEvidence) GetEvidenceHash() []byte {
+	if x != nil {
+		return x.EvidenceHash
+	}
+	return nil
+}
+
+func (x *CollateralReleaseEligibilityEvidence) GetEvaluatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.EvaluatedAt
+	}
+	return nil
+}
+
 var File_unified_v1_payment_proto protoreflect.FileDescriptor
 
 const file_unified_v1_payment_proto_rawDesc = "" +
@@ -1378,7 +1939,80 @@ const file_unified_v1_payment_proto_rawDesc = "" +
 	"\vresolved_by\x18\x05 \x01(\tR\n" +
 	"resolvedBy\x12;\n" +
 	"\vresolved_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"resolvedAt*Y\n" +
+	"resolvedAt\"\xb8\x03\n" +
+	"\x1eLoanObligationSnapshotEvidence\x12+\n" +
+	"\aloan_id\x18\x01 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x124\n" +
+	"\vborrower_id\x18\x02 \x01(\v2\x13.unified.v1.PartyIdR\n" +
+	"borrowerId\x120\n" +
+	"\tlender_id\x18\x03 \x01(\v2\x13.unified.v1.PartyIdR\blenderId\x12F\n" +
+	"\x15outstanding_principal\x18\x04 \x01(\v2\x11.unified.v1.MoneyR\x14outstandingPrincipal\x12+\n" +
+	"\x11aggregate_version\x18\x05 \x01(\x04R\x10aggregateVersion\x12)\n" +
+	"\x10source_authority\x18\x06 \x01(\tR\x0fsourceAuthority\x120\n" +
+	"\x14source_evidence_hash\x18\a \x01(\fR\x12sourceEvidenceHash\x12/\n" +
+	"\x05as_of\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\x04asOf\"\xbc\b\n" +
+	"\x1eFinalPaymentAllocationEvidence\x12;\n" +
+	"\rallocation_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\fallocationId\x125\n" +
+	"\n" +
+	"payment_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\tpaymentId\x12+\n" +
+	"\aloan_id\x18\x03 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x12\x1f\n" +
+	"\vprovider_id\x18\x04 \x01(\tR\n" +
+	"providerId\x12-\n" +
+	"\x12provider_reference\x18\x05 \x01(\tR\x11providerReference\x126\n" +
+	"\rgross_payment\x18\x06 \x01(\v2\x11.unified.v1.MoneyR\fgrossPayment\x12D\n" +
+	"\x14principal_allocation\x18\a \x01(\v2\x11.unified.v1.MoneyR\x13principalAllocation\x12>\n" +
+	"\x11refundable_excess\x18\b \x01(\v2\x11.unified.v1.MoneyR\x10refundableExcess\x122\n" +
+	"\vdebt_before\x18\t \x01(\v2\x11.unified.v1.MoneyR\n" +
+	"debtBefore\x120\n" +
+	"\n" +
+	"debt_after\x18\n" +
+	" \x01(\v2\x11.unified.v1.MoneyR\tdebtAfter\x12:\n" +
+	"\x19obligation_version_before\x18\v \x01(\x04R\x17obligationVersionBefore\x128\n" +
+	"\x18obligation_version_after\x18\f \x01(\x04R\x16obligationVersionAfter\x122\n" +
+	"\x15waterfall_policy_hash\x18\r \x01(\fR\x13waterfallPolicyHash\x120\n" +
+	"\x14finality_policy_hash\x18\x0e \x01(\fR\x12finalityPolicyHash\x12C\n" +
+	"\x11reconciliation_id\x18\x0f \x01(\v2\x16.unified.v1.IdentifierR\x10reconciliationId\x127\n" +
+	"\vjournal_ids\x18\x10 \x03(\v2\x16.unified.v1.IdentifierR\n" +
+	"journalIds\x12#\n" +
+	"\revidence_hash\x18\x11 \x01(\fR\fevidenceHash\x12G\n" +
+	"\x11reversal_deadline\x18\x12 \x01(\v2\x1a.google.protobuf.TimestampR\x10reversalDeadline\x12=\n" +
+	"\fallocated_at\x18\x13 \x01(\v2\x1a.google.protobuf.TimestampR\vallocatedAt\"\xa6\x06\n" +
+	"!PaymentAllocationReversalEvidence\x127\n" +
+	"\vreversal_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\n" +
+	"reversalId\x12;\n" +
+	"\rallocation_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\fallocationId\x125\n" +
+	"\n" +
+	"payment_id\x18\x03 \x01(\v2\x16.unified.v1.IdentifierR\tpaymentId\x12+\n" +
+	"\aloan_id\x18\x04 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x12@\n" +
+	"\x12restored_principal\x18\x05 \x01(\v2\x11.unified.v1.MoneyR\x11restoredPrincipal\x12M\n" +
+	"\x19removed_refundable_excess\x18\x06 \x01(\v2\x11.unified.v1.MoneyR\x17removedRefundableExcess\x122\n" +
+	"\vdebt_before\x18\a \x01(\v2\x11.unified.v1.MoneyR\n" +
+	"debtBefore\x120\n" +
+	"\n" +
+	"debt_after\x18\b \x01(\v2\x11.unified.v1.MoneyR\tdebtAfter\x12:\n" +
+	"\x19obligation_version_before\x18\t \x01(\x04R\x17obligationVersionBefore\x128\n" +
+	"\x18obligation_version_after\x18\n" +
+	" \x01(\x04R\x16obligationVersionAfter\x12\x1f\n" +
+	"\vreason_code\x18\v \x01(\tR\n" +
+	"reasonCode\x127\n" +
+	"\vjournal_ids\x18\f \x03(\v2\x16.unified.v1.IdentifierR\n" +
+	"journalIds\x12#\n" +
+	"\revidence_hash\x18\r \x01(\fR\fevidenceHash\x12;\n" +
+	"\vreversed_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"reversedAt\"\xed\x04\n" +
+	"$CollateralReleaseEligibilityEvidence\x127\n" +
+	"\vevidence_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\n" +
+	"evidenceId\x12;\n" +
+	"\rallocation_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\fallocationId\x12+\n" +
+	"\aloan_id\x18\x03 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x12\x1a\n" +
+	"\beligible\x18\x04 \x01(\bR\beligible\x12Y\n" +
+	"\x1fprojected_outstanding_principal\x18\x05 \x01(\v2\x11.unified.v1.MoneyR\x1dprojectedOutstandingPrincipal\x12#\n" +
+	"\rpayment_final\x18\x06 \x01(\bR\fpaymentFinal\x125\n" +
+	"\x16reconciliation_matched\x18\a \x01(\bR\x15reconciliationMatched\x12:\n" +
+	"\x19reversal_deadline_elapsed\x18\b \x01(\bR\x17reversalDeadlineElapsed\x12/\n" +
+	"\x13allocation_reversed\x18\t \x01(\bR\x12allocationReversed\x12#\n" +
+	"\revidence_hash\x18\n" +
+	" \x01(\fR\fevidenceHash\x12=\n" +
+	"\fevaluated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\vevaluatedAt*Y\n" +
 	"\vPaymentRail\x12\x1c\n" +
 	"\x18PAYMENT_RAIL_UNSPECIFIED\x10\x00\x12\x15\n" +
 	"\x11PAYMENT_RAIL_BANK\x10\x01\x12\x15\n" +
@@ -1415,7 +2049,7 @@ func file_unified_v1_payment_proto_rawDescGZIP() []byte {
 }
 
 var file_unified_v1_payment_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_unified_v1_payment_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_unified_v1_payment_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_unified_v1_payment_proto_goTypes = []any{
 	(PaymentRail)(0),                                // 0: unified.v1.PaymentRail
 	(PaymentStatus)(0),                              // 1: unified.v1.PaymentStatus
@@ -1430,68 +2064,104 @@ var file_unified_v1_payment_proto_goTypes = []any{
 	(*PaymentReconciliationRunEvidence)(nil),        // 10: unified.v1.PaymentReconciliationRunEvidence
 	(*PaymentReconciliationExceptionEvidence)(nil),  // 11: unified.v1.PaymentReconciliationExceptionEvidence
 	(*PaymentReconciliationResolutionEvidence)(nil), // 12: unified.v1.PaymentReconciliationResolutionEvidence
-	(*Identifier)(nil),                              // 13: unified.v1.Identifier
-	(*PartyId)(nil),                                 // 14: unified.v1.PartyId
-	(*LoanId)(nil),                                  // 15: unified.v1.LoanId
-	(*Money)(nil),                                   // 16: unified.v1.Money
-	(*timestamppb.Timestamp)(nil),                   // 17: google.protobuf.Timestamp
-	(*AssetId)(nil),                                 // 18: unified.v1.AssetId
+	(*LoanObligationSnapshotEvidence)(nil),          // 13: unified.v1.LoanObligationSnapshotEvidence
+	(*FinalPaymentAllocationEvidence)(nil),          // 14: unified.v1.FinalPaymentAllocationEvidence
+	(*PaymentAllocationReversalEvidence)(nil),       // 15: unified.v1.PaymentAllocationReversalEvidence
+	(*CollateralReleaseEligibilityEvidence)(nil),    // 16: unified.v1.CollateralReleaseEligibilityEvidence
+	(*Identifier)(nil),                              // 17: unified.v1.Identifier
+	(*PartyId)(nil),                                 // 18: unified.v1.PartyId
+	(*LoanId)(nil),                                  // 19: unified.v1.LoanId
+	(*Money)(nil),                                   // 20: unified.v1.Money
+	(*timestamppb.Timestamp)(nil),                   // 21: google.protobuf.Timestamp
+	(*AssetId)(nil),                                 // 22: unified.v1.AssetId
 }
 var file_unified_v1_payment_proto_depIdxs = []int32{
-	13, // 0: unified.v1.PaymentIntentRecord.payment_id:type_name -> unified.v1.Identifier
-	13, // 1: unified.v1.PaymentIntentRecord.correlation_id:type_name -> unified.v1.Identifier
-	14, // 2: unified.v1.PaymentIntentRecord.payer_reference:type_name -> unified.v1.PartyId
-	15, // 3: unified.v1.PaymentIntentRecord.loan_id:type_name -> unified.v1.LoanId
+	17, // 0: unified.v1.PaymentIntentRecord.payment_id:type_name -> unified.v1.Identifier
+	17, // 1: unified.v1.PaymentIntentRecord.correlation_id:type_name -> unified.v1.Identifier
+	18, // 2: unified.v1.PaymentIntentRecord.payer_reference:type_name -> unified.v1.PartyId
+	19, // 3: unified.v1.PaymentIntentRecord.loan_id:type_name -> unified.v1.LoanId
 	0,  // 4: unified.v1.PaymentIntentRecord.rail:type_name -> unified.v1.PaymentRail
-	16, // 5: unified.v1.PaymentIntentRecord.amount:type_name -> unified.v1.Money
-	17, // 6: unified.v1.PaymentIntentRecord.expires_at:type_name -> google.protobuf.Timestamp
+	20, // 5: unified.v1.PaymentIntentRecord.amount:type_name -> unified.v1.Money
+	21, // 6: unified.v1.PaymentIntentRecord.expires_at:type_name -> google.protobuf.Timestamp
 	1,  // 7: unified.v1.PaymentIntentRecord.status:type_name -> unified.v1.PaymentStatus
-	13, // 8: unified.v1.ProviderPaymentCallback.provider_event_id:type_name -> unified.v1.Identifier
-	13, // 9: unified.v1.ProviderPaymentCallback.payment_id:type_name -> unified.v1.Identifier
+	17, // 8: unified.v1.ProviderPaymentCallback.provider_event_id:type_name -> unified.v1.Identifier
+	17, // 9: unified.v1.ProviderPaymentCallback.payment_id:type_name -> unified.v1.Identifier
 	1,  // 10: unified.v1.ProviderPaymentCallback.status:type_name -> unified.v1.PaymentStatus
-	16, // 11: unified.v1.ProviderPaymentCallback.amount:type_name -> unified.v1.Money
-	17, // 12: unified.v1.ProviderPaymentCallback.occurred_at:type_name -> google.protobuf.Timestamp
-	17, // 13: unified.v1.ProviderPaymentCallback.expires_at:type_name -> google.protobuf.Timestamp
-	13, // 14: unified.v1.ProviderCallbackReceipt.ingress_id:type_name -> unified.v1.Identifier
-	13, // 15: unified.v1.ProviderCallbackReceipt.provider_event_id:type_name -> unified.v1.Identifier
-	17, // 16: unified.v1.ProviderCallbackReceipt.received_at:type_name -> google.protobuf.Timestamp
-	13, // 17: unified.v1.PaymentTransitionEvidence.payment_id:type_name -> unified.v1.Identifier
-	13, // 18: unified.v1.PaymentTransitionEvidence.provider_event_id:type_name -> unified.v1.Identifier
+	20, // 11: unified.v1.ProviderPaymentCallback.amount:type_name -> unified.v1.Money
+	21, // 12: unified.v1.ProviderPaymentCallback.occurred_at:type_name -> google.protobuf.Timestamp
+	21, // 13: unified.v1.ProviderPaymentCallback.expires_at:type_name -> google.protobuf.Timestamp
+	17, // 14: unified.v1.ProviderCallbackReceipt.ingress_id:type_name -> unified.v1.Identifier
+	17, // 15: unified.v1.ProviderCallbackReceipt.provider_event_id:type_name -> unified.v1.Identifier
+	21, // 16: unified.v1.ProviderCallbackReceipt.received_at:type_name -> google.protobuf.Timestamp
+	17, // 17: unified.v1.PaymentTransitionEvidence.payment_id:type_name -> unified.v1.Identifier
+	17, // 18: unified.v1.PaymentTransitionEvidence.provider_event_id:type_name -> unified.v1.Identifier
 	1,  // 19: unified.v1.PaymentTransitionEvidence.from_status:type_name -> unified.v1.PaymentStatus
 	1,  // 20: unified.v1.PaymentTransitionEvidence.to_status:type_name -> unified.v1.PaymentStatus
-	16, // 21: unified.v1.PaymentTransitionEvidence.amount:type_name -> unified.v1.Money
-	13, // 22: unified.v1.PaymentTransitionEvidence.journal_ids:type_name -> unified.v1.Identifier
-	17, // 23: unified.v1.PaymentTransitionEvidence.occurred_at:type_name -> google.protobuf.Timestamp
-	17, // 24: unified.v1.PaymentTransitionEvidence.received_at:type_name -> google.protobuf.Timestamp
-	13, // 25: unified.v1.PaymentQuarantineEvidence.quarantine_id:type_name -> unified.v1.Identifier
-	13, // 26: unified.v1.PaymentQuarantineEvidence.provider_event_id:type_name -> unified.v1.Identifier
-	13, // 27: unified.v1.PaymentQuarantineEvidence.payment_id:type_name -> unified.v1.Identifier
-	17, // 28: unified.v1.PaymentQuarantineEvidence.received_at:type_name -> google.protobuf.Timestamp
-	17, // 29: unified.v1.PaymentQuarantineEvidence.resolution_deadline:type_name -> google.protobuf.Timestamp
-	13, // 30: unified.v1.ProviderStatementEntry.entry_id:type_name -> unified.v1.Identifier
-	13, // 31: unified.v1.ProviderStatementEntry.payment_id:type_name -> unified.v1.Identifier
-	16, // 32: unified.v1.ProviderStatementEntry.amount:type_name -> unified.v1.Money
+	20, // 21: unified.v1.PaymentTransitionEvidence.amount:type_name -> unified.v1.Money
+	17, // 22: unified.v1.PaymentTransitionEvidence.journal_ids:type_name -> unified.v1.Identifier
+	21, // 23: unified.v1.PaymentTransitionEvidence.occurred_at:type_name -> google.protobuf.Timestamp
+	21, // 24: unified.v1.PaymentTransitionEvidence.received_at:type_name -> google.protobuf.Timestamp
+	17, // 25: unified.v1.PaymentQuarantineEvidence.quarantine_id:type_name -> unified.v1.Identifier
+	17, // 26: unified.v1.PaymentQuarantineEvidence.provider_event_id:type_name -> unified.v1.Identifier
+	17, // 27: unified.v1.PaymentQuarantineEvidence.payment_id:type_name -> unified.v1.Identifier
+	21, // 28: unified.v1.PaymentQuarantineEvidence.received_at:type_name -> google.protobuf.Timestamp
+	21, // 29: unified.v1.PaymentQuarantineEvidence.resolution_deadline:type_name -> google.protobuf.Timestamp
+	17, // 30: unified.v1.ProviderStatementEntry.entry_id:type_name -> unified.v1.Identifier
+	17, // 31: unified.v1.ProviderStatementEntry.payment_id:type_name -> unified.v1.Identifier
+	20, // 32: unified.v1.ProviderStatementEntry.amount:type_name -> unified.v1.Money
 	2,  // 33: unified.v1.ProviderStatementEntry.kind:type_name -> unified.v1.ProviderStatementKind
-	17, // 34: unified.v1.ProviderStatementEntry.occurred_at:type_name -> google.protobuf.Timestamp
-	13, // 35: unified.v1.PaymentReconciliationRunEvidence.run_id:type_name -> unified.v1.Identifier
-	18, // 36: unified.v1.PaymentReconciliationRunEvidence.asset_id:type_name -> unified.v1.AssetId
-	17, // 37: unified.v1.PaymentReconciliationRunEvidence.as_of:type_name -> google.protobuf.Timestamp
+	21, // 34: unified.v1.ProviderStatementEntry.occurred_at:type_name -> google.protobuf.Timestamp
+	17, // 35: unified.v1.PaymentReconciliationRunEvidence.run_id:type_name -> unified.v1.Identifier
+	22, // 36: unified.v1.PaymentReconciliationRunEvidence.asset_id:type_name -> unified.v1.AssetId
+	21, // 37: unified.v1.PaymentReconciliationRunEvidence.as_of:type_name -> google.protobuf.Timestamp
 	3,  // 38: unified.v1.PaymentReconciliationRunEvidence.status:type_name -> unified.v1.ReconciliationStatus
-	17, // 39: unified.v1.PaymentReconciliationRunEvidence.resolution_deadline:type_name -> google.protobuf.Timestamp
-	13, // 40: unified.v1.PaymentReconciliationExceptionEvidence.exception_id:type_name -> unified.v1.Identifier
-	13, // 41: unified.v1.PaymentReconciliationExceptionEvidence.run_id:type_name -> unified.v1.Identifier
-	18, // 42: unified.v1.PaymentReconciliationExceptionEvidence.asset_id:type_name -> unified.v1.AssetId
-	17, // 43: unified.v1.PaymentReconciliationExceptionEvidence.detected_at:type_name -> google.protobuf.Timestamp
-	17, // 44: unified.v1.PaymentReconciliationExceptionEvidence.resolution_deadline:type_name -> google.protobuf.Timestamp
-	13, // 45: unified.v1.PaymentReconciliationResolutionEvidence.resolution_id:type_name -> unified.v1.Identifier
-	13, // 46: unified.v1.PaymentReconciliationResolutionEvidence.exception_id:type_name -> unified.v1.Identifier
-	13, // 47: unified.v1.PaymentReconciliationResolutionEvidence.resolution_journal_id:type_name -> unified.v1.Identifier
-	17, // 48: unified.v1.PaymentReconciliationResolutionEvidence.resolved_at:type_name -> google.protobuf.Timestamp
-	49, // [49:49] is the sub-list for method output_type
-	49, // [49:49] is the sub-list for method input_type
-	49, // [49:49] is the sub-list for extension type_name
-	49, // [49:49] is the sub-list for extension extendee
-	0,  // [0:49] is the sub-list for field type_name
+	21, // 39: unified.v1.PaymentReconciliationRunEvidence.resolution_deadline:type_name -> google.protobuf.Timestamp
+	17, // 40: unified.v1.PaymentReconciliationExceptionEvidence.exception_id:type_name -> unified.v1.Identifier
+	17, // 41: unified.v1.PaymentReconciliationExceptionEvidence.run_id:type_name -> unified.v1.Identifier
+	22, // 42: unified.v1.PaymentReconciliationExceptionEvidence.asset_id:type_name -> unified.v1.AssetId
+	21, // 43: unified.v1.PaymentReconciliationExceptionEvidence.detected_at:type_name -> google.protobuf.Timestamp
+	21, // 44: unified.v1.PaymentReconciliationExceptionEvidence.resolution_deadline:type_name -> google.protobuf.Timestamp
+	17, // 45: unified.v1.PaymentReconciliationResolutionEvidence.resolution_id:type_name -> unified.v1.Identifier
+	17, // 46: unified.v1.PaymentReconciliationResolutionEvidence.exception_id:type_name -> unified.v1.Identifier
+	17, // 47: unified.v1.PaymentReconciliationResolutionEvidence.resolution_journal_id:type_name -> unified.v1.Identifier
+	21, // 48: unified.v1.PaymentReconciliationResolutionEvidence.resolved_at:type_name -> google.protobuf.Timestamp
+	19, // 49: unified.v1.LoanObligationSnapshotEvidence.loan_id:type_name -> unified.v1.LoanId
+	18, // 50: unified.v1.LoanObligationSnapshotEvidence.borrower_id:type_name -> unified.v1.PartyId
+	18, // 51: unified.v1.LoanObligationSnapshotEvidence.lender_id:type_name -> unified.v1.PartyId
+	20, // 52: unified.v1.LoanObligationSnapshotEvidence.outstanding_principal:type_name -> unified.v1.Money
+	21, // 53: unified.v1.LoanObligationSnapshotEvidence.as_of:type_name -> google.protobuf.Timestamp
+	17, // 54: unified.v1.FinalPaymentAllocationEvidence.allocation_id:type_name -> unified.v1.Identifier
+	17, // 55: unified.v1.FinalPaymentAllocationEvidence.payment_id:type_name -> unified.v1.Identifier
+	19, // 56: unified.v1.FinalPaymentAllocationEvidence.loan_id:type_name -> unified.v1.LoanId
+	20, // 57: unified.v1.FinalPaymentAllocationEvidence.gross_payment:type_name -> unified.v1.Money
+	20, // 58: unified.v1.FinalPaymentAllocationEvidence.principal_allocation:type_name -> unified.v1.Money
+	20, // 59: unified.v1.FinalPaymentAllocationEvidence.refundable_excess:type_name -> unified.v1.Money
+	20, // 60: unified.v1.FinalPaymentAllocationEvidence.debt_before:type_name -> unified.v1.Money
+	20, // 61: unified.v1.FinalPaymentAllocationEvidence.debt_after:type_name -> unified.v1.Money
+	17, // 62: unified.v1.FinalPaymentAllocationEvidence.reconciliation_id:type_name -> unified.v1.Identifier
+	17, // 63: unified.v1.FinalPaymentAllocationEvidence.journal_ids:type_name -> unified.v1.Identifier
+	21, // 64: unified.v1.FinalPaymentAllocationEvidence.reversal_deadline:type_name -> google.protobuf.Timestamp
+	21, // 65: unified.v1.FinalPaymentAllocationEvidence.allocated_at:type_name -> google.protobuf.Timestamp
+	17, // 66: unified.v1.PaymentAllocationReversalEvidence.reversal_id:type_name -> unified.v1.Identifier
+	17, // 67: unified.v1.PaymentAllocationReversalEvidence.allocation_id:type_name -> unified.v1.Identifier
+	17, // 68: unified.v1.PaymentAllocationReversalEvidence.payment_id:type_name -> unified.v1.Identifier
+	19, // 69: unified.v1.PaymentAllocationReversalEvidence.loan_id:type_name -> unified.v1.LoanId
+	20, // 70: unified.v1.PaymentAllocationReversalEvidence.restored_principal:type_name -> unified.v1.Money
+	20, // 71: unified.v1.PaymentAllocationReversalEvidence.removed_refundable_excess:type_name -> unified.v1.Money
+	20, // 72: unified.v1.PaymentAllocationReversalEvidence.debt_before:type_name -> unified.v1.Money
+	20, // 73: unified.v1.PaymentAllocationReversalEvidence.debt_after:type_name -> unified.v1.Money
+	17, // 74: unified.v1.PaymentAllocationReversalEvidence.journal_ids:type_name -> unified.v1.Identifier
+	21, // 75: unified.v1.PaymentAllocationReversalEvidence.reversed_at:type_name -> google.protobuf.Timestamp
+	17, // 76: unified.v1.CollateralReleaseEligibilityEvidence.evidence_id:type_name -> unified.v1.Identifier
+	17, // 77: unified.v1.CollateralReleaseEligibilityEvidence.allocation_id:type_name -> unified.v1.Identifier
+	19, // 78: unified.v1.CollateralReleaseEligibilityEvidence.loan_id:type_name -> unified.v1.LoanId
+	20, // 79: unified.v1.CollateralReleaseEligibilityEvidence.projected_outstanding_principal:type_name -> unified.v1.Money
+	21, // 80: unified.v1.CollateralReleaseEligibilityEvidence.evaluated_at:type_name -> google.protobuf.Timestamp
+	81, // [81:81] is the sub-list for method output_type
+	81, // [81:81] is the sub-list for method input_type
+	81, // [81:81] is the sub-list for extension type_name
+	81, // [81:81] is the sub-list for extension extendee
+	0,  // [0:81] is the sub-list for field type_name
 }
 
 func init() { file_unified_v1_payment_proto_init() }
@@ -1506,7 +2176,7 @@ func file_unified_v1_payment_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_unified_v1_payment_proto_rawDesc), len(file_unified_v1_payment_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   9,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

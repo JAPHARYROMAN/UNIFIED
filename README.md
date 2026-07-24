@@ -114,9 +114,9 @@ Its bounded engineering exit is recorded in `docs/reviews/phase-7a-exit-review.m
 providers, real financial data, loan allocation, refunds, payouts, collateral release,
 and real funds remain prohibited.
 
-The accepted Phase 7B boundary is recorded in
+The Phase 7B boundary and synthetic implementation are recorded in
 `adr/0016-phase-7b-final-payment-allocation-boundary.md` and
-`docs/architecture/phase-7b-final-payment-allocation.md`. It permits a synthetic
+`docs/architecture/phase-7b-final-payment-allocation.md`. They provide a synthetic
 principal-only allocation, overpayment-credit, accounting-reversal, and non-executing
 collateral-eligibility proof. Canonical loan mutation, refunds, payouts, collateral
 release, live providers, and real funds remain prohibited.
