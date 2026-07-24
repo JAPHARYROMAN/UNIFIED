@@ -209,8 +209,13 @@ contract OracleRouter is RoleControlled {
         RiskTypes.OracleObservation storage canonical = _latest[key];
         PairConfiguration memory pairConfig = _configuration[key];
         return riskContext != bytes32(0) && pairConfig.configured && !_circuitBroken[key]
+            && observation.assetId == canonical.assetId
+            && observation.quoteAssetId == canonical.quoteAssetId
             && observation.value == canonical.value
+            && observation.retrievedAt == canonical.retrievedAt
             && observation.observedAt == canonical.observedAt
+            && observation.roundId == canonical.roundId
+            && observation.confidenceBps == canonical.confidenceBps
             && observation.sourceEvidenceHash == canonical.sourceEvidenceHash
             && observation.decimals == NORMALIZED_DECIMALS
             && block.timestamp <= uint256(observation.observedAt) + pairConfig.maximumAge;

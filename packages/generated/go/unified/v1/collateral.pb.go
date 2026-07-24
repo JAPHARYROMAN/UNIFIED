@@ -132,6 +132,113 @@ func (CollateralStatus) EnumDescriptor() ([]byte, []int) {
 	return file_unified_v1_collateral_proto_rawDescGZIP(), []int{1}
 }
 
+type LiquidationRoute int32
+
+const (
+	LiquidationRoute_LIQUIDATION_ROUTE_UNSPECIFIED     LiquidationRoute = 0
+	LiquidationRoute_LIQUIDATION_ROUTE_DIRECT          LiquidationRoute = 1
+	LiquidationRoute_LIQUIDATION_ROUTE_DUTCH_AUCTION   LiquidationRoute = 2
+	LiquidationRoute_LIQUIDATION_ROUTE_ENGLISH_AUCTION LiquidationRoute = 3
+)
+
+// Enum value maps for LiquidationRoute.
+var (
+	LiquidationRoute_name = map[int32]string{
+		0: "LIQUIDATION_ROUTE_UNSPECIFIED",
+		1: "LIQUIDATION_ROUTE_DIRECT",
+		2: "LIQUIDATION_ROUTE_DUTCH_AUCTION",
+		3: "LIQUIDATION_ROUTE_ENGLISH_AUCTION",
+	}
+	LiquidationRoute_value = map[string]int32{
+		"LIQUIDATION_ROUTE_UNSPECIFIED":     0,
+		"LIQUIDATION_ROUTE_DIRECT":          1,
+		"LIQUIDATION_ROUTE_DUTCH_AUCTION":   2,
+		"LIQUIDATION_ROUTE_ENGLISH_AUCTION": 3,
+	}
+)
+
+func (x LiquidationRoute) Enum() *LiquidationRoute {
+	p := new(LiquidationRoute)
+	*p = x
+	return p
+}
+
+func (x LiquidationRoute) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (LiquidationRoute) Descriptor() protoreflect.EnumDescriptor {
+	return file_unified_v1_collateral_proto_enumTypes[2].Descriptor()
+}
+
+func (LiquidationRoute) Type() protoreflect.EnumType {
+	return &file_unified_v1_collateral_proto_enumTypes[2]
+}
+
+func (x LiquidationRoute) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use LiquidationRoute.Descriptor instead.
+func (LiquidationRoute) EnumDescriptor() ([]byte, []int) {
+	return file_unified_v1_collateral_proto_rawDescGZIP(), []int{2}
+}
+
+type LiquidationStatus int32
+
+const (
+	LiquidationStatus_LIQUIDATION_STATUS_UNSPECIFIED LiquidationStatus = 0
+	LiquidationStatus_LIQUIDATION_STATUS_ACTIVE      LiquidationStatus = 1
+	LiquidationStatus_LIQUIDATION_STATUS_SETTLED     LiquidationStatus = 2
+	LiquidationStatus_LIQUIDATION_STATUS_FAILED      LiquidationStatus = 3
+	LiquidationStatus_LIQUIDATION_STATUS_CANCELLED   LiquidationStatus = 4
+)
+
+// Enum value maps for LiquidationStatus.
+var (
+	LiquidationStatus_name = map[int32]string{
+		0: "LIQUIDATION_STATUS_UNSPECIFIED",
+		1: "LIQUIDATION_STATUS_ACTIVE",
+		2: "LIQUIDATION_STATUS_SETTLED",
+		3: "LIQUIDATION_STATUS_FAILED",
+		4: "LIQUIDATION_STATUS_CANCELLED",
+	}
+	LiquidationStatus_value = map[string]int32{
+		"LIQUIDATION_STATUS_UNSPECIFIED": 0,
+		"LIQUIDATION_STATUS_ACTIVE":      1,
+		"LIQUIDATION_STATUS_SETTLED":     2,
+		"LIQUIDATION_STATUS_FAILED":      3,
+		"LIQUIDATION_STATUS_CANCELLED":   4,
+	}
+)
+
+func (x LiquidationStatus) Enum() *LiquidationStatus {
+	p := new(LiquidationStatus)
+	*p = x
+	return p
+}
+
+func (x LiquidationStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (LiquidationStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_unified_v1_collateral_proto_enumTypes[3].Descriptor()
+}
+
+func (LiquidationStatus) Type() protoreflect.EnumType {
+	return &file_unified_v1_collateral_proto_enumTypes[3]
+}
+
+func (x LiquidationStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use LiquidationStatus.Descriptor instead.
+func (LiquidationStatus) EnumDescriptor() ([]byte, []int) {
+	return file_unified_v1_collateral_proto_rawDescGZIP(), []int{3}
+}
+
 type CollateralItem struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
 	CollateralId        *Identifier            `protobuf:"bytes,1,opt,name=collateral_id,json=collateralId,proto3" json:"collateral_id,omitempty"`
@@ -416,12 +523,400 @@ func (x *UftCollateralExposure) GetPolicyEvidenceHash() []byte {
 	return nil
 }
 
+type LiquidationPlan struct {
+	state                          protoimpl.MessageState `protogen:"open.v1"`
+	LiquidationId                  *Identifier            `protobuf:"bytes,1,opt,name=liquidation_id,json=liquidationId,proto3" json:"liquidation_id,omitempty"`
+	LoanId                         *LoanId                `protobuf:"bytes,2,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	CollateralId                   *Identifier            `protobuf:"bytes,3,opt,name=collateral_id,json=collateralId,proto3" json:"collateral_id,omitempty"`
+	Route                          LiquidationRoute       `protobuf:"varint,4,opt,name=route,proto3,enum=unified.v1.LiquidationRoute" json:"route,omitempty"`
+	Quantity                       string                 `protobuf:"bytes,5,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	ReferenceProceeds              *Money                 `protobuf:"bytes,6,opt,name=reference_proceeds,json=referenceProceeds,proto3" json:"reference_proceeds,omitempty"`
+	ReservePrice                   *Money                 `protobuf:"bytes,7,opt,name=reserve_price,json=reservePrice,proto3" json:"reserve_price,omitempty"`
+	ExecutionCostCap               *Money                 `protobuf:"bytes,8,opt,name=execution_cost_cap,json=executionCostCap,proto3" json:"execution_cost_cap,omitempty"`
+	IncentiveBasisPoints           uint32                 `protobuf:"varint,9,opt,name=incentive_basis_points,json=incentiveBasisPoints,proto3" json:"incentive_basis_points,omitempty"`
+	MinimumBidIncrementBasisPoints uint32                 `protobuf:"varint,10,opt,name=minimum_bid_increment_basis_points,json=minimumBidIncrementBasisPoints,proto3" json:"minimum_bid_increment_basis_points,omitempty"`
+	StartsAt                       *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=starts_at,json=startsAt,proto3" json:"starts_at,omitempty"`
+	EndsAt                         *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=ends_at,json=endsAt,proto3" json:"ends_at,omitempty"`
+	PolicySetHash                  []byte                 `protobuf:"bytes,13,opt,name=policy_set_hash,json=policySetHash,proto3" json:"policy_set_hash,omitempty"`
+	TriggerSnapshotHash            []byte                 `protobuf:"bytes,14,opt,name=trigger_snapshot_hash,json=triggerSnapshotHash,proto3" json:"trigger_snapshot_hash,omitempty"`
+	PricingObservation             *OracleObservation     `protobuf:"bytes,15,opt,name=pricing_observation,json=pricingObservation,proto3" json:"pricing_observation,omitempty"`
+	Status                         LiquidationStatus      `protobuf:"varint,16,opt,name=status,proto3,enum=unified.v1.LiquidationStatus" json:"status,omitempty"`
+	unknownFields                  protoimpl.UnknownFields
+	sizeCache                      protoimpl.SizeCache
+}
+
+func (x *LiquidationPlan) Reset() {
+	*x = LiquidationPlan{}
+	mi := &file_unified_v1_collateral_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LiquidationPlan) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LiquidationPlan) ProtoMessage() {}
+
+func (x *LiquidationPlan) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_collateral_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LiquidationPlan.ProtoReflect.Descriptor instead.
+func (*LiquidationPlan) Descriptor() ([]byte, []int) {
+	return file_unified_v1_collateral_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *LiquidationPlan) GetLiquidationId() *Identifier {
+	if x != nil {
+		return x.LiquidationId
+	}
+	return nil
+}
+
+func (x *LiquidationPlan) GetLoanId() *LoanId {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *LiquidationPlan) GetCollateralId() *Identifier {
+	if x != nil {
+		return x.CollateralId
+	}
+	return nil
+}
+
+func (x *LiquidationPlan) GetRoute() LiquidationRoute {
+	if x != nil {
+		return x.Route
+	}
+	return LiquidationRoute_LIQUIDATION_ROUTE_UNSPECIFIED
+}
+
+func (x *LiquidationPlan) GetQuantity() string {
+	if x != nil {
+		return x.Quantity
+	}
+	return ""
+}
+
+func (x *LiquidationPlan) GetReferenceProceeds() *Money {
+	if x != nil {
+		return x.ReferenceProceeds
+	}
+	return nil
+}
+
+func (x *LiquidationPlan) GetReservePrice() *Money {
+	if x != nil {
+		return x.ReservePrice
+	}
+	return nil
+}
+
+func (x *LiquidationPlan) GetExecutionCostCap() *Money {
+	if x != nil {
+		return x.ExecutionCostCap
+	}
+	return nil
+}
+
+func (x *LiquidationPlan) GetIncentiveBasisPoints() uint32 {
+	if x != nil {
+		return x.IncentiveBasisPoints
+	}
+	return 0
+}
+
+func (x *LiquidationPlan) GetMinimumBidIncrementBasisPoints() uint32 {
+	if x != nil {
+		return x.MinimumBidIncrementBasisPoints
+	}
+	return 0
+}
+
+func (x *LiquidationPlan) GetStartsAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.StartsAt
+	}
+	return nil
+}
+
+func (x *LiquidationPlan) GetEndsAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.EndsAt
+	}
+	return nil
+}
+
+func (x *LiquidationPlan) GetPolicySetHash() []byte {
+	if x != nil {
+		return x.PolicySetHash
+	}
+	return nil
+}
+
+func (x *LiquidationPlan) GetTriggerSnapshotHash() []byte {
+	if x != nil {
+		return x.TriggerSnapshotHash
+	}
+	return nil
+}
+
+func (x *LiquidationPlan) GetPricingObservation() *OracleObservation {
+	if x != nil {
+		return x.PricingObservation
+	}
+	return nil
+}
+
+func (x *LiquidationPlan) GetStatus() LiquidationStatus {
+	if x != nil {
+		return x.Status
+	}
+	return LiquidationStatus_LIQUIDATION_STATUS_UNSPECIFIED
+}
+
+type LiquidationBid struct {
+	state                   protoimpl.MessageState `protogen:"open.v1"`
+	LiquidationId           *Identifier            `protobuf:"bytes,1,opt,name=liquidation_id,json=liquidationId,proto3" json:"liquidation_id,omitempty"`
+	BidderId                *PartyId               `protobuf:"bytes,2,opt,name=bidder_id,json=bidderId,proto3" json:"bidder_id,omitempty"`
+	Amount                  *Money                 `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	PlacedAt                *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=placed_at,json=placedAt,proto3" json:"placed_at,omitempty"`
+	TransactionEvidenceHash []byte                 `protobuf:"bytes,5,opt,name=transaction_evidence_hash,json=transactionEvidenceHash,proto3" json:"transaction_evidence_hash,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *LiquidationBid) Reset() {
+	*x = LiquidationBid{}
+	mi := &file_unified_v1_collateral_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LiquidationBid) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LiquidationBid) ProtoMessage() {}
+
+func (x *LiquidationBid) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_collateral_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LiquidationBid.ProtoReflect.Descriptor instead.
+func (*LiquidationBid) Descriptor() ([]byte, []int) {
+	return file_unified_v1_collateral_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *LiquidationBid) GetLiquidationId() *Identifier {
+	if x != nil {
+		return x.LiquidationId
+	}
+	return nil
+}
+
+func (x *LiquidationBid) GetBidderId() *PartyId {
+	if x != nil {
+		return x.BidderId
+	}
+	return nil
+}
+
+func (x *LiquidationBid) GetAmount() *Money {
+	if x != nil {
+		return x.Amount
+	}
+	return nil
+}
+
+func (x *LiquidationBid) GetPlacedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.PlacedAt
+	}
+	return nil
+}
+
+func (x *LiquidationBid) GetTransactionEvidenceHash() []byte {
+	if x != nil {
+		return x.TransactionEvidenceHash
+	}
+	return nil
+}
+
+type LiquidationSettlement struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	LiquidationId        *Identifier            `protobuf:"bytes,1,opt,name=liquidation_id,json=liquidationId,proto3" json:"liquidation_id,omitempty"`
+	LoanId               *LoanId                `protobuf:"bytes,2,opt,name=loan_id,json=loanId,proto3" json:"loan_id,omitempty"`
+	GrossProceeds        *Money                 `protobuf:"bytes,3,opt,name=gross_proceeds,json=grossProceeds,proto3" json:"gross_proceeds,omitempty"`
+	ExecutionCosts       *Money                 `protobuf:"bytes,4,opt,name=execution_costs,json=executionCosts,proto3" json:"execution_costs,omitempty"`
+	LiquidationIncentive *Money                 `protobuf:"bytes,5,opt,name=liquidation_incentive,json=liquidationIncentive,proto3" json:"liquidation_incentive,omitempty"`
+	SecuredClaimPaid     *Money                 `protobuf:"bytes,6,opt,name=secured_claim_paid,json=securedClaimPaid,proto3" json:"secured_claim_paid,omitempty"`
+	BorrowerSurplus      *Money                 `protobuf:"bytes,7,opt,name=borrower_surplus,json=borrowerSurplus,proto3" json:"borrower_surplus,omitempty"`
+	ResidualBadDebt      *Money                 `protobuf:"bytes,8,opt,name=residual_bad_debt,json=residualBadDebt,proto3" json:"residual_bad_debt,omitempty"`
+	BuyerId              *PartyId               `protobuf:"bytes,9,opt,name=buyer_id,json=buyerId,proto3" json:"buyer_id,omitempty"`
+	ExecutorId           *PartyId               `protobuf:"bytes,10,opt,name=executor_id,json=executorId,proto3" json:"executor_id,omitempty"`
+	PaymentId            *Identifier            `protobuf:"bytes,11,opt,name=payment_id,json=paymentId,proto3" json:"payment_id,omitempty"`
+	JournalReference     []byte                 `protobuf:"bytes,12,opt,name=journal_reference,json=journalReference,proto3" json:"journal_reference,omitempty"`
+	PricingEvidenceHash  []byte                 `protobuf:"bytes,13,opt,name=pricing_evidence_hash,json=pricingEvidenceHash,proto3" json:"pricing_evidence_hash,omitempty"`
+	SettledAt            *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=settled_at,json=settledAt,proto3" json:"settled_at,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *LiquidationSettlement) Reset() {
+	*x = LiquidationSettlement{}
+	mi := &file_unified_v1_collateral_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LiquidationSettlement) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LiquidationSettlement) ProtoMessage() {}
+
+func (x *LiquidationSettlement) ProtoReflect() protoreflect.Message {
+	mi := &file_unified_v1_collateral_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LiquidationSettlement.ProtoReflect.Descriptor instead.
+func (*LiquidationSettlement) Descriptor() ([]byte, []int) {
+	return file_unified_v1_collateral_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *LiquidationSettlement) GetLiquidationId() *Identifier {
+	if x != nil {
+		return x.LiquidationId
+	}
+	return nil
+}
+
+func (x *LiquidationSettlement) GetLoanId() *LoanId {
+	if x != nil {
+		return x.LoanId
+	}
+	return nil
+}
+
+func (x *LiquidationSettlement) GetGrossProceeds() *Money {
+	if x != nil {
+		return x.GrossProceeds
+	}
+	return nil
+}
+
+func (x *LiquidationSettlement) GetExecutionCosts() *Money {
+	if x != nil {
+		return x.ExecutionCosts
+	}
+	return nil
+}
+
+func (x *LiquidationSettlement) GetLiquidationIncentive() *Money {
+	if x != nil {
+		return x.LiquidationIncentive
+	}
+	return nil
+}
+
+func (x *LiquidationSettlement) GetSecuredClaimPaid() *Money {
+	if x != nil {
+		return x.SecuredClaimPaid
+	}
+	return nil
+}
+
+func (x *LiquidationSettlement) GetBorrowerSurplus() *Money {
+	if x != nil {
+		return x.BorrowerSurplus
+	}
+	return nil
+}
+
+func (x *LiquidationSettlement) GetResidualBadDebt() *Money {
+	if x != nil {
+		return x.ResidualBadDebt
+	}
+	return nil
+}
+
+func (x *LiquidationSettlement) GetBuyerId() *PartyId {
+	if x != nil {
+		return x.BuyerId
+	}
+	return nil
+}
+
+func (x *LiquidationSettlement) GetExecutorId() *PartyId {
+	if x != nil {
+		return x.ExecutorId
+	}
+	return nil
+}
+
+func (x *LiquidationSettlement) GetPaymentId() *Identifier {
+	if x != nil {
+		return x.PaymentId
+	}
+	return nil
+}
+
+func (x *LiquidationSettlement) GetJournalReference() []byte {
+	if x != nil {
+		return x.JournalReference
+	}
+	return nil
+}
+
+func (x *LiquidationSettlement) GetPricingEvidenceHash() []byte {
+	if x != nil {
+		return x.PricingEvidenceHash
+	}
+	return nil
+}
+
+func (x *LiquidationSettlement) GetSettledAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.SettledAt
+	}
+	return nil
+}
+
 var File_unified_v1_collateral_proto protoreflect.FileDescriptor
 
 const file_unified_v1_collateral_proto_rawDesc = "" +
 	"\n" +
 	"\x1bunified/v1/collateral.proto\x12\n" +
-	"unified.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x16unified/v1/types.proto\"\x89\x04\n" +
+	"unified.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x15unified/v1/risk.proto\x1a\x16unified/v1/types.proto\"\x89\x04\n" +
 	"\x0eCollateralItem\x12;\n" +
 	"\rcollateral_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\fcollateralId\x12+\n" +
 	"\aloan_id\x18\x02 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x12.\n" +
@@ -448,7 +943,50 @@ const file_unified_v1_collateral_proto_rawDesc = "" +
 	"\x12circulating_supply\x18\x05 \x01(\tR\x11circulatingSupply\x12=\n" +
 	"\x11backed_debt_value\x18\x06 \x01(\v2\x11.unified.v1.MoneyR\x0fbackedDebtValue\x12E\n" +
 	"\x15protocol_debt_ceiling\x18\a \x01(\v2\x11.unified.v1.MoneyR\x13protocolDebtCeiling\x120\n" +
-	"\x14policy_evidence_hash\x18\b \x01(\fR\x12policyEvidenceHash*\xa1\x01\n" +
+	"\x14policy_evidence_hash\x18\b \x01(\fR\x12policyEvidenceHash\"\x98\a\n" +
+	"\x0fLiquidationPlan\x12=\n" +
+	"\x0eliquidation_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\rliquidationId\x12+\n" +
+	"\aloan_id\x18\x02 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x12;\n" +
+	"\rcollateral_id\x18\x03 \x01(\v2\x16.unified.v1.IdentifierR\fcollateralId\x122\n" +
+	"\x05route\x18\x04 \x01(\x0e2\x1c.unified.v1.LiquidationRouteR\x05route\x12\x1a\n" +
+	"\bquantity\x18\x05 \x01(\tR\bquantity\x12@\n" +
+	"\x12reference_proceeds\x18\x06 \x01(\v2\x11.unified.v1.MoneyR\x11referenceProceeds\x126\n" +
+	"\rreserve_price\x18\a \x01(\v2\x11.unified.v1.MoneyR\freservePrice\x12?\n" +
+	"\x12execution_cost_cap\x18\b \x01(\v2\x11.unified.v1.MoneyR\x10executionCostCap\x124\n" +
+	"\x16incentive_basis_points\x18\t \x01(\rR\x14incentiveBasisPoints\x12J\n" +
+	"\"minimum_bid_increment_basis_points\x18\n" +
+	" \x01(\rR\x1eminimumBidIncrementBasisPoints\x127\n" +
+	"\tstarts_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\bstartsAt\x123\n" +
+	"\aends_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\x06endsAt\x12&\n" +
+	"\x0fpolicy_set_hash\x18\r \x01(\fR\rpolicySetHash\x122\n" +
+	"\x15trigger_snapshot_hash\x18\x0e \x01(\fR\x13triggerSnapshotHash\x12N\n" +
+	"\x13pricing_observation\x18\x0f \x01(\v2\x1d.unified.v1.OracleObservationR\x12pricingObservation\x125\n" +
+	"\x06status\x18\x10 \x01(\x0e2\x1d.unified.v1.LiquidationStatusR\x06status\"\xa1\x02\n" +
+	"\x0eLiquidationBid\x12=\n" +
+	"\x0eliquidation_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\rliquidationId\x120\n" +
+	"\tbidder_id\x18\x02 \x01(\v2\x13.unified.v1.PartyIdR\bbidderId\x12)\n" +
+	"\x06amount\x18\x03 \x01(\v2\x11.unified.v1.MoneyR\x06amount\x127\n" +
+	"\tplaced_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\bplacedAt\x12:\n" +
+	"\x19transaction_evidence_hash\x18\x05 \x01(\fR\x17transactionEvidenceHash\"\xb8\x06\n" +
+	"\x15LiquidationSettlement\x12=\n" +
+	"\x0eliquidation_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\rliquidationId\x12+\n" +
+	"\aloan_id\x18\x02 \x01(\v2\x12.unified.v1.LoanIdR\x06loanId\x128\n" +
+	"\x0egross_proceeds\x18\x03 \x01(\v2\x11.unified.v1.MoneyR\rgrossProceeds\x12:\n" +
+	"\x0fexecution_costs\x18\x04 \x01(\v2\x11.unified.v1.MoneyR\x0eexecutionCosts\x12F\n" +
+	"\x15liquidation_incentive\x18\x05 \x01(\v2\x11.unified.v1.MoneyR\x14liquidationIncentive\x12?\n" +
+	"\x12secured_claim_paid\x18\x06 \x01(\v2\x11.unified.v1.MoneyR\x10securedClaimPaid\x12<\n" +
+	"\x10borrower_surplus\x18\a \x01(\v2\x11.unified.v1.MoneyR\x0fborrowerSurplus\x12=\n" +
+	"\x11residual_bad_debt\x18\b \x01(\v2\x11.unified.v1.MoneyR\x0fresidualBadDebt\x12.\n" +
+	"\bbuyer_id\x18\t \x01(\v2\x13.unified.v1.PartyIdR\abuyerId\x124\n" +
+	"\vexecutor_id\x18\n" +
+	" \x01(\v2\x13.unified.v1.PartyIdR\n" +
+	"executorId\x125\n" +
+	"\n" +
+	"payment_id\x18\v \x01(\v2\x16.unified.v1.IdentifierR\tpaymentId\x12+\n" +
+	"\x11journal_reference\x18\f \x01(\fR\x10journalReference\x122\n" +
+	"\x15pricing_evidence_hash\x18\r \x01(\fR\x13pricingEvidenceHash\x129\n" +
+	"\n" +
+	"settled_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tsettledAt*\xa1\x01\n" +
 	"\x0eCollateralKind\x12\x1f\n" +
 	"\x1bCOLLATERAL_KIND_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16COLLATERAL_KIND_NATIVE\x10\x01\x12\x19\n" +
@@ -460,7 +998,18 @@ const file_unified_v1_collateral_proto_rawDesc = "" +
 	"\x18COLLATERAL_STATUS_LOCKED\x10\x01\x12\x1e\n" +
 	"\x1aCOLLATERAL_STATUS_RELEASED\x10\x02\x12 \n" +
 	"\x1cCOLLATERAL_STATUS_LIQUIDATED\x10\x03\x12\x1d\n" +
-	"\x19COLLATERAL_STATUS_CLAIMED\x10\x04BOZMgithub.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1b\x06proto3"
+	"\x19COLLATERAL_STATUS_CLAIMED\x10\x04*\x9f\x01\n" +
+	"\x10LiquidationRoute\x12!\n" +
+	"\x1dLIQUIDATION_ROUTE_UNSPECIFIED\x10\x00\x12\x1c\n" +
+	"\x18LIQUIDATION_ROUTE_DIRECT\x10\x01\x12#\n" +
+	"\x1fLIQUIDATION_ROUTE_DUTCH_AUCTION\x10\x02\x12%\n" +
+	"!LIQUIDATION_ROUTE_ENGLISH_AUCTION\x10\x03*\xb7\x01\n" +
+	"\x11LiquidationStatus\x12\"\n" +
+	"\x1eLIQUIDATION_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n" +
+	"\x19LIQUIDATION_STATUS_ACTIVE\x10\x01\x12\x1e\n" +
+	"\x1aLIQUIDATION_STATUS_SETTLED\x10\x02\x12\x1d\n" +
+	"\x19LIQUIDATION_STATUS_FAILED\x10\x03\x12 \n" +
+	"\x1cLIQUIDATION_STATUS_CANCELLED\x10\x04BOZMgithub.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1b\x06proto3"
 
 var (
 	file_unified_v1_collateral_proto_rawDescOnce sync.Once
@@ -474,40 +1023,73 @@ func file_unified_v1_collateral_proto_rawDescGZIP() []byte {
 	return file_unified_v1_collateral_proto_rawDescData
 }
 
-var file_unified_v1_collateral_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_unified_v1_collateral_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_unified_v1_collateral_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_unified_v1_collateral_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_unified_v1_collateral_proto_goTypes = []any{
 	(CollateralKind)(0),           // 0: unified.v1.CollateralKind
 	(CollateralStatus)(0),         // 1: unified.v1.CollateralStatus
-	(*CollateralItem)(nil),        // 2: unified.v1.CollateralItem
-	(*CollateralBundle)(nil),      // 3: unified.v1.CollateralBundle
-	(*UftCollateralExposure)(nil), // 4: unified.v1.UftCollateralExposure
-	(*Identifier)(nil),            // 5: unified.v1.Identifier
-	(*LoanId)(nil),                // 6: unified.v1.LoanId
-	(*AssetId)(nil),               // 7: unified.v1.AssetId
-	(*PartyId)(nil),               // 8: unified.v1.PartyId
-	(*timestamppb.Timestamp)(nil), // 9: google.protobuf.Timestamp
-	(*Money)(nil),                 // 10: unified.v1.Money
+	(LiquidationRoute)(0),         // 2: unified.v1.LiquidationRoute
+	(LiquidationStatus)(0),        // 3: unified.v1.LiquidationStatus
+	(*CollateralItem)(nil),        // 4: unified.v1.CollateralItem
+	(*CollateralBundle)(nil),      // 5: unified.v1.CollateralBundle
+	(*UftCollateralExposure)(nil), // 6: unified.v1.UftCollateralExposure
+	(*LiquidationPlan)(nil),       // 7: unified.v1.LiquidationPlan
+	(*LiquidationBid)(nil),        // 8: unified.v1.LiquidationBid
+	(*LiquidationSettlement)(nil), // 9: unified.v1.LiquidationSettlement
+	(*Identifier)(nil),            // 10: unified.v1.Identifier
+	(*LoanId)(nil),                // 11: unified.v1.LoanId
+	(*AssetId)(nil),               // 12: unified.v1.AssetId
+	(*PartyId)(nil),               // 13: unified.v1.PartyId
+	(*timestamppb.Timestamp)(nil), // 14: google.protobuf.Timestamp
+	(*Money)(nil),                 // 15: unified.v1.Money
+	(*OracleObservation)(nil),     // 16: unified.v1.OracleObservation
 }
 var file_unified_v1_collateral_proto_depIdxs = []int32{
-	5,  // 0: unified.v1.CollateralItem.collateral_id:type_name -> unified.v1.Identifier
-	6,  // 1: unified.v1.CollateralItem.loan_id:type_name -> unified.v1.LoanId
-	7,  // 2: unified.v1.CollateralItem.asset_id:type_name -> unified.v1.AssetId
+	10, // 0: unified.v1.CollateralItem.collateral_id:type_name -> unified.v1.Identifier
+	11, // 1: unified.v1.CollateralItem.loan_id:type_name -> unified.v1.LoanId
+	12, // 2: unified.v1.CollateralItem.asset_id:type_name -> unified.v1.AssetId
 	0,  // 3: unified.v1.CollateralItem.kind:type_name -> unified.v1.CollateralKind
-	8,  // 4: unified.v1.CollateralItem.owner_id:type_name -> unified.v1.PartyId
-	9,  // 5: unified.v1.CollateralItem.locked_at:type_name -> google.protobuf.Timestamp
+	13, // 4: unified.v1.CollateralItem.owner_id:type_name -> unified.v1.PartyId
+	14, // 5: unified.v1.CollateralItem.locked_at:type_name -> google.protobuf.Timestamp
 	1,  // 6: unified.v1.CollateralItem.status:type_name -> unified.v1.CollateralStatus
-	6,  // 7: unified.v1.CollateralBundle.loan_id:type_name -> unified.v1.LoanId
-	2,  // 8: unified.v1.CollateralBundle.items:type_name -> unified.v1.CollateralItem
-	6,  // 9: unified.v1.UftCollateralExposure.loan_id:type_name -> unified.v1.LoanId
-	8,  // 10: unified.v1.UftCollateralExposure.borrower_id:type_name -> unified.v1.PartyId
-	10, // 11: unified.v1.UftCollateralExposure.backed_debt_value:type_name -> unified.v1.Money
-	10, // 12: unified.v1.UftCollateralExposure.protocol_debt_ceiling:type_name -> unified.v1.Money
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	11, // 7: unified.v1.CollateralBundle.loan_id:type_name -> unified.v1.LoanId
+	4,  // 8: unified.v1.CollateralBundle.items:type_name -> unified.v1.CollateralItem
+	11, // 9: unified.v1.UftCollateralExposure.loan_id:type_name -> unified.v1.LoanId
+	13, // 10: unified.v1.UftCollateralExposure.borrower_id:type_name -> unified.v1.PartyId
+	15, // 11: unified.v1.UftCollateralExposure.backed_debt_value:type_name -> unified.v1.Money
+	15, // 12: unified.v1.UftCollateralExposure.protocol_debt_ceiling:type_name -> unified.v1.Money
+	10, // 13: unified.v1.LiquidationPlan.liquidation_id:type_name -> unified.v1.Identifier
+	11, // 14: unified.v1.LiquidationPlan.loan_id:type_name -> unified.v1.LoanId
+	10, // 15: unified.v1.LiquidationPlan.collateral_id:type_name -> unified.v1.Identifier
+	2,  // 16: unified.v1.LiquidationPlan.route:type_name -> unified.v1.LiquidationRoute
+	15, // 17: unified.v1.LiquidationPlan.reference_proceeds:type_name -> unified.v1.Money
+	15, // 18: unified.v1.LiquidationPlan.reserve_price:type_name -> unified.v1.Money
+	15, // 19: unified.v1.LiquidationPlan.execution_cost_cap:type_name -> unified.v1.Money
+	14, // 20: unified.v1.LiquidationPlan.starts_at:type_name -> google.protobuf.Timestamp
+	14, // 21: unified.v1.LiquidationPlan.ends_at:type_name -> google.protobuf.Timestamp
+	16, // 22: unified.v1.LiquidationPlan.pricing_observation:type_name -> unified.v1.OracleObservation
+	3,  // 23: unified.v1.LiquidationPlan.status:type_name -> unified.v1.LiquidationStatus
+	10, // 24: unified.v1.LiquidationBid.liquidation_id:type_name -> unified.v1.Identifier
+	13, // 25: unified.v1.LiquidationBid.bidder_id:type_name -> unified.v1.PartyId
+	15, // 26: unified.v1.LiquidationBid.amount:type_name -> unified.v1.Money
+	14, // 27: unified.v1.LiquidationBid.placed_at:type_name -> google.protobuf.Timestamp
+	10, // 28: unified.v1.LiquidationSettlement.liquidation_id:type_name -> unified.v1.Identifier
+	11, // 29: unified.v1.LiquidationSettlement.loan_id:type_name -> unified.v1.LoanId
+	15, // 30: unified.v1.LiquidationSettlement.gross_proceeds:type_name -> unified.v1.Money
+	15, // 31: unified.v1.LiquidationSettlement.execution_costs:type_name -> unified.v1.Money
+	15, // 32: unified.v1.LiquidationSettlement.liquidation_incentive:type_name -> unified.v1.Money
+	15, // 33: unified.v1.LiquidationSettlement.secured_claim_paid:type_name -> unified.v1.Money
+	15, // 34: unified.v1.LiquidationSettlement.borrower_surplus:type_name -> unified.v1.Money
+	15, // 35: unified.v1.LiquidationSettlement.residual_bad_debt:type_name -> unified.v1.Money
+	13, // 36: unified.v1.LiquidationSettlement.buyer_id:type_name -> unified.v1.PartyId
+	13, // 37: unified.v1.LiquidationSettlement.executor_id:type_name -> unified.v1.PartyId
+	10, // 38: unified.v1.LiquidationSettlement.payment_id:type_name -> unified.v1.Identifier
+	14, // 39: unified.v1.LiquidationSettlement.settled_at:type_name -> google.protobuf.Timestamp
+	40, // [40:40] is the sub-list for method output_type
+	40, // [40:40] is the sub-list for method input_type
+	40, // [40:40] is the sub-list for extension type_name
+	40, // [40:40] is the sub-list for extension extendee
+	0,  // [0:40] is the sub-list for field type_name
 }
 
 func init() { file_unified_v1_collateral_proto_init() }
@@ -515,14 +1097,15 @@ func file_unified_v1_collateral_proto_init() {
 	if File_unified_v1_collateral_proto != nil {
 		return
 	}
+	file_unified_v1_risk_proto_init()
 	file_unified_v1_types_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_unified_v1_collateral_proto_rawDesc), len(file_unified_v1_collateral_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   3,
+			NumEnums:      4,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

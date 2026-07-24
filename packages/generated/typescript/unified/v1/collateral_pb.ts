@@ -6,6 +6,8 @@ import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2"
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Timestamp } from "@bufbuild/protobuf/wkt";
 import { file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
+import type { OracleObservation } from "./risk_pb.js";
+import { file_unified_v1_risk } from "./risk_pb.js";
 import type { AssetId, Identifier, LoanId, Money, PartyId } from "./types_pb.js";
 import { file_unified_v1_types } from "./types_pb.js";
 import type { Message } from "@bufbuild/protobuf";
@@ -14,7 +16,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file unified/v1/collateral.proto.
  */
 export const file_unified_v1_collateral: GenFile = /*@__PURE__*/
-  fileDesc("Cht1bmlmaWVkL3YxL2NvbGxhdGVyYWwucHJvdG8SCnVuaWZpZWQudjEikwMKDkNvbGxhdGVyYWxJdGVtEi0KDWNvbGxhdGVyYWxfaWQYASABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISIwoHbG9hbl9pZBgCIAEoCzISLnVuaWZpZWQudjEuTG9hbklkEiUKCGFzc2V0X2lkGAMgASgLMhMudW5pZmllZC52MS5Bc3NldElkEigKBGtpbmQYBCABKA4yGi51bmlmaWVkLnYxLkNvbGxhdGVyYWxLaW5kEhUKDXRva2VuX2FkZHJlc3MYBSABKAkSEAoIdG9rZW5faWQYBiABKAkSEAoIcXVhbnRpdHkYByABKAkSJQoIb3duZXJfaWQYCCABKAsyEy51bmlmaWVkLnYxLlBhcnR5SWQSLQoJbG9ja2VkX2F0GAkgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIsCgZzdGF0dXMYCiABKA4yHC51bmlmaWVkLnYxLkNvbGxhdGVyYWxTdGF0dXMSHQoVY3VzdG9keV9ldmlkZW5jZV9oYXNoGAsgASgMInkKEENvbGxhdGVyYWxCdW5kbGUSIwoHbG9hbl9pZBgBIAEoCzISLnVuaWZpZWQudjEuTG9hbklkEikKBWl0ZW1zGAIgAygLMhoudW5pZmllZC52MS5Db2xsYXRlcmFsSXRlbRIVCg1zdGF0ZV92ZXJzaW9uGAMgASgEIrICChVVZnRDb2xsYXRlcmFsRXhwb3N1cmUSIwoHbG9hbl9pZBgBIAEoCzISLnVuaWZpZWQudjEuTG9hbklkEigKC2JvcnJvd2VyX2lkGAIgASgLMhMudW5pZmllZC52MS5QYXJ0eUlkEhUKDWxvYW5fcXVhbnRpdHkYAyABKAkSGQoRYm9ycm93ZXJfcXVhbnRpdHkYBCABKAkSGgoSY2lyY3VsYXRpbmdfc3VwcGx5GAUgASgJEiwKEWJhY2tlZF9kZWJ0X3ZhbHVlGAYgASgLMhEudW5pZmllZC52MS5Nb25leRIwChVwcm90b2NvbF9kZWJ0X2NlaWxpbmcYByABKAsyES51bmlmaWVkLnYxLk1vbmV5EhwKFHBvbGljeV9ldmlkZW5jZV9oYXNoGAggASgMKqEBCg5Db2xsYXRlcmFsS2luZBIfChtDT0xMQVRFUkFMX0tJTkRfVU5TUEVDSUZJRUQQABIaChZDT0xMQVRFUkFMX0tJTkRfTkFUSVZFEAESGQoVQ09MTEFURVJBTF9LSU5EX0VSQzIwEAISGgoWQ09MTEFURVJBTF9LSU5EX0VSQzcyMRADEhsKF0NPTExBVEVSQUxfS0lORF9FUkMxMTU1EAQqtAEKEENvbGxhdGVyYWxTdGF0dXMSIQodQ09MTEFURVJBTF9TVEFUVVNfVU5TUEVDSUZJRUQQABIcChhDT0xMQVRFUkFMX1NUQVRVU19MT0NLRUQQARIeChpDT0xMQVRFUkFMX1NUQVRVU19SRUxFQVNFRBACEiAKHENPTExBVEVSQUxfU1RBVFVTX0xJUVVJREFURUQQAxIdChlDT0xMQVRFUkFMX1NUQVRVU19DTEFJTUVEEARCT1pNZ2l0aHViLmNvbS91bmlmaWVkLWZpbmFuY2UvdW5pZmllZC9wYWNrYWdlcy9nZW5lcmF0ZWQvZ28vdW5pZmllZC92MTt1bmlmaWVkdjFiBnByb3RvMw", [file_google_protobuf_timestamp, file_unified_v1_types]);
+  fileDesc("Cht1bmlmaWVkL3YxL2NvbGxhdGVyYWwucHJvdG8SCnVuaWZpZWQudjEikwMKDkNvbGxhdGVyYWxJdGVtEi0KDWNvbGxhdGVyYWxfaWQYASABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISIwoHbG9hbl9pZBgCIAEoCzISLnVuaWZpZWQudjEuTG9hbklkEiUKCGFzc2V0X2lkGAMgASgLMhMudW5pZmllZC52MS5Bc3NldElkEigKBGtpbmQYBCABKA4yGi51bmlmaWVkLnYxLkNvbGxhdGVyYWxLaW5kEhUKDXRva2VuX2FkZHJlc3MYBSABKAkSEAoIdG9rZW5faWQYBiABKAkSEAoIcXVhbnRpdHkYByABKAkSJQoIb3duZXJfaWQYCCABKAsyEy51bmlmaWVkLnYxLlBhcnR5SWQSLQoJbG9ja2VkX2F0GAkgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIsCgZzdGF0dXMYCiABKA4yHC51bmlmaWVkLnYxLkNvbGxhdGVyYWxTdGF0dXMSHQoVY3VzdG9keV9ldmlkZW5jZV9oYXNoGAsgASgMInkKEENvbGxhdGVyYWxCdW5kbGUSIwoHbG9hbl9pZBgBIAEoCzISLnVuaWZpZWQudjEuTG9hbklkEikKBWl0ZW1zGAIgAygLMhoudW5pZmllZC52MS5Db2xsYXRlcmFsSXRlbRIVCg1zdGF0ZV92ZXJzaW9uGAMgASgEIrICChVVZnRDb2xsYXRlcmFsRXhwb3N1cmUSIwoHbG9hbl9pZBgBIAEoCzISLnVuaWZpZWQudjEuTG9hbklkEigKC2JvcnJvd2VyX2lkGAIgASgLMhMudW5pZmllZC52MS5QYXJ0eUlkEhUKDWxvYW5fcXVhbnRpdHkYAyABKAkSGQoRYm9ycm93ZXJfcXVhbnRpdHkYBCABKAkSGgoSY2lyY3VsYXRpbmdfc3VwcGx5GAUgASgJEiwKEWJhY2tlZF9kZWJ0X3ZhbHVlGAYgASgLMhEudW5pZmllZC52MS5Nb25leRIwChVwcm90b2NvbF9kZWJ0X2NlaWxpbmcYByABKAsyES51bmlmaWVkLnYxLk1vbmV5EhwKFHBvbGljeV9ldmlkZW5jZV9oYXNoGAggASgMIqcFCg9MaXF1aWRhdGlvblBsYW4SLgoObGlxdWlkYXRpb25faWQYASABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISIwoHbG9hbl9pZBgCIAEoCzISLnVuaWZpZWQudjEuTG9hbklkEi0KDWNvbGxhdGVyYWxfaWQYAyABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISKwoFcm91dGUYBCABKA4yHC51bmlmaWVkLnYxLkxpcXVpZGF0aW9uUm91dGUSEAoIcXVhbnRpdHkYBSABKAkSLQoScmVmZXJlbmNlX3Byb2NlZWRzGAYgASgLMhEudW5pZmllZC52MS5Nb25leRIoCg1yZXNlcnZlX3ByaWNlGAcgASgLMhEudW5pZmllZC52MS5Nb25leRItChJleGVjdXRpb25fY29zdF9jYXAYCCABKAsyES51bmlmaWVkLnYxLk1vbmV5Eh4KFmluY2VudGl2ZV9iYXNpc19wb2ludHMYCSABKA0SKgoibWluaW11bV9iaWRfaW5jcmVtZW50X2Jhc2lzX3BvaW50cxgKIAEoDRItCglzdGFydHNfYXQYCyABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEisKB2VuZHNfYXQYDCABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhcKD3BvbGljeV9zZXRfaGFzaBgNIAEoDBIdChV0cmlnZ2VyX3NuYXBzaG90X2hhc2gYDiABKAwSOgoTcHJpY2luZ19vYnNlcnZhdGlvbhgPIAEoCzIdLnVuaWZpZWQudjEuT3JhY2xlT2JzZXJ2YXRpb24SLQoGc3RhdHVzGBAgASgOMh0udW5pZmllZC52MS5MaXF1aWRhdGlvblN0YXR1cyLdAQoOTGlxdWlkYXRpb25CaWQSLgoObGlxdWlkYXRpb25faWQYASABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISJgoJYmlkZGVyX2lkGAIgASgLMhMudW5pZmllZC52MS5QYXJ0eUlkEiEKBmFtb3VudBgDIAEoCzIRLnVuaWZpZWQudjEuTW9uZXkSLQoJcGxhY2VkX2F0GAQgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdGFtcBIhChl0cmFuc2FjdGlvbl9ldmlkZW5jZV9oYXNoGAUgASgMIuYEChVMaXF1aWRhdGlvblNldHRsZW1lbnQSLgoObGlxdWlkYXRpb25faWQYASABKAsyFi51bmlmaWVkLnYxLklkZW50aWZpZXISIwoHbG9hbl9pZBgCIAEoCzISLnVuaWZpZWQudjEuTG9hbklkEikKDmdyb3NzX3Byb2NlZWRzGAMgASgLMhEudW5pZmllZC52MS5Nb25leRIqCg9leGVjdXRpb25fY29zdHMYBCABKAsyES51bmlmaWVkLnYxLk1vbmV5EjAKFWxpcXVpZGF0aW9uX2luY2VudGl2ZRgFIAEoCzIRLnVuaWZpZWQudjEuTW9uZXkSLQoSc2VjdXJlZF9jbGFpbV9wYWlkGAYgASgLMhEudW5pZmllZC52MS5Nb25leRIrChBib3Jyb3dlcl9zdXJwbHVzGAcgASgLMhEudW5pZmllZC52MS5Nb25leRIsChFyZXNpZHVhbF9iYWRfZGVidBgIIAEoCzIRLnVuaWZpZWQudjEuTW9uZXkSJQoIYnV5ZXJfaWQYCSABKAsyEy51bmlmaWVkLnYxLlBhcnR5SWQSKAoLZXhlY3V0b3JfaWQYCiABKAsyEy51bmlmaWVkLnYxLlBhcnR5SWQSKgoKcGF5bWVudF9pZBgLIAEoCzIWLnVuaWZpZWQudjEuSWRlbnRpZmllchIZChFqb3VybmFsX3JlZmVyZW5jZRgMIAEoDBIdChVwcmljaW5nX2V2aWRlbmNlX2hhc2gYDSABKAwSLgoKc2V0dGxlZF9hdBgOIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAqoQEKDkNvbGxhdGVyYWxLaW5kEh8KG0NPTExBVEVSQUxfS0lORF9VTlNQRUNJRklFRBAAEhoKFkNPTExBVEVSQUxfS0lORF9OQVRJVkUQARIZChVDT0xMQVRFUkFMX0tJTkRfRVJDMjAQAhIaChZDT0xMQVRFUkFMX0tJTkRfRVJDNzIxEAMSGwoXQ09MTEFURVJBTF9LSU5EX0VSQzExNTUQBCq0AQoQQ29sbGF0ZXJhbFN0YXR1cxIhCh1DT0xMQVRFUkFMX1NUQVRVU19VTlNQRUNJRklFRBAAEhwKGENPTExBVEVSQUxfU1RBVFVTX0xPQ0tFRBABEh4KGkNPTExBVEVSQUxfU1RBVFVTX1JFTEVBU0VEEAISIAocQ09MTEFURVJBTF9TVEFUVVNfTElRVUlEQVRFRBADEh0KGUNPTExBVEVSQUxfU1RBVFVTX0NMQUlNRUQQBCqfAQoQTGlxdWlkYXRpb25Sb3V0ZRIhCh1MSVFVSURBVElPTl9ST1VURV9VTlNQRUNJRklFRBAAEhwKGExJUVVJREFUSU9OX1JPVVRFX0RJUkVDVBABEiMKH0xJUVVJREFUSU9OX1JPVVRFX0RVVENIX0FVQ1RJT04QAhIlCiFMSVFVSURBVElPTl9ST1VURV9FTkdMSVNIX0FVQ1RJT04QAyq3AQoRTGlxdWlkYXRpb25TdGF0dXMSIgoeTElRVUlEQVRJT05fU1RBVFVTX1VOU1BFQ0lGSUVEEAASHQoZTElRVUlEQVRJT05fU1RBVFVTX0FDVElWRRABEh4KGkxJUVVJREFUSU9OX1NUQVRVU19TRVRUTEVEEAISHQoZTElRVUlEQVRJT05fU1RBVFVTX0ZBSUxFRBADEiAKHExJUVVJREFUSU9OX1NUQVRVU19DQU5DRUxMRUQQBEJPWk1naXRodWIuY29tL3VuaWZpZWQtZmluYW5jZS91bmlmaWVkL3BhY2thZ2VzL2dlbmVyYXRlZC9nby91bmlmaWVkL3YxO3VuaWZpZWR2MWIGcHJvdG8z", [file_google_protobuf_timestamp, file_unified_v1_risk, file_unified_v1_types]);
 
 /**
  * @generated from message unified.v1.CollateralItem
@@ -163,6 +165,217 @@ export const UftCollateralExposureSchema: GenMessage<UftCollateralExposure> = /*
   messageDesc(file_unified_v1_collateral, 2);
 
 /**
+ * @generated from message unified.v1.LiquidationPlan
+ */
+export type LiquidationPlan = Message<"unified.v1.LiquidationPlan"> & {
+  /**
+   * @generated from field: unified.v1.Identifier liquidation_id = 1;
+   */
+  liquidationId?: Identifier | undefined;
+
+  /**
+   * @generated from field: unified.v1.LoanId loan_id = 2;
+   */
+  loanId?: LoanId | undefined;
+
+  /**
+   * @generated from field: unified.v1.Identifier collateral_id = 3;
+   */
+  collateralId?: Identifier | undefined;
+
+  /**
+   * @generated from field: unified.v1.LiquidationRoute route = 4;
+   */
+  route: LiquidationRoute;
+
+  /**
+   * @generated from field: string quantity = 5;
+   */
+  quantity: string;
+
+  /**
+   * @generated from field: unified.v1.Money reference_proceeds = 6;
+   */
+  referenceProceeds?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money reserve_price = 7;
+   */
+  reservePrice?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money execution_cost_cap = 8;
+   */
+  executionCostCap?: Money | undefined;
+
+  /**
+   * @generated from field: uint32 incentive_basis_points = 9;
+   */
+  incentiveBasisPoints: number;
+
+  /**
+   * @generated from field: uint32 minimum_bid_increment_basis_points = 10;
+   */
+  minimumBidIncrementBasisPoints: number;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp starts_at = 11;
+   */
+  startsAt?: Timestamp | undefined;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp ends_at = 12;
+   */
+  endsAt?: Timestamp | undefined;
+
+  /**
+   * @generated from field: bytes policy_set_hash = 13;
+   */
+  policySetHash: Uint8Array;
+
+  /**
+   * @generated from field: bytes trigger_snapshot_hash = 14;
+   */
+  triggerSnapshotHash: Uint8Array;
+
+  /**
+   * @generated from field: unified.v1.OracleObservation pricing_observation = 15;
+   */
+  pricingObservation?: OracleObservation | undefined;
+
+  /**
+   * @generated from field: unified.v1.LiquidationStatus status = 16;
+   */
+  status: LiquidationStatus;
+};
+
+/**
+ * Describes the message unified.v1.LiquidationPlan.
+ * Use `create(LiquidationPlanSchema)` to create a new message.
+ */
+export const LiquidationPlanSchema: GenMessage<LiquidationPlan> = /*@__PURE__*/
+  messageDesc(file_unified_v1_collateral, 3);
+
+/**
+ * @generated from message unified.v1.LiquidationBid
+ */
+export type LiquidationBid = Message<"unified.v1.LiquidationBid"> & {
+  /**
+   * @generated from field: unified.v1.Identifier liquidation_id = 1;
+   */
+  liquidationId?: Identifier | undefined;
+
+  /**
+   * @generated from field: unified.v1.PartyId bidder_id = 2;
+   */
+  bidderId?: PartyId | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money amount = 3;
+   */
+  amount?: Money | undefined;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp placed_at = 4;
+   */
+  placedAt?: Timestamp | undefined;
+
+  /**
+   * @generated from field: bytes transaction_evidence_hash = 5;
+   */
+  transactionEvidenceHash: Uint8Array;
+};
+
+/**
+ * Describes the message unified.v1.LiquidationBid.
+ * Use `create(LiquidationBidSchema)` to create a new message.
+ */
+export const LiquidationBidSchema: GenMessage<LiquidationBid> = /*@__PURE__*/
+  messageDesc(file_unified_v1_collateral, 4);
+
+/**
+ * @generated from message unified.v1.LiquidationSettlement
+ */
+export type LiquidationSettlement = Message<"unified.v1.LiquidationSettlement"> & {
+  /**
+   * @generated from field: unified.v1.Identifier liquidation_id = 1;
+   */
+  liquidationId?: Identifier | undefined;
+
+  /**
+   * @generated from field: unified.v1.LoanId loan_id = 2;
+   */
+  loanId?: LoanId | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money gross_proceeds = 3;
+   */
+  grossProceeds?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money execution_costs = 4;
+   */
+  executionCosts?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money liquidation_incentive = 5;
+   */
+  liquidationIncentive?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money secured_claim_paid = 6;
+   */
+  securedClaimPaid?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money borrower_surplus = 7;
+   */
+  borrowerSurplus?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.Money residual_bad_debt = 8;
+   */
+  residualBadDebt?: Money | undefined;
+
+  /**
+   * @generated from field: unified.v1.PartyId buyer_id = 9;
+   */
+  buyerId?: PartyId | undefined;
+
+  /**
+   * @generated from field: unified.v1.PartyId executor_id = 10;
+   */
+  executorId?: PartyId | undefined;
+
+  /**
+   * @generated from field: unified.v1.Identifier payment_id = 11;
+   */
+  paymentId?: Identifier | undefined;
+
+  /**
+   * @generated from field: bytes journal_reference = 12;
+   */
+  journalReference: Uint8Array;
+
+  /**
+   * @generated from field: bytes pricing_evidence_hash = 13;
+   */
+  pricingEvidenceHash: Uint8Array;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp settled_at = 14;
+   */
+  settledAt?: Timestamp | undefined;
+};
+
+/**
+ * Describes the message unified.v1.LiquidationSettlement.
+ * Use `create(LiquidationSettlementSchema)` to create a new message.
+ */
+export const LiquidationSettlementSchema: GenMessage<LiquidationSettlement> = /*@__PURE__*/
+  messageDesc(file_unified_v1_collateral, 5);
+
+/**
  * @generated from enum unified.v1.CollateralKind
  */
 export enum CollateralKind {
@@ -233,3 +446,70 @@ export enum CollateralStatus {
  */
 export const CollateralStatusSchema: GenEnum<CollateralStatus> = /*@__PURE__*/
   enumDesc(file_unified_v1_collateral, 1);
+
+/**
+ * @generated from enum unified.v1.LiquidationRoute
+ */
+export enum LiquidationRoute {
+  /**
+   * @generated from enum value: LIQUIDATION_ROUTE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: LIQUIDATION_ROUTE_DIRECT = 1;
+   */
+  DIRECT = 1,
+
+  /**
+   * @generated from enum value: LIQUIDATION_ROUTE_DUTCH_AUCTION = 2;
+   */
+  DUTCH_AUCTION = 2,
+
+  /**
+   * @generated from enum value: LIQUIDATION_ROUTE_ENGLISH_AUCTION = 3;
+   */
+  ENGLISH_AUCTION = 3,
+}
+
+/**
+ * Describes the enum unified.v1.LiquidationRoute.
+ */
+export const LiquidationRouteSchema: GenEnum<LiquidationRoute> = /*@__PURE__*/
+  enumDesc(file_unified_v1_collateral, 2);
+
+/**
+ * @generated from enum unified.v1.LiquidationStatus
+ */
+export enum LiquidationStatus {
+  /**
+   * @generated from enum value: LIQUIDATION_STATUS_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: LIQUIDATION_STATUS_ACTIVE = 1;
+   */
+  ACTIVE = 1,
+
+  /**
+   * @generated from enum value: LIQUIDATION_STATUS_SETTLED = 2;
+   */
+  SETTLED = 2,
+
+  /**
+   * @generated from enum value: LIQUIDATION_STATUS_FAILED = 3;
+   */
+  FAILED = 3,
+
+  /**
+   * @generated from enum value: LIQUIDATION_STATUS_CANCELLED = 4;
+   */
+  CANCELLED = 4,
+}
+
+/**
+ * Describes the enum unified.v1.LiquidationStatus.
+ */
+export const LiquidationStatusSchema: GenEnum<LiquidationStatus> = /*@__PURE__*/
+  enumDesc(file_unified_v1_collateral, 3);

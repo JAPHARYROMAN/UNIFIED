@@ -38,7 +38,7 @@ approval is mandatory before public testnet.
 - **Owns:** `protocol/`.
 - **Produces:** foundation interfaces, kernel and registries, fixed-supply UFT,
   allocation and vesting controls, fee-router skeleton, signed offers, atomic
-  funding, and versioned core loan accounts.
+  funding, versioned core loan accounts, and bounded liquidation execution.
 - **Consumes:** generated Solidity types and protocol invariants.
 - **Invariants:** no mint path; no hidden superuser; checked authority.
 - **Threats:** unsafe privilege; ABI or storage drift.
@@ -93,11 +93,13 @@ approval is mandatory before public testnet.
 ## WS-CUSTODY — Collateral custody
 
 - **Owns:** `protocol/src/collateral/`.
-- **Produces:** per-loan vaults, multi-asset custody, release gates, and exposure records.
+- **Produces:** per-loan vaults, multi-asset custody, release gates, exposure records,
+  reproducible direct/Dutch/English liquidation, auction escrow, and proceeds waterfalls.
 - **Consumes:** canonical loans, asset registry identities, debt state, and risk policy.
 - **Invariants:** custody existence; exact identity; no double release; borrower surplus rights.
 - **Threats:** unsolicited callbacks; accounting drift; premature release; UFT reflexivity.
-- **Acceptance:** mixed-bundle, reconciliation, release, callback, and concentration tests pass.
+- **Acceptance:** mixed-bundle, release, concentration, liquidation, auction failure,
+  proceeds conservation, and residual bad-debt tests pass.
 - **Accountable:** Security Authority.
 
 ## WS-PLATFORM — Toolchain and delivery

@@ -64,3 +64,10 @@ assumptions:
     expiry: 2026-10-24
     downstream_impact: Custody existence release and liquidation disposition
     validation: Asset admission review exact ERC20 deltas NFT callback matching and active-registry checks
+  - id: ASM-010
+    assumption: Phase 4B2 settlement tokens use reviewed exact ERC20 transfer and allowance semantics without fees rebasing callbacks or denylisting of protocol participants.
+    owner: Security Authority
+    evidence: adr/0011-phase-4b2-reproducible-liquidation.md
+    expiry: 2026-10-24
+    downstream_impact: Bid escrow lender recovery execution costs refunds and borrower surplus
+    validation: Asset admission plus exact balance deltas and atomic settlement rollback tests

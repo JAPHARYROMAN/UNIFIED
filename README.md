@@ -10,10 +10,11 @@ skeleton, signed tender and offer flow, atomic principal-only loans, balanced
 loan accounting, deterministic chain projections, authenticated API boundaries,
 multi-source oracle safety, cross-language interest and schedule calculations,
 objective servicing transitions, multi-asset per-loan collateral custody, UFT exposure
-controls, engineering gates, and a reproducible local environment.
+controls, reproducible direct and auction liquidation, reconciled recovery accounting,
+engineering gates, and a reproducible local environment.
 
-No production loan behavior, real token deployment, real funds, production keys,
-external provider, bridge, oracle, or mainnet integration is included.
+No production deployment, real token deployment, real funds, production keys,
+external provider, bridge, live oracle, or mainnet integration is included.
 
 ## Repository map
 
@@ -70,3 +71,8 @@ storage layouts are documented in `docs/architecture/phase-3-loan-accounting.md`
 and `docs/architecture/phase-3-storage-layouts.md`. Their internal security
 reviews authorize local and testnet engineering only; they do not authorize
 production funds, token distribution, or public lending.
+
+The Phase 4 risk, custody, and liquidation boundaries are documented in
+`docs/architecture/phase-4a-risk-servicing.md`,
+`docs/architecture/phase-4b1-collateral-custody.md`, and
+`docs/architecture/phase-4b2-liquidation.md`.

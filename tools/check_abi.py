@@ -134,6 +134,13 @@ ABI_PAIRS = {
         / "protocol_src_collateral_CollateralVault_sol_CollateralVault.abi",
         ROOT / "protocol" / "abi" / "phase4" / "CollateralVault.abi.json",
     ),
+    "LiquidationEngine": (
+        ROOT
+        / ".cache"
+        / "solc"
+        / "protocol_src_collateral_LiquidationEngine_sol_LiquidationEngine.abi",
+        ROOT / "protocol" / "abi" / "phase4" / "LiquidationEngine.abi.json",
+    ),
 }
 
 

@@ -27,3 +27,4 @@ import { ScheduleEngine } from "./risk/ScheduleEngine.sol";
 import { ServicingEngine } from "./risk/ServicingEngine.sol";
 import { CollateralManager } from "./collateral/CollateralManager.sol";
 import { CollateralVault } from "./collateral/CollateralVault.sol";
+import { LiquidationEngine } from "./collateral/LiquidationEngine.sol";
