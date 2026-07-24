@@ -3,12 +3,13 @@
 Unified is a governed, multi-language foundation for a decentralized credit and
 financial coordination protocol. This repository implements the reviewed
 foundation baseline, Phase 2 protocol-kernel/UFT milestone, and Phase 3 core
-loan/accounting engineering milestone:
+loan/accounting engineering milestone, plus the Phase 4A deterministic risk foundation:
 shared schemas and bindings, append-only registries, scoped authority, a
 fixed-supply token, genesis allocation and vesting controls, a fee-router
 skeleton, signed tender and offer flow, atomic principal-only loans, balanced
 loan accounting, deterministic chain projections, authenticated API boundaries,
-engineering gates, and a reproducible local environment.
+multi-source oracle safety, cross-language interest and schedule calculations,
+objective servicing transitions, engineering gates, and a reproducible local environment.
 
 No production loan behavior, real token deployment, real funds, production keys,
 external provider, bridge, oracle, or mainnet integration is included.

@@ -79,6 +79,17 @@ approval is mandatory before public testnet.
 - **Acceptance:** authentication, attribution, validation, and preparation tests pass.
 - **Accountable:** Security Authority.
 
+## WS-RISK — Deterministic risk and servicing
+
+- **Owns:** `protocol/src/risk/`, `services/risk-engine/`.
+- **Produces:** approved oracle aggregation, interest calculations, repayment schedules,
+  and servicing/default predicates.
+- **Consumes:** immutable policy references, asset identities, and final observations.
+- **Invariants:** deterministic debt; fresh approved prices; cure priority; explicit safe mode.
+- **Threats:** oracle manipulation; calculation drift; premature default or liquidation.
+- **Acceptance:** Foundry and independent Go vectors, ABI review, and risk traceability pass.
+- **Accountable:** Accounting and Economic Risk Authority.
+
 ## WS-PLATFORM — Toolchain and delivery
 
 - **Owns:** `.github/`, `infrastructure/`, `scripts/`, `tools/`.
