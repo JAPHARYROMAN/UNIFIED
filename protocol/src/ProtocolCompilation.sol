@@ -25,3 +25,5 @@ import { InterestEngine } from "./risk/InterestEngine.sol";
 import { OracleRouter } from "./risk/OracleRouter.sol";
 import { ScheduleEngine } from "./risk/ScheduleEngine.sol";
 import { ServicingEngine } from "./risk/ServicingEngine.sol";
+import { CollateralManager } from "./collateral/CollateralManager.sol";
+import { CollateralVault } from "./collateral/CollateralVault.sol";

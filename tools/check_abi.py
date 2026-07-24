@@ -120,6 +120,20 @@ ABI_PAIRS = {
         ROOT / ".cache" / "solc" / "protocol_src_risk_ServicingEngine_sol_ServicingEngine.abi",
         ROOT / "protocol" / "abi" / "phase4" / "ServicingEngine.abi.json",
     ),
+    "CollateralManager": (
+        ROOT
+        / ".cache"
+        / "solc"
+        / "protocol_src_collateral_CollateralManager_sol_CollateralManager.abi",
+        ROOT / "protocol" / "abi" / "phase4" / "CollateralManager.abi.json",
+    ),
+    "CollateralVault": (
+        ROOT
+        / ".cache"
+        / "solc"
+        / "protocol_src_collateral_CollateralVault_sol_CollateralVault.abi",
+        ROOT / "protocol" / "abi" / "phase4" / "CollateralVault.abi.json",
+    ),
 }
 
 

@@ -38,6 +38,22 @@ library RiskTypes {
         REPAID
     }
 
+    enum CollateralKind {
+        NONE,
+        NATIVE,
+        ERC20,
+        ERC721,
+        ERC1155
+    }
+
+    enum CollateralStatus {
+        NONE,
+        LOCKED,
+        RELEASED,
+        LIQUIDATED,
+        CLAIMED
+    }
+
     struct OracleObservation {
         bytes32 assetId;
         bytes32 quoteAssetId;
@@ -76,5 +92,17 @@ library RiskTypes {
         uint256 principalDue;
         uint256 interestDue;
         InstallmentState state;
+    }
+
+    struct CollateralItem {
+        bytes32 collateralId;
+        bytes32 assetId;
+        CollateralKind kind;
+        address token;
+        uint256 tokenId;
+        uint256 quantity;
+        address owner;
+        uint64 lockedAt;
+        CollateralStatus status;
     }
 }

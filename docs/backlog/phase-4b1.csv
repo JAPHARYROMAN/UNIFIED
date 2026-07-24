@@ -1,0 +1,8 @@
+id,workstream,title,status,owner,acceptance
+UNI-ADR-005,WS-SPEC,Accept Phase 4B1 custody boundary,DONE,Protocol Architecture Authority,ADR 0010 accepted with cross-authority review
+UNI-COLLATERAL-001,WS-PROTOCOL,Implement per-loan collateral vault,DONE,Security Authority,Native ERC20 ERC721 ERC1155 exact custody and callback tests pass
+UNI-COLLATERAL-002,WS-PROTOCOL,Implement mixed collateral manager,DONE,Protocol Architecture Authority,Mixed bundle exposure release and no-double-disposition tests pass
+UNI-UFT-COLL-001,WS-RISK,Implement UFT collateral concentration controls,DONE,Accounting and Economic Risk Authority,Canonical identity debt ceiling single-loan borrower and compliance tests pass
+UNI-SCHEMA-004,WS-DATA,Define collateral schemas,DONE,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
+UNI-SEC-005,WS-SECURITY,Complete Phase 4B1 internal review,DONE,Security Authority,No unresolved critical or existential finding
+UNI-LIQUIDATION-001,WS-PROTOCOL,Implement reproducible liquidation routes,IN_PROGRESS,Accounting and Economic Risk Authority,Required before binding liquidation engine

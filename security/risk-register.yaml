@@ -154,3 +154,30 @@ risks:
     downstream_impact: Borrower collateral is liquidated after timely cure
     validation: Cure-deadline state-ordering test and default transition role separation
     status: CONTROLLED
+  - id: RISK-PHASE4B1-001
+    severity: CRITICAL
+    title: Recorded collateral is not actually controlled
+    owner: Security Authority
+    evidence: protocol/test/Phase4Collateral.t.sol
+    expiry: 2026-10-24
+    downstream_impact: Unsecured debt is represented as collateralized
+    validation: Exact transfer balance ownership callback and vault reconciliation tests
+    status: CONTROLLED
+  - id: RISK-PHASE4B1-002
+    severity: EXISTENTIAL
+    title: Collateral is released before secured debt finality
+    owner: Security Authority
+    evidence: protocol/src/collateral/CollateralManager.sol
+    expiry: 2026-10-24
+    downstream_impact: Lender loss insolvency and irreversible borrower asset movement
+    validation: Canonical terminal state zero outstanding debt borrower recipient and no-double-release gates
+    status: CONTROLLED
+  - id: RISK-PHASE4B1-003
+    severity: CRITICAL
+    title: UFT collateral bypasses concentration or debt ceilings
+    owner: Accounting and Economic Risk Authority
+    evidence: protocol/test/Phase4Collateral.t.sol
+    expiry: 2026-10-24
+    downstream_impact: Reflexive liquidation cascade and systemic UFT-backed credit loss
+    validation: Canonical identity lock supply percentage limits attested debt ceiling and post-burn compliance view
+    status: CONTROLLED

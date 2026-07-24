@@ -9,7 +9,8 @@ fixed-supply token, genesis allocation and vesting controls, a fee-router
 skeleton, signed tender and offer flow, atomic principal-only loans, balanced
 loan accounting, deterministic chain projections, authenticated API boundaries,
 multi-source oracle safety, cross-language interest and schedule calculations,
-objective servicing transitions, engineering gates, and a reproducible local environment.
+objective servicing transitions, multi-asset per-loan collateral custody, UFT exposure
+controls, engineering gates, and a reproducible local environment.
 
 No production loan behavior, real token deployment, real funds, production keys,
 external provider, bridge, oracle, or mainnet integration is included.
