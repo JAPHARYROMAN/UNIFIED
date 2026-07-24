@@ -1,12 +1,12 @@
 id,workstream,title,status,owner,acceptance
 UNI-ADR-010,WS-SPEC,Accept Phase 7A payment ingress and reconciliation boundary,DONE,Protocol Architecture Authority,ADR 0015 fixes provider authority finality idempotency accounting quarantine and reconciliation boundaries
-UNI-PAYMENT-001,WS-PAYMENTS,Implement immutable payment intent lifecycle,TODO,Protocol Architecture Authority,Exact synthetic intent state and idempotency transitions fail closed
-UNI-PROVIDER-001,WS-PAYMENTS,Implement authenticated mock callback ingress,TODO,Security Authority,Pinned Ed25519 provider exact binding expiry and retain-before-normalize checks pass
-UNI-IDEMPOTENCY-001,WS-PAYMENTS,Enforce provider event idempotency and ordering,TODO,Security Authority,Replay returns prior result while conflicts and impossible order create no repeated economic effect
-UNI-ACCOUNTING-008,WS-LEDGER,Post provisional final and reversal payment journals,TODO,Accounting and Economic Risk Authority,Distinct exact-asset accounts remain balanced immutable idempotent and linked
-UNI-RECON-001,WS-LEDGER,Implement synthetic provider-to-ledger reconciliation,TODO,Accounting and Economic Risk Authority,Every difference remains visible owned aged and deadline-bound
-UNI-QUARANTINE-001,WS-SECURITY,Quarantine unknown invalid and conflicting callbacks,TODO,Security Authority,Raw evidence hash and reason remain immutable without changing payment economics
-UNI-SCHEMA-009,WS-SCHEMA,Define payment callback and reconciliation schemas,TODO,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
-UNI-SIM-004,WS-RISK,Simulate callback delivery and reconciliation faults,TODO,Accounting and Economic Risk Authority,Duplicate reordered forged stale outage and mismatch scenarios conserve effects
-UNI-SEC-010,WS-SECURITY,Complete Phase 7A internal review,TODO,Security Authority,No unresolved critical or existential payment-ingress finding
+UNI-PAYMENT-001,WS-PAYMENTS,Implement immutable payment intent lifecycle,DONE,Protocol Architecture Authority,Exact synthetic intent state and idempotency transitions fail closed
+UNI-PROVIDER-001,WS-PAYMENTS,Implement authenticated mock callback ingress,DONE,Security Authority,Pinned Ed25519 provider exact binding expiry and retain-before-normalize checks pass
+UNI-IDEMPOTENCY-001,WS-PAYMENTS,Enforce provider event idempotency and ordering,DONE,Security Authority,Replay returns prior result while conflicts and impossible order create no repeated economic effect
+UNI-ACCOUNTING-008,WS-LEDGER,Post provisional final and reversal payment journals,DONE,Accounting and Economic Risk Authority,Distinct exact-asset accounts remain balanced immutable idempotent and linked
+UNI-RECON-001,WS-LEDGER,Implement synthetic provider-to-ledger reconciliation,DONE,Accounting and Economic Risk Authority,Every difference remains visible owned aged and deadline-bound
+UNI-QUARANTINE-001,WS-SECURITY,Quarantine unknown invalid and conflicting callbacks,DONE,Security Authority,Raw evidence hash and reason remain immutable without changing payment economics
+UNI-SCHEMA-009,WS-SCHEMA,Define payment callback and reconciliation schemas,DONE,Protocol Architecture Authority,Additive Protobuf generates deterministic bindings in four languages
+UNI-SIM-004,WS-RISK,Simulate callback delivery and reconciliation faults,DONE,Accounting and Economic Risk Authority,Duplicate reordered forged stale outage and mismatch scenarios conserve effects
+UNI-SEC-010,WS-SECURITY,Complete Phase 7A internal review,DONE,Security Authority,No unresolved critical or existential payment-ingress finding
 UNI-REVIEW-008,WS-SPEC,Complete bounded Phase 7A engineering exit,TODO,Program Authority,Exit separates synthetic ingress proof from live payment and loan-allocation approval

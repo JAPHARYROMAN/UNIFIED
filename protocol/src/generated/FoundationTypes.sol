@@ -2,7 +2,7 @@
 pragma solidity 0.8.36;
 
 // Code generated from schemas/proto/unified/v1. DO NOT EDIT.
-// Source SHA-256: 5a7030da225aacd625688d9edeeb5a1065792e4cc9332cbea8c59cbc29739860
+// Source SHA-256: f030d21167ba402ec182438dbf844089c5da826c673c06ecf5770118ab56a6c8
 library FoundationTypes {
     enum CollateralKind { UNSPECIFIED, NATIVE, ERC20, ERC721, ERC1155 }
 
@@ -37,6 +37,14 @@ library FoundationTypes {
     enum PaymentState { UNSPECIFIED, REQUESTED, AUTHORIZED, PROCESSING, PROVISIONAL, FINAL, ALLOCATED, REVERSED, DISPUTED, FAILED, REFUNDED }
 
     enum FinalityState { UNSPECIFIED, PROVISIONAL, FINAL, REORGED }
+
+    enum PaymentRail { UNSPECIFIED, BANK, CARD }
+
+    enum PaymentStatus { UNSPECIFIED, CREATED, PROCESSING, PROVISIONAL, FINAL, FAILED, REVERSED, DISPUTED }
+
+    enum ProviderStatementKind { UNSPECIFIED, SETTLED, REVERSED }
+
+    enum ReconciliationStatus { UNSPECIFIED, MATCHED, EXCEPTION, RESOLVED }
 
     enum ScheduleKind { UNSPECIFIED, BULLET, EQUAL_PRINCIPAL, ANNUITY, INTEREST_ONLY, BALLOON, CUSTOM }
 
@@ -420,6 +428,118 @@ library FoundationTypes {
         string valueUnits;
         bytes expectedTermsHash;
         int64 expiresAt;
+    }
+
+    struct PaymentIntentRecord {
+        Identifier paymentId;
+        string legalEntityId;
+        string idempotencyKey;
+        Identifier correlationId;
+        PartyId payerReference;
+        LoanId loanId;
+        string providerId;
+        PaymentRail rail;
+        string purpose;
+        Money amount;
+        int64 expiresAt;
+        PaymentStatus status;
+        uint64 aggregateVersion;
+        uint32 schemaVersion;
+    }
+
+    struct ProviderPaymentCallback {
+        string providerId;
+        Identifier providerEventId;
+        Identifier paymentId;
+        string providerReference;
+        PaymentStatus status;
+        Money amount;
+        int64 occurredAt;
+        int64 expiresAt;
+        bytes evidenceHash;
+    }
+
+    struct ProviderCallbackReceipt {
+        Identifier ingressId;
+        string providerId;
+        Identifier providerEventId;
+        bytes rawPayloadHash;
+        bytes signatureHash;
+        int64 receivedAt;
+    }
+
+    struct PaymentTransitionEvidence {
+        Identifier paymentId;
+        string providerId;
+        Identifier providerEventId;
+        PaymentStatus fromStatus;
+        PaymentStatus toStatus;
+        Money amount;
+        Identifier[] journalIds;
+        bytes evidenceHash;
+        int64 occurredAt;
+        int64 receivedAt;
+    }
+
+    struct PaymentQuarantineEvidence {
+        Identifier quarantineId;
+        string providerId;
+        Identifier providerEventId;
+        Identifier paymentId;
+        bytes rawPayloadHash;
+        bytes evidenceHash;
+        string reasonCode;
+        string owner;
+        int64 receivedAt;
+        int64 resolutionDeadline;
+    }
+
+    struct ProviderStatementEntry {
+        Identifier entryId;
+        string providerId;
+        string providerReference;
+        Identifier paymentId;
+        Money amount;
+        ProviderStatementKind kind;
+        int64 occurredAt;
+    }
+
+    struct PaymentReconciliationRunEvidence {
+        Identifier runId;
+        string providerId;
+        AssetId assetId;
+        int64 asOf;
+        bytes providerSnapshotHash;
+        bytes ledgerSnapshotHash;
+        string expectedUnits;
+        string observedUnits;
+        string differenceUnits;
+        ReconciliationStatus status;
+        string owner;
+        int64 resolutionDeadline;
+        uint32 unmatchedItems;
+    }
+
+    struct PaymentReconciliationExceptionEvidence {
+        Identifier exceptionId;
+        Identifier runId;
+        string providerId;
+        AssetId assetId;
+        string differenceUnits;
+        string reasonCode;
+        string owner;
+        int64 detectedAt;
+        int64 resolutionDeadline;
+        uint32 unmatchedItems;
+    }
+
+    struct PaymentReconciliationResolutionEvidence {
+        Identifier resolutionId;
+        Identifier exceptionId;
+        bytes evidenceHash;
+        Identifier resolutionJournalId;
+        string resolvedBy;
+        int64 resolvedAt;
     }
 
     struct OracleObservation {

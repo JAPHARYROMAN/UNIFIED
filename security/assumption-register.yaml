@@ -120,3 +120,17 @@ assumptions:
     expiry: 2026-10-24
     downstream_impact: Rollback conservation lender balances exposure totals offer state and loan identity
     validation: Contract and independent Python failure injection at every activation step
+  - id: ASM-018
+    assumption: Every Phase 7A provider key payload statement payer reference and payment amount is synthetic and used only inside local engineering.
+    owner: Release Authority
+    evidence: security/reviews/phase-7a-internal-review.md
+    expiry: 2026-10-24
+    downstream_impact: Raw callback retention privacy key custody provider authenticity and financial-data handling
+    validation: Mock-only architecture public payment privacy gate secret scanning and no network listener or provider credential
+  - id: ASM-019
+    assumption: A Phase 7A provider callback fits within 64 KiB and signs the exact domain-separated canonical JSON encoding with a pinned Ed25519 key.
+    owner: Security Authority
+    evidence: services/payment-orchestrator/payment/payment.go
+    expiry: 2026-10-24
+    downstream_impact: Callback authentication replay conflict quarantine and raw evidence retention
+    validation: Exact-byte authentication noncanonical and oversize rejection plus forged stale mismatch and replay tests

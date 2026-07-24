@@ -16,6 +16,7 @@ uv run ruff check models tools scripts
 uv run python tools/check_foundation.py
 uv run python tools/check_privileged_surface.py
 uv run python tools/check_privacy_surface.py
+uv run python tools/check_payment_privacy_surface.py
 
 $solcTarget = Join-Path $workspace '.cache\solc'
 if (Test-Path -LiteralPath $solcTarget) {

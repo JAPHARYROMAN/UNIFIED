@@ -1,6 +1,6 @@
 # Phase 7A Payment Ingress and Reconciliation
 
-Status: accepted boundary; implementation pending
+Status: implemented for synthetic local engineering; not approved for live providers
 
 ## Scope
 
@@ -149,6 +149,23 @@ financial correction automatically.
   unavailable.
 - `INV-PAY-011`, `INV-ACC-005`, and `INV-ACC-007`: mismatches remain owned and visible,
   while suspense cannot be treated as available value.
+
+## Implemented slice
+
+- a provider-independent Go orchestrator with immutable intent identity and explicit
+  state transitions;
+- a dependency-injected synthetic provider registry with pinned Ed25519 public keys;
+- canonical retain-before-normalize callback encoding, authentication, expiry, exact
+  binding, idempotent replay, conflict detection, and immutable quarantine evidence;
+- a separate ledger poster for exact bank/card provisional and final journals plus atomic
+  linked reversals;
+- per-payment provider-to-ledger reconciliation that detects offsetting reference
+  mismatches even when aggregate units are equal;
+- owned exception aging and immutable synthetic resolution evidence;
+- additive Protobuf and deterministic Solidity, Go, TypeScript, and Python projections;
+- append-only SQL evidence tables and a disposable local migration/smoke/reset path;
+- independent Python duplicate, forgery, staleness, reordering, outage, reversal, and
+  reconciliation simulations.
 
 ## Explicitly unavailable
 
