@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import solc from "solc";
@@ -33,6 +33,35 @@ const PHASE9_CONTRACTS = [
 const PHASE9_PRODUCTION_CONTRACTS = PHASE9_CONTRACTS.slice(0, -1);
 const PHASE9_MUTABILITY_WARNING_CODE = "2018";
 const ACTIVATED_IMPLEMENTATIONS = new Map([["PayoffQuoteEngine", "UNI-PAYOFF-001"]]);
+const ACTIVATED_IMPLEMENTATION_SOURCES = new Map([
+  ["PayoffQuoteEngine", "protocol/src/resolution/PayoffQuoteEngine.sol"],
+]);
+const BASELINE = {
+  commit: "4f01a5692df92c435ff8893840ebdcca055449f0",
+  manifestSha256: "sha256:9237acd53b00f5e90d77bbd4f5ce09590ddb750d079c333be4b14d8e7b4238a2",
+  rawFreezeArtifactsSha256:
+    "sha256:b0d494141f0e229cf9fd542401036cd63ba04de73e2f056c1e89a25253cdb1a3",
+  sourceSetSha256: "sha256:a40ac90f75c52fc7583651d2d57d2a4d82f1899ed673be8b460d17fb7b7425cb",
+};
+const CHECKPOINT_ROOT_KEYS = [
+  "baseline",
+  "currentSourceSetSha256",
+  "implementations",
+  "schemaVersion",
+];
+const CHECKPOINT_ENTRY_KEYS = [
+  "abiSha256",
+  "backlogId",
+  "contract",
+  "dependencyClosureSha256",
+  "reviewPath",
+  "reviewSha256",
+  "sourceSha256",
+  "sourceSetSha256",
+  "status",
+  "storageStructuralSha256",
+];
+const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/;
 
 const COMPILER_SETTINGS = {
   evmVersion: "prague",
@@ -62,6 +91,81 @@ function sha256(value) {
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, "utf8"));
+}
+
+function exactKeys(value, expected) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const observed = Object.keys(value).sort();
+  const wanted = [...expected].sort();
+  return observed.length === wanted.length && observed.every((key, index) => key === wanted[index]);
+}
+
+function repositoryPath(path) {
+  const result = relative(ROOT, path);
+  return result !== ".." && !result.startsWith(`..${sep}`) && !isAbsolute(result);
+}
+
+function solidityImports(sourcePath) {
+  const source = readFileSync(sourcePath, "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/[^\r\n]*/g, "");
+  const pattern =
+    /\bimport\s+(?:[^;]*?\s+from\s+)?["'](?<path>[^"']+)["'](?:\s+as\s+[A-Za-z_]\w*)?\s*;/gs;
+  return [...source.matchAll(pattern)].map((match) => match.groups.path);
+}
+
+function repositoryImportPath(sourcePath, importPath) {
+  const candidates = importPath.startsWith(".")
+    ? [resolve(dirname(sourcePath), importPath)]
+    : [resolve(ROOT, importPath), resolve(ROOT, "protocol/src", importPath)];
+  for (const candidate of candidates) {
+    if (!repositoryPath(candidate)) {
+      if (importPath.startsWith(".")) {
+        throw new Error(`${relative(ROOT, sourcePath)} imports outside the repository: ${importPath}`);
+      }
+      continue;
+    }
+    try {
+      if (!statSync(candidate).isFile()) continue;
+      if (!candidate.toLowerCase().endsWith(".sol")) {
+        throw new Error(
+          `${relative(ROOT, sourcePath)} imports a non-Solidity repository file: ${importPath}`,
+        );
+      }
+      return candidate;
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+    }
+  }
+  if ([".", "protocol/", "src/"].some((prefix) => importPath.startsWith(prefix))) {
+    throw new Error(`${relative(ROOT, sourcePath)} has an unresolved repository import: ${importPath}`);
+  }
+  return null;
+}
+
+export function repositorySolidityDependencyHash(sourcePath) {
+  const rootSource = resolve(ROOT, sourcePath);
+  if (!repositoryPath(rootSource)) {
+    throw new Error("Phase 9 implementation source is outside the repository");
+  }
+  const pending = [rootSource];
+  const observed = new Set();
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (observed.has(current)) continue;
+    observed.add(current);
+    for (const importPath of solidityImports(current)) {
+      const dependency = repositoryImportPath(current, importPath);
+      if (dependency !== null && !observed.has(dependency)) pending.push(dependency);
+    }
+  }
+  const payload = [...observed]
+    .map((path) => ({
+      path: relative(ROOT, path).split(sep).join("/"),
+      sha256: sha256(readFileSync(path)),
+    }))
+    .sort((left, right) => left.path.localeCompare(right.path));
+  return sha256(canonicalJson(payload));
 }
 
 function findImport(importPath) {
@@ -181,10 +285,12 @@ function externalMutators(output, productionContracts) {
 
 export function phase9StubContracts(payload) {
   if (
-    payload === null ||
-    typeof payload !== "object" ||
+    !exactKeys(payload, CHECKPOINT_ROOT_KEYS) ||
     payload.schemaVersion !== 1 ||
-    !Array.isArray(payload.implementations)
+    !Array.isArray(payload.implementations) ||
+    !exactKeys(payload.baseline, Object.keys(BASELINE)) ||
+    canonicalJson(payload.baseline) !== canonicalJson(BASELINE) ||
+    !SHA256_PATTERN.test(payload.currentSourceSetSha256)
   ) {
     throw new Error("Phase 9 implementation checkpoint registry is malformed");
   }
@@ -192,18 +298,39 @@ export function phase9StubContracts(payload) {
   if (
     payload.implementations.some(
       (entry) =>
-        entry === null ||
-        typeof entry !== "object" ||
+        !exactKeys(entry, CHECKPOINT_ENTRY_KEYS) ||
+        !Object.values(entry).every((value) => typeof value === "string") ||
         typeof entry.contract !== "string" ||
         !PHASE9_PRODUCTION_CONTRACTS.includes(entry.contract) ||
         entry.backlogId !== ACTIVATED_IMPLEMENTATIONS.get(entry.contract) ||
-        entry.status !== "PASS",
+        entry.status !== "PASS" ||
+        [
+          entry.abiSha256,
+          entry.dependencyClosureSha256,
+          entry.reviewSha256,
+          entry.sourceSha256,
+          entry.sourceSetSha256,
+          entry.storageStructuralSha256,
+        ].some((value) => !SHA256_PATTERN.test(value)),
     ) ||
     new Set(implemented).size !== implemented.length
   ) {
     throw new Error("Phase 9 implementation checkpoint contract set is invalid");
   }
   return PHASE9_PRODUCTION_CONTRACTS.filter((contract) => !implemented.includes(contract));
+}
+
+export function validateCheckpointDependencyClosures(payload) {
+  for (const entry of payload.implementations) {
+    const sourcePath = ACTIVATED_IMPLEMENTATION_SOURCES.get(entry.contract);
+    if (sourcePath === undefined) {
+      throw new Error(`${entry.contract}: implementation dependency closure is not activated`);
+    }
+    const actual = repositorySolidityDependencyHash(sourcePath);
+    if (actual !== entry.dependencyClosureSha256) {
+      throw new Error(`${entry.contract}: reviewed Solidity dependency closure hash is stale`);
+    }
+  }
 }
 
 export function validatePhase9MutabilityDiagnostics(
@@ -397,6 +524,7 @@ async function main() {
   if (errors.length > 0) throw new Error(`Solidity compilation failed (${errors.length} errors)`);
   const checkpointPayload = await readJson(CHECKPOINT_PATH);
   const stubContracts = phase9StubContracts(checkpointPayload);
+  validateCheckpointDependencyClosures(checkpointPayload);
   validatePhase9MutabilityDiagnostics(output, { productionContracts: stubContracts });
 
   const definitions = contractDefinitions(output);

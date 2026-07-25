@@ -38,10 +38,13 @@ The constructor-bound `RefinanceCoordinator` is the only caller authorized to in
 Every other caller reverts `UnauthorizedQuoteCaller(caller)`. The public `quote(bytes32)`
 view remains permissionless and grants no state-changing authority.
 
-The engine accepts only `loanId` and `validUntil` at issuance. Debt, beneficiaries,
-obligation codes, policy, asset, token, route, version, and quote identity are resolved
-from constructor-bound or loan-bound canonical authorities. No caller value may replace
-or supplement them.
+The engine accepts only `loanId` and `validUntil` at issuance. `validUntil` is the
+coordinator-selected sole time input: the coordinator may choose an expiry only inside
+the canonical window derived from `block.timestamp` and the immutable maximum. It cannot
+supply `issuedAt`, a duration, a clock, or another time fact. Debt, beneficiaries,
+obligation codes, policy, asset, token, route, version, nonce, and quote identity are
+resolved from constructor-bound or loan-bound canonical authorities. No caller value may
+replace or supplement them.
 
 ### 2. Loan and debt eligibility
 
@@ -54,8 +57,26 @@ At issuance, the loan must:
   constructor-approved factory and registry independently resolve the same account;
 - bind that same loan registry, the approved Phase 9 factory, this quote engine, and the
   constructor-bound refinance coordinator;
+- bind a position manager equal to
+  `IPhase9LoanFactory(_approvedPhase9Factory).positionManager(loanId)` and containing
+  deployed code;
 - use lifecycle `ACTIVE`; and
 - use servicing state `CURRENT`, `DELINQUENT`, or `DEFAULTED`.
+
+Issuance is also gated to the exact local domain and token implementation:
+
+```solidity
+block.chainid == 31337
+settlementToken.codehash == keccak256(type(Phase9LocalSyntheticToken).runtimeCode)
+```
+
+Under the frozen Foundry `1.7.1`, Solidity `0.8.36`, optimizer-runs-`200`, Prague, and
+OpenZeppelin Contracts `5.6.1` settings, that exact deployed runtime hash is
+`0xb4cb1bc940c6783f3ecad43dc045c0fa93b02fae77d6e874a8adaf7216c907e5`.
+An ERC-20 look-alike, interface-compatible substitute, Phase 8 token, or contract with a
+different runtime is invalid. The token's own constructor already rejects every chain
+other than `31337`; the engine check independently prevents a spoofed policy or account
+from substituting another deployed token.
 
 The engine reads one canonical `debtState()` and never accepts component amounts from the
 caller. In the first quote-policy slice, `capitalizedInterest` and `recoverableCosts` must
@@ -122,10 +143,40 @@ The returned tuple is accepted only when:
   `_maximumQuoteValidity`; and
 - the policy source and settlement token contain code.
 
+The returned `policyHash` is not an arbitrary registry label. It must equal this exact
+deterministic preimage:
+
+```solidity
+keccak256(
+    abi.encode(
+        "UNIFIED_PAYOFF_POLICY_V1",
+        block.chainid,
+        address(this),
+        _quotePolicyRegistry,
+        loanId,
+        loanAccount,
+        boundPolicySetHash,
+        feePenaltyBeneficiary,
+        settlementAssetId,
+        settlementToken,
+        maximumValidity
+    )
+)
+```
+
 A changed resolver response, inactive binding, asset substitution, token substitution,
 policy-set substitution, beneficiary substitution, or maximum-validity substitution is
-invalid canonical state. Neither deprecation nor a later policy may reinterpret an
-already issued quote.
+invalid canonical state. A successful first issuance freezes the complete binding for
+that `(loanId, loanAccount)` in this local slice. For every successor issuance, including
+after terminal disposition or effective expiry, the engine reconstructs the prior binding
+from the latest stored quote, its fixed component array, the account configuration, and
+the constructor-bound maximum. The newly resolved tuple and recomputed deterministic
+`policyHash` must equal that prior binding exactly. Any change reverts
+`InvalidQuoteInput()` without advancing the nonce or writing a quote. No additional
+storage is required: the prior policy hash, asset, and token are in the quote; the
+fee/penalty beneficiary is in components `2` through `4`; and the policy-set hash and
+maximum are immutable account/engine configuration. Neither deprecation nor a later
+policy may reinterpret an issued quote or authorize a successor under a changed binding.
 
 ### 4. Exact component and route commitments
 
@@ -196,13 +247,20 @@ advance it. Exhaustion at `type(uint64).max` fails closed with
 `QuoteReplayConflict(bytes32(0))`; zero communicates that no new quote identity was
 created.
 
+After deriving the exact quote ID and before any quote, component, latest-ID, or nonce
+write, `quoteId == bytes32(0)` or `_quotes[quoteId].quoteId != bytes32(0)` reverts
+`QuoteReplayConflict(quoteId)`. This is the complete collision rule; no existing content
+is returned, overwritten, or treated as replay.
+
 There is at most one effective `ISSUED` quote per loan. If `_latestQuoteId[loanId]` has no
 terminal disposition and `block.timestamp < validUntil`, a new issuance reverts
 `InvalidQuoteInput()`. There is no implicit supersession and no automatic invalidation of
 an unexpired quote. A stored terminal disposition or effective expiry permits a later
 successful issuance with the next nonce.
 
-Validity is the half-open interval `[issuedAt, validUntil)`:
+Validity is the half-open interval `[issuedAt, validUntil)`. `validUntil` is selected by
+the coordinator as the only caller-provided time field, while every other time fact is
+derived canonically:
 
 - `issuedAt = uint64(block.timestamp)`;
 - `validUntil` must be strictly greater than `issuedAt`;
@@ -225,14 +283,19 @@ Before recording `CONSUMED`, the engine re-resolves and revalidates all canonica
   address;
 - independent equality of the registry account and
   `IPhase9LoanFactory(_approvedPhase9Factory).loanAccount(loanId)`;
+- equality of the account's configured position manager and
+  `IPhase9LoanFactory(_approvedPhase9Factory).positionManager(loanId)`, with deployed
+  position-manager code;
 - loan ID, registry, approved factory, engine, coordinator, settlement asset, settlement
   token, policy-set hash, lifecycle, and supported servicing state;
+- chain ID `31337` and the exact
+  `keccak256(type(Phase9LocalSyntheticToken).runtimeCode)` settlement-token code hash;
 - the complete debt state, stored debt-state version, gross equation, credit bound, and
   nonzero net payoff;
 - exactly one active lender position, its owner, and its exact principal-plus-interest
   claim;
-- the complete active policy-source tuple and its immutable equality to the issued
-  binding;
+- the complete active policy-source tuple, its exact deterministic policy-hash preimage,
+  and its immutable equality to the issued and prior successful binding;
 - every component kind, amount, beneficiary, and obligation code;
 - the component-beneficiary commitment and settlement-route commitment; and
 - the exact quote-ID preimage reconstructed from the stored issuance facts.
@@ -266,6 +329,10 @@ frozen disposition storage:
 - invalidate at or after deadline: `EXPIRED`, zero refinance ID, the quote's stored
   debt-state version, and `sourceEventId`.
 
+For invalidation, `sourceEventId` must be nonzero. After caller authorization and quote
+existence validation, a zero source event reverts `InvalidQuoteInput()` before terminal
+classification and without a disposition write or event.
+
 An exact replay of the same terminal action and the same bound fields is idempotent:
 
 - exact `consumeQuote` replay returns the original stored quote with state `CONSUMED`;
@@ -279,42 +346,53 @@ attempted different terminal action after any terminal disposition reverts
 
 ### 8. Deterministic local constructor cycle
 
-The immutable engine/coordinator binding is deployed by one reviewed local deployer with
-ordinary sequential `CREATE`:
+The immutable engine/coordinator binding is deployed in one transaction by one reviewed,
+dedicated local deployer using ordinary sequential `CREATE`:
 
 1. before deploying either component, the deployer predicts the coordinator address from
    its own address and the nonce of the immediately next `CREATE` after the engine;
 2. it deploys `PayoffQuoteEngine` with that exact predicted coordinator address;
 3. with no intervening contract creation, callback, or external deployment step, it
    deploys `RefinanceCoordinator` bound to the actual engine address; and
-4. the deployment script verifies the actual coordinator equals the prediction and that
-   the coordinator's engine binding and the engine's coordinator binding are reciprocal
-   before any loan or quote is created. Because the frozen ABI intentionally exposes no
-   configuration getter, this local verification reads the exact fields identified by
-   the reviewed compiler storage-layout artifacts and cross-checks the recorded
-   constructor arguments; those reads are release evidence, not protocol authority.
+4. inside that same transaction, the deployer requires that the actual coordinator equal
+   the prediction, that both deployed addresses contain code, and that the exact engine
+   and coordinator constructor arguments it supplied are reciprocal. The deployer
+   validates every required nonzero/local constructor argument before creation, and the
+   activated engine constructor independently enforces its local dependencies. These
+   internal transaction checks make any mismatch revert the complete transaction before
+   either deployment can be accepted.
 
 This local sequence uses no mutable setter, proxy initialization, rebinding, late
 registration, or `CREATE2`. A nonce mismatch, intervening creation, predicted/actual
-address mismatch, or reciprocal-binding mismatch reverts the deployment. The prediction
-is local deployment mechanics only and grants no production or public-network authority.
+address mismatch, constructor-argument mismatch, missing code, or reciprocal-binding
+mismatch reverts the deployment transaction. After the transaction succeeds, the local
+release-evidence process reads the exact private fields identified by the reviewed
+compiler storage-layout artifacts and cross-checks the recorded constructor arguments.
+Those raw-storage reads are post-transaction activation evidence only: they do not cause
+or substitute for the transaction's internal revert checks and grant no protocol
+authority. The prediction is local deployment mechanics only and grants no production or
+public-network authority.
 
 ### 9. Historical baseline and implementation checkpoint
 
 The accepted `UNI-ABI-009` freeze remains a historical compatibility baseline. Its
 reviewed ABI hashes, storage-layout hashes, compiler settings, source-set hash, manifest
 hash, review decision, merge commit, and tag must remain reproducible and must not be
-rewritten to pretend that implementation source existed at the freeze checkpoint.
+rewritten to pretend that implementation source existed at the freeze checkpoint. The
+manifest, every frozen ABI and storage snapshot, and the freeze-review record are also
+pinned as raw bytes; semantic JSON equality cannot conceal formatting or key-order drift.
 
 Activating `UNI-PAYOFF-001` creates a new exact-source implementation checkpoint:
 
 1. the external ABI and compiler storage layout are compared with the historical freeze;
 2. the current implementation source and complete reviewed Phase 9 source set receive new
-   exact hashes in an implementation checkpoint manifest;
+   exact hashes in an implementation checkpoint manifest, and the activated contract's
+   ordered transitive repository-local Solidity dependency closure receives a separate
+   exact hash;
 3. the review record names both the immutable historical freeze and the current
    exact-source checkpoint;
-4. source-only changes require regenerated source hashes and renewed architecture and
-   security review, but do not replace historical evidence;
+4. source-only or dependency-only changes require regenerated source/dependency hashes
+   and renewed architecture and security review, but do not replace historical evidence;
 5. any selector, event, error, tuple, mapping, field, base contract, slot, offset, type,
    or compiler-setting change remains blocked until a separate explicit additive
    compatibility decision is accepted; and
@@ -336,18 +414,20 @@ before `UNI-PAYOFF-001` may become `DONE`.
 The implementation and its independent review must prove:
 
 - coordinator-only issue, consume, and invalidate authority;
-- canonical registry, approved-factory account, account configuration, position, policy,
-  asset, token, beneficiary, and route resolution with substitution failures;
+- canonical registry, approved-factory account and position manager, account
+  configuration, position, deterministic immutable policy binding, asset, exact local
+  token runtime, beneficiary, and route resolution with substitution failures;
 - exact five-component order, strings, zero-component retention, and both commitment
   preimages;
 - the exact quote-ID preimage and cross-language golden digest;
 - the payoff and credit equations with checked arithmetic and nonzero net payoff;
-- nonce origin, success-only advancement, collision behavior, and one effective issued
-  quote per loan;
+- nonce origin, success-only advancement, exact zero/materialized-ID collision failure,
+  and one effective issued quote per loan;
 - half-open validity, inclusive maximum window, view-only expiry overlay, and persisted
   expiry through invalidation;
 - full canonical consumption revalidation, stale-version failure, exact replay, changed
-  replay conflict, different-terminal-action failure, and atomic rollback; and
+  replay conflict, different-terminal-action failure, nonzero invalidation source, and
+  atomic rollback; and
 - historical freeze preservation plus deterministic current source, ABI, storage, and
   review checkpoint checks.
 

@@ -15,11 +15,15 @@ BASELINE_MANIFEST_PATH = ROOT / "protocol/compatibility/phase9-manifest.json"
 CHECKPOINT_PATH = ROOT / "protocol/compatibility/phase9-implementation-checkpoints.json"
 BACKLOG_PATH = ROOT / "docs/backlog/phase-9.csv"
 SECURITY_REVIEW_ROOT = ROOT / "security/reviews"
+BASELINE_REVIEW_PATH = SECURITY_REVIEW_ROOT / "phase-9-interface-freeze.md"
 
 BASELINE_COMMIT = "4f01a5692df92c435ff8893840ebdcca055449f0"
 BASELINE_MANIFEST_SHA256 = "sha256:9237acd53b00f5e90d77bbd4f5ce09590ddb750d079c333be4b14d8e7b4238a2"
 BASELINE_SOURCE_SET_SHA256 = (
     "sha256:a40ac90f75c52fc7583651d2d57d2a4d82f1899ed673be8b460d17fb7b7425cb"
+)
+BASELINE_RAW_FREEZE_ARTIFACTS_SHA256 = (
+    "sha256:b0d494141f0e229cf9fd542401036cd63ba04de73e2f056c1e89a25253cdb1a3"
 )
 ACTIVATION_BACKLOG_ID = "UNI-ADR-015"
 ACTIVATED_IMPLEMENTATIONS = {"PayoffQuoteEngine": "UNI-PAYOFF-001"}
@@ -40,11 +44,17 @@ EXPECTED_ROOT_KEYS = {
     "implementations",
     "schemaVersion",
 }
-EXPECTED_BASELINE_KEYS = {"commit", "manifestSha256", "sourceSetSha256"}
+EXPECTED_BASELINE_KEYS = {
+    "commit",
+    "manifestSha256",
+    "rawFreezeArtifactsSha256",
+    "sourceSetSha256",
+}
 EXPECTED_ENTRY_KEYS = {
     "abiSha256",
     "backlogId",
     "contract",
+    "dependencyClosureSha256",
     "reviewPath",
     "reviewSha256",
     "sourceSha256",
@@ -91,6 +101,7 @@ def historical_manifest() -> dict[str, Any]:
     sources = manifest.get("sources")
     if not isinstance(sources, list) or sha256_payload(sources) != BASELINE_SOURCE_SET_SHA256:
         raise SystemExit("Phase 9 baseline source-set identity drifted")
+    verify_raw_freeze_artifacts(manifest)
     return manifest
 
 
@@ -165,6 +176,112 @@ def baseline_sources(manifest: dict[str, Any]) -> tuple[list[str], dict[str, str
     return order, sources
 
 
+def raw_freeze_artifact_paths(manifest: dict[str, Any]) -> list[Path]:
+    """Return every historical freeze artifact in deterministic repository-relative order."""
+    _, contracts = baseline_contracts(manifest)
+    expected_abis = {ROOT / entry["abiPath"] for entry in contracts.values()}
+    expected_storage = {ROOT / entry["storagePath"] for entry in contracts.values()}
+    actual_abis = set((ROOT / "protocol/abi/phase9").glob("*.json"))
+    actual_storage = set((ROOT / "protocol/storage-layout/phase9").glob("*.json"))
+    if actual_abis != expected_abis:
+        raise SystemExit("Phase 9 historical ABI snapshot file set drifted")
+    if actual_storage != expected_storage:
+        raise SystemExit("Phase 9 historical storage snapshot file set drifted")
+    paths = {
+        BASELINE_MANIFEST_PATH,
+        BASELINE_REVIEW_PATH,
+        *expected_abis,
+        *expected_storage,
+    }
+    return sorted(paths, key=lambda path: path.relative_to(ROOT).as_posix())
+
+
+def raw_freeze_artifacts_hash(manifest: dict[str, Any]) -> str:
+    payload = [
+        {"path": path.relative_to(ROOT).as_posix(), "sha256": sha256_file(path)}
+        for path in raw_freeze_artifact_paths(manifest)
+    ]
+    return sha256_payload(payload)
+
+
+def verify_raw_freeze_artifacts(manifest: dict[str, Any]) -> None:
+    if raw_freeze_artifacts_hash(manifest) != BASELINE_RAW_FREEZE_ARTIFACTS_SHA256:
+        raise SystemExit("Phase 9 historical freeze artifact bytes drifted")
+
+
+def solidity_imports(path: Path) -> tuple[str, ...]:
+    try:
+        source = path.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise SystemExit(f"{path.relative_to(ROOT)} is missing") from exc
+    source = re.sub(r"/\*.*?\*/", "", source, flags=re.DOTALL)
+    source = re.sub(r"//[^\r\n]*", "", source)
+    pattern = re.compile(
+        r"\bimport\s+(?:[^;]*?\s+from\s+)?[\"'](?P<path>[^\"']+)[\"']"
+        r"(?:\s+as\s+[A-Za-z_]\w*)?\s*;",
+        flags=re.DOTALL,
+    )
+    return tuple(match.group("path") for match in pattern.finditer(source))
+
+
+def repository_import_path(source_path: Path, import_path: str) -> Path | None:
+    candidates = (
+        (source_path.parent / import_path,)
+        if import_path.startswith(".")
+        else (ROOT / import_path, ROOT / "protocol/src" / import_path)
+    )
+    for candidate in candidates:
+        resolved = candidate.resolve()
+        try:
+            resolved.relative_to(ROOT.resolve())
+        except ValueError:
+            if import_path.startswith("."):
+                raise SystemExit(
+                    f"{source_path.relative_to(ROOT)} imports outside the repository: {import_path}"
+                ) from None
+            continue
+        if resolved.is_file():
+            if resolved.suffix.lower() != ".sol":
+                raise SystemExit(
+                    f"{source_path.relative_to(ROOT)} imports a non-Solidity repository file: "
+                    f"{import_path}"
+                )
+            return resolved
+    if import_path.startswith((".", "protocol/", "src/")):
+        raise SystemExit(
+            f"{source_path.relative_to(ROOT)} has an unresolved repository import: {import_path}"
+        )
+    return None
+
+
+def repository_solidity_dependency_paths(source_path: Path) -> list[Path]:
+    root_source = source_path.resolve()
+    try:
+        root_source.relative_to(ROOT.resolve())
+    except ValueError as exc:
+        raise SystemExit("Phase 9 implementation source is outside the repository") from exc
+    pending = [root_source]
+    observed: set[Path] = set()
+    while pending:
+        current = pending.pop()
+        if current in observed:
+            continue
+        observed.add(current)
+        for import_path in solidity_imports(current):
+            dependency = repository_import_path(current, import_path)
+            if dependency is not None and dependency not in observed:
+                pending.append(dependency)
+    return sorted(observed, key=lambda path: path.relative_to(ROOT).as_posix())
+
+
+def repository_solidity_dependency_hash(source_path: Path) -> str:
+    payload = [
+        {"path": path.relative_to(ROOT).as_posix(), "sha256": sha256_file(path)}
+        for path in repository_solidity_dependency_paths(source_path)
+    ]
+    return sha256_payload(payload)
+
+
 def ordered_source_set_hash(order: list[str], sources: dict[str, str]) -> str:
     return sha256_payload([{"path": path, "sha256": sources[path]} for path in order])
 
@@ -230,6 +347,7 @@ def checkpoint_payload() -> dict[str, Any]:
     expected_baseline = {
         "commit": BASELINE_COMMIT,
         "manifestSha256": BASELINE_MANIFEST_SHA256,
+        "rawFreezeArtifactsSha256": BASELINE_RAW_FREEZE_ARTIFACTS_SHA256,
         "sourceSetSha256": BASELINE_SOURCE_SET_SHA256,
     }
     if baseline != expected_baseline:
@@ -260,6 +378,7 @@ def validate_checkpoints(
     expected_baseline = {
         "commit": BASELINE_COMMIT,
         "manifestSha256": BASELINE_MANIFEST_SHA256,
+        "rawFreezeArtifactsSha256": BASELINE_RAW_FREEZE_ARTIFACTS_SHA256,
         "sourceSetSha256": BASELINE_SOURCE_SET_SHA256,
     }
     if checkpoints.get("baseline") != expected_baseline:
@@ -306,6 +425,7 @@ def validate_checkpoints(
             raise SystemExit(f"{contract}: implementation checkpoint backlog substitution")
         for field in (
             "abiSha256",
+            "dependencyClosureSha256",
             "reviewSha256",
             "sourceSha256",
             "sourceSetSha256",
@@ -335,8 +455,11 @@ def validate_checkpoints(
             raise SystemExit(f"{contract}: checkpoint backlog {backlog_id} is not DONE")
 
         source_path = ROOT / contract_baseline["sourcePath"]
-        if verify_current and sha256_file(source_path) != entry["sourceSha256"]:
-            raise SystemExit(f"{contract}: reviewed implementation source hash is stale")
+        if verify_current:
+            if sha256_file(source_path) != entry["sourceSha256"]:
+                raise SystemExit(f"{contract}: reviewed implementation source hash is stale")
+            if repository_solidity_dependency_hash(source_path) != entry["dependencyClosureSha256"]:
+                raise SystemExit(f"{contract}: reviewed Solidity dependency closure hash is stale")
 
         if verify_reviews:
             review_path = validate_review_path(entry["reviewPath"])
@@ -351,6 +474,7 @@ def validate_checkpoints(
                 backlog_id.lower(),
                 entry["sourceSha256"],
                 entry["sourceSetSha256"],
+                entry["dependencyClosureSha256"],
                 entry["abiSha256"],
                 entry["storageStructuralSha256"],
             )

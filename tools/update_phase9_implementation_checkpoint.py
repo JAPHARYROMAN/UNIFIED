@@ -14,6 +14,7 @@ from check_phase9_implementation_checkpoints import (
     current_reviewed_source_set_hash,
     historical_manifest,
     read_json,
+    repository_solidity_dependency_hash,
     sha256_file,
     structural_storage_hash,
     validate_checkpoints,
@@ -37,6 +38,9 @@ def candidate_entry(
         "abiSha256": baseline["abiSha256"],
         "backlogId": backlog_id,
         "contract": contract,
+        "dependencyClosureSha256": repository_solidity_dependency_hash(
+            ROOT / baseline["sourcePath"]
+        ),
         "reviewPath": review.relative_to(ROOT).as_posix(),
         "reviewSha256": sha256_file(review),
         "sourceSha256": sha256_file(ROOT / baseline["sourcePath"]),

@@ -76,9 +76,15 @@ string private _symbol;                                                        /
 The derived contract declares no non-constant storage. Compiler storage-layout output
 is still authoritative for encoding metadata and MUST match these five entries. Every
 Phase 9 component constructor and active policy binds the exact token address and asset
-ID. Phase 8 registries, routes, hubs, wrapped-token components, workers, and manifests
-must contain neither; Phase 9 never accepts `Phase8LocalSyntheticToken`, `WrappedUFT`,
-or `UnifiedToken` as a substitute.
+ID. Under Foundry `1.7.1`, Solidity `0.8.36`, optimizer runs `200`, EVM Prague, and
+OpenZeppelin Contracts `5.6.1`, its exact deployed runtime code hash is
+`0xb4cb1bc940c6783f3ecad43dc045c0fa93b02fae77d6e874a8adaf7216c907e5`, equivalently
+`keccak256(type(Phase9LocalSyntheticToken).runtimeCode)`. Every active payoff issue and
+first consumption requires that exact `settlementToken.codehash` and
+`block.chainid == 31337`; matching the ERC-20 interface or metadata is insufficient. The
+token constructor independently rejects another chain. Phase 8 registries, routes, hubs,
+wrapped-token components, workers, and manifests must contain neither; Phase 9 never
+accepts `Phase8LocalSyntheticToken`, `WrappedUFT`, or `UnifiedToken` as a substitute.
 
 ## Frozen local numerical fixture
 
@@ -587,10 +593,42 @@ set, asset, and token, and when `maximumValidity == _maximumQuoteValidity`. This
 belongs to the local `IPhase9PayoffQuotePolicySource` implementation dependency. It adds
 no external `PayoffQuoteEngine` selector or storage.
 
+The returned policy hash must equal:
+
+```solidity
+keccak256(abi.encode(
+    "UNIFIED_PAYOFF_POLICY_V1",
+    block.chainid,
+    address(this),
+    _quotePolicyRegistry,
+    loanId,
+    loanAccount,
+    boundPolicySetHash,
+    feePenaltyBeneficiary,
+    settlementAssetId,
+    settlementToken,
+    maximumValidity
+))
+```
+
+This binds the policy to the local domain, exact engine and source, account, policy set,
+beneficiary, asset, token, and validity limit. After the first successful issuance, every
+successor for the same `(loanId, loanAccount)` reconstructs this prior binding from the
+latest quote, its fixed components, account configuration, and constructor-bound source
+and maximum. It must reproduce the prior stored `quote.policyHash`, including after
+terminal disposition or effective expiry. A changed binding fails before any write or
+nonce advance. Consumption performs the same reconstruction against the consumed quote;
+no additional storage field is permitted.
+
 At issue and consume, `_loanRegistry.loanAccount(loanId)` must independently equal
 `IPhase9LoanFactory(_approvedPhase9Factory).loanAccount(loanId)`. Both must equal the
 stored quote account and that account's self-declared configuration. A mismatch is a
 substitution failure, not a recoverable routing choice.
+
+At both gates, the account's configured position manager must independently equal
+`IPhase9LoanFactory(_approvedPhase9Factory).positionManager(loanId)` and contain deployed
+code. The chain must be `31337`, and the configured settlement token's code hash must be
+the exact pinned `Phase9LocalSyntheticToken` runtime hash above.
 
 `_nextQuoteNonce[loanId] == 0` means uninitialized. The first successful issuance stores
 quote nonce `1` and advances the next nonce to `2`; only a successful issuance advances
@@ -599,26 +637,40 @@ no terminal disposition cannot be superseded. A terminal or effectively expired 
 permits a new successful nonce. Exhaustion at `type(uint64).max` reverts
 `QuoteReplayConflict(bytes32(0))` before creating an identity.
 
-Validity is `[issuedAt, validUntil)`, and the maximum duration is inclusive. When no
-terminal disposition exists, `quote()` overlays `EXPIRED` at
+After deriving `quoteId` and before any quote, component, latest-ID, or nonce write,
+`quoteId == bytes32(0)` or `_quotes[quoteId].quoteId != bytes32(0)` reverts
+`QuoteReplayConflict(quoteId)`. A collision never returns, mutates, or overwrites the
+previous record.
+
+Validity is `[issuedAt, validUntil)`, and the maximum duration is inclusive. `validUntil`
+is the coordinator-selected sole time input; `issuedAt` is the checked block timestamp,
+and no caller supplies a clock, duration, or alternate issuance time. When no terminal
+disposition exists, `quote()` overlays `EXPIRED` at
 `block.timestamp >= validUntil` without writing. Coordinator invalidation then persists
 `EXPIRED`; before the boundary it persists `INVALIDATED`.
 
 The disposition fields are the replay identity. Exact terminal replay is idempotent and
 does not write or emit twice. A changed replay of the same action is a
 `QuoteReplayConflict`; an attempted different terminal action is `QuoteTerminal`.
-Successful consumption first re-resolves the complete registry, account, debt, position,
-policy, component, route, and quote-ID facts and requires expected, stored, and live debt
-versions to match.
+Invalidation requires a nonzero `sourceEventId`; after caller authorization and quote
+existence validation, zero reverts `InvalidQuoteInput()` before terminal classification
+and without a disposition write or event. Successful consumption first re-resolves the
+complete registry, factory account and position manager, account, debt, position, local
+chain, exact token runtime, deterministic immutable policy, component, route, and
+quote-ID facts and requires expected, stored, and live debt versions to match.
 
 The local engine/coordinator constructor cycle does not add a setter or deployment slot.
-One deployer predicts the coordinator address at the immediately next sequential `CREATE`
-after the engine, deploys the engine with that prediction, and then performs that exact
-coordinator creation with no intervening `CREATE`. It supplies the actual engine to the
-coordinator. The deployment script rejects an address mismatch and verifies both private
-bindings through the exact reviewed compiler storage-layout fields plus the recorded
-constructor arguments. These local raw-storage checks are evidence only; `CREATE2`, a
-mutable setter, a proxy, late registration, or rebinding is prohibited.
+In one transaction, a dedicated deployer predicts the coordinator address at the
+immediately next sequential `CREATE` after the engine, deploys the engine with that
+prediction, and then performs that exact coordinator creation with no intervening
+creation or callback. It supplies the actual engine to the coordinator. In-transaction
+address, code, and constructor-argument checks validate every required nonzero/local
+dependency, and the activated engine constructor independently enforces its local
+dependencies. Any mismatch makes the whole transaction revert. Post-transaction
+raw-storage reads use the reviewed layout to cross-check both private bindings before
+activation; those reads are evidence only and are never claimed to cause the transaction
+to revert. `CREATE2`, a mutable setter, a proxy, late registration, or rebinding is
+prohibited.
 
 ### `Phase9LoanAccount`
 
@@ -684,6 +736,7 @@ configuration:
   quote_policy_registry
   maximum_quote_validity
   approved_phase9_factory
+  refinance_coordinator
 
 mutable:
   loan_id -> next_quote_nonce
@@ -2564,8 +2617,10 @@ broadcast, or named container-volume roots.
   checker, `ProtocolCompilation.sol` imports, formatter scope, and clean-regeneration CI
   all pass;
 - the historical `UNI-ABI-009` freeze keeps its original ABI, storage, compiler,
-  source-set, manifest, review, merge, and tag evidence, while each activated work
-  package records a distinct current exact-source implementation checkpoint;
+  source-set, manifest, review, merge, and tag evidence, with the manifest, every ABI and
+  storage snapshot, and freeze review pinned as raw bytes, while each activated work
+  package records a distinct current exact-source implementation checkpoint and ordered
+  transitive repository-local Solidity dependency-closure hash;
 - the protected checker applies a reviewed backlog-to-contract activation map, retains
   the exact freeze revert for unopened logic, and compares current ABI and storage with
   the historical freeze instead of overwriting that baseline;

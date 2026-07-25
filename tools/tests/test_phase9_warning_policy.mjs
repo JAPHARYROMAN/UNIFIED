@@ -3,10 +3,45 @@ import test from "node:test";
 
 import {
   phase9StubContracts,
+  repositorySolidityDependencyHash,
+  validateCheckpointDependencyClosures,
   validatePhase9MutabilityDiagnostics,
 } from "../compile_phase9_storage_layouts.mjs";
 
 const SOURCE = "protocol/src/resolution/Phase9LoanFactory.sol";
+const HASH = `sha256:${"1".repeat(64)}`;
+const BASELINE = {
+  commit: "4f01a5692df92c435ff8893840ebdcca055449f0",
+  manifestSha256: "sha256:9237acd53b00f5e90d77bbd4f5ce09590ddb750d079c333be4b14d8e7b4238a2",
+  rawFreezeArtifactsSha256:
+    "sha256:b0d494141f0e229cf9fd542401036cd63ba04de73e2f056c1e89a25253cdb1a3",
+  sourceSetSha256: "sha256:a40ac90f75c52fc7583651d2d57d2a4d82f1899ed673be8b460d17fb7b7425cb",
+};
+
+function checkpointEntry(overrides = {}) {
+  return {
+    abiSha256: HASH,
+    backlogId: "UNI-PAYOFF-001",
+    contract: "PayoffQuoteEngine",
+    dependencyClosureSha256: HASH,
+    reviewPath: "security/reviews/phase-9-payoff-implementation.md",
+    reviewSha256: HASH,
+    sourceSha256: HASH,
+    sourceSetSha256: HASH,
+    status: "PASS",
+    storageStructuralSha256: HASH,
+    ...overrides,
+  };
+}
+
+function checkpointRegistry(implementations = []) {
+  return {
+    baseline: BASELINE,
+    currentSourceSetSha256: HASH,
+    implementations,
+    schemaVersion: 1,
+  };
+}
 
 function freezeFunction(id, start, errorName = "Phase9ImplementationNotFrozen") {
   return {
@@ -89,16 +124,7 @@ test("rejects a canonical mutator without its warning 2018", () => {
 });
 
 test("derives the exact stub set from implementation checkpoints", () => {
-  const stubs = phase9StubContracts({
-    implementations: [
-      {
-        backlogId: "UNI-PAYOFF-001",
-        contract: "PayoffQuoteEngine",
-        status: "PASS",
-      },
-    ],
-    schemaVersion: 1,
-  });
+  const stubs = phase9StubContracts(checkpointRegistry([checkpointEntry()]));
   assert.equal(stubs.includes("PayoffQuoteEngine"), false);
   assert.equal(stubs.includes("Phase9LoanAccount"), true);
   assert.equal(stubs.length, 12);
@@ -108,28 +134,13 @@ test("rejects unknown or duplicate checkpoint contracts", () => {
   assert.throws(
     () =>
       phase9StubContracts({
-        implementations: [{ contract: "Unexpected" }],
-        schemaVersion: 1,
+        ...checkpointRegistry([checkpointEntry({ contract: "Unexpected" })]),
       }),
     /contract set is invalid/,
   );
   assert.throws(
     () =>
-      phase9StubContracts({
-        implementations: [
-          {
-            backlogId: "UNI-PAYOFF-001",
-            contract: "PayoffQuoteEngine",
-            status: "PASS",
-          },
-          {
-            backlogId: "UNI-PAYOFF-001",
-            contract: "PayoffQuoteEngine",
-            status: "PASS",
-          },
-        ],
-        schemaVersion: 1,
-      }),
+      phase9StubContracts(checkpointRegistry([checkpointEntry(), checkpointEntry()])),
     /contract set is invalid/,
   );
 });
@@ -137,30 +148,47 @@ test("rejects unknown or duplicate checkpoint contracts", () => {
 test("rejects unopened contracts and backlog substitutions", () => {
   assert.throws(
     () =>
-      phase9StubContracts({
-        implementations: [
-          {
-            backlogId: "UNI-REFI-001",
-            contract: "RefinanceCoordinator",
-            status: "PASS",
-          },
-        ],
-        schemaVersion: 1,
-      }),
+      phase9StubContracts(
+        checkpointRegistry([
+          checkpointEntry({ backlogId: "UNI-REFI-001", contract: "RefinanceCoordinator" }),
+        ]),
+      ),
     /contract set is invalid/,
   );
   assert.throws(
     () =>
-      phase9StubContracts({
-        implementations: [
-          {
-            backlogId: "UNI-WRONG-001",
-            contract: "PayoffQuoteEngine",
-            status: "PASS",
-          },
-        ],
-        schemaVersion: 1,
-      }),
+      phase9StubContracts(
+        checkpointRegistry([checkpointEntry({ backlogId: "UNI-WRONG-001" })]),
+      ),
     /contract set is invalid/,
+  );
+});
+
+test("rejects missing or malformed dependency-closure evidence", () => {
+  const missing = checkpointEntry();
+  delete missing.dependencyClosureSha256;
+  assert.throws(
+    () => phase9StubContracts(checkpointRegistry([missing])),
+    /contract set is invalid/,
+  );
+  assert.throws(
+    () =>
+      phase9StubContracts(
+        checkpointRegistry([checkpointEntry({ dependencyClosureSha256: "stale" })]),
+      ),
+    /contract set is invalid/,
+  );
+});
+
+test("node compilation guard verifies the current dependency closure", () => {
+  const actual = repositorySolidityDependencyHash(
+    "protocol/src/resolution/PayoffQuoteEngine.sol",
+  );
+  const valid = checkpointRegistry([checkpointEntry({ dependencyClosureSha256: actual })]);
+  assert.doesNotThrow(() => validateCheckpointDependencyClosures(valid));
+  const stale = checkpointRegistry([checkpointEntry()]);
+  assert.throws(
+    () => validateCheckpointDependencyClosures(stale),
+    /dependency closure hash is stale/,
   );
 });
