@@ -9,6 +9,12 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, cast
 
+from check_phase9_implementation_checkpoints import (
+    structural_storage_hash,
+    structural_storage_payload,
+    validate_checkpoints,
+)
+
 ROOT = Path(__file__).resolve().parents[1]
 ACTUAL_PATH = ROOT / ".cache/solc/phase9-storage-layouts.json"
 SNAPSHOT_ROOT = ROOT / "protocol/storage-layout/phase9"
@@ -52,7 +58,9 @@ def canonical_json(payload: object) -> str:
     return json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
 
 
-def validate_layout(contract: str, payload: Mapping[str, Any]) -> None:
+def validate_layout(
+    contract: str, payload: Mapping[str, Any], *, require_frozen_mutators: bool = True
+) -> None:
     if payload.get("schemaVersion") != 1:
         raise SystemExit(f"{contract}: unsupported storage snapshot schema")
     if payload.get("contract") != contract:
@@ -76,9 +84,9 @@ def validate_layout(contract: str, payload: Mapping[str, Any]) -> None:
         raise SystemExit(f"{contract}: compiler settings drifted from the Phase 9 freeze")
     if re.fullmatch(r"sha256:[0-9a-f]{64}", settings_hash) is None:
         raise SystemExit(f"{contract}: compiler settings hash is malformed")
-    expected_settings_hash = "sha256:" + hashlib.sha256(
-        canonical_json(settings).encode("utf-8")
-    ).hexdigest()
+    expected_settings_hash = (
+        "sha256:" + hashlib.sha256(canonical_json(settings).encode("utf-8")).hexdigest()
+    )
     if settings_hash != expected_settings_hash:
         raise SystemExit(f"{contract}: compiler settings hash does not match settings")
 
@@ -143,7 +151,8 @@ def validate_layout(contract: str, payload: Mapping[str, Any]) -> None:
         if function.get("kind") in {"fallback", "receive"}:
             raise SystemExit(f"{contract}: fallback or receive surface is prohibited")
         if (
-            function.get("kind") == "function"
+            require_frozen_mutators
+            and function.get("kind") == "function"
             and function.get("visibility") in {"public", "external"}
             and function.get("stateMutability") in {"nonpayable", "payable"}
             and function.get("revertError") != "Phase9ImplementationNotFrozen"
@@ -154,7 +163,10 @@ def validate_layout(contract: str, payload: Mapping[str, Any]) -> None:
             )
 
 
-def load_actual_layouts() -> dict[str, dict[str, Any]]:
+def load_actual_layouts(
+    implemented: set[str] | None = None,
+) -> dict[str, dict[str, Any]]:
+    implemented_contracts = set() if implemented is None else implemented
     artifact = read_json(ACTUAL_PATH)
     if artifact.get("schemaVersion") != 1 or not isinstance(artifact.get("contracts"), dict):
         raise SystemExit("compiled Phase 9 storage artifact has an unsupported schema")
@@ -174,7 +186,11 @@ def load_actual_layouts() -> dict[str, dict[str, Any]]:
         if not isinstance(payload, dict):
             raise SystemExit(f"{contract}: compiled storage payload is malformed")
         typed_payload = cast(dict[str, Any], payload)
-        validate_layout(contract, typed_payload)
+        validate_layout(
+            contract,
+            typed_payload,
+            require_frozen_mutators=contract not in implemented_contracts,
+        )
         result[contract] = typed_payload
     return result
 
@@ -208,7 +224,10 @@ def first_difference(expected: object, actual: object, path: str = "$") -> str |
     return None
 
 
-def check_snapshots(actual_layouts: Mapping[str, Mapping[str, Any]]) -> None:
+def check_snapshots(
+    actual_layouts: Mapping[str, Mapping[str, Any]], implemented: set[str] | None = None
+) -> None:
+    implemented_contracts = set() if implemented is None else implemented
     expected_names = {f"{contract}.storage.json" for contract in PHASE9_CONTRACTS}
     actual_names = (
         {path.name for path in SNAPSHOT_ROOT.glob("*.json")} if SNAPSHOT_ROOT.is_dir() else set()
@@ -224,7 +243,18 @@ def check_snapshots(actual_layouts: Mapping[str, Mapping[str, Any]]) -> None:
     for contract in PHASE9_CONTRACTS:
         snapshot = read_json(SNAPSHOT_ROOT / f"{contract}.storage.json")
         validate_layout(contract, snapshot)
-        difference = first_difference(snapshot, actual_layouts[contract])
+        actual = actual_layouts[contract]
+        if contract in implemented_contracts:
+            expected_payload = structural_storage_payload(snapshot)
+            actual_payload = structural_storage_payload(dict(actual))
+            difference = first_difference(expected_payload, actual_payload)
+            if difference is None:
+                expected_hash = structural_storage_hash(snapshot)
+                actual_hash = structural_storage_hash(dict(actual))
+                if actual_hash != expected_hash:
+                    difference = f"$.structuralHash: {expected_hash!r} != {actual_hash!r}"
+        else:
+            difference = first_difference(snapshot, actual)
         if difference is not None:
             failures.append(f"{contract}: {difference}")
     if failures:
@@ -235,9 +265,14 @@ def check_snapshots(actual_layouts: Mapping[str, Mapping[str, Any]]) -> None:
 
 
 def main() -> None:
-    actual_layouts = load_actual_layouts()
-    check_snapshots(actual_layouts)
-    print(f"Phase 9 storage-layout compatibility passed ({len(PHASE9_CONTRACTS)} contracts).")
+    checkpoints = validate_checkpoints()
+    implemented = set(checkpoints)
+    actual_layouts = load_actual_layouts(implemented)
+    check_snapshots(actual_layouts, implemented)
+    print(
+        "Phase 9 storage-layout compatibility passed "
+        f"({len(PHASE9_CONTRACTS)} contracts, {len(implemented)} implemented)."
+    )
 
 
 if __name__ == "__main__":

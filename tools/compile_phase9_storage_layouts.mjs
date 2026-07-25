@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { Buffer } from "node:buffer";
+import { readFileSync, statSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import solc from "solc";
@@ -9,6 +10,10 @@ import solc from "solc";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const COMPILATION_ROOT = "protocol/src/ProtocolCompilation.sol";
 const OUTPUT_PATH = resolve(ROOT, ".cache/solc/phase9-storage-layouts.json");
+const CHECKPOINT_PATH = resolve(
+  ROOT,
+  "protocol/compatibility/phase9-implementation-checkpoints.json",
+);
 
 const PHASE9_CONTRACTS = [
   "Phase9LoanFactory",
@@ -28,7 +33,36 @@ const PHASE9_CONTRACTS = [
 ];
 const PHASE9_PRODUCTION_CONTRACTS = PHASE9_CONTRACTS.slice(0, -1);
 const PHASE9_MUTABILITY_WARNING_CODE = "2018";
-const EXPECTED_PHASE9_MUTABILITY_WARNINGS = 53;
+const ACTIVATED_IMPLEMENTATIONS = new Map([["PayoffQuoteEngine", "UNI-PAYOFF-001"]]);
+const ACTIVATED_IMPLEMENTATION_SOURCES = new Map([
+  ["PayoffQuoteEngine", "protocol/src/resolution/PayoffQuoteEngine.sol"],
+]);
+const BASELINE = {
+  commit: "4f01a5692df92c435ff8893840ebdcca055449f0",
+  manifestSha256: "sha256:9237acd53b00f5e90d77bbd4f5ce09590ddb750d079c333be4b14d8e7b4238a2",
+  rawFreezeArtifactsSha256:
+    "sha256:b0d494141f0e229cf9fd542401036cd63ba04de73e2f056c1e89a25253cdb1a3",
+  sourceSetSha256: "sha256:a40ac90f75c52fc7583651d2d57d2a4d82f1899ed673be8b460d17fb7b7425cb",
+};
+const CHECKPOINT_ROOT_KEYS = [
+  "baseline",
+  "currentSourceSetSha256",
+  "implementations",
+  "schemaVersion",
+];
+const CHECKPOINT_ENTRY_KEYS = [
+  "abiSha256",
+  "backlogId",
+  "contract",
+  "dependencyClosureSha256",
+  "reviewPath",
+  "reviewSha256",
+  "sourceSha256",
+  "sourceSetSha256",
+  "status",
+  "storageStructuralSha256",
+];
+const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/;
 
 const COMPILER_SETTINGS = {
   evmVersion: "prague",
@@ -58,6 +92,182 @@ function sha256(value) {
 
 async function readJson(path) {
   return JSON.parse(await readFile(path, "utf8"));
+}
+
+function exactKeys(value, expected) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
+  const observed = Object.keys(value).sort();
+  const wanted = [...expected].sort();
+  return observed.length === wanted.length && observed.every((key, index) => key === wanted[index]);
+}
+
+function repositoryPath(path) {
+  const result = relative(ROOT, path);
+  return result !== ".." && !result.startsWith(`..${sep}`) && !isAbsolute(result);
+}
+
+function solidityIdentifierCharacter(character) {
+  return character !== undefined && /[A-Za-z0-9_$]/.test(character);
+}
+
+function skipSolidityComment(source, index) {
+  if (source.startsWith("//", index)) {
+    const lineEnds = ["\r", "\n"]
+      .map((marker) => source.indexOf(marker, index + 2))
+      .filter((position) => position !== -1);
+    if (lineEnds.length === 0) return source.length;
+    const end = Math.min(...lineEnds);
+    return source.startsWith("\r\n", end) ? end + 2 : end + 1;
+  }
+  if (source.startsWith("/*", index)) {
+    const end = source.indexOf("*/", index + 2);
+    if (end === -1) throw new Error("Solidity dependency source has an unterminated block comment");
+    return end + 2;
+  }
+  return null;
+}
+
+function readSolidityString(source, index) {
+  const quote = source[index];
+  let cursor = index + 1;
+  const characters = [];
+  while (cursor < source.length) {
+    const character = source[cursor];
+    if (character === "\\") {
+      if (cursor + 1 >= source.length) {
+        throw new Error("Solidity dependency source has an unterminated string escape");
+      }
+      characters.push(character, source[cursor + 1]);
+      cursor += 2;
+      continue;
+    }
+    if (character === quote) return { cursor: cursor + 1, value: characters.join("") };
+    characters.push(character);
+    cursor += 1;
+  }
+  throw new Error("Solidity dependency source has an unterminated string");
+}
+
+function readSolidityImport(source, index) {
+  let cursor = index;
+  let importPath = null;
+  while (cursor < source.length) {
+    const commentEnd = skipSolidityComment(source, cursor);
+    if (commentEnd !== null) {
+      cursor = commentEnd;
+      continue;
+    }
+    const character = source[cursor];
+    if (character === '"' || character === "'") {
+      const parsed = readSolidityString(source, cursor);
+      if (importPath !== null) {
+        throw new Error("Solidity import directive contains multiple string literals");
+      }
+      if (parsed.value.includes("\\")) {
+        throw new Error("Escaped Solidity import paths are not supported");
+      }
+      importPath = parsed.value;
+      cursor = parsed.cursor;
+      continue;
+    }
+    if (character === ";") {
+      if (importPath === null) throw new Error("Solidity import directive lacks a path");
+      return { cursor: cursor + 1, importPath };
+    }
+    cursor += 1;
+  }
+  throw new Error("Solidity import directive is unterminated");
+}
+
+export function solidityImportsFromSource(source) {
+  const imports = [];
+  let cursor = 0;
+  while (cursor < source.length) {
+    const commentEnd = skipSolidityComment(source, cursor);
+    if (commentEnd !== null) {
+      cursor = commentEnd;
+      continue;
+    }
+    const character = source[cursor];
+    if (character === '"' || character === "'") {
+      cursor = readSolidityString(source, cursor).cursor;
+      continue;
+    }
+    if (solidityIdentifierCharacter(character)) {
+      const start = cursor;
+      while (cursor < source.length && solidityIdentifierCharacter(source[cursor])) cursor += 1;
+      if (source.slice(start, cursor) === "import") {
+        const parsed = readSolidityImport(source, cursor);
+        imports.push(parsed.importPath);
+        cursor = parsed.cursor;
+      }
+      continue;
+    }
+    cursor += 1;
+  }
+  return imports;
+}
+
+function solidityImports(sourcePath) {
+  return solidityImportsFromSource(readFileSync(sourcePath, "utf8"));
+}
+
+export function ordinalUtf8Compare(left, right) {
+  return Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
+}
+
+function repositoryImportPath(sourcePath, importPath) {
+  const candidates = importPath.startsWith(".")
+    ? [resolve(dirname(sourcePath), importPath)]
+    : [resolve(ROOT, importPath), resolve(ROOT, "protocol/src", importPath)];
+  for (const candidate of candidates) {
+    if (!repositoryPath(candidate)) {
+      if (importPath.startsWith(".")) {
+        throw new Error(`${relative(ROOT, sourcePath)} imports outside the repository: ${importPath}`);
+      }
+      continue;
+    }
+    try {
+      if (!statSync(candidate).isFile()) continue;
+      if (!candidate.toLowerCase().endsWith(".sol")) {
+        throw new Error(
+          `${relative(ROOT, sourcePath)} imports a non-Solidity repository file: ${importPath}`,
+        );
+      }
+      return candidate;
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+    }
+  }
+  if ([".", "protocol/", "src/"].some((prefix) => importPath.startsWith(prefix))) {
+    throw new Error(`${relative(ROOT, sourcePath)} has an unresolved repository import: ${importPath}`);
+  }
+  return null;
+}
+
+export function repositorySolidityDependencyHash(sourcePath) {
+  const rootSource = resolve(ROOT, sourcePath);
+  if (!repositoryPath(rootSource)) {
+    throw new Error("Phase 9 implementation source is outside the repository");
+  }
+  const pending = [rootSource];
+  const observed = new Set();
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (observed.has(current)) continue;
+    observed.add(current);
+    for (const importPath of solidityImports(current)) {
+      const dependency = repositoryImportPath(current, importPath);
+      if (dependency !== null && !observed.has(dependency)) pending.push(dependency);
+    }
+  }
+  const payload = [...observed]
+    .map((path) => ({
+      path: relative(ROOT, path).split(sep).join("/"),
+      sha256: sha256(readFileSync(path)),
+    }))
+    .sort((left, right) => ordinalUtf8Compare(left.path, right.path));
+  return sha256(canonicalJson(payload));
 }
 
 function findImport(importPath) {
@@ -150,17 +360,94 @@ function canonicalFreezeMutators(output, productionContracts) {
   return functions;
 }
 
+function externalMutators(output, productionContracts) {
+  const functions = [];
+  for (const [sourceName, sourceOutput] of Object.entries(output.sources ?? {})) {
+    for (const contract of sourceOutput.ast?.nodes ?? []) {
+      if (
+        contract.nodeType !== "ContractDefinition" ||
+        !productionContracts.includes(contract.name)
+      ) {
+        continue;
+      }
+      for (const node of contract.nodes ?? []) {
+        if (
+          node.nodeType === "FunctionDefinition" &&
+          node.kind === "function" &&
+          ["external", "public"].includes(node.visibility) &&
+          !["view", "pure"].includes(node.stateMutability)
+        ) {
+          functions.push(functionLabel(sourceName, contract.name, node));
+        }
+      }
+    }
+  }
+  return functions;
+}
+
+export function phase9StubContracts(payload) {
+  if (
+    !exactKeys(payload, CHECKPOINT_ROOT_KEYS) ||
+    payload.schemaVersion !== 1 ||
+    !Array.isArray(payload.implementations) ||
+    !exactKeys(payload.baseline, Object.keys(BASELINE)) ||
+    canonicalJson(payload.baseline) !== canonicalJson(BASELINE) ||
+    !SHA256_PATTERN.test(payload.currentSourceSetSha256)
+  ) {
+    throw new Error("Phase 9 implementation checkpoint registry is malformed");
+  }
+  const implemented = payload.implementations.map((entry) => entry?.contract);
+  if (
+    payload.implementations.some(
+      (entry) =>
+        !exactKeys(entry, CHECKPOINT_ENTRY_KEYS) ||
+        !Object.values(entry).every((value) => typeof value === "string") ||
+        typeof entry.contract !== "string" ||
+        !PHASE9_PRODUCTION_CONTRACTS.includes(entry.contract) ||
+        entry.backlogId !== ACTIVATED_IMPLEMENTATIONS.get(entry.contract) ||
+        entry.status !== "PASS" ||
+        [
+          entry.abiSha256,
+          entry.dependencyClosureSha256,
+          entry.reviewSha256,
+          entry.sourceSha256,
+          entry.sourceSetSha256,
+          entry.storageStructuralSha256,
+        ].some((value) => !SHA256_PATTERN.test(value)),
+    ) ||
+    new Set(implemented).size !== implemented.length
+  ) {
+    throw new Error("Phase 9 implementation checkpoint contract set is invalid");
+  }
+  return PHASE9_PRODUCTION_CONTRACTS.filter((contract) => !implemented.includes(contract));
+}
+
+export function validateCheckpointDependencyClosures(payload) {
+  for (const entry of payload.implementations) {
+    const sourcePath = ACTIVATED_IMPLEMENTATION_SOURCES.get(entry.contract);
+    if (sourcePath === undefined) {
+      throw new Error(`${entry.contract}: implementation dependency closure is not activated`);
+    }
+    const actual = repositorySolidityDependencyHash(sourcePath);
+    if (actual !== entry.dependencyClosureSha256) {
+      throw new Error(`${entry.contract}: reviewed Solidity dependency closure hash is stale`);
+    }
+  }
+}
+
 export function validatePhase9MutabilityDiagnostics(
   output,
   {
-    expectedCount = EXPECTED_PHASE9_MUTABILITY_WARNINGS,
+    expectedCount,
     productionContracts = PHASE9_PRODUCTION_CONTRACTS,
   } = {},
 ) {
+  const mutators = externalMutators(output, productionContracts);
+  const requiredCount = expectedCount ?? mutators.length;
   const canonical = canonicalFreezeMutators(output, productionContracts);
-  if (canonical.length !== expectedCount) {
+  if (canonical.length !== requiredCount) {
     throw new Error(
-      `Expected ${expectedCount} canonical Phase 9 fail-closed mutators, found ${canonical.length}`,
+      `Expected ${requiredCount} canonical Phase 9 fail-closed mutators, found ${canonical.length}`,
     );
   }
 
@@ -169,9 +456,9 @@ export function validatePhase9MutabilityDiagnostics(
       diagnostic.severity === "warning" &&
       String(diagnostic.errorCode) === PHASE9_MUTABILITY_WARNING_CODE,
   );
-  if (warnings.length !== expectedCount) {
+  if (warnings.length !== requiredCount) {
     throw new Error(
-      `Expected ${expectedCount} Phase 9 warning-2018 diagnostics, found ${warnings.length}`,
+      `Expected ${requiredCount} Phase 9 warning-2018 diagnostics, found ${warnings.length}`,
     );
   }
 
@@ -337,7 +624,10 @@ async function main() {
   }
   const errors = diagnostics.filter((diagnostic) => diagnostic.severity === "error");
   if (errors.length > 0) throw new Error(`Solidity compilation failed (${errors.length} errors)`);
-  validatePhase9MutabilityDiagnostics(output);
+  const checkpointPayload = await readJson(CHECKPOINT_PATH);
+  const stubContracts = phase9StubContracts(checkpointPayload);
+  validateCheckpointDependencyClosures(checkpointPayload);
+  validatePhase9MutabilityDiagnostics(output, { productionContracts: stubContracts });
 
   const definitions = contractDefinitions(output);
   const matches = new Map();

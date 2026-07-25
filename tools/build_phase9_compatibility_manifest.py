@@ -1,4 +1,4 @@
-"""Build or verify the reviewed Phase 9 ABI/storage compatibility hash manifest."""
+"""Verify the immutable Phase 9 freeze and layered implementation checkpoints."""
 
 from __future__ import annotations
 
@@ -6,13 +6,20 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
+from check_phase9_implementation_checkpoints import (
+    BASELINE_MANIFEST_PATH,
+    baseline_contracts,
+    baseline_sources,
+    historical_manifest,
+    validate_checkpoints,
+)
 from check_phase9_storage_layouts import PHASE9_CONTRACTS, ROOT, canonical_json
 
 ABI_ROOT = ROOT / "protocol/abi/phase9"
 STORAGE_ROOT = ROOT / "protocol/storage-layout/phase9"
-MANIFEST_PATH = ROOT / "protocol/compatibility/phase9-manifest.json"
+MANIFEST_PATH = BASELINE_MANIFEST_PATH
 SOURCE_ROOTS = (
     ROOT / "protocol/src/interfaces/phase9",
     ROOT / "protocol/src/resolution",
@@ -89,11 +96,7 @@ def validate_source_paths(paths: set[str]) -> None:
 
 
 def expected_sources() -> list[dict[str, str]]:
-    paths = {
-        path.resolve()
-        for source_root in SOURCE_ROOTS
-        for path in source_root.glob("*.sol")
-    }
+    paths = {path.resolve() for source_root in SOURCE_ROOTS for path in source_root.rglob("*.sol")}
     paths.add(TOKEN_SOURCE.resolve())
     relative_paths = {path.relative_to(ROOT).as_posix() for path in paths}
     validate_source_paths(relative_paths)
@@ -107,38 +110,8 @@ def expected_sources() -> list[dict[str, str]]:
 
 
 def expected_manifest() -> dict[str, Any]:
-    contracts: list[dict[str, str]] = []
-    for contract in PHASE9_CONTRACTS:
-        abi_path = ABI_ROOT / f"{contract}.abi.json"
-        storage_path = STORAGE_ROOT / f"{contract}.storage.json"
-        abi = read_json(abi_path)
-        storage = read_json(storage_path)
-        if not isinstance(abi, list):
-            raise SystemExit(f"{abi_path.relative_to(ROOT)} must contain a JSON ABI array")
-        if not isinstance(storage, dict):
-            raise SystemExit(f"{storage_path.relative_to(ROOT)} must contain a JSON object")
-        source = storage.get("source")
-        if not isinstance(source, str):
-            raise SystemExit(f"{storage_path.relative_to(ROOT)} lacks its Solidity source")
-        source_path = ROOT / source
-        if not source_path.is_file():
-            raise SystemExit(f"{source} is missing")
-        contracts.append(
-            {
-                "abiPath": abi_path.relative_to(ROOT).as_posix(),
-                "abiSha256": sha256_payload(abi),
-                "contract": contract,
-                "sourcePath": source,
-                "sourceSha256": sha256_file(source_path),
-                "storagePath": storage_path.relative_to(ROOT).as_posix(),
-                "storageSha256": sha256_payload(storage),
-            }
-        )
-    return {
-        "contracts": contracts,
-        "schemaVersion": 2,
-        "sources": expected_sources(),
-    }
+    """Return the historical manifest; implementation hashes live in checkpoints."""
+    return historical_manifest()
 
 
 def manifest_hash(payload: object | None = None) -> str:
@@ -151,16 +124,14 @@ def source_set_hash(payload: dict[str, Any] | None = None) -> str:
 
 
 def check_manifest() -> dict[str, Any]:
-    expected = expected_manifest()
-    actual = read_json(MANIFEST_PATH)
-    if not isinstance(actual, dict):
-        raise SystemExit("Phase 9 compatibility manifest must contain a JSON object")
-    typed_actual = cast(dict[str, Any], actual)
-    if typed_actual != expected:
-        raise SystemExit(
-            "Phase 9 compatibility manifest is stale; regenerate only after compatibility review."
-        )
-    return typed_actual
+    manifest = historical_manifest()
+    contract_order, _ = baseline_contracts(manifest)
+    source_order, _ = baseline_sources(manifest)
+    if contract_order != list(PHASE9_CONTRACTS):
+        raise SystemExit("Phase 9 historical contract order drifted")
+    validate_source_paths(set(source_order))
+    validate_checkpoints(manifest=manifest)
+    return manifest
 
 
 def main() -> None:
@@ -170,19 +141,15 @@ def main() -> None:
     mode.add_argument("--write", action="store_true")
     args = parser.parse_args()
 
-    expected = expected_manifest()
     if args.write:
-        MANIFEST_PATH.parent.mkdir(parents=True, exist_ok=True)
-        MANIFEST_PATH.write_text(
-            json.dumps(expected, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
+        raise SystemExit(
+            "The Phase 9 freeze manifest is immutable; add a reviewed implementation "
+            "checkpoint instead."
         )
-        print(f"Phase 9 compatibility manifest written ({len(PHASE9_CONTRACTS)} contracts).")
-        return
-    check_manifest()
+    manifest = check_manifest()
     print(
-        "Phase 9 compatibility manifest passed "
-        f"({len(PHASE9_CONTRACTS)} contracts, {manifest_hash(expected)})."
+        "Phase 9 historical compatibility manifest and implementation checkpoints passed "
+        f"({len(PHASE9_CONTRACTS)} contracts, {manifest_hash(manifest)})."
     )
 
 

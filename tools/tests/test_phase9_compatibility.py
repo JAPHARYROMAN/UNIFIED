@@ -29,9 +29,9 @@ def sample_layout(contract: str = "Phase9LoanFactory") -> dict[str, Any]:
         "optimizer": {"enabled": True, "runs": 200},
         "viaIR": False,
     }
-    settings_hash = "sha256:" + hashlib.sha256(
-        storage.canonical_json(settings).encode("utf-8")
-    ).hexdigest()
+    settings_hash = (
+        "sha256:" + hashlib.sha256(storage.canonical_json(settings).encode("utf-8")).hexdigest()
+    )
     return {
         "compiler": {
             "openzeppelinVersion": "5.6.1",
@@ -102,9 +102,7 @@ def test_valid_storage_layout_passes() -> None:
             "public storage",
         ),
         (
-            lambda payload: payload["freezeSurface"]["functions"][0].update(
-                revertError=None
-            ),
+            lambda payload: payload["freezeSurface"]["functions"][0].update(revertError=None),
             "does not revert",
         ),
         (lambda payload: payload["storageLayout"].update(types={}), "unknown type ID"),
@@ -120,9 +118,12 @@ def test_storage_layout_negative_gates(mutation: Any, message: str) -> None:
 def test_storage_layout_rejects_self_consistent_but_wrong_compiler_settings() -> None:
     payload = sample_layout()
     payload["compiler"]["settings"]["optimizer"]["runs"] = 201
-    payload["compiler"]["settingsHash"] = "sha256:" + hashlib.sha256(
-        storage.canonical_json(payload["compiler"]["settings"]).encode("utf-8")
-    ).hexdigest()
+    payload["compiler"]["settingsHash"] = (
+        "sha256:"
+        + hashlib.sha256(
+            storage.canonical_json(payload["compiler"]["settings"]).encode("utf-8")
+        ).hexdigest()
+    )
     with pytest.raises(SystemExit, match="compiler settings drifted"):
         storage.validate_layout("Phase9LoanFactory", payload)
 
@@ -142,17 +143,26 @@ def test_backlog_dependency_order_is_fail_closed() -> None:
     rows = {identifier: {"status": "TODO"} for identifier in phase9.BACKLOG_IDS}
     for identifier in phase9.BOUNDARY_COMPLETE_IDS:
         rows[identifier]["status"] = "DONE"
+    rows["UNI-SCHEMA-013"]["status"] = "DONE"
+    rows["UNI-ABI-009"]["status"] = "DONE"
     phase9.check_backlog_precedence(rows)
 
     abi_before_schema = copy.deepcopy(rows)
-    abi_before_schema["UNI-ABI-009"]["status"] = "DONE"
+    abi_before_schema["UNI-SCHEMA-013"]["status"] = "TODO"
     with pytest.raises(SystemExit, match="UNI-SCHEMA-013"):
         phase9.check_backlog_precedence(abi_before_schema)
 
     implementation_before_abi = copy.deepcopy(rows)
+    implementation_before_abi["UNI-ABI-009"]["status"] = "TODO"
     implementation_before_abi["UNI-PAYOFF-001"]["status"] = "DONE"
     with pytest.raises(SystemExit, match="UNI-ABI-009"):
         phase9.check_backlog_precedence(implementation_before_abi)
+
+    implementation_before_activation = copy.deepcopy(rows)
+    implementation_before_activation["UNI-ADR-015"]["status"] = "TODO"
+    implementation_before_activation["UNI-PAYOFF-001"]["status"] = "DONE"
+    with pytest.raises(SystemExit, match="UNI-ADR-015"):
+        phase9.check_backlog_precedence(implementation_before_activation)
 
 
 @pytest.mark.parametrize(
@@ -184,6 +194,14 @@ def test_mutating_stub_source_must_be_exact_revert() -> None:
     assert not phase9.is_exact_freeze_revert(phase9.solidity_function_bodies(rejected)[0][1])
 
 
+def test_activated_contract_cannot_retain_freeze_behavior() -> None:
+    with pytest.raises(SystemExit, match="retains fail-closed freeze behavior"):
+        phase9.check_phase9_stub_sources(
+            phase9.protocol_compilation_imports(),
+            implemented={"PayoffQuoteEngine"},
+        )
+
+
 def test_phase9_foundry_warning_policy_is_exact() -> None:
     phase9.check_phase9_foundry_warning_policy(
         phase9.protocol_compilation_imports(), foundry_config()
@@ -209,8 +227,15 @@ def test_phase9_foundry_warning_policy_rejects_scope_drift(mutation: str) -> Non
         message = "broad path warning ignores"
 
     with pytest.raises(SystemExit, match=message):
+        phase9.check_phase9_foundry_warning_policy(phase9.protocol_compilation_imports(), config)
+
+
+def test_implemented_contract_cannot_retain_a_broad_warning_exemption() -> None:
+    with pytest.raises(SystemExit, match="exception set drifted"):
         phase9.check_phase9_foundry_warning_policy(
-            phase9.protocol_compilation_imports(), config
+            phase9.protocol_compilation_imports(),
+            foundry_config(),
+            implemented={"PayoffQuoteEngine"},
         )
 
 
@@ -218,9 +243,7 @@ def test_manifest_hash_is_semantic_and_deterministic() -> None:
     left = {"b": [2, 1], "a": {"z": True}}
     right = {"a": {"z": True}, "b": [2, 1]}
     assert manifest.sha256_payload(left) == manifest.sha256_payload(right)
-    assert manifest.sha256_payload(left) != manifest.sha256_payload(
-        {"b": [1, 2], "a": {"z": True}}
-    )
+    assert manifest.sha256_payload(left) != manifest.sha256_payload({"b": [1, 2], "a": {"z": True}})
 
 
 def test_manifest_hash_binds_the_complete_reviewed_source_set() -> None:
@@ -247,9 +270,7 @@ def test_manifest_hash_binds_the_complete_reviewed_source_set() -> None:
         ),
     ),
 )
-def test_manifest_rejects_source_set_addition_or_removal(
-    paths: set[str], message: str
-) -> None:
+def test_manifest_rejects_source_set_addition_or_removal(paths: set[str], message: str) -> None:
     with pytest.raises(SystemExit, match=message):
         manifest.validate_source_paths(paths)
 
