@@ -159,8 +159,9 @@ derivatives cover Solidity, Go, TypeScript, and Python. The durable release comm
 binds exactly 49 SQL tables, balanced evidence-linked journals, sixteen
 content-addressed authenticated-inclusion objects, exact replay behavior, state
 rehydration across service restart, matched cross-domain reconciliation, and a
-reset-controlled local topology. `UNI-REVIEW-011` remains `TODO` for the separate
-bounded engineering exit.
+reset-controlled local topology. The bounded Phase 8 engineering exit is recorded in
+`docs/reviews/phase-8-exit-review.md`; all Phase 8 backlog rows are complete inside that
+synthetic local-only authority.
 
 Phase 8 does not select or authorize a production home or satellite chain, consensus
 or light-client system, bridge provider, relayer, RPC, oracle, identity provider,
