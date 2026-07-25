@@ -1,0 +1,572 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract ILoanRegistry",
+        "name": "loanRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "quotePolicyRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "uint64",
+        "name": "maximumQuoteValidity_",
+        "type": "uint64"
+      },
+      {
+        "internalType": "address",
+        "name": "approvedPhase9Factory_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "refinanceCoordinator_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidQuoteInput",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Phase9ImplementationNotFrozen",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "quoteId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "validUntil",
+        "type": "uint64"
+      }
+    ],
+    "name": "QuoteExpired",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "quoteId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "QuoteReplayConflict",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "quoteId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "enum IPayoffQuoteEngineV2.QuoteState",
+        "name": "state",
+        "type": "uint8"
+      }
+    ],
+    "name": "QuoteTerminal",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint64",
+        "name": "expectedVersion",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "actualVersion",
+        "type": "uint64"
+      }
+    ],
+    "name": "StaleDebtVersion",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "caller",
+        "type": "address"
+      }
+    ],
+    "name": "UnauthorizedQuoteCaller",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "quoteId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnknownQuote",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "quoteId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum IPayoffQuoteEngineV2.QuoteState",
+        "name": "state",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "sourceEventId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "recordedAt",
+        "type": "uint64"
+      }
+    ],
+    "name": "PayoffQuoteDispositionRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "quoteId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint64",
+        "name": "debtStateVersion",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "componentBeneficiaryHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "grossPayoff",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "credits",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "netPayoff",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "settlementAssetId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "settlementToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "settlementRouteHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "issuedAt",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "validUntil",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "quoteNonce",
+        "type": "uint64"
+      }
+    ],
+    "name": "PayoffQuoteIssued",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "consumeQuote",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "quoteId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "loanAccount",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "debtStateVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "principal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedInterest",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "fees",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "penalties",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "credits",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "componentBeneficiaryHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "grossPayoff",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "netPayoff",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "settlementToken",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementRouteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "issuedAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validUntil",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "quoteNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum IPayoffQuoteEngineV2.QuoteState",
+            "name": "state",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct IPayoffQuoteEngineV2.PayoffQuoteV2",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "invalidateQuote",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "name": "issueQuote",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "quoteId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "quote",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "quoteId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "loanAccount",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "debtStateVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "principal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedInterest",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "fees",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "penalties",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "credits",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "componentBeneficiaryHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "grossPayoff",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "netPayoff",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "settlementToken",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementRouteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "issuedAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validUntil",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "quoteNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum IPayoffQuoteEngineV2.QuoteState",
+            "name": "state",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct IPayoffQuoteEngineV2.PayoffQuoteV2",
+        "name": "storedQuote",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "enum IPayoffQuoteEngineV2.ComponentKind",
+            "name": "kind",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "beneficiary",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "obligationCode",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct IPayoffQuoteEngineV2.PayoffComponentV2[]",
+        "name": "components",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

@@ -6,9 +6,19 @@ import argparse
 import csv
 import json
 import re
+import tomllib
 from collections.abc import Iterable
 from pathlib import Path
+from typing import cast
 
+from build_phase9_compatibility_manifest import (
+    MANIFEST_PATH as PHASE9_COMPATIBILITY_MANIFEST_PATH,
+)
+from build_phase9_compatibility_manifest import (
+    check_manifest,
+    manifest_hash,
+    source_set_hash,
+)
 from check_abi import ABI_PAIRS
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,6 +44,7 @@ PHASE8_EXIT_PATH = ROOT / "docs/reviews/phase-8-exit-review.md"
 FOUNDATION_CHECK_PATH = ROOT / "scripts/check-foundation.ps1"
 CONTRACT_SIZE_CHECK_PATH = ROOT / "scripts/check-contract-sizes.py"
 PROTOCOL_COMPILATION_PATH = ROOT / "protocol/src/ProtocolCompilation.sol"
+FOUNDRY_CONFIG_PATH = ROOT / "protocol/foundry.toml"
 PHASE9_ABI_PATH = ROOT / "protocol/abi/phase9"
 PHASE9_STORAGE_PATH = ROOT / "protocol/storage-layout/phase9"
 PHASE9_STORAGE_CHECK_PATH = ROOT / "tools/check_phase9_storage_layouts.py"
@@ -43,6 +54,7 @@ PHASE9_RELEASE_SCHEMA_PATH = (
     ROOT / "infrastructure/local/resolution/phase9-release-evidence.schema.json"
 )
 PHASE9_RELEASE_DOC_PATH = ROOT / "docs/architecture/phase-9-local-release-evidence.md"
+PHASE9_FREEZE_REVIEW_PATH = ROOT / "security/reviews/phase-9-interface-freeze.md"
 
 PHASE9_PRODUCTION_CONTRACTS = (
     "Phase9LoanFactory",
@@ -60,6 +72,7 @@ PHASE9_PRODUCTION_CONTRACTS = (
     "RecoveryManager",
 )
 PHASE9_CONTRACTS = (*PHASE9_PRODUCTION_CONTRACTS, "Phase9LocalSyntheticToken")
+PHASE9_FOUNDRY_WARNING_CODE = 2018
 
 EXPECTED_QUOTE_PREIMAGE = (
     '"UNIFIED_PAYOFF_QUOTE_V1"',
@@ -1086,7 +1099,8 @@ def check_phase9_local_token_source(imports: dict[str, Path]) -> None:
     )
     require(
         re.search(
-            r"uint256\s+public\s+constant\s+FIXED_SUPPLY_UNITS\s*=\s*"
+            r"uint256\s+public\s+constant\s+(?:override\s+)?"
+            r"FIXED_SUPPLY_UNITS\s*=\s*"
             r"1_000_000_000_000_000\s*;",
             token_source,
         )
@@ -1103,7 +1117,8 @@ def check_phase9_local_token_source(imports: dict[str, Path]) -> None:
         "Phase9LocalSyntheticToken does not reject the zero fixture allocator",
     )
     decimals_match = re.search(
-        r"function\s+decimals\s*\(\s*\)\s+public\s+(?:pure|view)\s+override\s+"
+        r"function\s+decimals\s*\(\s*\)\s+public\s+(?:pure|view)\s+override"
+        r"(?:\s*\([^)]*\))?\s+"
         r"returns\s*\(\s*uint8\s*\)\s*\{\s*return\s+6\s*;\s*\}",
         token_source,
     )
@@ -1191,6 +1206,177 @@ def check_phase9_local_token_source(imports: dict[str, Path]) -> None:
     )
 
 
+def solidity_function_bodies(source: str) -> list[tuple[str, str]]:
+    functions: list[tuple[str, str]] = []
+    for match in re.finditer(r"\bfunction\b(?P<header>[^;{]+)\{", source, re.DOTALL):
+        depth = 1
+        cursor = match.end()
+        while cursor < len(source) and depth:
+            if source[cursor] == "{":
+                depth += 1
+            elif source[cursor] == "}":
+                depth -= 1
+            cursor += 1
+        require(depth == 0, "Phase 9 Solidity function body is not parseable")
+        functions.append((match.group("header"), source[match.end() : cursor - 1]))
+    return functions
+
+
+def is_exact_freeze_revert(body: str) -> bool:
+    return (
+        re.fullmatch(
+            r"\s*revert\s+Phase9ImplementationNotFrozen\s*\(\s*\)\s*;\s*",
+            body,
+        )
+        is not None
+    )
+
+
+def check_phase9_stub_sources(imports: dict[str, Path]) -> None:
+    forbidden = ("delegatecall", "selfdestruct", "assembly", "Phase8")
+    for contract in PHASE9_PRODUCTION_CONTRACTS:
+        source = strip_solidity_comments(read(imports[contract]))
+        require_tokens(
+            source,
+            (f"contract {contract}", "Phase9ImplementationNotFrozen"),
+            f"{contract} freeze stub",
+        )
+        present = [token for token in forbidden if token.lower() in source.lower()]
+        require(
+            not present,
+            f"{contract} contains prohibited freeze-stub mechanisms: {', '.join(present)}",
+        )
+        require(
+            re.search(r"\b(?:fallback|receive)\s*\(", source) is None,
+            f"{contract} exposes a fallback or receive function",
+        )
+        for header, body in solidity_function_bodies(source):
+            header_words = set(re.findall(r"[A-Za-z_]\w*", header))
+            if not ({"public", "external"} & header_words):
+                continue
+            if {"view", "pure"} & header_words:
+                continue
+            function_name = re.match(r"\s*([A-Za-z_]\w*)", header)
+            label = function_name.group(1) if function_name else "<unknown>"
+            require(
+                is_exact_freeze_revert(body),
+                f"{contract}.{label} has a successful or non-canonical mutating stub path",
+            )
+
+
+def check_phase9_foundry_warning_policy(
+    imports: dict[str, Path], config: dict[str, object] | None = None
+) -> None:
+    if config is None:
+        with FOUNDRY_CONFIG_PATH.open("rb") as handle:
+            config = cast(dict[str, object], tomllib.load(handle))
+
+    profile = config.get("profile")
+    require(isinstance(profile, dict), "Foundry config has no profile table")
+    profile_table = cast(dict[str, object], profile)
+    default = profile_table.get("default")
+    require(isinstance(default, dict), "Foundry config has no default profile")
+    default_table = cast(dict[str, object], default)
+
+    require(
+        default_table.get("deny") == "warnings",
+        "Foundry must continue to deny all non-exempt compiler warnings",
+    )
+    global_codes = default_table.get("ignored_error_codes", [])
+    require(isinstance(global_codes, list), "Foundry global warning policy is malformed")
+    global_code_list = cast(list[object], global_codes)
+    normalized_global_codes = {str(code).strip().lower() for code in global_code_list}
+    require(
+        not normalized_global_codes.intersection({"2018", "func-mutability"}),
+        "Foundry warning 2018 must not be ignored globally",
+    )
+    broad_paths = default_table.get("ignored_warnings_from", [])
+    require(
+        isinstance(broad_paths, list) and not broad_paths,
+        "Foundry broad path warning ignores are prohibited for Phase 9",
+    )
+
+    raw_entries = default_table.get("ignored_error_codes_from", [])
+    require(
+        isinstance(raw_entries, list),
+        "Foundry path-scoped warning policy is malformed",
+    )
+    raw_entry_list = cast(list[object], raw_entries)
+    actual: set[tuple[str, tuple[str, ...]]] = set()
+    for entry in raw_entry_list:
+        require(
+            isinstance(entry, list) and len(entry) == 2,
+            "Foundry path-scoped warning entry is malformed",
+        )
+        entry_items = cast(list[object], entry)
+        source_path, codes = entry_items
+        require(
+            isinstance(source_path, str) and isinstance(codes, list),
+            "Foundry path-scoped warning entry has invalid types",
+        )
+        normalized_path = cast(str, source_path).replace("\\", "/").removeprefix("./")
+        normalized_codes = tuple(
+            str(code).strip().lower() for code in cast(list[object], codes)
+        )
+        actual.add((normalized_path, normalized_codes))
+    require(
+        len(actual) == len(raw_entry_list),
+        "Foundry path-scoped warning policy contains duplicate entries",
+    )
+
+    protocol_root = ROOT / "protocol"
+    expected = {
+        (
+            imports[contract].relative_to(protocol_root).as_posix(),
+            (str(PHASE9_FOUNDRY_WARNING_CODE),),
+        )
+        for contract in PHASE9_PRODUCTION_CONTRACTS
+    }
+    missing = expected - actual
+    unexpected = actual - expected
+    require(
+        not missing and not unexpected,
+        "Foundry Phase 9 warning exception set drifted: "
+        f"missing={sorted(missing)} unexpected={sorted(unexpected)}",
+    )
+
+
+def check_phase9_compatibility_review() -> None:
+    require_paths(
+        (PHASE9_COMPATIBILITY_MANIFEST_PATH, PHASE9_FREEZE_REVIEW_PATH),
+        "Phase 9 compatibility manifest and freeze review",
+    )
+    manifest = check_manifest()
+    review = normalized(read(PHASE9_FREEZE_REVIEW_PATH))
+    require_tokens(
+        review,
+        (
+            "decision: pass",
+            "architecture review: pass",
+            "security review: pass",
+            manifest_hash(manifest),
+            source_set_hash(manifest),
+        ),
+        "Phase 9 interface-freeze review",
+    )
+    contracts = manifest.get("contracts")
+    if not isinstance(contracts, list):
+        raise SystemExit("ERROR: Phase 9 compatibility manifest contracts are malformed")
+    for entry in contracts:
+        if not isinstance(entry, dict):
+            raise SystemExit("ERROR: Phase 9 compatibility manifest entry is malformed")
+        require_tokens(
+            review,
+            (
+                str(entry.get("contract", "")),
+                str(entry.get("abiSha256", "")),
+                str(entry.get("sourceSha256", "")),
+                str(entry.get("storageSha256", "")),
+            ),
+            "Phase 9 interface-freeze review hash table",
+        )
+
+
 def check_phase9_local_token_evidence(smoke_scripts: list[Path]) -> None:
     deploy_script = read(PHASE9_DEPLOY_SCRIPT_PATH)
     require_tokens(
@@ -1261,7 +1447,10 @@ def check_pre_code_freeze(by_id: dict[str, dict[str, str]]) -> None:
     check_phase9_storage_layouts()
     check_phase9_formatting_scope(imports)
     check_phase9_contract_size_coverage()
+    check_phase9_stub_sources(imports)
+    check_phase9_foundry_warning_policy(imports)
     check_phase9_local_token_source(imports)
+    check_phase9_compatibility_review()
 
 
 def check_implementation_artifacts() -> None:

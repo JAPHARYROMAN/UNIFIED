@@ -1,0 +1,358 @@
+{
+  "compiler": {
+    "openzeppelinVersion": "5.6.1",
+    "settings": {
+      "evmVersion": "prague",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "viaIR": false
+    },
+    "settingsHash": "sha256:0e0b5553d328d2bcca346b1c4c6662f419766d011fc75a7148f1ab9e2a398fb3",
+    "version": "0.8.36+commit.8a079791.Emscripten.clang"
+  },
+  "contract": "LienRegistry",
+  "freezeSurface": {
+    "functions": [
+      {
+        "bodyStatementKinds": [
+          "ExpressionStatement"
+        ],
+        "implemented": true,
+        "kind": "constructor",
+        "modifiers": [],
+        "name": "",
+        "revertError": null,
+        "stateMutability": "nonpayable",
+        "visibility": "public"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "registerLien",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "beginHandoff",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "completeHandoff",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "registeredRefinanceCoordinator",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "lien",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "handoff",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      }
+    ],
+    "stateVariables": [
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_registeredRefinanceCoordinator",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_liens",
+        "type": "mapping(bytes32 => struct Phase9Types.Lien)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_handoffs",
+        "type": "mapping(bytes32 => struct Phase9Types.LienHandoffResult)",
+        "visibility": "private"
+      }
+    ]
+  },
+  "linearizedBases": [
+    "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+    "protocol/src/interfaces/phase9/ILienRegistry.sol:ILienRegistry"
+  ],
+  "schemaVersion": 1,
+  "source": "protocol/src/resolution/LienRegistry.sol",
+  "storageLayout": {
+    "storage": [
+      {
+        "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+        "label": "_registeredRefinanceCoordinator",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+        "label": "_liens",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_bytes32,t_struct(Lien)60199_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+        "label": "_handoffs",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_bytes32,t_struct(LienHandoffResult)60219_storage)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_enum(LienHandoffState)60008": {
+        "encoding": "inplace",
+        "label": "enum Phase9Types.LienHandoffState",
+        "numberOfBytes": "1"
+      },
+      "t_enum(LienStatus)59978": {
+        "encoding": "inplace",
+        "label": "enum Phase9Types.LienStatus",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_bytes32,t_struct(Lien)60199_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.Lien)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Lien)60199_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(LienHandoffResult)60219_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.LienHandoffResult)",
+        "numberOfBytes": "32",
+        "value": "t_struct(LienHandoffResult)60219_storage"
+      },
+      "t_struct(Lien)60199_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.Lien",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "collateralId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "collateralManager",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "vault",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "assetId",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "quantity",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "borrower",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "seniorLoanId",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "lienVersion",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "status",
+            "offset": 8,
+            "slot": "7",
+            "type": "t_enum(LienStatus)59978"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "pendingRefinanceId",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "pendingTargetLoanId",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "320"
+      },
+      "t_struct(LienHandoffResult)60219_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.LienHandoffResult",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "handoffId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "refinanceId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "collateralId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "oldLoanId",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "newLoanId",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "priorLienVersion",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "nextLienVersion",
+            "offset": 8,
+            "slot": "5",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "state",
+            "offset": 16,
+            "slot": "5",
+            "type": "t_enum(LienHandoffState)60008"
+          },
+          {
+            "contract": "protocol/src/resolution/LienRegistry.sol:LienRegistry",
+            "label": "evidenceHash",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "224"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint64": {
+        "encoding": "inplace",
+        "label": "uint64",
+        "numberOfBytes": "8"
+      }
+    }
+  }
+}

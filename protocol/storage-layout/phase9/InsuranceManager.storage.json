@@ -1,0 +1,1143 @@
+{
+  "compiler": {
+    "openzeppelinVersion": "5.6.1",
+    "settings": {
+      "evmVersion": "prague",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "viaIR": false
+    },
+    "settingsHash": "sha256:0e0b5553d328d2bcca346b1c4c6662f419766d011fc75a7148f1ab9e2a398fb3",
+    "version": "0.8.36+commit.8a079791.Emscripten.clang"
+  },
+  "contract": "InsuranceManager",
+  "freezeSurface": {
+    "functions": [
+      {
+        "bodyStatementKinds": [
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement"
+        ],
+        "implemented": true,
+        "kind": "constructor",
+        "modifiers": [],
+        "name": "",
+        "revertError": null,
+        "stateMutability": "nonpayable",
+        "visibility": "public"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "registerPolicyVersion",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "setActivePolicy",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "createCoverage",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "submitClaim",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recordDecision",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recordClaimPayment",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "registerAdjudicatorSet",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "coverage",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "claim",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "decision",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "claimPayment",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "activePolicy",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "operationProcessed",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      }
+    ],
+    "stateVariables": [
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_reserveVault",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_reservePolicy",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_recoveryManager",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_settlementToken",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_policyVersions",
+        "type": "mapping(bytes32 => struct Phase9ProtectionTypes.ReservePolicyVersion)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_activePolicyHashes",
+        "type": "mapping(bytes32 => bytes32)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_coverages",
+        "type": "mapping(bytes32 => struct Phase9ProtectionTypes.LoanCoverage)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_claims",
+        "type": "mapping(bytes32 => struct Phase9ProtectionTypes.InsuranceClaim)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_decisions",
+        "type": "mapping(bytes32 => struct Phase9ProtectionTypes.ClaimDecision)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_claimPayments",
+        "type": "mapping(bytes32 => struct Phase9ProtectionTypes.ClaimPayment)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_adjudicatorSets",
+        "type": "mapping(bytes32 => struct Phase9ProtectionTypes.AdjudicatorSet)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_processedSignatureIds",
+        "type": "mapping(bytes32 => bool)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_processedOperationIds",
+        "type": "mapping(bytes32 => bool)",
+        "visibility": "private"
+      }
+    ]
+  },
+  "linearizedBases": [
+    "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+    "protocol/src/interfaces/phase9/IInsuranceManager.sol:IInsuranceManager"
+  ],
+  "schemaVersion": 1,
+  "source": "protocol/src/protection/InsuranceManager.sol",
+  "storageLayout": {
+    "storage": [
+      {
+        "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+        "label": "_reserveVault",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+        "label": "_reservePolicy",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+        "label": "_recoveryManager",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+        "label": "_settlementToken",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+        "label": "_policyVersions",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_mapping(t_bytes32,t_struct(ReservePolicyVersion)59076_storage)"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+        "label": "_activePolicyHashes",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_mapping(t_bytes32,t_bytes32)"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+        "label": "_coverages",
+        "offset": 0,
+        "slot": "6",
+        "type": "t_mapping(t_bytes32,t_struct(LoanCoverage)59133_storage)"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+        "label": "_claims",
+        "offset": 0,
+        "slot": "7",
+        "type": "t_mapping(t_bytes32,t_struct(InsuranceClaim)59179_storage)"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+        "label": "_decisions",
+        "offset": 0,
+        "slot": "8",
+        "type": "t_mapping(t_bytes32,t_struct(ClaimDecision)59208_storage)"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+        "label": "_claimPayments",
+        "offset": 0,
+        "slot": "9",
+        "type": "t_mapping(t_bytes32,t_struct(ClaimPayment)59235_storage)"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+        "label": "_adjudicatorSets",
+        "offset": 0,
+        "slot": "10",
+        "type": "t_mapping(t_bytes32,t_struct(AdjudicatorSet)59248_storage)"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+        "label": "_processedSignatureIds",
+        "offset": 0,
+        "slot": "11",
+        "type": "t_mapping(t_bytes32,t_bool)"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+        "label": "_processedOperationIds",
+        "offset": 0,
+        "slot": "12",
+        "type": "t_mapping(t_bytes32,t_bool)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_address)3_storage": {
+        "base": "t_address",
+        "encoding": "inplace",
+        "label": "address[3]",
+        "numberOfBytes": "96"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_enum(CoverageState)59011": {
+        "encoding": "inplace",
+        "label": "enum Phase9ProtectionTypes.CoverageState",
+        "numberOfBytes": "1"
+      },
+      "t_enum(InsuranceClaimState)59028": {
+        "encoding": "inplace",
+        "label": "enum Phase9ProtectionTypes.InsuranceClaimState",
+        "numberOfBytes": "1"
+      },
+      "t_enum(ReservePolicyState)59002": {
+        "encoding": "inplace",
+        "label": "enum Phase9ProtectionTypes.ReservePolicyState",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_bytes32,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_bytes32,t_bytes32)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => bytes32)",
+        "numberOfBytes": "32",
+        "value": "t_bytes32"
+      },
+      "t_mapping(t_bytes32,t_struct(AdjudicatorSet)59248_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9ProtectionTypes.AdjudicatorSet)",
+        "numberOfBytes": "32",
+        "value": "t_struct(AdjudicatorSet)59248_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(ClaimDecision)59208_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9ProtectionTypes.ClaimDecision)",
+        "numberOfBytes": "32",
+        "value": "t_struct(ClaimDecision)59208_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(ClaimPayment)59235_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9ProtectionTypes.ClaimPayment)",
+        "numberOfBytes": "32",
+        "value": "t_struct(ClaimPayment)59235_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(InsuranceClaim)59179_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9ProtectionTypes.InsuranceClaim)",
+        "numberOfBytes": "32",
+        "value": "t_struct(InsuranceClaim)59179_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(LoanCoverage)59133_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9ProtectionTypes.LoanCoverage)",
+        "numberOfBytes": "32",
+        "value": "t_struct(LoanCoverage)59133_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(ReservePolicyVersion)59076_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9ProtectionTypes.ReservePolicyVersion)",
+        "numberOfBytes": "32",
+        "value": "t_struct(ReservePolicyVersion)59076_storage"
+      },
+      "t_struct(AdjudicatorSet)59248_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9ProtectionTypes.AdjudicatorSet",
+        "members": [
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "adjudicatorSetHash",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "adjudicators",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_address)3_storage"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "threshold",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint8"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "validFrom",
+            "offset": 1,
+            "slot": "4",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "validUntil",
+            "offset": 9,
+            "slot": "4",
+            "type": "t_uint64"
+          }
+        ],
+        "numberOfBytes": "160"
+      },
+      "t_struct(ClaimDecision)59208_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9ProtectionTypes.ClaimDecision",
+        "members": [
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "decisionId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "claimId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "adjudicatedAmount",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "approvalCap",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "beneficiaryCoveredUnresolvedEntitlement",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "approvedAmount",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "authorizedCosts",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "beneficiaryEntitlementHash",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "evidenceHash",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "adjudicationNonce",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "validUntil",
+            "offset": 8,
+            "slot": "9",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "adjudicatorSetHash",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "lossStateVersion",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "decisionDigest",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "416"
+      },
+      "t_struct(ClaimPayment)59235_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9ProtectionTypes.ClaimPayment",
+        "members": [
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "claimPaymentId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "claimId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "decisionId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "poolId",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "beneficiary",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "amount",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "unpaidApprovedAmount",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "transactionHash",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "logIndex",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "balanceDeltaHash",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "subrogationEntitlementHash",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "paidAt",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "paymentNonce",
+            "offset": 8,
+            "slot": "11",
+            "type": "t_uint64"
+          }
+        ],
+        "numberOfBytes": "384"
+      },
+      "t_struct(InsuranceClaim)59179_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9ProtectionTypes.InsuranceClaim",
+        "members": [
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "claimId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "coverageId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "lossId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "claimant",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "requestedAmount",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "eligibleUncoveredLoss",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "evidenceHash",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "claimNonce",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "submittedAt",
+            "offset": 8,
+            "slot": "7",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "state",
+            "offset": 16,
+            "slot": "7",
+            "type": "t_enum(InsuranceClaimState)59028"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "claimDigest",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "288"
+      },
+      "t_struct(LoanCoverage)59133_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9ProtectionTypes.LoanCoverage",
+        "members": [
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "coverageId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "poolId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "loanId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "beneficiary",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "settlementAssetId",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "coveredEventMask",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "deductible",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "coverageBasisPoints",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "coverageLimit",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "remainingLimit",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "premium",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "lossPriority",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "subrogationPriority",
+            "offset": 4,
+            "slot": "11",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "validFrom",
+            "offset": 8,
+            "slot": "11",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "expiresAt",
+            "offset": 16,
+            "slot": "11",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "coverageNonce",
+            "offset": 24,
+            "slot": "11",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "policyVersionId",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "coverageDigest",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "state",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_enum(CoverageState)59011"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "reservePolicyHash",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "512"
+      },
+      "t_struct(ReservePolicyVersion)59076_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9ProtectionTypes.ReservePolicyVersion",
+        "members": [
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "policyVersionId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "poolId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "settlementAssetId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "token",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "stressHaircutBasisPoints",
+            "offset": 20,
+            "slot": "3",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "modeledLossAtTargetConfidence",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "targetConfidenceBasisPoints",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "maximumCoverageBasisPoints",
+            "offset": 4,
+            "slot": "5",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "maximumSinglePolicy",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "aggregateCommitmentLimit",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "minimumReserveRatioRay",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "minimumCommitmentRatioRay",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "coveredEventMask",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "minimumDeductible",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "maximumDeductible",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "premiumPolicyHash",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "adjudicatorSetHash",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "payoutWaterfallHash",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "recoveryWaterfallHash",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "effectiveAt",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "expiresAt",
+            "offset": 8,
+            "slot": "17",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "state",
+            "offset": 16,
+            "slot": "17",
+            "type": "t_enum(ReservePolicyState)59002"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceManager.sol:InsuranceManager",
+            "label": "contentHash",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "608"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint32": {
+        "encoding": "inplace",
+        "label": "uint32",
+        "numberOfBytes": "4"
+      },
+      "t_uint64": {
+        "encoding": "inplace",
+        "label": "uint64",
+        "numberOfBytes": "8"
+      },
+      "t_uint8": {
+        "encoding": "inplace",
+        "label": "uint8",
+        "numberOfBytes": "1"
+      }
+    }
+  }
+}

@@ -1,0 +1,183 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+enum PayoffComponentKind {
+  PAYOFF_COMPONENT_KIND_UNSPECIFIED = 0;
+  PAYOFF_COMPONENT_KIND_PRINCIPAL = 1;
+  PAYOFF_COMPONENT_KIND_ACCRUED_INTEREST = 2;
+  PAYOFF_COMPONENT_KIND_CAPITALIZED_INTEREST = 3;
+  PAYOFF_COMPONENT_KIND_FEE = 4;
+  PAYOFF_COMPONENT_KIND_PENALTY = 5;
+  PAYOFF_COMPONENT_KIND_RECOVERABLE_COST = 6;
+  PAYOFF_COMPONENT_KIND_CREDIT = 7;
+}
+
+enum PayoffQuoteState {
+  PAYOFF_QUOTE_STATE_UNSPECIFIED = 0;
+  PAYOFF_QUOTE_STATE_ISSUED = 1;
+  PAYOFF_QUOTE_STATE_CONSUMED = 2;
+  PAYOFF_QUOTE_STATE_EXPIRED = 3;
+  PAYOFF_QUOTE_STATE_INVALIDATED = 4;
+}
+
+enum RefinanceState {
+  REFINANCE_STATE_UNSPECIFIED = 0;
+  REFINANCE_STATE_REQUESTED = 1;
+  REFINANCE_STATE_QUOTED = 2;
+  REFINANCE_STATE_OFFERED = 3;
+  REFINANCE_STATE_ACCEPTED = 4;
+  REFINANCE_STATE_FUNDING_ESCROWED = 5;
+  REFINANCE_STATE_EXECUTING = 6;
+  REFINANCE_STATE_COMPLETED = 7;
+  REFINANCE_STATE_REJECTED = 8;
+  REFINANCE_STATE_EXPIRED = 9;
+  REFINANCE_STATE_CANCELLED = 10;
+  REFINANCE_STATE_REFUNDABLE = 11;
+  REFINANCE_STATE_REFUNDED = 12;
+  REFINANCE_STATE_DISPUTED = 13;
+}
+
+enum FundingCommitmentState {
+  FUNDING_COMMITMENT_STATE_UNSPECIFIED = 0;
+  FUNDING_COMMITMENT_STATE_OFFERED = 1;
+  FUNDING_COMMITMENT_STATE_ACCEPTED = 2;
+  FUNDING_COMMITMENT_STATE_FUNDED = 3;
+  FUNDING_COMMITMENT_STATE_REFUNDABLE = 4;
+  FUNDING_COMMITMENT_STATE_REFUNDED = 5;
+  FUNDING_COMMITMENT_STATE_CONSUMED = 6;
+}
+
+enum LienHandoffState {
+  LIEN_HANDOFF_STATE_UNSPECIFIED = 0;
+  LIEN_HANDOFF_STATE_ACTIVE_OLD = 1;
+  LIEN_HANDOFF_STATE_EXECUTING = 2;
+  LIEN_HANDOFF_STATE_ACTIVE_NEW = 3;
+  LIEN_HANDOFF_STATE_REVERTED = 4;
+  LIEN_HANDOFF_STATE_DISPUTED = 5;
+}
+
+message CanonicalDebtSnapshot {
+  LoanId loan_id = 1;
+  Identifier loan_account_id = 2;
+  Money principal = 3;
+  Money accrued_interest = 4;
+  Money capitalized_interest = 5;
+  Money fees = 6;
+  Money penalties = 7;
+  Money recoverable_costs = 8;
+  Money credits = 9;
+  uint64 debt_state_version = 10;
+  google.protobuf.Timestamp as_of = 11;
+  bytes policy_set_hash = 12;
+  bytes snapshot_hash = 13;
+}
+
+message PayoffComponent {
+  PayoffComponentKind kind = 1;
+  Money amount = 2;
+  PartyId beneficiary_id = 3;
+  string obligation_code = 4;
+}
+
+message PayoffQuote {
+  Identifier quote_id = 1;
+  LoanId loan_id = 2;
+  CanonicalDebtSnapshot debt = 3;
+  repeated PayoffComponent components = 4;
+  Money gross_payoff = 5;
+  Money credits = 6;
+  Money net_payoff = 7;
+  bytes component_beneficiary_hash = 8;
+  bytes settlement_route_hash = 9;
+  google.protobuf.Timestamp issued_at = 10;
+  google.protobuf.Timestamp valid_until = 11;
+  uint64 quote_nonce = 12;
+  PolicyReference quote_policy = 13;
+  bytes quote_digest = 14;
+  PayoffQuoteState state = 15;
+}
+
+message RefinanceRequest {
+  Identifier refinance_id = 1;
+  LoanId old_loan_id = 2;
+  LoanId new_loan_id = 3;
+  PartyId borrower_id = 4;
+  PartyId old_lender_id = 5;
+  Identifier quote_id = 6;
+  Money old_net_payoff = 7;
+  Money new_principal = 8;
+  Money funding_amount = 9;
+  Money refinance_fee = 10;
+  Money borrower_proceeds = 11;
+  bytes component_beneficiary_hash = 12;
+  repeated Identifier collateral_ids = 13;
+  bytes collateral_set_hash = 14;
+  uint64 lien_version = 15;
+  bytes proposed_terms_hash = 16;
+  bytes new_policy_set_hash = 17;
+  google.protobuf.Timestamp expires_at = 18;
+  uint64 refinance_nonce = 19;
+  PolicyReference refinance_policy = 20;
+  bytes request_digest = 21;
+  RefinanceState state = 22;
+  uint64 new_loan_nonce = 23;
+}
+
+message RefinanceFundingCommitment {
+  Identifier commitment_id = 1;
+  Identifier refinance_id = 2;
+  Identifier position_id = 3;
+  Identifier tranche_id = 4;
+  PartyId funder_id = 5;
+  Money amount = 6;
+  uint64 commitment_nonce = 7;
+  bytes commitment_digest = 8;
+  FundingCommitmentState state = 9;
+}
+
+message CollateralLienHandoff {
+  Identifier handoff_id = 1;
+  Identifier refinance_id = 2;
+  Identifier collateral_id = 3;
+  LoanId old_loan_id = 4;
+  LoanId new_loan_id = 5;
+  uint64 prior_lien_version = 6;
+  uint64 next_lien_version = 7;
+  LienHandoffState state = 8;
+  bytes evidence_hash = 9;
+}
+
+message RefinanceExecutionEvidence {
+  Identifier refinance_id = 1;
+  Identifier quote_id = 2;
+  Identifier execution_event_id = 3;
+  LoanId old_loan_id = 4;
+  LoanId new_loan_id = 5;
+  Money funding_amount = 6;
+  Money old_net_payoff = 7;
+  Money refinance_fee = 8;
+  Money borrower_proceeds = 9;
+  repeated CollateralLienHandoff lien_handoffs = 10;
+  bytes old_debt_result_hash = 11;
+  bytes new_activation_result_hash = 12;
+  bytes recipient_balance_delta_hash = 13;
+  bytes component_payout_hash = 14;
+  bytes journal_batch_hash = 15;
+  google.protobuf.Timestamp executed_at = 16;
+}
+
+message RefinanceRefundEvidence {
+  Identifier refinance_id = 1;
+  Identifier commitment_id = 2;
+  Identifier refund_id = 3;
+  PartyId funder_id = 4;
+  Money amount = 5;
+  bytes balance_delta_hash = 6;
+  google.protobuf.Timestamp refunded_at = 7;
+}

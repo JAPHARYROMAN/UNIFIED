@@ -1,0 +1,973 @@
+{
+  "compiler": {
+    "openzeppelinVersion": "5.6.1",
+    "settings": {
+      "evmVersion": "prague",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "viaIR": false
+    },
+    "settingsHash": "sha256:0e0b5553d328d2bcca346b1c4c6662f419766d011fc75a7148f1ab9e2a398fb3",
+    "version": "0.8.36+commit.8a079791.Emscripten.clang"
+  },
+  "contract": "RestructuringController",
+  "freezeSurface": {
+    "functions": [
+      {
+        "bodyStatementKinds": [
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement"
+        ],
+        "implemented": true,
+        "kind": "constructor",
+        "modifiers": [],
+        "name": "",
+        "revertError": null,
+        "stateMutability": "nonpayable",
+        "visibility": "public"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "propose",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recordBorrowerConsent",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "castVote",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "execute",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "proposal",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "borrowerConsent",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "vote",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "voteWeights",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "executionResult",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      }
+    ],
+    "stateVariables": [
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_loanRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_amendmentPolicyRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_emergencyController",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_nextProposalNonce",
+        "type": "mapping(bytes32 => uint64)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_proposals",
+        "type": "mapping(bytes32 => struct Phase9Types.RestructuringProposal)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_borrowerConsents",
+        "type": "mapping(bytes32 => struct Phase9Types.BorrowerConsentRecord)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_votes",
+        "type": "mapping(bytes32 => mapping(bytes32 => struct Phase9Types.VoteRecord))",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_supportWeight",
+        "type": "mapping(bytes32 => uint256)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_opposeWeight",
+        "type": "mapping(bytes32 => uint256)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_castWeight",
+        "type": "mapping(bytes32 => uint256)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_executionResults",
+        "type": "mapping(bytes32 => struct Phase9Types.RestructuringExecutionResult)",
+        "visibility": "private"
+      }
+    ]
+  },
+  "linearizedBases": [
+    "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+    "protocol/src/interfaces/phase9/IRestructuringController.sol:IRestructuringController"
+  ],
+  "schemaVersion": 1,
+  "source": "protocol/src/resolution/RestructuringController.sol",
+  "storageLayout": {
+    "storage": [
+      {
+        "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+        "label": "_loanRegistry",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+        "label": "_amendmentPolicyRegistry",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+        "label": "_emergencyController",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+        "label": "_nextProposalNonce",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_mapping(t_bytes32,t_uint64)"
+      },
+      {
+        "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+        "label": "_proposals",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_mapping(t_bytes32,t_struct(RestructuringProposal)60437_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+        "label": "_borrowerConsents",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_mapping(t_bytes32,t_struct(BorrowerConsentRecord)60462_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+        "label": "_votes",
+        "offset": 0,
+        "slot": "6",
+        "type": "t_mapping(t_bytes32,t_mapping(t_bytes32,t_struct(VoteRecord)60480_storage))"
+      },
+      {
+        "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+        "label": "_supportWeight",
+        "offset": 0,
+        "slot": "7",
+        "type": "t_mapping(t_bytes32,t_uint256)"
+      },
+      {
+        "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+        "label": "_opposeWeight",
+        "offset": 0,
+        "slot": "8",
+        "type": "t_mapping(t_bytes32,t_uint256)"
+      },
+      {
+        "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+        "label": "_castWeight",
+        "offset": 0,
+        "slot": "9",
+        "type": "t_mapping(t_bytes32,t_uint256)"
+      },
+      {
+        "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+        "label": "_executionResults",
+        "offset": 0,
+        "slot": "10",
+        "type": "t_mapping(t_bytes32,t_struct(RestructuringExecutionResult)60491_storage)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_bytes_storage": {
+        "encoding": "bytes",
+        "label": "bytes",
+        "numberOfBytes": "32"
+      },
+      "t_enum(RestructuringState)60025": {
+        "encoding": "inplace",
+        "label": "enum Phase9Types.RestructuringState",
+        "numberOfBytes": "1"
+      },
+      "t_enum(VoteChoice)60030": {
+        "encoding": "inplace",
+        "label": "enum Phase9Types.VoteChoice",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_bytes32,t_mapping(t_bytes32,t_struct(VoteRecord)60480_storage))": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => mapping(bytes32 => struct Phase9Types.VoteRecord))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_bytes32,t_struct(VoteRecord)60480_storage)"
+      },
+      "t_mapping(t_bytes32,t_struct(BorrowerConsentRecord)60462_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.BorrowerConsentRecord)",
+        "numberOfBytes": "32",
+        "value": "t_struct(BorrowerConsentRecord)60462_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(RestructuringExecutionResult)60491_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.RestructuringExecutionResult)",
+        "numberOfBytes": "32",
+        "value": "t_struct(RestructuringExecutionResult)60491_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(RestructuringProposal)60437_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.RestructuringProposal)",
+        "numberOfBytes": "32",
+        "value": "t_struct(RestructuringProposal)60437_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(VoteRecord)60480_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.VoteRecord)",
+        "numberOfBytes": "32",
+        "value": "t_struct(VoteRecord)60480_storage"
+      },
+      "t_mapping(t_bytes32,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_mapping(t_bytes32,t_uint64)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => uint64)",
+        "numberOfBytes": "32",
+        "value": "t_uint64"
+      },
+      "t_struct(BorrowerConsentRecord)60462_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.BorrowerConsentRecord",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "consentId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "restructureId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "loanId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "borrower",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "activeTermsVersion",
+            "offset": 20,
+            "slot": "3",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "amendedTermsHash",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "disclosureHash",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "accountingDeltaHash",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "consentNonce",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "validUntil",
+            "offset": 8,
+            "slot": "7",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "signature",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_bytes_storage"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "consentDigest",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "320"
+      },
+      "t_struct(LoanAmendment)60159_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.LoanAmendment",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "amendmentId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "restructureId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "loanId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "priorTermsVersion",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "nextTermsVersion",
+            "offset": 8,
+            "slot": "3",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "priorDebtStateVersion",
+            "offset": 16,
+            "slot": "3",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "nextDebtStateVersion",
+            "offset": 24,
+            "slot": "3",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "priorAgreementHash",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "amendedTermsHash",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "amendedScheduleHash",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "accountingDeltaHash",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "capitalizedInterest",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "waivedFees",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "waivedPenalties",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "forgivenAmount",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "amendmentDigest",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "416"
+      },
+      "t_struct(RestructuringExecutionResult)60491_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.RestructuringExecutionResult",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "restructureId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "executionEventId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "amendmentDigest",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "journalBatchHash",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "executedAt",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint64"
+          }
+        ],
+        "numberOfBytes": "160"
+      },
+      "t_struct(RestructuringProposal)60437_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.RestructuringProposal",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "restructureId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "loanId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "proposer",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "activeTermsVersion",
+            "offset": 20,
+            "slot": "2",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "debtStateVersion",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "amendmentPolicyHash",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "modificationMask",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "maturityExtensionSeconds",
+            "offset": 8,
+            "slot": "5",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "newRateRay",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "paymentHolidayPeriods",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "paymentHolidayScheduleHash",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "feeWaiverAmount",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "penaltyWaiverAmount",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "arrearsCapitalizationAmount",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "newPrincipalCap",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "addedCollateralCommitmentHash",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "partialForgivenessAmount",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "positionLossAllocationHash",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "amendedTermsHash",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "amendedScheduleHash",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "disclosureHash",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "accountingDeltaHash",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "positionSnapshotId",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "positionSnapshotRoot",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "positionSnapshotBlock",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "eligibleWeight",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "quorumBasisPoints",
+            "offset": 0,
+            "slot": "24",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "approvalBasisPoints",
+            "offset": 4,
+            "slot": "24",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "borrower",
+            "offset": 8,
+            "slot": "24",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "reviewStartsAt",
+            "offset": 0,
+            "slot": "25",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "votingEndsAt",
+            "offset": 8,
+            "slot": "25",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "executeBy",
+            "offset": 16,
+            "slot": "25",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "proposalNonce",
+            "offset": 24,
+            "slot": "25",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "proposalDigest",
+            "offset": 0,
+            "slot": "26",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "amendment",
+            "offset": 0,
+            "slot": "27",
+            "type": "t_struct(LoanAmendment)60159_storage"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "state",
+            "offset": 0,
+            "slot": "40",
+            "type": "t_enum(RestructuringState)60025"
+          }
+        ],
+        "numberOfBytes": "1312"
+      },
+      "t_struct(VoteRecord)60480_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.VoteRecord",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "voteId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "restructureId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "positionId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "owner",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "weight",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "choice",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_enum(VoteChoice)60030"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "authorizationHash",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RestructuringController.sol:RestructuringController",
+            "label": "recordedAt",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint64"
+          }
+        ],
+        "numberOfBytes": "256"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint32": {
+        "encoding": "inplace",
+        "label": "uint32",
+        "numberOfBytes": "4"
+      },
+      "t_uint64": {
+        "encoding": "inplace",
+        "label": "uint64",
+        "numberOfBytes": "8"
+      }
+    }
+  }
+}

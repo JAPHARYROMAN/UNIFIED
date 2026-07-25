@@ -1,0 +1,738 @@
+{
+  "compiler": {
+    "openzeppelinVersion": "5.6.1",
+    "settings": {
+      "evmVersion": "prague",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "viaIR": false
+    },
+    "settingsHash": "sha256:0e0b5553d328d2bcca346b1c4c6662f419766d011fc75a7148f1ab9e2a398fb3",
+    "version": "0.8.36+commit.8a079791.Emscripten.clang"
+  },
+  "contract": "PositionManagerV2",
+  "freezeSurface": {
+    "functions": [
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "initialize",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "registerTranche",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "issuePosition",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "transferPosition",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "createSnapshot",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "consumeVotingRight",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "tranche",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "trancheIds",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "position",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "positionIds",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "snapshot",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "votingRightConsumed",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "positionOwnerAt",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "positionVotingPowerAt",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "positionClaimAt",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "totalVotingPowerAt",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "ForStatement",
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "_ownerAt",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "private"
+      },
+      {
+        "bodyStatementKinds": [
+          "ForStatement",
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "_valueAt",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "private"
+      }
+    ],
+    "stateVariables": [
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_loanId",
+        "type": "bytes32",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_loanAccount",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_settlementToken",
+        "type": "contract IERC20",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_tranches",
+        "type": "mapping(bytes32 => struct Phase9Types.Tranche)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_trancheIds",
+        "type": "bytes32[]",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_positions",
+        "type": "mapping(bytes32 => struct Phase9Types.Position)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_positionIds",
+        "type": "bytes32[]",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_ownerCheckpoints",
+        "type": "mapping(bytes32 => struct Phase9Types.Checkpoint[])",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_votingPowerCheckpoints",
+        "type": "mapping(bytes32 => struct Phase9Types.Checkpoint[])",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_claimCheckpoints",
+        "type": "mapping(bytes32 => struct Phase9Types.Checkpoint[])",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_totalVotingPowerCheckpoints",
+        "type": "struct Phase9Types.Checkpoint[]",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_snapshots",
+        "type": "mapping(bytes32 => struct Phase9Types.PositionRightSnapshot)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_consumedVoteRights",
+        "type": "mapping(bytes32 => mapping(bytes32 => bool))",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_initialized",
+        "type": "bool",
+        "visibility": "private"
+      }
+    ]
+  },
+  "linearizedBases": [
+    "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+    "protocol/src/interfaces/phase9/IPositionManagerV2.sol:IPositionManagerV2"
+  ],
+  "schemaVersion": 1,
+  "source": "protocol/src/resolution/PositionManagerV2.sol",
+  "storageLayout": {
+    "storage": [
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_loanId",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_bytes32"
+      },
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_loanAccount",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_settlementToken",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_contract(IERC20)51928"
+      },
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_tranches",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_mapping(t_bytes32,t_struct(Tranche)60320_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_trancheIds",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_array(t_bytes32)dyn_storage"
+      },
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_positions",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_mapping(t_bytes32,t_struct(Position)60334_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_positionIds",
+        "offset": 0,
+        "slot": "6",
+        "type": "t_array(t_bytes32)dyn_storage"
+      },
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_ownerCheckpoints",
+        "offset": 0,
+        "slot": "7",
+        "type": "t_mapping(t_bytes32,t_array(t_struct(Checkpoint)60341_storage)dyn_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_votingPowerCheckpoints",
+        "offset": 0,
+        "slot": "8",
+        "type": "t_mapping(t_bytes32,t_array(t_struct(Checkpoint)60341_storage)dyn_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_claimCheckpoints",
+        "offset": 0,
+        "slot": "9",
+        "type": "t_mapping(t_bytes32,t_array(t_struct(Checkpoint)60341_storage)dyn_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_totalVotingPowerCheckpoints",
+        "offset": 0,
+        "slot": "10",
+        "type": "t_array(t_struct(Checkpoint)60341_storage)dyn_storage"
+      },
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_snapshots",
+        "offset": 0,
+        "slot": "11",
+        "type": "t_mapping(t_bytes32,t_struct(PositionRightSnapshot)60362_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_consumedVoteRights",
+        "offset": 0,
+        "slot": "12",
+        "type": "t_mapping(t_bytes32,t_mapping(t_bytes32,t_bool))"
+      },
+      {
+        "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+        "label": "_initialized",
+        "offset": 0,
+        "slot": "13",
+        "type": "t_bool"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_bytes32)dyn_storage": {
+        "base": "t_bytes32",
+        "encoding": "dynamic_array",
+        "label": "bytes32[]",
+        "numberOfBytes": "32"
+      },
+      "t_array(t_struct(Checkpoint)60341_storage)dyn_storage": {
+        "base": "t_struct(Checkpoint)60341_storage",
+        "encoding": "dynamic_array",
+        "label": "struct Phase9Types.Checkpoint[]",
+        "numberOfBytes": "32"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_contract(IERC20)51928": {
+        "encoding": "inplace",
+        "label": "contract IERC20",
+        "numberOfBytes": "20"
+      },
+      "t_enum(PositionState)60013": {
+        "encoding": "inplace",
+        "label": "enum Phase9Types.PositionState",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_bytes32,t_array(t_struct(Checkpoint)60341_storage)dyn_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.Checkpoint[])",
+        "numberOfBytes": "32",
+        "value": "t_array(t_struct(Checkpoint)60341_storage)dyn_storage"
+      },
+      "t_mapping(t_bytes32,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_bytes32,t_mapping(t_bytes32,t_bool))": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => mapping(bytes32 => bool))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_bytes32,t_bool)"
+      },
+      "t_mapping(t_bytes32,t_struct(Position)60334_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.Position)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Position)60334_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(PositionRightSnapshot)60362_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.PositionRightSnapshot)",
+        "numberOfBytes": "32",
+        "value": "t_struct(PositionRightSnapshot)60362_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(Tranche)60320_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.Tranche)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Tranche)60320_storage"
+      },
+      "t_struct(Checkpoint)60341_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.Checkpoint",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "blockNumber",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "value",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "owner",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address"
+          }
+        ],
+        "numberOfBytes": "96"
+      },
+      "t_struct(Position)60334_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.Position",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "positionId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "trancheId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "owner",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "votingPower",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "claim",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "state",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_enum(PositionState)60013"
+          }
+        ],
+        "numberOfBytes": "192"
+      },
+      "t_struct(PositionRightSnapshot)60362_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.PositionRightSnapshot",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "snapshotId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "loanId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "termsVersion",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "snapshotBlock",
+            "offset": 8,
+            "slot": "2",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "positionRoot",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "eligibleWeight",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "positionCount",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "quorumBasisPoints",
+            "offset": 4,
+            "slot": "5",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "approvalBasisPoints",
+            "offset": 8,
+            "slot": "5",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "policyHash",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "224"
+      },
+      "t_struct(Tranche)60320_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.Tranche",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "trancheId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "priority",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "originalClaim",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "outstandingClaim",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/PositionManagerV2.sol:PositionManagerV2",
+            "label": "configurationHash",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "160"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint32": {
+        "encoding": "inplace",
+        "label": "uint32",
+        "numberOfBytes": "4"
+      },
+      "t_uint64": {
+        "encoding": "inplace",
+        "label": "uint64",
+        "numberOfBytes": "8"
+      }
+    }
+  }
+}

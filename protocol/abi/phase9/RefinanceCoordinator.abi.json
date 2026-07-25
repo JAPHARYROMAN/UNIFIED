@@ -1,0 +1,835 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "loanRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "phase9LoanFactory_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "payoffQuoteEngine_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "lienRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "assetRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "policyRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "emergencyController_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "treasuryFeeRecipient_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "settlementToken_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidRefinance",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Phase9ImplementationNotFrozen",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RefinanceReplayConflict",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnknownRefinance",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "commitmentId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "funder",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "RefinanceCommitmentRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "executionEventId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "resultHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RefinanceExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "commitmentId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "RefinanceRefunded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "oldLoanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "newLoanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "quoteId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RefinanceRequested",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "cancelRefinance",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "commitmentIds",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "escrowedUnits",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "executeRefinance",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "refinanceId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "executionEventId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "resultHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "recordedAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum Phase9Types.RefinanceState",
+            "name": "state",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct Phase9Types.RefinanceTerminalResult",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "commitmentId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "fundingCommitment",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "commitmentId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "refinanceId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "positionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "trancheId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "funder",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "commitmentNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "commitmentDigest",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum Phase9Types.FundingCommitmentState",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "fundingResultHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.FundingCommitment",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "operationId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "operationProcessed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "commitmentId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "refinanceId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "positionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "trancheId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "funder",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "commitmentNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "commitmentDigest",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum Phase9Types.FundingCommitmentState",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "fundingResultHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.FundingCommitment",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "recordFundingCommitment",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "refinance",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "refinanceId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "oldLoanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "newLoanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "oldLender",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "newPositionManager",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "quoteId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "componentBeneficiaryHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "oldNetPayoff",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "newPrincipal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "collateralSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "lienVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "proposedTermsHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "newPolicySetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "fundingAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "refinanceFee",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "borrowerProceeds",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "refinanceNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "refinancePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "newLoanNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum Phase9Types.RefinanceState",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "stateVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "acceptedFunding",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "executionAttempts",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "terminalEvidenceHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.RefinanceRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "refundCommitment",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "refinanceId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "oldLoanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "newLoanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "oldLender",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "newPositionManager",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "quoteId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "componentBeneficiaryHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "oldNetPayoff",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "newPrincipal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "collateralSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "lienVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "proposedTermsHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "newPolicySetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "fundingAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "refinanceFee",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "borrowerProceeds",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "refinanceNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "refinancePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "newLoanNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum Phase9Types.RefinanceState",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "stateVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "acceptedFunding",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "executionAttempts",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "terminalEvidenceHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.RefinanceRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "requestRefinance",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "terminalResult",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "refinanceId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "executionEventId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "resultHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "recordedAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum Phase9Types.RefinanceState",
+            "name": "state",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct Phase9Types.RefinanceTerminalResult",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

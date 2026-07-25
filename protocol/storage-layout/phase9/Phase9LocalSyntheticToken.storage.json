@@ -1,0 +1,137 @@
+{
+  "compiler": {
+    "openzeppelinVersion": "5.6.1",
+    "settings": {
+      "evmVersion": "prague",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "viaIR": false
+    },
+    "settingsHash": "sha256:0e0b5553d328d2bcca346b1c4c6662f419766d011fc75a7148f1ab9e2a398fb3",
+    "version": "0.8.36+commit.8a079791.Emscripten.clang"
+  },
+  "contract": "Phase9LocalSyntheticToken",
+  "freezeSurface": {
+    "functions": [
+      {
+        "bodyStatementKinds": [
+          "IfStatement",
+          "IfStatement",
+          "ExpressionStatement"
+        ],
+        "implemented": true,
+        "kind": "constructor",
+        "modifiers": [
+          "ERC20"
+        ],
+        "name": "",
+        "revertError": null,
+        "stateMutability": "nonpayable",
+        "visibility": "public"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "decimals",
+        "revertError": null,
+        "stateMutability": "pure",
+        "visibility": "public"
+      }
+    ],
+    "stateVariables": [
+      {
+        "constant": true,
+        "immutable": false,
+        "name": "FIXED_SUPPLY_UNITS",
+        "type": "uint256",
+        "visibility": "public"
+      }
+    ]
+  },
+  "linearizedBases": [
+    "protocol/src/token/Phase9LocalSyntheticToken.sol:Phase9LocalSyntheticToken",
+    "@openzeppelin/contracts/token/ERC20/ERC20.sol:ERC20",
+    "@openzeppelin/contracts/interfaces/draft-IERC6093.sol:IERC20Errors",
+    "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol:IERC20Metadata",
+    "@openzeppelin/contracts/token/ERC20/IERC20.sol:IERC20",
+    "@openzeppelin/contracts/utils/Context.sol:Context"
+  ],
+  "schemaVersion": 1,
+  "source": "protocol/src/token/Phase9LocalSyntheticToken.sol",
+  "storageLayout": {
+    "storage": [
+      {
+        "contract": "protocol/src/token/Phase9LocalSyntheticToken.sol:Phase9LocalSyntheticToken",
+        "label": "_balances",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_mapping(t_address,t_uint256)"
+      },
+      {
+        "contract": "protocol/src/token/Phase9LocalSyntheticToken.sol:Phase9LocalSyntheticToken",
+        "label": "_allowances",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))"
+      },
+      {
+        "contract": "protocol/src/token/Phase9LocalSyntheticToken.sol:Phase9LocalSyntheticToken",
+        "label": "_totalSupply",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_uint256"
+      },
+      {
+        "contract": "protocol/src/token/Phase9LocalSyntheticToken.sol:Phase9LocalSyntheticToken",
+        "label": "_name",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_string_storage"
+      },
+      {
+        "contract": "protocol/src/token/Phase9LocalSyntheticToken.sol:Phase9LocalSyntheticToken",
+        "label": "_symbol",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_string_storage"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => mapping(address => uint256))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_address,t_uint256)"
+      },
+      "t_mapping(t_address,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_string_storage": {
+        "encoding": "bytes",
+        "label": "string",
+        "numberOfBytes": "32"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

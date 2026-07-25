@@ -1,0 +1,938 @@
+{
+  "compiler": {
+    "openzeppelinVersion": "5.6.1",
+    "settings": {
+      "evmVersion": "prague",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "viaIR": false
+    },
+    "settingsHash": "sha256:0e0b5553d328d2bcca346b1c4c6662f419766d011fc75a7148f1ab9e2a398fb3",
+    "version": "0.8.36+commit.8a079791.Emscripten.clang"
+  },
+  "contract": "RecoveryManager",
+  "freezeSurface": {
+    "functions": [
+      {
+        "bodyStatementKinds": [
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement"
+        ],
+        "implemented": true,
+        "kind": "constructor",
+        "modifiers": [],
+        "name": "",
+        "revertError": null,
+        "stateMutability": "nonpayable",
+        "visibility": "public"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "openLoss",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recordRecoverySource",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "setEntitlement",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "allocateRecovery",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recognizeWriteOff",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "assetRegistry",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "settlementToken",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "authorizedReceiptManager",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "loss",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recoverySource",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "entitlement",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "allocation",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "writeOff",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "operationProcessed",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      }
+    ],
+    "stateVariables": [
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_assetRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_settlementToken",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_authorizedReceiptManager",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_losses",
+        "type": "mapping(bytes32 => struct Phase9RecoveryTypes.LossRecord)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_recoverySources",
+        "type": "mapping(bytes32 => struct Phase9RecoveryTypes.RecoverySourceEvidence)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_entitlements",
+        "type": "mapping(bytes32 => mapping(bytes32 => struct Phase9RecoveryTypes.RecoveryEntitlement))",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_allocations",
+        "type": "mapping(bytes32 => struct Phase9RecoveryTypes.RecoveryAllocation)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_writeOffs",
+        "type": "mapping(bytes32 => struct Phase9RecoveryTypes.WriteOffEvidence)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_processedSourceIds",
+        "type": "mapping(bytes32 => bool)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_processedOperationIds",
+        "type": "mapping(bytes32 => bool)",
+        "visibility": "private"
+      }
+    ]
+  },
+  "linearizedBases": [
+    "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+    "protocol/src/interfaces/phase9/IRecoveryManager.sol:IRecoveryManager"
+  ],
+  "schemaVersion": 1,
+  "source": "protocol/src/recovery/RecoveryManager.sol",
+  "storageLayout": {
+    "storage": [
+      {
+        "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+        "label": "_assetRegistry",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+        "label": "_settlementToken",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+        "label": "_authorizedReceiptManager",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+        "label": "_losses",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_mapping(t_bytes32,t_struct(LossRecord)59621_storage)"
+      },
+      {
+        "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+        "label": "_recoverySources",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_mapping(t_bytes32,t_struct(RecoverySourceEvidence)59648_storage)"
+      },
+      {
+        "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+        "label": "_entitlements",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_mapping(t_bytes32,t_mapping(t_bytes32,t_struct(RecoveryEntitlement)59666_storage))"
+      },
+      {
+        "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+        "label": "_allocations",
+        "offset": 0,
+        "slot": "6",
+        "type": "t_mapping(t_bytes32,t_struct(RecoveryAllocation)59687_storage)"
+      },
+      {
+        "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+        "label": "_writeOffs",
+        "offset": 0,
+        "slot": "7",
+        "type": "t_mapping(t_bytes32,t_struct(WriteOffEvidence)59714_storage)"
+      },
+      {
+        "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+        "label": "_processedSourceIds",
+        "offset": 0,
+        "slot": "8",
+        "type": "t_mapping(t_bytes32,t_bool)"
+      },
+      {
+        "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+        "label": "_processedOperationIds",
+        "offset": 0,
+        "slot": "9",
+        "type": "t_mapping(t_bytes32,t_bool)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_enum(RecoveryCaseState)59525": {
+        "encoding": "inplace",
+        "label": "enum Phase9RecoveryTypes.RecoveryCaseState",
+        "numberOfBytes": "1"
+      },
+      "t_enum(RecoveryEntitlementKind)59545": {
+        "encoding": "inplace",
+        "label": "enum Phase9RecoveryTypes.RecoveryEntitlementKind",
+        "numberOfBytes": "1"
+      },
+      "t_enum(RecoverySourceState)59539": {
+        "encoding": "inplace",
+        "label": "enum Phase9RecoveryTypes.RecoverySourceState",
+        "numberOfBytes": "1"
+      },
+      "t_enum(RecoverySourceType)59532": {
+        "encoding": "inplace",
+        "label": "enum Phase9RecoveryTypes.RecoverySourceType",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_bytes32,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_bytes32,t_mapping(t_bytes32,t_struct(RecoveryEntitlement)59666_storage))": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => mapping(bytes32 => struct Phase9RecoveryTypes.RecoveryEntitlement))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_bytes32,t_struct(RecoveryEntitlement)59666_storage)"
+      },
+      "t_mapping(t_bytes32,t_struct(LossRecord)59621_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9RecoveryTypes.LossRecord)",
+        "numberOfBytes": "32",
+        "value": "t_struct(LossRecord)59621_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(RecoveryAllocation)59687_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9RecoveryTypes.RecoveryAllocation)",
+        "numberOfBytes": "32",
+        "value": "t_struct(RecoveryAllocation)59687_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(RecoveryEntitlement)59666_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9RecoveryTypes.RecoveryEntitlement)",
+        "numberOfBytes": "32",
+        "value": "t_struct(RecoveryEntitlement)59666_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(RecoverySourceEvidence)59648_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9RecoveryTypes.RecoverySourceEvidence)",
+        "numberOfBytes": "32",
+        "value": "t_struct(RecoverySourceEvidence)59648_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(WriteOffEvidence)59714_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9RecoveryTypes.WriteOffEvidence)",
+        "numberOfBytes": "32",
+        "value": "t_struct(WriteOffEvidence)59714_storage"
+      },
+      "t_struct(LossRecord)59621_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9RecoveryTypes.LossRecord",
+        "members": [
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "loanId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "debtStateVersion",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "defaultEventId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "settlementAssetId",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "grossCoveredLossExposure",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "collateralCredited",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "guarantorCredited",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "insuranceCredited",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "otherRecoveryCredited",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "forgivenessRecognized",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "residualLossExposure",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "realizedLossRecognized",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "writeoffRecognized",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "lenderUncoveredRight",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "productPoolSubrogationRight",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "guarantorSubrogationRight",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "laterRecoveryAllocated",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "borrowerSurplus",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "waterfallPolicyHash",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "state",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_enum(RecoveryCaseState)59525"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "stateVersion",
+            "offset": 1,
+            "slot": "19",
+            "type": "t_uint64"
+          }
+        ],
+        "numberOfBytes": "640"
+      },
+      "t_struct(RecoveryAllocation)59687_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9RecoveryTypes.RecoveryAllocation",
+        "members": [
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "allocationId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "lossId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "recoverySourceId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "entitlementId",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "beneficiary",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "amount",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "allocationSequence",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "receiptResidual",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "waterfallPolicyHash",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "allocationDigest",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "320"
+      },
+      "t_struct(RecoveryEntitlement)59666_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9RecoveryTypes.RecoveryEntitlement",
+        "members": [
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "entitlementId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "lossId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "kind",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_enum(RecoveryEntitlementKind)59545"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "beneficiary",
+            "offset": 1,
+            "slot": "2",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "originalAmount",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "remainingAmount",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "priority",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "policyHash",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "224"
+      },
+      "t_struct(RecoverySourceEvidence)59648_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9RecoveryTypes.RecoverySourceEvidence",
+        "members": [
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "recoverySourceId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "lossId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "sourceType",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_enum(RecoverySourceType)59532"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "sourceParty",
+            "offset": 1,
+            "slot": "2",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "sourceReferenceHash",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "amount",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "transactionHash",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "logIndex",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "balanceDeltaHash",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "descriptiveEvidenceHash",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "state",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_enum(RecoverySourceState)59539"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "finalizedAt",
+            "offset": 1,
+            "slot": "9",
+            "type": "t_uint64"
+          }
+        ],
+        "numberOfBytes": "320"
+      },
+      "t_struct(WriteOffEvidence)59714_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9RecoveryTypes.WriteOffEvidence",
+        "members": [
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "writeoffId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "lossId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "loanId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "debtStateVersion",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "residualLossExposure",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "writeoffAmount",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "positionAllocationHash",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "recoveryAssessmentHash",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "reasonCode",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "approvalPolicyHash",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "writeoffNonce",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "approvalEvidenceHash",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/RecoveryManager.sol:RecoveryManager",
+            "label": "recognizedAt",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint64"
+          }
+        ],
+        "numberOfBytes": "416"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint32": {
+        "encoding": "inplace",
+        "label": "uint32",
+        "numberOfBytes": "4"
+      },
+      "t_uint64": {
+        "encoding": "inplace",
+        "label": "uint64",
+        "numberOfBytes": "8"
+      }
+    }
+  }
+}

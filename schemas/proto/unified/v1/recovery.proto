@@ -1,0 +1,171 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+enum GuaranteeState {
+  GUARANTEE_STATE_UNSPECIFIED = 0;
+  GUARANTEE_STATE_PROPOSED = 1;
+  GUARANTEE_STATE_ACCEPTED = 2;
+  GUARANTEE_STATE_ACTIVE = 3;
+  GUARANTEE_STATE_CLAIM_PENDING = 4;
+  GUARANTEE_STATE_PARTIALLY_PAID = 5;
+  GUARANTEE_STATE_PAID = 6;
+  GUARANTEE_STATE_EXPIRED = 7;
+  GUARANTEE_STATE_RELEASED = 8;
+  GUARANTEE_STATE_EXHAUSTED = 9;
+}
+
+enum RecoveryCaseState {
+  RECOVERY_CASE_STATE_UNSPECIFIED = 0;
+  RECOVERY_CASE_STATE_OPEN = 1;
+  RECOVERY_CASE_STATE_RECOVERY_PENDING = 2;
+  RECOVERY_CASE_STATE_LOSS_FINALIZED = 3;
+  RECOVERY_CASE_STATE_WRITE_OFF_PENDING = 4;
+  RECOVERY_CASE_STATE_WRITTEN_OFF = 5;
+  RECOVERY_CASE_STATE_RECOVERY_OPEN = 6;
+  RECOVERY_CASE_STATE_RECOVERED = 7;
+  RECOVERY_CASE_STATE_CLOSED_WITH_UNRECOVERED_LOSS = 8;
+  RECOVERY_CASE_STATE_DISPUTED = 9;
+}
+
+enum RecoverySourceType {
+  RECOVERY_SOURCE_TYPE_UNSPECIFIED = 0;
+  RECOVERY_SOURCE_TYPE_COLLATERAL = 1;
+  RECOVERY_SOURCE_TYPE_GUARANTOR = 2;
+  RECOVERY_SOURCE_TYPE_INSURANCE = 3;
+  RECOVERY_SOURCE_TYPE_MOCKED_LEGAL_RECEIPT = 4;
+  RECOVERY_SOURCE_TYPE_OTHER_AUTHORIZED_RECEIPT = 5;
+}
+
+enum RecoverySourceState {
+  RECOVERY_SOURCE_STATE_UNSPECIFIED = 0;
+  RECOVERY_SOURCE_STATE_OBSERVED = 1;
+  RECOVERY_SOURCE_STATE_FINAL = 2;
+  RECOVERY_SOURCE_STATE_ALLOCATED = 3;
+  RECOVERY_SOURCE_STATE_REJECTED = 4;
+  RECOVERY_SOURCE_STATE_DISPUTED = 5;
+}
+
+enum RecoveryEntitlementKind {
+  RECOVERY_ENTITLEMENT_KIND_UNSPECIFIED = 0;
+  RECOVERY_ENTITLEMENT_KIND_LENDER_UNCOVERED = 1;
+  RECOVERY_ENTITLEMENT_KIND_PRODUCT_POOL_SUBROGATION = 2;
+  RECOVERY_ENTITLEMENT_KIND_GUARANTOR_SUBROGATION = 3;
+  RECOVERY_ENTITLEMENT_KIND_BORROWER_SURPLUS = 4;
+}
+
+message Guarantee {
+  Identifier guarantee_id = 1;
+  LoanId loan_id = 2;
+  Identifier loss_id = 3;
+  PartyId guarantor_id = 4;
+  AssetId asset_id = 5;
+  Money maximum_amount = 6;
+  uint64 covered_event_mask = 7;
+  uint32 priority = 8;
+  bytes subrogation_policy_hash = 9;
+  google.protobuf.Timestamp valid_from = 10;
+  google.protobuf.Timestamp expires_at = 11;
+  Money committed_amount = 12;
+  Money paid_amount = 13;
+  GuaranteeState state = 14;
+  bytes guarantee_digest = 15;
+}
+
+message RecoveryCase {
+  Identifier recovery_case_id = 1;
+  Identifier loss_id = 2;
+  LoanId loan_id = 3;
+  uint64 debt_state_version = 4;
+  Identifier default_event_id = 5;
+  AssetId settlement_asset_id = 6;
+  Money gross_covered_loss_exposure = 7;
+  Money collateral_credited = 8;
+  Money guarantor_credited = 9;
+  Money insurance_credited = 10;
+  Money other_recovery_credited = 11;
+  Money forgiveness_recognized = 12;
+  Money residual_loss_exposure = 13;
+  Money realized_loss_recognized = 14;
+  Money writeoff_recognized = 15;
+  bytes position_snapshot_root = 16;
+  bytes waterfall_policy_hash = 17;
+  RecoveryCaseState state = 18;
+  uint64 state_version = 19;
+}
+
+message RecoverySourceEvidence {
+  Identifier recovery_source_id = 1;
+  Identifier loss_id = 2;
+  RecoverySourceType source_type = 3;
+  PartyId source_party_id = 4;
+  string source_reference = 5;
+  Money amount = 6;
+  bytes transaction_hash = 7;
+  uint32 log_index = 8;
+  bytes balance_delta_hash = 9;
+  bytes descriptive_evidence_hash = 10;
+  RecoverySourceState state = 11;
+  google.protobuf.Timestamp finalized_at = 12;
+}
+
+message RecoveryEntitlement {
+  Identifier entitlement_id = 1;
+  Identifier loss_id = 2;
+  RecoveryEntitlementKind kind = 3;
+  PartyId beneficiary_id = 4;
+  Money original_amount = 5;
+  Money remaining_amount = 6;
+  uint32 priority = 7;
+  bytes policy_hash = 8;
+}
+
+message RecoveryAllocation {
+  Identifier allocation_id = 1;
+  Identifier loss_id = 2;
+  Identifier recovery_source_id = 3;
+  Identifier entitlement_id = 4;
+  PartyId beneficiary_id = 5;
+  Money amount = 6;
+  uint32 allocation_sequence = 7;
+  Money receipt_residual = 8;
+  bytes waterfall_policy_hash = 9;
+  bytes allocation_digest = 10;
+}
+
+message WriteOffEvidence {
+  Identifier writeoff_id = 1;
+  Identifier loss_id = 2;
+  LoanId loan_id = 3;
+  uint64 debt_state_version = 4;
+  Money residual_loss_exposure = 5;
+  Money writeoff_amount = 6;
+  bytes position_allocation_hash = 7;
+  bytes recovery_assessment_hash = 8;
+  string reason_code = 9;
+  PolicyReference approval_policy = 10;
+  uint64 writeoff_nonce = 11;
+  bytes approval_evidence_hash = 12;
+  google.protobuf.Timestamp recognized_at = 13;
+}
+
+message RecoveryReconciliationEvidence {
+  Identifier reconciliation_id = 1;
+  Identifier loss_id = 2;
+  Money gross_loss = 3;
+  Money unique_credited_sources = 4;
+  Money residual_loss = 5;
+  Money writeoff = 6;
+  Money later_receipts = 7;
+  Money allocated_to_entitlements = 8;
+  Money borrower_surplus = 9;
+  bytes entitlement_set_hash = 10;
+  bytes journal_set_hash = 11;
+  bytes evidence_hash = 12;
+  google.protobuf.Timestamp reconciled_at = 13;
+}

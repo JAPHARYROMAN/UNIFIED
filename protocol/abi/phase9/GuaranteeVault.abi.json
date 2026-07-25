@@ -1,0 +1,389 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "assetRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "settlementToken_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "authorizedRecoveryManager_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "receiptId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "GuaranteeReceiptReplay",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidGuarantee",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Phase9ImplementationNotFrozen",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "guaranteeId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnknownGuarantee",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "guaranteeId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "receiptId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "paidAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "GuaranteeReceiptRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "guaranteeId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "guarantor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "maximumAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "GuaranteeRegistered",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "assetRegistry",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "authorizedRecoveryManager",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "guaranteeId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "guarantee",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "guaranteeId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "lossId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "guarantor",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "assetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maximumAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "coveredEventMask",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "priority",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "subrogationPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validFrom",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "committedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "paidAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum Phase9RecoveryTypes.GuaranteeState",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "guaranteeDigest",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9RecoveryTypes.Guarantee",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "receiptId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "receiptProcessed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "recordGuaranteeReceipt",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "guaranteeId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "lossId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "guarantor",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "assetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maximumAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "coveredEventMask",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint32",
+            "name": "priority",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "subrogationPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validFrom",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "committedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "paidAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum Phase9RecoveryTypes.GuaranteeState",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "guaranteeDigest",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9RecoveryTypes.Guarantee",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "registerGuarantee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "settlementToken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

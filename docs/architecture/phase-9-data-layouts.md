@@ -1040,6 +1040,42 @@ RefinanceRefundEvidence {
 }
 ```
 
+The frozen `PayoffQuote` wire tags intentionally omit deployment authority. Every
+quote codec MUST resolve `payoff_quote_engine`, `chainid`, the canonical
+`settlement_asset_id` bytes and matching `AssetId.value`, and `settlement_token`
+from an immutable authoritative tuple held only by the codec closure. The public
+`TrustedPayoffQuoteContext` is solely an opaque singleton identity token created in
+that same closure: it stores and exposes no engine, chain, asset, token, capability,
+snapshot, mint function, or registry field. No public constructor or arbitrary-value
+factory may exist. That token is service wiring, not command, event, API, or
+per-request data; callers MUST NOT construct, substitute, or override it. The codec
+MUST require strict singleton identity before returning its closure-held tuple and
+MUST never resolve authority from object attributes, private-name lookups, symbols,
+getters, prototypes, or caller values. A deployment or registry change requires a
+new internally authenticated codec closure; it cannot be expressed through request
+data.
+
+The Python token MUST be an empty, immutable tuple-backed identity with empty slots
+and blocked normal construction and subclassing; `object.__setattr__` cannot add
+authority or replace its class, `object.__new__` is unsafe for the type, and any
+lower-level tuple forgery fails the identity check. The TypeScript token MUST be a
+frozen, property-free, null-prototype object; assignment, prototype tampering,
+property copying, and forged null-prototype objects cannot alter or satisfy its
+identity. Capability, snapshot, class, getter, and mint-based implementations are
+non-conforming.
+
+Before hashing, the codec MUST verify that every wire `Money.asset_id` matches the
+trusted asset, that the loan account and quote policy come from the canonical debt
+snapshot and quote respectively, and that the payoff equation, exact integer
+encoding, timestamp precision, and fixed-width values are canonical. The exact
+`UNIFIED_PAYOFF_QUOTE_V1` digest MUST match both `quote_digest` and `quote_id`.
+Python and TypeScript implementations share the same committed golden vector;
+neither implementation may accept caller-provided engine, chain, asset, or token
+substitutions. Test code may expose only the fixed no-argument canonical golden
+context. The golden fixture is not an alternate-value factory and MUST NOT become a
+production registry-adapter API. Low-level preimage resolution and encoding remain
+module-private so a request caller cannot bypass trusted-context validation.
+
 ### `restructuring.proto`
 
 Frozen enums:

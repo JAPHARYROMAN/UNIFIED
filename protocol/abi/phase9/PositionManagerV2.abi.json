@@ -1,0 +1,688 @@
+[
+  {
+    "inputs": [],
+    "name": "InvalidPositionOperation",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Phase9ImplementationNotFrozen",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnknownPosition",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "snapshotId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "VotingRightAlreadyConsumed",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "trancheId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "claim",
+        "type": "uint256"
+      }
+    ],
+    "name": "PositionIssued",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "loanAccount",
+        "type": "address"
+      }
+    ],
+    "name": "PositionManagerInitialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "snapshotId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "snapshotBlock",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "positionRoot",
+        "type": "bytes32"
+      }
+    ],
+    "name": "PositionSnapshotCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "oldOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "PositionTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "trancheId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "priority",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "originalClaim",
+        "type": "uint256"
+      }
+    ],
+    "name": "TrancheRegistered",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "consumeVotingRight",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "snapshotId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "termsVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "snapshotBlock",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "positionRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "eligibleWeight",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "positionCount",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "quorumBasisPoints",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "approvalBasisPoints",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.PositionRightSnapshot",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "createSnapshot",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "positionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "trancheId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "votingPower",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "claim",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum Phase9Types.PositionState",
+            "name": "state",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct Phase9Types.Position",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "issuePosition",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "position",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "positionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "trancheId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "votingPower",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "claim",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum Phase9Types.PositionState",
+            "name": "state",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct Phase9Types.Position",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "blockNumber",
+        "type": "uint64"
+      }
+    ],
+    "name": "positionClaimAt",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "positionIds",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "blockNumber",
+        "type": "uint64"
+      }
+    ],
+    "name": "positionOwnerAt",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "blockNumber",
+        "type": "uint64"
+      }
+    ],
+    "name": "positionVotingPowerAt",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "trancheId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "priority",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "originalClaim",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "outstandingClaim",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "configurationHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.Tranche",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "registerTranche",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "snapshotId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "snapshot",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "snapshotId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "termsVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "snapshotBlock",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "positionRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "eligibleWeight",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "positionCount",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "quorumBasisPoints",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "approvalBasisPoints",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.PositionRightSnapshot",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint64",
+        "name": "blockNumber",
+        "type": "uint64"
+      }
+    ],
+    "name": "totalVotingPowerAt",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "trancheId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "tranche",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "trancheId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "priority",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "originalClaim",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "outstandingClaim",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "configurationHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.Tranche",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "trancheIds",
+    "outputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "",
+        "type": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "transferPosition",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "snapshotId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "votingRightConsumed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

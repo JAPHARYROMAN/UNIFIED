@@ -1,0 +1,1045 @@
+[
+  {
+    "inputs": [],
+    "name": "InvalidPhase9LoanOperation",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Phase9ImplementationNotFrozen",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "operationId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "Phase9LoanOperationReplay",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "caller",
+        "type": "address"
+      }
+    ],
+    "name": "UnauthorizedPhase9LoanCaller",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "lossId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "coveredLossExposure",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "debtStateVersion",
+        "type": "uint64"
+      }
+    ],
+    "name": "LossRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "debtStateVersion",
+        "type": "uint64"
+      }
+    ],
+    "name": "Phase9LoanClosed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "recoverySourceId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "debtStateVersion",
+        "type": "uint64"
+      }
+    ],
+    "name": "PostWriteOffRecoveryRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "debtStateVersion",
+        "type": "uint64"
+      }
+    ],
+    "name": "RefinancePayoffRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "debtStateVersion",
+        "type": "uint64"
+      }
+    ],
+    "name": "ReplacementLoanActivated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "restructureId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "termsVersion",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "debtStateVersion",
+        "type": "uint64"
+      }
+    ],
+    "name": "RestructuringApplied",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "writeoffId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "debtStateVersion",
+        "type": "uint64"
+      }
+    ],
+    "name": "WriteOffRecorded",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "enum Phase9Types.LoanLifecycle",
+            "name": "lifecycle",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum Phase9Types.ServicingState",
+            "name": "servicingState",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "termsVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "debtStateVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "stateNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "commencementTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "maturityTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "scheduleHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "outstandingPrincipal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedInterest",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "capitalizedInterest",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedFees",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedPenalties",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "recoverableCosts",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "unappliedCredit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "coveredLossExposure",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "realizedLoss",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "writtenOffAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "recoveredAfterWriteoff",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "activeRefinanceId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "activeRestructureId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.DebtState",
+        "name": "",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "activateReplacementLoan",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint64",
+        "name": "version",
+        "type": "uint64"
+      }
+    ],
+    "name": "agreementVersionHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "amendmentId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "restructureId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "priorTermsVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "nextTermsVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "priorDebtStateVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "nextDebtStateVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "priorAgreementHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendedTermsHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendedScheduleHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "accountingDeltaHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "capitalizedInterest",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "waivedFees",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "waivedPenalties",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "forgivenAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendmentDigest",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.LoanAmendment",
+        "name": "",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "applyRestructuring",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "closeLoan",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "configuration",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "factory",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "loanRegistry",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "settlementToken",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "positionManager",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateralCustody",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "lienRegistry",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "payoffQuoteEngine",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "refinanceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "restructuringController",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "insuranceManager",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "recoveryManager",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "agreementHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policySetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendmentPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "protectionPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "recoveryPolicyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.LoanConfiguration",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "debtState",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "enum Phase9Types.LoanLifecycle",
+            "name": "lifecycle",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum Phase9Types.ServicingState",
+            "name": "servicingState",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "termsVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "debtStateVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "stateNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "commencementTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "maturityTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "scheduleHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "outstandingPrincipal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedInterest",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "capitalizedInterest",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedFees",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedPenalties",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "recoverableCosts",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "unappliedCredit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "coveredLossExposure",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "realizedLoss",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "writtenOffAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "recoveredAfterWriteoff",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "activeRefinanceId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "activeRestructureId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.DebtState",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "factory",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "loanRegistry",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "settlementToken",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "positionManager",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateralCustody",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "lienRegistry",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "payoffQuoteEngine",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "refinanceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "restructuringController",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "insuranceManager",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "recoveryManager",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "agreementHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policySetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendmentPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "protectionPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "recoveryPolicyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.LoanConfiguration",
+        "name": "",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "enum Phase9Types.LoanLifecycle",
+            "name": "lifecycle",
+            "type": "uint8"
+          },
+          {
+            "internalType": "enum Phase9Types.ServicingState",
+            "name": "servicingState",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "termsVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "debtStateVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "stateNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "commencementTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "maturityTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "scheduleHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "outstandingPrincipal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedInterest",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "capitalizedInterest",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedFees",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "accruedPenalties",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "recoverableCosts",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "unappliedCredit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "coveredLossExposure",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "realizedLoss",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "writtenOffAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "recoveredAfterWriteoff",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "activeRefinanceId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "activeRestructureId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.DebtState",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "operationId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "operationProcessed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "recordCoveredLoss",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "recordPostWriteOffRecovery",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "recordRealizedLoss",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "recordRefinancePayoff",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "recordWriteOff",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
