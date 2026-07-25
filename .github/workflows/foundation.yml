@@ -36,6 +36,7 @@ jobs:
       - uses: bufbuild/buf-setup-action@v1
         with:
           version: "1.69.0"
+          github_token: ${{ github.token }}
       - uses: foundry-rs/foundry-toolchain@v1
         with:
           version: "v1.7.1"
