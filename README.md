@@ -138,4 +138,6 @@ enforces canonical receipt/Merkle-Patricia encoding, same-header proof enrichmen
 monotonic signed observations, and aggregate input limits. Its pinned Ed25519 observer is
 a synthetic local/test trust root, not EVM consensus or a production light client.
 Service executables remain local skeletons without provider, EVM RPC, broker, or
-production ledger-listener wiring.
+production ledger-listener wiring. Its bounded engineering exit is recorded in
+`docs/reviews/phase-7c-exit-review.md`; live-provider, production-chain, reserve-backed,
+public-network, collateral-release, and real-fund authority remain prohibited.
