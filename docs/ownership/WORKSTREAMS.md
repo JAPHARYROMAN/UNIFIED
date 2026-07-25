@@ -39,7 +39,9 @@ approval is mandatory before public testnet.
 - **Produces:** foundation interfaces, kernel and registries, fixed-supply UFT,
   allocation and vesting controls, fee-router skeleton, signed offers, atomic
   funding, versioned core loan accounts, bounded liquidation execution, deterministic
-  syndicate vaults, and conserved lender-position rights.
+  syndicate vaults, conserved lender-position rights, and synthetic-local payoff,
+  refinance, lien-handoff, restructuring, funded-protection, guarantee, write-off,
+  subrogation, and recovery controls.
 - **Consumes:** generated Solidity types and protocol invariants.
 - **Invariants:** no mint path; no hidden superuser; checked authority.
 - **Threats:** unsafe privilege; ABI or storage drift.
@@ -47,11 +49,13 @@ approval is mandatory before public testnet.
   runtime-size, storage-layout, and Solidity compiler checks pass.
 - **Accountable:** Protocol Architecture Authority.
 
-## WS-LEDGER — Accounting foundation
+## WS-LEDGER — Accounting and resolution foundation
 
-- **Owns:** `services/foundation-ledger/`.
+- **Owns:** `services/foundation-ledger/`, `services/resolution-coordinator/`.
 - **Produces:** balanced posting kernel, loan subledger, linked reversals,
-  finality-gated loan accounting, identity/credit control evidence, and migrations.
+  finality-gated loan accounting, identity/credit control evidence, Phase 9 resolution
+  projections and coordination, protection, loss, recovery, solvency, reconciliation
+  records, and migrations.
 - **Consumes:** finance schemas and accounting rules.
 - **Invariants:** balanced entries; idempotency; immutable posted history.
 - **Threats:** duplicate posting; unbalanced journals; currency mixing.
@@ -84,7 +88,8 @@ approval is mandatory before public testnet.
 
 - **Owns:** `protocol/src/risk/`, `services/risk-engine/`.
 - **Produces:** approved oracle aggregation, interest calculations, repayment schedules,
-  servicing/default predicates, and deterministic synthetic underwriting rules.
+  servicing/default predicates, deterministic synthetic underwriting rules, canonical
+  payoff-component inputs, reserve stress haircuts, and modeled-loss fixture metrics.
 - **Consumes:** immutable policy references, asset identities, and final observations.
 - **Invariants:** deterministic debt; fresh approved prices; cure priority; explicit safe mode.
 - **Threats:** oracle manipulation; calculation drift; premature default or liquidation.

@@ -1,0 +1,969 @@
+# Phase 9 Resolution, Protection, and Recovery
+
+Status: implementation boundary for synthetic local engineering
+
+## Scope
+
+Phase 9 implements one integrated local product across five work packages:
+
+- deterministic payoff quoting;
+- atomic refinancing and senior-lien handoff;
+- protected-consent restructuring;
+- funded synthetic coverage, premiums, claim adjudication, and payout; and
+- guarantee, loss, write-off, subrogation, and later-recovery allocation.
+
+The environment uses the local EVM home domain, disposable PostgreSQL, the durable event
+broker, object storage, and synthetic parties, assets, keys, balances, and evidence.
+Every economic amount is a nonzero integer in one registered synthetic denomination.
+
+The word `insurance` in this milestone describes a test state machine over synthetic
+funds. It is not a real insurance product, guarantee, reserve claim, solvency statement,
+legal promise, or deployment authorization.
+
+## Product topology
+
+```text
+                               canonical local EVM
+
+  old lender ──┐
+               │    ┌───────────────────────┐
+  new lender ──┼───►│ RefinanceCoordinator │
+               │    └───────┬───────────────┘
+  borrower ────┘            │
+                   ┌─────────┼───────────┐
+                   ▼         ▼           ▼
+             PayoffQuote  LienRegistry  Phase9LoanAccount
+                Engine       │                 ▲
+                   │         ▼                 │
+                   │  CollateralCustodyV2  Phase9LoanFactory
+                   │
+                   ▼
+          RestructuringController
+                   │
+             PositionManagerV2
+                   │
+                   ▼
+  funder ─────► InsuranceReserveVault ◄──── premium
+                   │
+                   ▼
+            InsuranceManager
+                   │
+          threshold adjudication
+                   │
+                   ▼
+              RecoveryManager ◄──── guarantor / actual later receipt
+                   │
+        loss, write-off, subrogation
+                   │
+                   ▼
+       Foundation ledger + reconciliation
+
+                  durable local projection
+
+     PostgreSQL ◄── event broker ──► object evidence
+          │                              │
+          └──────── release assembler ──┘
+```
+
+No service or provider owns EVM authority. Services project canonical transitions,
+verify typed local signatures and token receipts, create balanced accounting intent,
+and retain evidence. A database row cannot create a payoff, lien, consent, reserve
+asset, claim, write-off, or recovery.
+
+Existing Phase 3 through Phase 8 clones cannot satisfy this boundary and are not
+upgraded or reinterpreted. Phase 9 adds `IMPLEMENTATION_VERSION = 9` loan, position,
+custody, lien, and resolution components. Existing loans retain their original
+implementation and history. Phase 8 bridge, wrapped-token, message-recovery, satellite,
+and collateral-release contracts are unreachable from every Phase 9 component.
+
+## Canonical local scenario
+
+All displayed values are synthetic six-decimal base units:
+
+```text
+old principal                         90
+old accrued interest                   5
+old fees                               3
+old penalties                          3
+old unapplied credit                    1
+old payoff                           100
+old lender principal + interest       95
+old net fee + penalty recipient         5
+
+new senior funding                    90
+new junior funding                    30
+total funding                        120
+refinance fee                          2
+borrower proceeds                     18
+
+post-refinance accrued interest         5
+restructured debt                    125
+
+collateral recovery                   60
+actual guarantee payment              10
+eligible uncovered loss               55
+coverage deductible                    5
+coverage percentage                  40%
+coverage policy limit                 20
+funded coverage payment               20
+residual write-off                    35
+later mocked legal-recovery receipt    5
+
+reserve capitalization                60
+funded premium                         4
+reserve stress haircut           10,000 bps
+modeled loss at target confidence     40
+pre-claim reserve coverage ratio    1.60
+post-claim reserve coverage ratio   1.10
+```
+
+The successful restructure capitalizes the five units, extends maturity, and replaces
+the schedule without changing total debt. The senior position votes yes, the junior
+position votes no, eligible participation is 100%, approval is exactly 75%, and the
+borrower separately consents.
+
+A required failure scenario reverts immediately before lien completion. Old debt and
+lien remain unchanged, the new loan remains inactive, all 120 units remain refundable,
+and the borrower receives zero. Retrying the same immutable execution succeeds.
+
+## Components
+
+### Phase9LoanFactory and Phase9LoanAccount
+
+`Phase9LoanFactory` creates a non-upgradeable version-9 account and position manager
+with a new loan ID, registers the account in the existing `LoanRegistry`, and binds the
+approved quote, refinance, amendment, protection, and recovery policies. It cannot
+replace or mutate an existing Phase 3 through Phase 8 registration.
+
+`Phase9LoanAccount` is the versioned debt authority dedicated to Phase 9. It exposes:
+
+- immutable loan, borrower, lender, settlement asset, policy, and collateral identity;
+- principal, accrued interest, fees, penalties, credits, and state version;
+- exact refinance payoff entrypoint callable only by the bound coordinator;
+- one-time replacement-loan activation;
+- bounded restructuring application;
+- covered-loss exposure, realized-loss, and explicit write-off records as distinct
+  states; and
+- terminal closure that does not erase recovery history.
+
+Every debt-changing action increments `debt_state_version`. The quote engine and every
+resolution proposal bind that version.
+
+### PayoffQuoteEngine
+
+The engine reads the complete canonical debt snapshot and stores an immutable quote.
+It never accepts caller-supplied components. Quote nonces are monotonic per loan.
+
+```text
+quote_id = keccak256(abi.encode(
+  "UNIFIED_PAYOFF_QUOTE_V1",
+  address(this),
+  chainid,
+  loan_id,
+  loan_account,
+  policy_hash,
+  debt_state_version,
+  principal,
+  interest,
+  fees,
+  penalties,
+  credits,
+  net_payoff,
+  settlement_asset_id,
+  settlement_token,
+  component_beneficiary_hash,
+  settlement_route_hash,
+  issued_at,
+  valid_until,
+  quote_nonce
+))
+```
+
+The maximum validity window is immutable policy. Stored quote content cannot be
+recalculated into a different identity.
+
+The additive `IPayoffQuoteEngineV2` surface and event return the entire stored quote.
+They preserve existing ABI meanings; the legacy total-and-expiry interface is not used
+as Phase 9 execution authority.
+
+For the canonical scenario, principal and accrued interest route 95 units to the old
+lender while the separately bound fee and penalty beneficiary receives five units.
+Those routes, the two-unit refinance fee, and the 18-unit borrower proceeds are fixed
+before funding:
+
+```text
+120 funding = 95 old lender + 5 old fee/penalty + 2 refinance fee + 18 borrower
+```
+
+### CollateralCustodyV2 and LienRegistry
+
+`CollateralCustodyV2` holds the synthetic collateral independently of either loan
+account. Only `LienRegistry` may change the bound secured-loan identity, and only the
+borrower can receive an authorized surplus or final release after the active lien and
+all stored recovery rights are satisfied. Neither component calls or inherits a
+Phase 3 through Phase 8 collateral vault.
+
+For each collateral ID `LienRegistry` stores:
+
+```text
+collateral_id
+collateral_manager
+vault
+asset_id
+quantity
+borrower
+senior_loan_id
+lien_version
+status
+pending_refinance_id
+pending_target_loan_id
+```
+
+`pending_target_loan_id` is not an enforceable lien. Only `senior_loan_id` owns the
+claim. A handoff is callable only by the registered coordinator and changes old owner
+to new owner inside a successful refinance transaction. The borrower never receives
+collateral during handoff.
+
+### RefinanceCoordinator
+
+The coordinator owns:
+
+- immutable policy registration;
+- refinance requests and exact quote binding;
+- new-lender offer and borrower acceptance;
+- exact funding escrow;
+- cancellation/expiry/refund before execution;
+- atomic payoff, lien handoff, replacement activation, and borrower proceeds; and
+- terminal replay evidence.
+
+The coordinator is non-upgradeable in the first slice. It has no general token rescue
+or arbitrary target call. Exact balance-delta checks reject fee, rebase, or callback
+behavior. Terminal exact replay returns stored results; changed reuse reverts.
+
+### PositionManagerV2
+
+`PositionManagerV2` owns the replacement loan's senior and junior positions and exposes
+historical position-level proofs:
+
+```text
+positionOwnerAt(position_id, block_number)
+positionVotingPowerAt(position_id, block_number)
+positionClaimAt(position_id, block_number)
+totalVotingPowerAt(block_number)
+```
+
+It freezes eligible lender positions for one proposal:
+
+```text
+snapshot_id
+loan_id
+terms_version
+snapshot_block
+position_root
+eligible_weight
+position_count
+quorum_basis_points
+approval_basis_points
+policy_hash
+```
+
+Each accepted position proof binds the position ID, owner, tranche, voting weight, and
+snapshot root. One position can contribute its weight once. Transfers after the
+snapshot do not move or duplicate proposal voting power.
+
+### RestructuringController
+
+The controller stores the full proposal and consumes:
+
+- the immutable active amendment policy;
+- exact current terms and debt version;
+- an allowed modification mask and bounded values;
+- disclosure and accounting-delta hashes;
+- position snapshot;
+- borrower EIP-712 consent;
+- one vote per eligible position; and
+- review, voting, and execution deadlines.
+
+Execution calls the bound loan account with the exact approved amendment. The loan
+increments terms and debt versions atomically. The controller cannot change borrower,
+settlement asset, collateral recipient, lender-position identity, or an unlisted term.
+
+### InsuranceReserveVault
+
+The vault records exact custody by pool and asset. Deposits can be made only through
+registered funding and premium paths. Claim payment is callable only by the bound
+insurance manager for a stored approved claim and canonical beneficiary.
+
+The vault exposes no:
+
+- general withdrawal or rescue;
+- treasury transfer;
+- bridge backing;
+- swap or cross-asset conversion;
+- lending, staking, delegation, or liquidity provision;
+- arbitrary approval or call; or
+- administrator-selected claim recipient.
+
+Pool assets remain physically segregated from protocol operating balances. A logical
+reserve designation without custody is never counted.
+
+The only first-product pool maps to `3210 Product-Specific Risk Reserve`. The
+protocol-wide `3200 Insurance Reserve`, the UFT genesis allocation, bridge backing,
+treasury, and other product pools are neither counted nor callable. The 100,000,000-UFT
+allocation in tokenomics is not treated as funded or legally available capital.
+
+### ReservePolicy
+
+An immutable policy version binds:
+
+- pool and settlement asset;
+- token;
+- stress haircut;
+- target-confidence modeled-loss fixture;
+- maximum coverage percentage;
+- maximum single-policy limit;
+- aggregate commitment limit;
+- minimum governing reserve coverage ratio;
+- minimum commitment coverage ratio;
+- covered-event vocabulary;
+- deductible bounds;
+- premium requirements;
+- claim adjudicator set;
+- payout and recovery waterfall;
+- activation delay; and
+- expiry.
+
+An effective loosening receives a new version and delayed activation. Immediate strict
+reduction can block new coverage but cannot confiscate an existing approved claim.
+
+### InsuranceManager
+
+The manager stores coverage and claim state. Coverage cannot activate until:
+
+- exact premium funding is present;
+- reserve custody and stress capacity are sufficient;
+- the loan, beneficiary, asset, events, limits, deductible, percentage, policy, and
+  expiry are exact; and
+- active aggregate commitments remain within policy.
+
+Claim submission is non-economic. Approval requires a canonical loss, policy eligibility
+and two-of-three typed signatures. Payment uses the exact stored beneficiary and amount.
+Payout replay returns the same result without a second transfer.
+
+Claim submitter, adjudicators, reserve payment authority, and reconciler are distinct
+fixture roles. The reserve payer cannot be an adjudicator for the same claim. General
+governance, treasury, emergency, and accounting roles cannot approve a claim or select
+its beneficiary. A legacy recipient argument is accepted only when it equals the stored
+beneficiary.
+
+The loss submitter, write-off approver, recovery-receipt recorder, accounting poster,
+reconciler, and release assembler are also distinct fixture roles. A write-off approver
+cannot record or allocate a recovery for that loss, and a recovery recorder cannot
+approve its accounting or close its reconciliation difference. Phase 8 and Phase 9
+roles, signer domains, database schemas, object prefixes, broker subjects, and release
+evidence namespaces are disjoint.
+
+### GuaranteeVault
+
+The vault records synthetic capped commitments:
+
+```text
+guarantee_id
+loan_id
+loss_id
+guarantor
+asset_id
+maximum_amount
+covered_event_mask
+priority
+subrogation_policy_hash
+valid_from
+expires_at
+committed_amount
+paid_amount
+state
+```
+
+The commitment is memorandum authority only. `paid_amount` increases solely from exact
+token custody in the recovery vault.
+
+### RecoveryManager
+
+The manager owns one immutable loss identity and monotonic source totals:
+
+```text
+gross covered-loss exposure
+collateral credited
+guarantor credited
+insurance credited
+other recovery credited
+forgiveness recognized
+residual loss exposure
+realized loss recognized
+write-off recognized
+lender uncovered right
+product-pool subrogation right
+guarantor subrogation right
+later recovery allocated
+borrower surplus
+```
+
+It accepts actual registered-token receipts from the collateral, guarantor, or mocked
+off-chain receipt paths. Descriptive evidence is content-addressed and privacy-safe.
+Evidence without a token receipt cannot increment a recovery total.
+
+Expected loss, covered-loss exposure, approved claim payable, funded claim payment,
+residual exposure, realized loss, and write-off are never aliases. Realized loss is
+recognized only after contractual recovery sources are exhausted or an exact valid
+write-off is approved. Write-off requires separate authority and cannot exceed residual
+loss exposure. Later recovery remains valid after write-off and follows the stored
+waterfall.
+
+The first product's loss order is collateral, zero unsupported borrower reserve,
+actual funded guarantee, junior first-loss allocation, loan-specific coverage from the
+dedicated product pool, then residual lender loss. No protocol-wide insurance reserve
+or safety module participates. Later receipts restore uncovered lenders with senior
+priority, then replenish the product-pool subrogation right, then the guarantor
+subrogation right, and finally pay canonical borrower surplus.
+
+## State transitions
+
+### Quote
+
+```text
+NONE -> ISSUED -> CONSUMED
+               -> EXPIRED
+               -> INVALIDATED
+```
+
+`CONSUMED`, `EXPIRED`, and `INVALIDATED` are terminal. A new debt version requires a new
+quote nonce and ID.
+
+### Refinance
+
+```text
+NONE
+  -> REQUESTED
+  -> QUOTED
+  -> OFFERED
+  -> ACCEPTED
+  -> FUNDING_ESCROWED
+  -> EXECUTING
+  -> COMPLETED
+
+OFFERED -> REJECTED | EXPIRED | CANCELLED
+ACCEPTED -> EXPIRED | CANCELLED
+FUNDING_ESCROWED -> REFUNDABLE -> REFUNDED
+* -> DISPUTED only on retained safety contradiction
+```
+
+The local atomic execution cannot persist `EXECUTING`; it exists as a reentrancy guard
+within one transaction. Durable projections may observe the transaction result, never a
+half-committed EVM state.
+
+### Restructure
+
+```text
+NONE -> PROPOSED -> REVIEW -> VOTING -> APPROVED -> EXECUTING -> EFFECTIVE
+                    \          \-> REJECTED | EXPIRED | WITHDRAWN
+                     \-> REJECTED | EXPIRED | WITHDRAWN
+```
+
+### Coverage
+
+```text
+DRAFT -> PREMIUM_PENDING -> ACTIVE -> EXPIRED
+                                  \-> EXHAUSTED
+                                  \-> CANCELLED_FOR_NEW_LOSS_ONLY
+```
+
+Cancellation cannot erase an already covered event or approved claim.
+
+### Claim
+
+```text
+NONE -> SUBMITTED -> UNDER_REVIEW
+                      -> APPROVED -> PAYMENT_PENDING -> PAID
+                      -> PARTIALLY_APPROVED -> PAYMENT_PENDING -> PAID
+                      -> REJECTED | EXPIRED | DISPUTED
+```
+
+### Loss and recovery
+
+```text
+NONE
+  -> OPEN
+  -> RECOVERY_PENDING
+  -> LOSS_FINALIZED
+  -> WRITE_OFF_PENDING
+  -> WRITTEN_OFF
+  -> RECOVERY_OPEN
+  -> RECOVERED | CLOSED_WITH_UNRECOVERED_LOSS
+```
+
+Later recovery can append to a written-off loss without rewriting the write-off.
+
+## Closed modification vocabulary
+
+The restructuring payload is typed and additive:
+
+| Modification | Required bound |
+| --- | --- |
+| Maturity extension | maximum extension seconds |
+| Rate reduction | new rate not above active rate |
+| Payment holiday | maximum periods and exact schedule |
+| Fee waiver | exact amount not above fee due |
+| Penalty waiver | exact amount not above penalty due |
+| Arrears capitalization | exact amount and new principal cap |
+| Added collateral | exact registered collateral commitment |
+| Partial forgiveness | exact amount, supermajority, loss and position allocation |
+
+Each payload field participates in the proposal and accounting hashes. Unsupported
+modification bits fail.
+
+## Consent and signature domains
+
+Borrower consent:
+
+```text
+keccak256(abi.encode(
+  "UNIFIED_RESTRUCTURE_BORROWER_CONSENT_V1",
+  chainid,
+  restructuring_controller,
+  restructure_id,
+  loan_id,
+  active_terms_version,
+  amended_terms_hash,
+  disclosure_hash,
+  accounting_delta_hash,
+  consent_nonce,
+  valid_until
+))
+```
+
+Claim approval:
+
+```text
+keccak256(abi.encode(
+  "UNIFIED_CLAIM_ADJUDICATION_V1",
+  chainid,
+  insurance_manager,
+  claim_id,
+  coverage_id,
+  loss_id,
+  loss_state_version,
+  requested_amount,
+  adjudicated_amount,
+  evidence_hash,
+  policy_hash,
+  adjudication_nonce,
+  valid_until,
+  adjudicator_set_hash
+))
+```
+
+`approved_amount` is derived by the contract from the signed adjudicated amount and the
+current canonical approval cap; it is never an unsigned substitute for adjudicator
+judgment. A changed loss version invalidates the decision.
+
+Signatures use low-`s` ECDSA, canonical signer ordering, unique signers, explicit
+threshold, nonce, deadline, chain, contract, and policy. The local keys are fixtures,
+not production identity or legal consent.
+
+## Exact equations
+
+### Payoff
+
+```text
+gross due = principal + interest + fees + penalties
+net payoff = gross due - credits
+0 <= credits <= gross due
+```
+
+### Refinance
+
+```text
+funding escrow
+= old net payoff
+ + borrower proceeds
+ + explicitly disclosed refinance fee
+
+terminal coordinator balance = 0
+old outstanding debt = 0
+new activated principal = committed new principal
+enforceable senior lien count(collateral ID) = 1
+```
+
+### Voting
+
+```text
+quorum reached
+<=> voted weight * 10_000 >= eligible weight * quorum bps
+
+approved
+<=> support weight * 10_000 >= cast weight * approval bps
+```
+
+Every division uses cross-multiplication. No fractional vote rounding creates weight.
+
+### Protection
+
+```text
+eligible risk-adjusted assets
+= sum(floor(actual custody * immutable stress haircut bps / 10_000))
+
+unclaimed commitments
+= sum(policy remaining limits excluding approved unpaid amounts)
+
+encumbered capacity = unclaimed commitments + approved unpaid claims
+available underwriting capacity
+= max(eligible risk-adjusted assets - encumbered capacity, 0)
+
+unencumbered payout liquidity
+= actual settlement custody - all approved unpaid claims
+
+claim-specific payment liquidity for claim C
+= actual settlement custody - approved unpaid claims for every claim other than C
+
+reserve coverage ratio
+= eligible risk-adjusted assets / modeled covered loss at target confidence
+
+commitment coverage ratio
+= eligible risk-adjusted assets / max(encumbered capacity, 1)
+```
+
+Every stress haircut is an integer in `[0, 10_000]` and modeled covered loss is strictly
+positive. The canonical fixture therefore uses `64 * 10_000 / 10_000 = 64` eligible
+units before its 20-unit claim payment.
+
+Approval converts an unclaimed commitment to an approved payable in one transition, so
+the same amount is not present in both terms.
+
+For admission, a new or incremental commitment must be no greater than the
+pre-activation available underwriting capacity. After activation, encumbered capacity
+must not exceed eligible risk-adjusted assets and both policy ratio floors must hold.
+Later impairment blocks increases but cannot delete or subordinate an existing payable.
+
+### Claim
+
+```text
+eligible uncovered loss
+= max(
+     gross covered-loss exposure
+     - collateral
+     - guarantor paid
+     - insurance already paid
+     - other credited recovery,
+     0
+   )
+
+coverage-formula amount
+= max(eligible uncovered loss - deductible, 0)
+  * coverage bps / 10_000
+
+approval cap
+= min(
+     requested amount,
+     coverage-formula amount,
+     unclaimed policy limit,
+     unclaimed policy commitment,
+     claim-specific payment liquidity,
+     beneficiary covered unresolved entitlement
+   )
+
+approved amount = min(adjudicated amount, approval cap)
+payable amount = approved amount - paid amount
+payment permitted <=> claim-specific payment liquidity >= payable amount
+payment amount = payable amount when permitted; otherwise zero
+```
+
+The beneficiary entitlement is committed by the loss-position snapshot and waterfall.
+The first local product makes no partial claim transfer. Insufficient liquidity leaves
+the full amount in `PAYMENT_PENDING`; one nonce-bound exact payment consumes the
+decision. Rounding is down and any explicit residual remains visible.
+
+### Loss and later recovery
+
+```text
+residual loss exposure
+= gross covered-loss exposure
+ - all unique credited recovery sources
+ - explicit forgiveness already recognized
+
+realized loss is recognized only after recovery exhaustion or valid write-off
+write-off <= residual loss exposure
+
+later receipt
+= lender uncovered allocation
+ + product-pool subrogation allocation
+ + guarantor subrogation allocation
+ + borrower surplus
+```
+
+## Durable projection
+
+The local `resolution-coordinator` service is split into:
+
+```text
+quote/
+refinance/
+restructure/
+protection/
+claim/
+guarantee/
+recovery/
+accounting/
+reconciliation/
+store/
+cmd/server/
+cmd/local-worker/
+```
+
+Each package consumes typed canonical events and produces monotonic compare-and-set
+records. Restart rehydrates incomplete work from PostgreSQL and object evidence. The
+service does not hold a private key that can change loan, lien, reserve, or claim state.
+
+The foundation ledger gains corresponding `resolutionaccounting` and
+`resolutionreconciliation` packages. Accounting accepts only canonical terminal
+evidence and registered identities. It cannot originate claim or recovery rights.
+
+## Database authority
+
+Migrations `000013` through `000015` define owner-only tables and reviewed functions.
+Runtime roles receive `EXECUTE` only on the exact transitions they project.
+
+Required negative tests prove runtime identities cannot:
+
+- forge a quote or mark it consumed;
+- complete a refinance or move a lien;
+- insert consent, votes, approval, or effective amendment;
+- increase reserve custody or stress value;
+- approve or pay a claim;
+- record a guarantee payment without receipt;
+- write off more than remaining loss;
+- create or allocate a recovery receipt; or
+- insert, edit, or delete journal history.
+
+## Accounting composition
+
+The implementation must freeze the exact journal templates before use. Minimum batches:
+
+1. refinance funding escrow control;
+2. exact old payoff and old lender settlement;
+3. old claim extinguishment and new claim activation;
+4. borrower residual proceeds;
+5. refinance fee, if nonzero;
+6. restructuring waiver/capitalization/forgiveness;
+7. premium receipt and reserve restriction;
+8. coverage memorandum commitment;
+9. guarantor memorandum commitment and actual payment;
+10. approved claim payable;
+11. claim settlement and insurer subrogation;
+12. realized loss and write-off;
+13. later recovery receipt;
+14. lender, insurer, guarantor, and borrower-surplus allocation; and
+15. reconciliation differences.
+
+Every batch is denomination-balanced and evidence-linked. Control-account equality is
+tested separately from financial double-entry equality.
+
+Phase 9 adds `2370 Accrued Lender Interest Claims`, `2380 Refinance Funding Escrow
+Liability`, `2390 Refinance Refund Payable`, and `3210 Product-Specific Risk Reserve`.
+The implemented `2320 Funding Commitment Liabilities` meaning is preserved. The
+protocol-wide `3200 Insurance Reserve` is neither posted nor inferred from the UFT
+genesis allocation.
+
+## Reconciliation dimensions
+
+Each snapshot reports:
+
+- old and new debt components and versions;
+- quote and refinance status;
+- funding escrow and terminal recipients;
+- lien owner and collateral vault custody;
+- active terms and amendment version;
+- eligible, cast, support, and oppose weight;
+- reserve gross custody, stress value, commitments, payables, and capacity;
+- coverage remaining and claim states;
+- loss component totals;
+- guarantee paid and subrogation right;
+- insurance paid and subrogation right;
+- write-off and later receipts;
+- recovery allocations and borrower surplus;
+- journal and control-account totals; and
+- open difference owner, age, deadline, and evidence.
+
+Differences are never netted across unrelated loans, losses, pools, assets, parties, or
+accounting roles.
+
+## Release evidence and reset
+
+Phase 9 has one independent authoritative local manifest:
+
+```text
+protocol/deployments/local/phase9-release-evidence.json
+```
+
+It does not extend, import, or satisfy the Phase 8 manifest. The Phase 9 manifest is
+schema validated and binds `environment = "local"`, `contains_real_value = false`, the
+checked-out `source_commit`, a clean source tree at assembly, chain `31337`, exact
+contract addresses and code hashes, policy and role hashes, canonical events, migration
+and privilege checks, balanced journal identities, object and broker evidence,
+PostgreSQL checkpoints, reconciliation closure, restart/replay results, and reset
+scope. Required live sections cover the successful flow and every named negative,
+concurrency, and injected-failure scenario.
+
+The pre-reset verifier reads only this manifest and live local resources. The
+one-command reset deletes all Phase 9 contracts' generated manifests, local token
+balances, database rows and schemas, object prefixes, broker streams, cached fixture
+keys, and run artifacts within the reviewed workspace paths. The post-reset verifier
+tests absence directly and never attempts to read a deleted manifest.
+
+## Failure matrix
+
+| Failure | Required result |
+| --- | --- |
+| Debt changes after quote | quote cannot execute |
+| Competing refinance consumes quote | one completes; the other fails without value or lien effect |
+| New lender funds twice | exact replay only; no second escrow |
+| Token callback or transfer fee | entire transition reverts |
+| Old payoff fails | no lien or new-loan change |
+| Lien handoff fails | payoff and all other effects revert |
+| New activation fails | payoff, lien, funding, and proceeds revert |
+| Borrower proceeds fail | entire refinance reverts |
+| Offer expires before execution | exact lender refund remains available once |
+| Position transfers after snapshot | vote right remains bound to snapshot owner/proof |
+| Vote replays | no duplicate weight |
+| Borrower signature changes field | proposal cannot execute |
+| Reserve value falls below limit | new coverage blocked; existing claims remain visible |
+| Claim exceeds eligibility or capacity | approval/payment capped or rejected |
+| Adjudicator set substituted | claim cannot approve |
+| Guarantee promised but not paid | loss unchanged |
+| Same receipt submitted twice | exact replay; no second recovery |
+| Write-off and later recovery race | serializable totals and append-only history |
+| Database response lost | replay returns same terminal record and journals |
+| Process restarts | incomplete projections rehydrate without a new economic effect |
+
+## Invariant traceability
+
+Phase 9 test and release-evidence matrices map every applicable invariant in these
+families:
+
+```text
+INV-ACC-001 through INV-ACC-007
+INV-AUTH-001 through INV-AUTH-009
+INV-LOAN-001 through INV-LOAN-015
+INV-FUND-001 through INV-FUND-011
+INV-INT-001 through INV-INT-012
+INV-COL-001 through INV-COL-012
+INV-LIQ-005 through INV-LIQ-012
+INV-REFI-001 through INV-REFI-008
+INV-INS-001 through INV-INS-009
+REC-001 through REC-008
+LIVE-REFI-001
+```
+
+An invariant is never omitted merely because the local fixture does not exercise its
+production variant. `INV-INT-007` has an explicit no-live-benchmark non-applicability
+test; `INV-COL-009`, `INV-COL-010`, and `INV-COL-011` have explicit prohibited UFT,
+NFT, and off-chain-collateral path tests. Equivalent non-applicability evidence names
+the invariant, reason, enforcing prohibition, owner, and expiry.
+
+## Work packages
+
+### 9A — Boundary, schemas, and models
+
+- accept ADR 0019;
+- define data layouts, identities, policies, equations, and accounts;
+- add canonical Protobuf and deterministic four-language bindings;
+- build independent Python and TypeScript models/goldens;
+- register risks, assumptions, backlog, and Phase 8 residual records.
+
+### 9B — Payoff and refinance
+
+- implement debt account, quote engine, lien registry, replacement account, and
+  coordinator;
+- prove quote freshness and atomic refinance;
+- implement funding cancellation, expiry, refund, exact replay, and collision tests.
+
+### 9C — Restructuring and consent
+
+- implement policy, snapshot registry, controller, typed signatures, votes, and exact
+  amendment;
+- prove one-position-one-vote, policy caps, borrower consent, quorum, and no debt
+  disappearance.
+
+### 9D — Funded protection
+
+- implement reserve vault, reserve policy, coverage, premium, adjudicator set, claim,
+  payout, guarantee, and solvency metrics;
+- prove custody, segregation, stress haircuts, capacity, policy limits, eligibility,
+  payment conservation, and no duplicate claim.
+
+### 9E — Loss and recovery
+
+- implement canonical loss, actual receipt verification, write-off, subrogation, later
+  recovery, allocation, and borrower surplus;
+- add migrations, services, accounting, reconciliation, evidence, restart, and
+  least-privilege roles.
+
+### 9F — Simulations, release, and review
+
+- run stale quote, interruption, reentrancy, competing lien, consent replay, reserve
+  impairment, duplicate claim, guarantee failure, write-off, and recovery simulations;
+- run full foundation, schema, ABI, architecture, privilege, dependency, secret, local
+  flow, release-evidence, reset, and post-reset gates;
+- complete internal security review; and
+- complete a separate Phase 9 engineering exit PR.
+
+## Required acceptance tests
+
+The Phase 9 exit must prove:
+
+- payoff components and net amount match canonical debt at one version;
+- quote expiry and every state-changing debt event invalidate execution;
+- funding, payoff, lien handoff, activation, fee, and borrower proceeds are atomic;
+- old debt is zero and exactly one senior lien remains after refinance;
+- every pre-execution terminal refinance returns funding once without moving collateral;
+- restructuring uses the original amendment policy, complete disclosure, borrower
+  consent, immutable position snapshot, quorum, approval, and exact schedule;
+- duplicate, foreign, transferred, or post-snapshot positions cannot add weight;
+- debt reduction has explicit concession, settlement, claim, write-off, or forgiveness
+  accounting;
+- reserve assets are actually held, segregated, stress-valued, and not counted in
+  treasury, bridge, collateral, or another pool;
+- commitments and approved payables never exceed disclosed capacity;
+- claims cannot exceed eligible loss, deductible/percentage result, policy remaining,
+  approval, or payout liquidity;
+- claim payout uses the canonical beneficiary and creates exact subrogation;
+- a guarantor promise does not reduce loss before actual receipt;
+- collateral, guarantee, claim, write-off, and later recovery share one loss identity
+  and cannot be double counted;
+- later recovery allocates deterministically and reconciles to token custody and
+  journals;
+- stale writers, conflicting replay, response loss, restart, rollback, privilege, and
+  append-only tests pass;
+- executable or explicit non-applicability evidence covers the complete invariant
+  traceability matrix above, and randomized sequences preserve every stateful invariant
+  exercised by the product;
+- a clean checkout runs the complete nonzero local flow and resets with one command;
+  and
+- no real reserve, guarantee, recovery, provider, asset, identity, public network,
+  production credential, or real fund is involved.
+
+## Production boundary
+
+The implementation must reject non-loopback providers and any configuration marked as
+containing real value. Local fixtures may use unlocked Anvil accounts and deterministic
+test signers only. Evidence contains synthetic identifiers and content hashes only; raw
+personal data, production identity attributes, payment credentials, legal records, and
+external provider payloads are prohibited.
+
+No claim in this document is an actuarial, legal, accounting, solvency, custody,
+consumer-protection, or enforceability conclusion. The governing reserve coverage ratio
+uses a deterministic synthetic modeled-loss-at-target-confidence fixture; the separate
+commitment ratio uses only local commitments and payables. Neither is a regulatory,
+actuarial, or commercial capital measure.
+
+Phase 10 cannot treat this milestone as authority for governance, staking, liquidity,
+secondary markets, reserve investment, or socialized loss.

@@ -169,3 +169,11 @@ signing service, HSM/KMS custody, public testnet, mainnet, production key, real 
 real collateral, live loan, treasury asset, or real fund. Every such production
 decision requires separate architecture, threat-model, operational-control,
 key-ceremony, due-diligence, and independent-review authority.
+
+The accepted synthetic-local Phase 9 boundary is recorded in
+[ADR 0019](adr/0019-phase-9-resolution-protection-and-recovery-boundary.md) and the
+[resolution, protection, and recovery architecture](docs/architecture/phase-9-resolution-protection-recovery.md),
+with authoritative [data layouts](docs/architecture/phase-9-data-layouts.md) and the
+[Phase 9 backlog](docs/backlog/phase-9.csv). It authorizes engineering only; real
+reserves, insurance or guarantee promises, legal recovery, production providers,
+public networks, live loans, real assets, and real funds remain prohibited.

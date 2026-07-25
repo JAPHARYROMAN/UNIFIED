@@ -20,6 +20,7 @@ uv run python tools/check_privileged_surface.py
 uv run python tools/check_privacy_surface.py
 uv run python tools/check_payment_privacy_surface.py
 uv run python tools/check_phase8.py
+uv run python tools/check_phase9.py
 
 $solcTarget = Join-Path $workspace '.cache\solc'
 if (Test-Path -LiteralPath $solcTarget) {
