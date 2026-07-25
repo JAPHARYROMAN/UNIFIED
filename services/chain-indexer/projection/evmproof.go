@@ -51,6 +51,49 @@ type ReceiptInclusionProof struct {
 	ReceiptProofNodes     [][]byte
 }
 
+// AuthenticatedHeader carries one exact signed EVM header without receipt
+// payloads. It is used to prove the contiguous confirmation path from a
+// receipt block to the finality head.
+type AuthenticatedHeader struct {
+	HeaderRLP  []byte
+	ObservedAt time.Time
+	Signature  []byte
+}
+
+// VerifiedReceiptEvidence is the public, immutable projection of one receipt
+// after exact transaction- and receipt-trie inclusion and a contiguous signed
+// confirmation-header path have been verified.
+type VerifiedReceiptEvidence struct {
+	TransactionHash    string
+	TransactionIndex   uint64
+	BlockHash          string
+	BlockNumber        uint64
+	BlockTimestamp     uint64
+	ReceiptsRoot       string
+	InclusionProofHash string
+	FinalityHeadHash   string
+	FinalityHeadNumber uint64
+	Log                VerifiedReceiptLog
+}
+
+// ExpectedReceiptLog is the exact coordinator log expected at the
+// authenticated block-global log index.
+type ExpectedReceiptLog struct {
+	Address  string
+	Topics   []string
+	Data     []byte
+	LogIndex uint64
+}
+
+// VerifiedReceiptLog is the exact raw coordinator log decoded from the
+// MPT-verified receipt. LogIndex is derived from the prefix-complete receipts.
+type VerifiedReceiptLog struct {
+	Address  string
+	Topics   []string
+	Data     []byte
+	LogIndex uint64
+}
+
 type evmHeader struct {
 	number           uint64
 	hash             string
@@ -161,6 +204,15 @@ func verifyAuthenticatedBlock(
 	if err != nil || !ed25519.Verify(authority, digest[:], block.Signature) {
 		return evmHeader{}, nil, nil, ErrInvalidHeaderEvidence
 	}
+	for position := range block.Receipts {
+		// Keep the caller-provided slice canonical. Later exact-log selection
+		// walks this same slice to derive the block-global log index, so accepting
+		// a reordered prefix here would make trie verification and log selection
+		// disagree about which transaction occupies each position.
+		if block.Receipts[position].TransactionIndex != uint64(position) {
+			return evmHeader{}, nil, nil, ErrInvalidInclusionProof
+		}
+	}
 
 	proofs := append([]ReceiptInclusionProof(nil), block.Receipts...)
 	signatureHash := keccak(block.Signature)
@@ -254,6 +306,132 @@ func verifyAuthenticatedBlock(
 		}
 	}
 	return header, receipts, events, nil
+}
+
+// VerifyAuthenticatedReceiptEvidence applies the Phase 7C signed-header and
+// transaction/receipt MPT boundary to one target receipt. The receipt set must
+// be prefix-complete through targetIndex. Confirmation headers must be exactly
+// requiredDepth contiguous descendants of the receipt header.
+func VerifyAuthenticatedReceiptEvidence(
+	chainID uint64,
+	coordinator string,
+	authority ed25519.PublicKey,
+	block AuthenticatedBlock,
+	confirmationHeaders []AuthenticatedHeader,
+	targetIndex uint64,
+	requiredDepth uint64,
+	expectedLog ExpectedReceiptLog,
+) (VerifiedReceiptEvidence, error) {
+	if requiredDepth == 0 || uint64(len(confirmationHeaders)) != requiredDepth ||
+		targetIndex >= uint64(len(block.Receipts)) ||
+		targetIndex != uint64(len(block.Receipts)-1) ||
+		!canonicalAddress(expectedLog.Address) ||
+		expectedLog.Address != coordinator ||
+		len(expectedLog.Topics) == 0 {
+		return VerifiedReceiptEvidence{}, ErrInvalidHeaderEvidence
+	}
+	for _, topic := range expectedLog.Topics {
+		if !canonicalHash(topic) {
+			return VerifiedReceiptEvidence{}, ErrInvalidHeaderEvidence
+		}
+	}
+	header, receipts, _, err := verifyAuthenticatedBlock(
+		chainID,
+		coordinator,
+		authority,
+		block,
+	)
+	if err != nil || targetIndex >= uint64(len(receipts)) {
+		return VerifiedReceiptEvidence{}, err
+	}
+	var globalLogIndex uint64
+	var matched bool
+	var matchedLog VerifiedReceiptLog
+	for index, receiptProof := range block.Receipts {
+		status, logs, decodeErr := decodeReceipt(receiptProof.ReceiptRLP)
+		if decodeErr != nil {
+			return VerifiedReceiptEvidence{}, ErrInvalidInclusionProof
+		}
+		for _, log := range logs {
+			if uint64(index) == targetIndex &&
+				globalLogIndex == expectedLog.LogIndex &&
+				status == TransactionSucceeded &&
+				log.address == expectedLog.Address &&
+				equalStrings(log.topics, expectedLog.Topics) &&
+				bytes.Equal(log.data, expectedLog.Data) {
+				if matched {
+					return VerifiedReceiptEvidence{}, ErrInvalidInclusionProof
+				}
+				matched = true
+				matchedLog = VerifiedReceiptLog{
+					Address:  log.address,
+					Topics:   append([]string(nil), log.topics...),
+					Data:     append([]byte(nil), log.data...),
+					LogIndex: globalLogIndex,
+				}
+			}
+			globalLogIndex++
+		}
+		if uint64(index) == targetIndex {
+			break
+		}
+	}
+	if !matched {
+		return VerifiedReceiptEvidence{}, ErrInvalidInclusionProof
+	}
+	previous := header
+	var finalityHead evmHeader
+	previousObservedAt := block.ObservedAt.UTC()
+	for index, signed := range confirmationHeaders {
+		if signed.ObservedAt.UTC().Before(previousObservedAt) {
+			return VerifiedReceiptEvidence{}, ErrInvalidHeaderEvidence
+		}
+		next, _, _, verifyErr := verifyAuthenticatedBlock(
+			chainID,
+			coordinator,
+			authority,
+			AuthenticatedBlock{
+				HeaderRLP:  signed.HeaderRLP,
+				ObservedAt: signed.ObservedAt,
+				Signature:  signed.Signature,
+			},
+		)
+		if verifyErr != nil ||
+			next.number != previous.number+1 ||
+			next.parentHash != previous.hash {
+			return VerifiedReceiptEvidence{}, ErrInvalidHeaderEvidence
+		}
+		if index == len(confirmationHeaders)-1 {
+			finalityHead = next
+		}
+		previous = next
+		previousObservedAt = signed.ObservedAt.UTC()
+	}
+	target := receipts[targetIndex]
+	return VerifiedReceiptEvidence{
+		TransactionHash:    target.TransactionHash,
+		TransactionIndex:   target.TransactionIndex,
+		BlockHash:          target.BlockHash,
+		BlockNumber:        target.BlockNumber,
+		BlockTimestamp:     header.timestamp,
+		ReceiptsRoot:       target.ReceiptsRoot,
+		InclusionProofHash: target.InclusionProofHash,
+		FinalityHeadHash:   finalityHead.hash,
+		FinalityHeadNumber: finalityHead.number,
+		Log:                matchedLog,
+	}, nil
+}
+
+func equalStrings(left, right []string) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for index := range left {
+		if left[index] != right[index] {
+			return false
+		}
+	}
+	return true
 }
 
 func parseEVMHeader(encoded []byte) (evmHeader, error) {

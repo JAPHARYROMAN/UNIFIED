@@ -169,10 +169,30 @@ destination dispatch, finality, ordering, or exposure. Provider preference order
 operational data and is not part of the economic message identity; the approved provider
 set commitment is.
 
+The synthetic local worker materializes these authorities rather than hashing aliases:
+
+- `UNIFIED_LOCAL_CHAIN_CONFIGURATION_V1` commits the chain ID, version, coordinator,
+  finality verifier, observer authority, and activation block.
+- `UNIFIED_LOCAL_CROSS_CHAIN_POLICY_V1` is intentionally nonrecursive. It commits the
+  protocol and route identities, both chain-configuration hashes, both components, the
+  action family, message timeout, and recovery action and authorizer set. It excludes
+  the route, adapter-set, and finality-policy hashes.
+- `UNIFIED_LOCAL_FINALITY_POLICY_V1` commits the applicable chain and configuration,
+  source contract, confirmation depth, observer authority, signer-set hash, threshold
+  and version, the nonrecursive cross-chain policy, and action family.
+- `UNIFIED_LOCAL_ADAPTER_SET_POLICY_V1` commits the canonical bytewise-sorted set of
+  provider ID and authority pairs. Runtime A-to-B preference remains operational and
+  reordering the same approved set does not change economic identity.
+- `UNIFIED_LOCAL_ROUTE_REGISTRATION_V1` finally commits the complete durable route
+  registration, including both real finality-policy hashes and the real adapter-set
+  hash. The envelope and finality certificate bind this final route policy separately,
+  avoiding a route-to-finality hash cycle.
+
 ### `SyntheticFinalityVerifier`
 
 ```text
 signer-set hash -> immutable SignerSetVersion
+finality-policy hash -> immutable FinalityPolicyConfig
 SignerSetVersion {
   version
   threshold
@@ -181,10 +201,20 @@ SignerSetVersion {
   validUntil
   status
 }
+FinalityPolicyConfig {
+  source and destination chain/coordinator/component identities
+  evidence direction, chain version, and chain-configuration hash
+  action family and exact allowed-action bitmap
+  exact confirmation depth
+  observer-authority hash
+  signer-set hash and version
+}
 ```
 
 The verifier keeps no mutable success oracle. It validates an exact certificate against
-the route-pinned signer-set and policy versions.
+the route-pinned signer-set and policy versions. Policy registration resolves the
+evidence chain version from `ChainRegistry` and rejects a coordinator or configuration
+hash that does not match that append-only version.
 
 ### `CrossChainCoordinator`
 
@@ -213,10 +243,12 @@ recovery ID -> state
 original message ID -> recovery ID
 ```
 
-The request digest binds the original message ID and immutable envelope, route versions,
-assets, amount, source and destination state commitments, expiry, reason, recovery
-action, nonce, and authorizer-set version. A recovery record cannot directly write the
-coordinator result or tombstone mappings.
+The request digest binds the original message ID and immutable envelope, route policy,
+the exact original action-and-payload asset/amount commitment, source and destination
+state commitments, the predefined compensation-payload hash, expiry, reason, recovery
+action, nonce, and authorizer-set hash and version. The compensation call must match the
+signed payload hash before any external call. A recovery record cannot directly write
+the coordinator result or tombstone mappings.
 
 ## Satellite loan storage
 
@@ -489,9 +521,12 @@ crosschain.messages
 crosschain.message_transitions
 crosschain.source_proofs
 crosschain.finality_certificates
+crosschain.header_observations
 crosschain.provider_attempts
 crosschain.execution_results
 crosschain.acknowledgements
+crosschain.action_projections
+crosschain.recovery_authorizer_sets
 crosschain.recovery_requests
 crosschain.tombstones
 crosschain.compensations
@@ -499,6 +534,7 @@ crosschain.reorganizations
 crosschain.incidents
 crosschain.outbox
 crosschain.inbox
+ledger.crosschain_recovery_journal_links
 ```
 
 `crosschain.messages` includes:
@@ -549,10 +585,34 @@ original_message_id in terminal compensations
 ```
 
 State transitions are CAS updates of the current row plus an append-only transition
-insert in one transaction. Execution results, tombstones, and compensations have
-cross-table exclusion triggers so mutually exclusive terminal outcomes cannot coexist.
+insert in one transaction. Execution and tombstone writers take the same authoritative
+message-row lock before checking or inserting their mutually exclusive terminal facts.
+Compensations atomically post deterministic financial/control reversal journals and
+immutable recovery links.
 Inbox acquisition and the corresponding durable effect commit atomically. Outbox
 delivery is at-least-once; destination execution remains at-most-once.
+
+`crosschain.action_projections` binds canonical JSONB economics to the finalized
+execution effect commitment, retained destination proof/certificate pair, and
+acknowledgement. The observer can register an exact projection only after acknowledgement;
+runtime commit procedures may read it but cannot create or mutate it.
+
+Deep-reorganization persistence is a separate authenticated boundary. The observer role
+records immutable replacement and detected-head commitments, the finality-attester role
+records threshold certificates, and the reorganization-verifier role may call only the
+reviewed exact-replay reorganization procedure. That procedure verifies the pinned route
+and every affected orphaned finalized fact. The reorganization row persists sorted,
+index-aligned message IDs, proof IDs, and certificate IDs for every affected message;
+the singular proof and certificate columns are retained as legacy first-item anchors.
+All aligned facts must share the exact orphan block number/hash, observer authority, and
+finality policy. Each aligned certificate must also be the exact certificate retained
+by the message's `SOURCE_FINAL` transition or destination execution record; another
+valid signature subset for the same proof is not interchangeable. The procedure creates
+an incident under the canonical route ID and
+deterministic `crosschain-incident:<evidence-hash>` identity, then transitions the
+affected messages to `DISPUTED` atomically. A restart reconstructs the exact aligned
+evidence and incident rather than an existential summary. The runtime role cannot
+manufacture `DISPUTED` from an arbitrary hash.
 
 ### `000011_satellite_loan_accounting.sql`
 
@@ -564,6 +624,7 @@ crosschain.collateral_positions
 crosschain.disbursement_authorizations
 crosschain.disbursement_results
 crosschain.repayment_results
+crosschain.direct_home_repayment_evidence
 crosschain.direct_home_repayment_results
 crosschain.collateral_release_authorizations
 crosschain.collateral_release_results
@@ -577,6 +638,9 @@ constraints enforce one loan per collateral position, one disbursement, cumulati
 repayment not above principal for the first slice, and one release after the exact home
 authorization. A direct home repayment has a unique payment ID, changes only canonical
 loan debt and lender balance, and cannot consume a wrapped burn or change bridge backing.
+Its amount, asset, lender, transaction/log identity, and finality time must first exist
+in an immutable record written only by the finality-attester role; debt before/after is
+then derived under the locked loan row.
 
 The callable commit functions accept only the exact stored finalized chain projection.
 They derive recipients, assets, amounts, and journal roles from registered immutable
@@ -588,6 +652,7 @@ Tables:
 
 ```text
 crosschain.bridge_locks
+crosschain.bridge_exposure_policies
 crosschain.wrapped_mints
 crosschain.wrapped_burns
 crosschain.canonical_releases
@@ -607,22 +672,35 @@ amount equality, and the registered route, token, hub, and wrapped-token identit
 Exposure snapshots store the numerator, denominator, circulating-supply evidence, every
 applicable absolute cap, percentage ceiling, policy version, block identity, and
 calculated headroom. They are evidence and cannot override the hub's on-chain cap check.
+Exactly one exposure policy is active. Activating a new version deprecates the prior
+version under a table lock, and replaying an old version cannot reactivate it. Exposure
+used by `PARTIALLY_DISPOSED` and `DISPUTED` locks remains in every cap numerator until
+the corresponding canonical units are released, permanently burned, or compensated.
+
+Reconciliation difference insertion and run finalization serialize on the same run row.
+An exact difference or finalization replay returns the immutable record, while a new
+difference cannot enter after the run has closed.
 
 ## Least-privilege database boundary
 
-Migration 000010 creates or documents:
+Migration 000010 creates:
 
 - a `NOLOGIN` schema owner;
-- a runtime role with `CONNECT` and schema `USAGE`;
+- separate `NOLOGIN` runtime, observer, finality-attester, recovery-verifier, and
+  reorganization-verifier roles with `CONNECT` and schema `USAGE`;
+- a separate `NOLOGIN` home-accounting runtime that can read attested direct-home
+  evidence and execute only the corresponding commit procedure;
 - read access to immutable reference and projection tables;
-- execute access only to reviewed transition and accounting functions; and
+- execute access only to the reviewed functions owned by each role; and
 - no direct insert, update, delete, truncate, trigger-disable, role-grant, or DDL rights
   on authoritative message, result, tombstone, compensation, reconciliation, or ledger
   tables.
 
-Test fixtures prove the runtime role cannot forge a finalized proof, execution result,
-tombstone, bridge mint, loan repayment, reconciliation closure, or journal. Migration
-and break-glass roles are absent from service configuration.
+Test fixtures prove the runtime role cannot forge a finalized proof, header observation,
+threshold certificate, signed recovery request, authenticated reorganization, execution
+result, tombstone, bridge mint, loan repayment, reconciliation closure, or journal.
+Cross-role calls are denied, and migration and break-glass roles are absent from service
+configuration.
 
 ## Go service state
 
@@ -733,7 +811,9 @@ contract and token identities
 source balances and event totals
 destination balances and event totals
 ledger balances and control totals
+hub route obligations and separately quarantined unsolicited surplus
 pending message set
+recovery request, tombstone, compensation, and recovered counts
 calculated difference
 evidence hashes
 started/completed times
@@ -823,7 +903,11 @@ synthetic evidence. Production retention and jurisdictional deletion rules are d
 - one collateral position belongs to one loan for its lifetime;
 - one disbursement, repayment event, release, mint, burn, canonical release, permanent
   burn, compensation, or journal idempotency key creates at most one effect;
-- the hub token balance equals the sum of route escrow obligations;
+- the hub token balance equals route escrow obligations plus separately classified,
+  quarantined surplus that cannot authorize minting or release;
+- recovery counts preserve
+  `requests >= tombstones >= compensations >= recovered`, and every unequal stage pair
+  remains a visible owned reconciliation difference;
 - wrapped supply and escrow snapshots satisfy the route and global backing equations;
 - SQL and language encoders reproduce the Solidity digest golden vectors exactly;
 - runtime database credentials cannot manufacture terminal or financial authority;

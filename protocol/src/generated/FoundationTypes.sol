@@ -2,7 +2,7 @@
 pragma solidity 0.8.36;
 
 // Code generated from schemas/proto/unified/v1. DO NOT EDIT.
-// Source SHA-256: b5a4611707835a2c58ca73ff423c1a1d6d8c86ac3d8f6a9d3417b68fecc77b46
+// Source SHA-256: be288c30a0144cb44c19ef70b22e0e02c4e2d73023d5922fca06e5b9309c702d
 library FoundationTypes {
     enum CollateralKind { UNSPECIFIED, NATIVE, ERC20, ERC721, ERC1155 }
 
@@ -11,6 +11,22 @@ library FoundationTypes {
     enum LiquidationRoute { UNSPECIFIED, DIRECT, DUTCH_AUCTION, ENGLISH_AUCTION }
 
     enum LiquidationStatus { UNSPECIFIED, ACTIVE, SETTLED, FAILED, CANCELLED }
+
+    enum CrossChainMessageState { UNSPECIFIED, CREATED, SOURCE_FINALIZING, SOURCE_FINAL, SENT, RELAYED, VERIFIED, EXECUTED, ACK_PENDING, ACKNOWLEDGED, REJECTED, FAILED, EXPIRED, RECOVERY_PENDING, DESTINATION_TOMBSTONED, SOURCE_COMPENSATED, RECOVERED, DISPUTED }
+
+    enum CrossChainRecoveryState { UNSPECIFIED, REQUESTED, DESTINATION_CHECKED, TOMBSTONED, COMPENSATED, RECOVERED, DISPUTED }
+
+    enum RecoveryAction { UNSPECIFIED, TOMBSTONE_THEN_COMPENSATE }
+
+    enum RecoveryState { NONE_UNSPECIFIED, AUTHORIZED, DESTINATION_TOMBSTONED, SOURCE_COMPENSATED }
+
+    enum CrossChainActionType { UNSPECIFIED, CANONICAL_UFT_LOCKED_V1, WRAPPED_UFT_MINTED_V1, WRAPPED_UFT_BURNED_V1, CANONICAL_UFT_RELEASED_V1, SATELLITE_COLLATERAL_LOCKED_V1, HOME_DISBURSEMENT_AUTHORIZED_V1, SATELLITE_DISBURSEMENT_SETTLED_V1, SATELLITE_REPAYMENT_BURNED_V1, HOME_COLLATERAL_RELEASE_AUTHORIZED_V1, SATELLITE_COLLATERAL_RELEASED_V1, STATE_ACKNOWLEDGED_V1, CANCELLATION_REQUESTED_V1, DESTINATION_TOMBSTONED_V1, SOURCE_COMPENSATED_V1, SATELLITE_UFT_PERMANENT_BURNED_V1, ROUTE_GOVERNANCE_V1 }
+
+    enum CrossChainFailureClass { UNSPECIFIED, RETRYABLE_TRANSPORT, RETRYABLE_TARGET, REJECTED, EXPIRED, NONRETRYABLE, SAFETY_CONTRADICTION }
+
+    enum CrossChainGovernanceActionType { UNSPECIFIED, REGISTER_ROUTE_VERSION, DEPRECATE_ROUTE_VERSION, PAUSE_NEW_EXPOSURE, RESUME_NEW_EXPOSURE, LOWER_EXPOSURE_CAP, ACTIVATE_DELAYED_EXPOSURE_POLICY }
+
+    enum CrossChainSignerSetStatus { UNSPECIFIED, ACTIVE, DEPRECATED, COMPROMISED }
 
     enum PostingSide { UNSPECIFIED, DEBIT, CREDIT }
 
@@ -141,6 +157,595 @@ library FoundationTypes {
         bytes journalReference;
         bytes pricingEvidenceHash;
         int64 settledAt;
+    }
+
+    struct CrossChainDomain {
+        string chainId;
+        bytes coordinator;
+        bytes configurationHash;
+        bytes finalityVerifier;
+        uint64 version;
+    }
+
+    struct CrossChainLane {
+        bytes laneId;
+        string sourceChainId;
+        bytes sourceComponent;
+        string destinationChainId;
+        bytes destinationComponent;
+        bytes aggregateId;
+        string actionFamily;
+    }
+
+    struct CrossChainSignerSet {
+        bytes signerSetHash;
+        uint32 version;
+        uint32 threshold;
+        bytes[] signerAddresses;
+        bytes observerAuthorityHash;
+        int64 validFrom;
+        int64 validUntil;
+        CrossChainSignerSetStatus status;
+    }
+
+    struct CrossChainRoutePolicy {
+        Identifier routeId;
+        uint64 routeVersion;
+        CrossChainDomain sourceDomain;
+        CrossChainDomain destinationDomain;
+        CrossChainActionType[] allowedActions;
+        bytes adapterSetPolicyHash;
+        bytes sourceFinalityPolicyHash;
+        bytes destinationFinalityPolicyHash;
+        uint32 signerThreshold;
+        uint64 timeoutSeconds;
+        string routeAbsoluteCapUnits;
+        string chainAbsoluteCapUnits;
+        string adapterAbsoluteCapUnits;
+        bytes policyHash;
+        bytes sourceSignerSetHash;
+        uint32 sourceSignerSetVersion;
+        bytes destinationSignerSetHash;
+        uint32 destinationSignerSetVersion;
+    }
+
+    struct CrossChainMessageEnvelope {
+        uint32 schemaVersion;
+        bytes messageId;
+        bytes protocolId;
+        string sourceChainId;
+        bytes sourceCoordinator;
+        bytes sourceComponent;
+        string destinationChainId;
+        bytes destinationCoordinator;
+        bytes destinationComponent;
+        bytes laneId;
+        uint64 sourceNonce;
+        bytes aggregateId;
+        CrossChainActionType actionType;
+        bytes typedActionPayload;
+        bytes payloadHash;
+        int64 createdAt;
+        int64 expiresAt;
+        bytes routePolicyHash;
+        bytes adapterSetPolicyHash;
+        bytes sourceFinalityPolicyHash;
+        bytes destinationFinalityPolicyHash;
+        bytes correlationId;
+        bytes causationMessageId;
+        bytes supersededMessageId;
+        CanonicalUftLockPayload canonicalUftLock;
+        WrappedUftMintedPayload wrappedUftMinted;
+        WrappedUftBurnedPayload wrappedUftBurned;
+        CanonicalUftReleasedPayload canonicalUftReleased;
+        SatelliteCollateralLockedPayload satelliteCollateralLocked;
+        HomeDisbursementAuthorizedPayload homeDisbursementAuthorized;
+        SatelliteDisbursementSettledPayload satelliteDisbursementSettled;
+        SatelliteRepaymentBurnedPayload satelliteRepaymentBurned;
+        HomeCollateralReleaseAuthorizedPayload homeCollateralReleaseAuthorized;
+        SatelliteCollateralReleasedPayload satelliteCollateralReleased;
+        LoanCancellationRequestedPayload loanCancellationRequested;
+        SatelliteFundingCancelledPayload satelliteFundingCancelled;
+        SatelliteUftPermanentBurnedPayload satelliteUftPermanentBurned;
+    }
+
+    struct CrossChainSourceEventProof {
+        bytes messageId;
+        string sourceChainId;
+        bytes sourceContract;
+        bytes sourceBlockHash;
+        uint64 sourceBlockNumber;
+        int64 sourceBlockTimestamp;
+        bytes transactionHash;
+        uint64 transactionIndex;
+        bytes receiptRoot;
+        bytes receiptProofHash;
+        uint64 logIndex;
+        bytes eventHash;
+        bytes finalityHeadHash;
+        uint64 finalityHeadNumber;
+        uint64 requiredDepth;
+        bytes headerAuthorityHash;
+        bytes observerSignature;
+        bytes finalityPolicyHash;
+        bytes observerSignedHeaderCommitment;
+    }
+
+    struct CrossChainFinalityCertificate {
+        bytes messageId;
+        bytes sourceProofHash;
+        bytes signerSetHash;
+        uint32 signerSetVersion;
+        uint32 threshold;
+        bytes[] signatures;
+        int64 validFrom;
+        int64 validUntil;
+        bytes certificateHash;
+    }
+
+    struct CrossChainProviderDeliveryAttempt {
+        bytes messageId;
+        string providerId;
+        uint32 attemptNumber;
+        bytes serializedEnvelopeHash;
+        bytes sourceProofHash;
+        string status;
+        bytes providerReceiptHash;
+        int64 attemptedAt;
+    }
+
+    struct CrossChainExecutionResult {
+        bytes messageId;
+        bytes laneId;
+        uint64 sourceNonce;
+        CrossChainActionType actionType;
+        bytes target;
+        bytes resultHash;
+        string destinationChainId;
+        bytes transactionHash;
+        uint64 logIndex;
+        int64 executedAt;
+    }
+
+    struct CrossChainAcknowledgement {
+        bytes messageId;
+        bytes executionResultHash;
+        CrossChainSourceEventProof destinationExecutionProof;
+        CrossChainFinalityCertificate finalityCertificate;
+        int64 acknowledgedAt;
+    }
+
+    struct CrossChainTransitionEvidence {
+        bytes messageId;
+        CrossChainMessageState fromState;
+        CrossChainMessageState toState;
+        uint64 stateVersion;
+        CrossChainFailureClass failureClass;
+        bytes evidenceHash;
+        int64 occurredAt;
+    }
+
+    struct CrossChainCancellationRequest {
+        Identifier recoveryId;
+        bytes originalMessageId;
+        bytes immutableEnvelopeHash;
+        uint64 recoveryNonce;
+        string reasonCode;
+        bytes sourceStateCommitment;
+        bytes destinationStateCommitment;
+        string boundedUnits;
+        AssetId assetId;
+        uint64 routeVersion;
+        bytes authorizerSetHash;
+        bytes[] authorizerSignatures;
+        int64 requestedAt;
+    }
+
+    struct CrossChainRecoveryRequestV2 {
+        bytes messageId;
+        bytes envelopeHash;
+        bytes routePolicyHash;
+        bytes assetAmountCommitment;
+        bytes sourceStateCommitment;
+        bytes destinationStateCommitment;
+        bytes compensationPayloadHash;
+        uint64 messageExpiresAt;
+        uint64 recoveryNonce;
+        bytes reasonCode;
+        RecoveryAction action;
+        bytes authorizerSetHash;
+        uint32 authorizerSetVersion;
+    }
+
+    struct CrossChainRecoveryAuthorizationV2 {
+        bytes protocolId;
+        string sourceChainId;
+        bytes sourceCoordinator;
+        string destinationChainId;
+        bytes destinationCoordinator;
+        CrossChainRecoveryRequestV2 request;
+        bytes[] authorizerSignatures;
+        uint32 signerBitmap;
+    }
+
+    struct CrossChainRecoveryAuthorizerSetV2 {
+        uint32 version;
+        uint32 threshold;
+        bytes[] authorizers;
+        bytes setHash;
+    }
+
+    struct CrossChainRecoveryRecordV2 {
+        bytes recoveryId;
+        bytes requestDigest;
+        uint32 signerBitmap;
+        RecoveryState state;
+        bytes tombstoneEventHash;
+        bytes compensationPayloadHash;
+        bytes compensationResult;
+    }
+
+    struct CrossChainTombstone {
+        Identifier recoveryId;
+        bytes originalMessageId;
+        bytes immutableEnvelopeHash;
+        uint64 recoveryNonce;
+        string reasonCode;
+        bytes destinationStateCommitment;
+        bytes tombstoneHash;
+        int64 tombstonedAt;
+    }
+
+    struct CrossChainCompensation {
+        Identifier recoveryId;
+        bytes originalMessageId;
+        bytes tombstoneHash;
+        string compensationType;
+        AssetId assetId;
+        string units;
+        PartyId recipient;
+        bytes resultHash;
+        int64 compensatedAt;
+    }
+
+    struct CrossChainRecoveryRecord {
+        Identifier recoveryId;
+        bytes originalMessageId;
+        CrossChainRecoveryState state;
+        CrossChainCancellationRequest request;
+        CrossChainTombstone tombstone;
+        CrossChainCompensation compensation;
+        bytes supersedingMessageId;
+        uint64 version;
+    }
+
+    struct CanonicalUftLockPayload {
+        bytes lockId;
+        bytes loanId;
+        bytes canonicalToken;
+        bytes homeBridgeHub;
+        bytes wrappedToken;
+        bytes destinationRecipient;
+        string amount;
+    }
+
+    struct WrappedUftMintedPayload {
+        bytes loanId;
+        bytes lockId;
+        bytes homeLoanAccount;
+        bytes borrower;
+        bytes lender;
+        bytes wrappedToken;
+        string amount;
+        bytes policyHash;
+    }
+
+    struct WrappedUftBurnedPayload {
+        bytes burnId;
+        bytes backingRoutePolicyHash;
+        bytes canonicalToken;
+        bytes homeBridgeHub;
+        bytes wrappedToken;
+        bytes recipient;
+        string amount;
+    }
+
+    struct CanonicalUftReleasedPayload {
+        bytes burnId;
+        bytes canonicalToken;
+        bytes recipient;
+        string amount;
+        bytes wrappedBurnMessageId;
+    }
+
+    struct SatelliteCollateralLockedPayload {
+        bytes loanId;
+        bytes collateralId;
+        bytes homeLoanAccount;
+        bytes borrower;
+        bytes lender;
+        bytes collateralToken;
+        string amount;
+        bytes policyHash;
+    }
+
+    struct HomeDisbursementAuthorizedPayload {
+        bytes loanId;
+        bytes fundingLockId;
+        bytes homeLoanAccount;
+        bytes borrower;
+        bytes lender;
+        bytes wrappedToken;
+        string amount;
+        bytes policyHash;
+    }
+
+    struct SatelliteDisbursementSettledPayload {
+        bytes loanId;
+        bytes fundingLockId;
+        bytes homeLoanAccount;
+        bytes borrower;
+        bytes lender;
+        bytes wrappedToken;
+        string amount;
+        bytes policyHash;
+    }
+
+    struct SatelliteRepaymentBurnedPayload {
+        bytes burnId;
+        bytes loanId;
+        bytes paymentId;
+        bytes backingRoutePolicyHash;
+        bytes canonicalToken;
+        bytes homeBridgeHub;
+        bytes wrappedToken;
+        bytes lender;
+        string amount;
+    }
+
+    struct HomeCollateralReleaseAuthorizedPayload {
+        bytes loanId;
+        bytes collateralId;
+        bytes homeLoanAccount;
+        bytes borrower;
+        bytes lender;
+        bytes collateralToken;
+        string amount;
+        bytes policyHash;
+    }
+
+    struct SatelliteCollateralReleasedPayload {
+        bytes loanId;
+        bytes collateralId;
+        bytes homeLoanAccount;
+        bytes borrower;
+        bytes lender;
+        bytes collateralToken;
+        string amount;
+        bytes policyHash;
+    }
+
+    struct LoanCancellationAuthorization {
+        bytes loanRouter;
+        bytes loanId;
+        bytes fundingLockId;
+        bytes disbursementMessageId;
+        bytes disbursementTombstoneHash;
+        string amount;
+        bytes policyHash;
+        uint64 authorizationNonce;
+        uint64 validUntil;
+        bytes reasonCode;
+        bytes authorizerSetHash;
+        uint32 authorizerSetVersion;
+    }
+
+    struct LoanCancellationRequestedPayload {
+        bytes cancellationId;
+        bytes loanId;
+        bytes fundingLockId;
+        bytes disbursementMessageId;
+        bytes disbursementTombstoneHash;
+        bytes homeLoanAccount;
+        bytes lender;
+        bytes wrappedToken;
+        string amount;
+        bytes policyHash;
+        bytes reasonCode;
+    }
+
+    struct SatelliteFundingCancelledPayload {
+        bytes cancellationId;
+        bytes loanId;
+        bytes fundingLockId;
+        bytes disbursementMessageId;
+        bytes disbursementTombstoneHash;
+        bytes escrowBurnResultHash;
+        bytes homeLoanAccount;
+        bytes lender;
+        bytes wrappedToken;
+        string amount;
+        bytes policyHash;
+    }
+
+    struct SatelliteUftPermanentBurnedPayload {
+        bytes burnId;
+        bytes backingRoutePolicyHash;
+        bytes canonicalToken;
+        bytes homeBridgeHub;
+        bytes wrappedToken;
+        string amount;
+    }
+
+    struct CrossChainLoanTerms {
+        LoanId loanId;
+        PartyId borrower;
+        PartyId lender;
+        AssetId principalAssetId;
+        string principalUnits;
+        AssetId collateralAssetId;
+        string collateralUnits;
+        bytes homeLoan;
+        bytes satelliteComponent;
+        bytes immutablePolicyHash;
+        uint64 policyVersion;
+    }
+
+    struct CrossChainLoanState {
+        CrossChainLoanTerms terms;
+        string outstandingPrincipalUnits;
+        string lifecycleState;
+        uint64 stateNonce;
+        bytes disbursementMessageId;
+        bytes[] repaymentMessageIds;
+        bytes collateralReleaseMessageId;
+        bytes stateCommitment;
+    }
+
+    struct SatelliteCollateralPosition {
+        Identifier positionId;
+        LoanId loanId;
+        PartyId borrower;
+        AssetId assetId;
+        string units;
+        bytes satelliteVault;
+        string status;
+        bytes custodyCommitment;
+    }
+
+    struct BridgeExposureSnapshot {
+        Identifier routeId;
+        uint64 policyVersion;
+        string routeEscrowUnits;
+        string chainEscrowUnits;
+        string adapterEscrowUnits;
+        string aggregateEscrowUnits;
+        string circulatingSupplyReferenceUnits;
+        bytes circulatingSupplyEvidenceHash;
+        string routeAbsoluteCapUnits;
+        string chainAbsoluteCapUnits;
+        string adapterAbsoluteCapUnits;
+        string aggregateAbsoluteCapUnits;
+        uint32 routePercentageBasisPoints;
+        uint32 aggregatePercentageBasisPoints;
+        bytes blockHash;
+        uint64 blockNumber;
+    }
+
+    struct WrappedUftBackingSnapshot {
+        Identifier routeId;
+        AssetId canonicalUftAssetId;
+        AssetId wrappedUftAssetId;
+        string canonicalEscrowUnits;
+        string wrappedSupplyUnits;
+        string pendingMintUnits;
+        string pendingBurnUnits;
+        bytes homeBlockHash;
+        bytes satelliteBlockHash;
+        bytes evidenceHash;
+    }
+
+    struct CrossChainLedgerPostingIntent {
+        Identifier postingIntentId;
+        bytes messageId;
+        string sourceChainId;
+        string destinationChainId;
+        Identifier routeId;
+        uint64 routeVersion;
+        LoanId loanId;
+        string entryType;
+        AssetId assetId;
+        string units;
+        string[] debitAccountCodes;
+        string[] creditAccountCodes;
+        bytes sourceEvidenceHash;
+        string idempotencyKey;
+        Identifier correlationId;
+        bytes causationMessageId;
+        int64 effectiveAt;
+    }
+
+    struct CrossChainReconciliationDifference {
+        Identifier differenceId;
+        Identifier runId;
+        string dimension;
+        string reasonCode;
+        AssetId assetId;
+        string expectedUnits;
+        string observedUnits;
+        bytes messageId;
+        LoanId loanId;
+        string severity;
+        string owner;
+        int64 detectedAt;
+        int64 resolutionDeadline;
+        bytes evidenceHash;
+        string status;
+    }
+
+    struct CrossChainReconciliationRun {
+        Identifier runId;
+        string homeChainId;
+        string satelliteChainId;
+        uint64 routeVersion;
+        bytes homeHeadHash;
+        bytes satelliteHeadHash;
+        WrappedUftBackingSnapshot backing;
+        BridgeExposureSnapshot exposure;
+        CrossChainReconciliationDifference[] differences;
+        int64 startedAt;
+        int64 completedAt;
+        string status;
+    }
+
+    struct CrossChainGovernanceAction {
+        Identifier governanceActionId;
+        CrossChainGovernanceActionType actionType;
+        Identifier routeId;
+        uint64 currentRouteVersion;
+        uint64 proposedRouteVersion;
+        bytes exactPayloadHash;
+        bytes authoritySetHash;
+        int64 executableAfter;
+        int64 expiresAt;
+        bytes supersededPolicyHash;
+    }
+
+    struct CrossChainReorganizationEvidence {
+        string chainId;
+        bytes orphanedBlockHash;
+        bytes replacementBlockHash;
+        bytes detectedHeadHash;
+        uint64 blockNumber;
+        uint64 detectedHeadNumber;
+        bytes[] affectedMessageIds;
+        bytes evidenceHash;
+        int64 detectedAt;
+        CrossChainSourceEventProof orphanedSourceProof;
+        bytes orphanedEventEvidenceHash;
+        uint64 replacementBlockNumber;
+        bytes replacementHeaderAuthorityHash;
+        bytes replacementObserverSignedHeaderCommitment;
+        bytes replacementObserverSignature;
+        bytes detectedHeadHeaderAuthorityHash;
+        bytes detectedHeadObserverSignedHeaderCommitment;
+        bytes detectedHeadObserverSignature;
+        bytes finalityPolicyHash;
+        CrossChainFinalityCertificate orphanedFinalityCertificate;
+        CrossChainSourceEventProof[] affectedOrphanedSourceProofs;
+        bytes[] affectedOrphanedEventEvidenceHashes;
+        CrossChainFinalityCertificate[] affectedOrphanedFinalityCertificates;
+    }
+
+    struct CrossChainIncident {
+        Identifier incidentId;
+        Identifier routeId;
+        bytes[] affectedMessageIds;
+        string reasonCode;
+        string owner;
+        bytes evidenceHash;
+        int64 openedAt;
+        string status;
     }
 
     struct CommandEnvelope {

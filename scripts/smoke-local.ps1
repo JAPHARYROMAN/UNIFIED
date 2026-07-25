@@ -8,8 +8,8 @@ $migrationRoot = (Resolve-Path -LiteralPath (
 )).Path
 
 $running = docker compose --project-name unified-local --file $composeFile ps --status running --quiet
-if (($running | Measure-Object).Count -lt 5) {
-    throw 'The five unified-local services are not all running.'
+if (($running | Measure-Object).Count -lt 8) {
+    throw 'The eight unified-local services are not all running.'
 }
 
 $provider = Invoke-RestMethod -Uri 'http://127.0.0.1:58080/v1/payments/mock-payment-001'
@@ -17,15 +17,71 @@ if ($provider.contains_real_value -ne $false -or $provider.finality_status -ne '
     throw 'Mock provider returned unsafe or unexpected evidence.'
 }
 
-$topics = docker compose --project-name unified-local --file $composeFile exec -T redpanda `
-    rpk topic list
+$homeChain = docker compose --project-name unified-local --file $composeFile exec -T `
+    home-anvil cast chain-id --rpc-url http://127.0.0.1:8545
+$satelliteChain = docker compose --project-name unified-local --file $composeFile exec -T `
+    satellite-anvil cast chain-id --rpc-url http://127.0.0.1:8545
+if ($homeChain.Trim() -ne '31337' -or $satelliteChain.Trim() -ne '31338') {
+    throw "Unexpected local chain domains: home=$homeChain, satellite=$satelliteChain"
+}
+
+$transportBody = @{
+    message_id = '0xphase8localsynthetic'
+    contains_real_value = $false
+} | ConvertTo-Json -Compress
+$providerA = Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:58081/v1/messages' `
+    -ContentType 'application/json' -Body $transportBody
+$providerB = Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:58082/v1/messages' `
+    -ContentType 'application/json' -Body $transportBody
+if (
+    $providerA.authority -ne 'TRANSPORT_ONLY' -or
+    $providerB.authority -ne 'TRANSPORT_ONLY' -or
+    $providerA.contains_real_value -ne $false -or
+    $providerB.contains_real_value -ne $false
+) {
+    throw 'Mock cross-chain providers asserted authority or real value.'
+}
+$retryable = Invoke-WebRequest -Method Post `
+    -Uri 'http://127.0.0.1:58081/v1/faults/retryable' `
+    -ContentType 'application/json' -Body $transportBody -SkipHttpErrorCheck
+if ($retryable.StatusCode -ne 503) {
+    throw 'Provider A did not expose the bounded retryable-failure fixture.'
+}
+$failover = Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:58082/v1/messages' `
+    -ContentType 'application/json' -Body $transportBody
+$duplicate = Invoke-RestMethod -Method Post `
+    -Uri 'http://127.0.0.1:58082/v1/faults/duplicate' `
+    -ContentType 'application/json' -Body $transportBody
+$fabricated = Invoke-RestMethod -Method Post `
+    -Uri 'http://127.0.0.1:58082/v1/faults/fabricated-authority' `
+    -ContentType 'application/json' -Body $transportBody
+if (
+    $failover.provider -ne 'mock-bridge-provider-b' -or
+    $duplicate.delivery_status -ne 'DUPLICATE' -or
+    $duplicate.authority -ne 'TRANSPORT_ONLY' -or
+    $fabricated.authority -ne 'FABRICATED_FINALITY'
+) {
+    throw 'Cross-chain failover, duplicate, or fabricated-authority fixtures drifted.'
+}
+
+$topics = (
+    docker compose --project-name unified-local --file $composeFile exec -T redpanda `
+        rpk topic list
+) -join "`n"
 if ($topics -notmatch 'unified\.foundation\.events') {
     docker compose --project-name unified-local --file $composeFile exec -T redpanda `
         rpk topic create unified.foundation.events | Out-Null
 }
+if ($topics -notmatch 'unified\.crosschain\.messages') {
+    docker compose --project-name unified-local --file $composeFile exec -T redpanda `
+        rpk topic create unified.crosschain.messages | Out-Null
+}
 '{"event_id":"event-001","event_type":"FoundationJournalPosted"}' |
     docker compose --project-name unified-local --file $composeFile exec -T redpanda `
         rpk topic produce unified.foundation.events | Out-Null
+'{"message_id":"0xphase8localsynthetic","state":"SENT","contains_real_value":false}' |
+    docker compose --project-name unified-local --file $composeFile exec -T redpanda `
+        rpk topic produce unified.crosschain.messages | Out-Null
 
 Get-ChildItem -LiteralPath $migrationRoot -Filter '*.sql' |
     Sort-Object Name |
@@ -34,6 +90,30 @@ Get-ChildItem -LiteralPath $migrationRoot -Filter '*.sql' |
             docker compose --project-name unified-local --file $composeFile exec -T postgres `
                 psql --set ON_ERROR_STOP=1 --username unified_local --dbname unified_local | Out-Null
     }
+
+$phase8MigrationTest = Join-Path $migrationRoot `
+    'tests\000010_000012_crosschain_foundation_test.sql'
+Get-Content -LiteralPath $phase8MigrationTest -Raw |
+    docker compose --project-name unified-local --file $composeFile exec -T postgres `
+        psql --set ON_ERROR_STOP=1 --username unified_local --dbname unified_local | Out-Null
+
+$priorCoordinatorDatabaseUrl = $env:UNIFIED_CROSSCHAIN_DATABASE_URL
+try {
+    $env:UNIFIED_CROSSCHAIN_DATABASE_URL = `
+        'postgres://unified_local:local-only-not-a-secret@127.0.0.1:55432/unified_local?sslmode=disable'
+    $coordinatorStatus = go run ./services/cross-chain-coordinator/cmd/server `
+        --mode smoke --timeout 10s
+    if ($coordinatorStatus -notmatch '"repository":"crosschain"' -or `
+        $coordinatorStatus -notmatch '"status":"ok"') {
+        throw "Cross-chain coordinator did not rehydrate its SQL surface: $coordinatorStatus"
+    }
+} finally {
+    if ($null -eq $priorCoordinatorDatabaseUrl) {
+        Remove-Item Env:UNIFIED_CROSSCHAIN_DATABASE_URL -ErrorAction SilentlyContinue
+    } else {
+        $env:UNIFIED_CROSSCHAIN_DATABASE_URL = $priorCoordinatorDatabaseUrl
+    }
+}
 
 $sampleSql = @'
 BEGIN;
@@ -155,4 +235,4 @@ if ($counts.Trim() -ne '1,1,2,1,2,1') {
     throw "Unexpected foundation and payment evidence counts: $counts"
 }
 
-Write-Output 'Local smoke passed: command, event, payment lifecycle, balanced journals, and reconciliation persisted.'
+Write-Output 'Local smoke passed: two chains, providers, cross-chain SQL/runtime, command, event, payment lifecycle, balanced journals, and reconciliation.'

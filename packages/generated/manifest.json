@@ -6,6 +6,10 @@
       "sha256": "cefa7e927d0acd0528c222ab76bea72b206fe4752d22f48a3ad594cbd506f56d"
     },
     {
+      "path": "packages/generated/go/unified/v1/crosschain.pb.go",
+      "sha256": "49cc926b603b5b902c45af28378ebf1eef46adb4489ce2cfb75f087e24c9e777"
+    },
+    {
       "path": "packages/generated/go/unified/v1/envelopes.pb.go",
       "sha256": "59353fb11be90ee6ca2279b223f686640c53054865151a30b96891eda157e94a"
     },
@@ -48,6 +52,10 @@
     {
       "path": "packages/generated/typescript/unified/v1/collateral_pb.ts",
       "sha256": "9364c3fb8296c231f13322af956783f252b6e48ec78b4cb89e70e9b58a25e28e"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/crosschain_pb.ts",
+      "sha256": "c4a12715ea99e04e99afd03ebd665549dde816bca17e9c9188a3e3cd53c0cf4d"
     },
     {
       "path": "packages/generated/typescript/unified/v1/envelopes_pb.ts",
@@ -102,6 +110,10 @@
       "sha256": "d371683888bc408075b1920860ea79daa8cbf6fe2e6199d4b0f67e84add7c265"
     },
     {
+      "path": "packages/generated/python/unified/v1/crosschain_pb2.py",
+      "sha256": "09a4cb0b084fc11793287664b31256522c335b4013d05333904664623f588249"
+    },
+    {
       "path": "packages/generated/python/unified/v1/envelopes_pb2.py",
       "sha256": "57a9b08d1f101d231d387fe40c9167b5af37ea5535242aed4669dfe0e1d4d271"
     },
@@ -143,7 +155,7 @@
     },
     {
       "path": "protocol/src/generated/FoundationTypes.sol",
-      "sha256": "2e20a740d4547441189d3984d78674da50f7d55f795ca4743b352b21cf260f77"
+      "sha256": "ab09e52e48e9c4ada54cbf66733a540233854330eaf53f439e6acde5c0d92c54"
     }
   ]
 }

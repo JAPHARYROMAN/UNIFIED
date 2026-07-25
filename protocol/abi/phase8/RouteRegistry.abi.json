@@ -1,0 +1,826 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "roleManager_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ChainRegistry",
+        "name": "chainRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IEmergencyController",
+        "name": "emergencyController_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidRoute",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RouteAlreadyDeprecated",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unauthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UnauthorizedRoutePause",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnknownRoute",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "deprecatedAt",
+        "type": "uint64"
+      }
+    ],
+    "name": "RouteDeprecated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "paused",
+        "type": "bool"
+      }
+    ],
+    "name": "RoutePauseChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "sourceChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sourceComponent",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "destinationComponent",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "actionFamily",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "allowedActionsBitmap",
+        "type": "uint32"
+      }
+    ],
+    "name": "RouteRegistered",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "BRIDGE_EXIT_ACTION_MASK",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "COLLATERAL_RELEASE_ACTION_MASK",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "DISBURSEMENT_ACTION_MASK",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "LOCK_ACTION_MASK",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "REPAYMENT_ACTION_MASK",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "REPORT_ACTION_MASK",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SUPPORTED_ACTIONS_MASK",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "chainRegistry",
+    "outputs": [
+      {
+        "internalType": "contract ChainRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "deprecateRoute",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "emergencyController",
+    "outputs": [
+      {
+        "internalType": "contract IEmergencyController",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "sourceChainVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "destinationChainVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceComponentCodeHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationComponentCodeHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "actionFamily",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "allowedActionsBitmap",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterCodeHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterSetPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceSignerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationSignerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "absoluteCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chainCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "adapterCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "activatedAt",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct RouteRegistry.RouteConfig",
+        "name": "config",
+        "type": "tuple"
+      }
+    ],
+    "name": "hashRoute",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "enum CrossChainTypes.CrossChainActionType",
+        "name": "actionType",
+        "type": "uint8"
+      }
+    ],
+    "name": "isActionAllowed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "isAvailableForNewMessage",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "messageCreatedAt",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bool",
+        "name": "allowPausedExit",
+        "type": "bool"
+      }
+    ],
+    "name": "isExecutable",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "sourceChainVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "destinationChainVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceComponentCodeHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationComponentCodeHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "actionFamily",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "allowedActionsBitmap",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterCodeHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterSetPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceSignerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationSignerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "absoluteCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chainCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "adapterCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "activatedAt",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct RouteRegistry.RouteConfig",
+        "name": "config",
+        "type": "tuple"
+      }
+    ],
+    "name": "registerRoute",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "roleManager",
+    "outputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "route",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint32",
+                "name": "sourceChainVersion",
+                "type": "uint32"
+              },
+              {
+                "internalType": "uint32",
+                "name": "destinationChainVersion",
+                "type": "uint32"
+              },
+              {
+                "internalType": "uint256",
+                "name": "sourceChainId",
+                "type": "uint256"
+              },
+              {
+                "internalType": "address",
+                "name": "sourceCoordinator",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "sourceComponent",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "sourceComponentCodeHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint256",
+                "name": "destinationChainId",
+                "type": "uint256"
+              },
+              {
+                "internalType": "address",
+                "name": "destinationCoordinator",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "destinationComponent",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "destinationComponentCodeHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "actionFamily",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint32",
+                "name": "allowedActionsBitmap",
+                "type": "uint32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "adapterId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "adapterCodeHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "adapterSetPolicyHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "sourceFinalityPolicyHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "destinationFinalityPolicyHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "sourceSignerSetHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "destinationSignerSetHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint256",
+                "name": "absoluteCap",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "chainCap",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "adapterCap",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint64",
+                "name": "activatedAt",
+                "type": "uint64"
+              }
+            ],
+            "internalType": "struct RouteRegistry.RouteConfig",
+            "name": "config",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint64",
+            "name": "deprecatedAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "internalType": "enum CrossChainTypes.RegistryStatus",
+            "name": "status",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct RouteRegistry.RouteVersion",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bool",
+        "name": "paused",
+        "type": "bool"
+      }
+    ],
+    "name": "setRoutePaused",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

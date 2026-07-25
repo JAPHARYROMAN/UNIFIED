@@ -227,9 +227,13 @@ signer-set hash and version
 ```
 
 The destination `SyntheticFinalityVerifier` verifies the threshold, signer uniqueness,
-validity interval, certificate domain, and exact route policy before the coordinator can
-consume a message. A signer cannot substitute a different source contract, destination,
-action, aggregate, payload, nonce, or proof commitment.
+validity interval, certificate domain, and append-only route-pinned finality policy
+before the coordinator can consume a message. That policy resolves the evidence chain
+version from `ChainRegistry` and commits its configuration hash, both endpoint
+coordinators and components, action family and bitmap, exact confirmation depth,
+observer authority, and signer-set hash and version. A signer cannot substitute a
+shallower depth, different source contract, destination, action, aggregate, payload,
+nonce, or proof commitment.
 
 The Ed25519 observer and two-of-three ECDSA signer set are synthetic local trust roots.
 They are not EVM consensus verification, a light client, a zero-knowledge proof, or a
@@ -460,6 +464,13 @@ canonical pending/escrow control journal reverses, for the exact canonical units
 journal balances within one asset identity. Issuance and redemption are supply-control
 events, not revenue.
 
+The database never accepts these economic values merely because a commit caller supplied
+them. Each cross-chain commit first matches an immutable action projection whose hash is
+the finalized execution effect commitment and whose proof/certificate pair is the one
+retained by the acknowledgement. The business fact, its balanced journal pair, and its
+immutable link row are one database transaction. Exact replay verifies and returns that
+same set; changed economics or absent evidence fail without a partial posting.
+
 Satellite collateral and settlement balances use control/custody journals tied to the
 exact finalized vault event. Loan receivable reduction occurs only from the finalized
 `SATELLITE_REPAYMENT_BURNED_V1` effect and the same atomic home transaction that releases
@@ -467,13 +478,22 @@ exact backing to the canonical lender. Existing principal receivable and lender
 claim/payable accounts remain authoritative; Phase 8 does not invent interest, FX, fee,
 or reserve economics.
 
+A direct-home repayment uses no bridge message, but it is not caller-authoritative: a
+separate finality-attester must first append the exact home transaction/log, asset,
+amount, lender, evidence hash, and finality time. The commit locks the immutable loan,
+derives debt before/after, and atomically posts the debt reduction. A compensation
+similarly posts deterministic financial and control reversals linked to its signed
+recovery evidence.
+
 Continuous reconciliation compares:
 
-- home hub token balance to the sum of route escrow obligations;
+- home hub token balance to route escrow obligations plus separately quarantined,
+  non-obligation surplus;
 - route escrow to wrapped supply and pending finalized actions;
 - canonical UFT supply to genesis issuance less canonical burns;
 - satellite `WrappedUFT.totalSupply()` to issuance/burn events and ledger controls;
-- home and satellite message state, nonces, results, acknowledgements, and tombstones;
+- home and satellite message state, nonces, results, acknowledgements, and the exact
+  recovery request -> tombstone -> compensation -> recovered count progression;
 - satellite custody token balances to exclusive collateral positions;
 - settlement-vault disbursement deltas, wrapped burn/supply deltas, and home lender
   receipts; and
@@ -506,10 +526,12 @@ These facts are mutually exclusive in destination storage. A refund, escrow unlo
 collateral change, or balance restoration is therefore impossible on both branches.
 
 Recovery authorization is two-of-three in the local environment and binds the original
-message, amount, assets, source and destination state commitments, route versions,
-expiry, reason, and recovery action. It can request cancellation or submit independently
-verified destination evidence; it cannot declare non-execution without a finalized
-destination tombstone.
+message, its exact action-and-payload asset/amount commitment, source and destination
+state commitments, the hash of the one predefined compensation payload, route policy,
+expiry, nonce, reason, action, and authorizer-set hash and version. The caller cannot
+choose or change a compensation effect after signatures exist. The authorization can
+request cancellation or submit independently verified destination evidence; it cannot
+declare non-execution without a finalized destination tombstone.
 
 If the destination is unavailable, the verifier threshold is suspected compromised, or
 the two domains disagree, value stays frozen and the workflow enters `DISPUTED`. An
@@ -520,9 +542,19 @@ binds the superseded message. There is no unilateral operator unlock, message de
 arbitrary recipient, or general rescue function.
 
 A deep reorganization after a finalized action freezes the affected lane and exposure,
-records the full orphan/replacement proof, opens an incident, and posts linked accounting
-opposites only when the canonical economic effect is actually absent. It never
-automatically mints, releases, refunds, reopens debt, or releases collateral.
+records sorted and index-aligned message IDs, route-pinned orphan
+transaction/receipt/log proof IDs, and threshold-certificate IDs for every affected
+message, plus replacement and detected-head observer commitments. Legacy singular proof
+and certificate fields remain first-item anchors. Every aligned fact must share the
+orphan block number/hash, observer authority, and finality policy. The certificate ID
+must be the exact evidence retained when that source or destination fact became final;
+an alternate valid certificate for the same proof is rejected. The incident uses the
+trusted canonical route ID and deterministic
+`crosschain-incident:<evidence-hash>` identity. Restart reconstruction must reproduce
+the exact evidence arrays and incident fields. Accounting opposites post only when the
+canonical economic effect is actually absent. The runtime cannot enter `DISPUTED` from
+caller-supplied hashes. Reorganization handling never automatically mints, releases,
+refunds, reopens debt, or releases collateral.
 
 ## Local two-chain topology
 

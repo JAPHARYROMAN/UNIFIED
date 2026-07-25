@@ -17,8 +17,15 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-go@v7
         with:
-          go-version: "1.26.4"
+          go-version: "1.26.5"
           cache: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.6"
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.11.15"
+          enable-cache: true
       - uses: pnpm/action-setup@v6
         with:
           version: "10.28.2"
@@ -26,13 +33,6 @@ jobs:
         with:
           node-version: "22.13.1"
           cache: pnpm
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12.6"
-      - uses: astral-sh/setup-uv@v7
-        with:
-          version: "0.11.15"
-          enable-cache: true
       - uses: bufbuild/buf-setup-action@v1
         with:
           version: "1.69.0"
@@ -55,13 +55,53 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.26.5"
+          cache: true
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12.6"
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.11.15"
+          enable-cache: true
+      - uses: pnpm/action-setup@v6
+        with:
+          version: "10.28.2"
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22.13.1"
+          cache: pnpm
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: "v1.7.1"
+      - name: Prepare pinned Solidity dependencies
+        shell: pwsh
+        run: |
+          pnpm install --frozen-lockfile
+          uv sync --frozen
+          ./scripts/prepare-foundry.ps1
       - name: Start isolated foundation topology
         shell: pwsh
         run: ./scripts/local-up.ps1
       - name: Exercise command event and ledger flow
         shell: pwsh
         run: ./scripts/smoke-local.ps1
+      - name: Deploy and verify Phase 8 across both local domains
+        shell: bash
+        run: bash scripts/smoke-phase8-anvil.sh
+      - name: Verify concurrent cancellation replay
+        shell: pwsh
+        run: ./scripts/test-phase8-cancellation-concurrency.ps1
+      - name: Validate Phase 8 release evidence before reset
+        shell: pwsh
+        run: ./scripts/check-phase8-release-evidence.ps1 -Stage pre-reset
       - name: Reset isolated topology
         if: always()
         shell: pwsh
         run: ./scripts/local-reset.ps1
+      - name: Validate Phase 8 cleanup after reset
+        if: always()
+        shell: pwsh
+        run: ./scripts/check-phase8-release-evidence.ps1 -Stage post-reset

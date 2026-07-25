@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/v1/faults/delayed"
+  },
+  "response": {
+    "status": 202,
+    "fixedDelayMilliseconds": 1500,
+    "jsonBody": {
+      "provider": "mock-bridge-provider-a",
+      "authority": "TRANSPORT_ONLY",
+      "contains_real_value": false,
+      "delivery_status": "DELAYED"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

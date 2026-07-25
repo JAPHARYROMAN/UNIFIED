@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/v1/faults/duplicate"
+  },
+  "response": {
+    "status": 202,
+    "jsonBody": {
+      "provider": "mock-bridge-provider-b",
+      "authority": "TRANSPORT_ONLY",
+      "contains_real_value": false,
+      "delivery_status": "DUPLICATE",
+      "duplicate_count": 2
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "UNIFIED_PHASE8_LOCAL_SUPPLY_REFERENCE_V1",
+  "environment": "local",
+  "contains_real_value": false,
+  "asset_id": "asset:local:uft",
+  "circulating_supply_reference_units": "1000000000000000000000000000",
+  "captured_at": "2026-07-25T00:00:00Z",
+  "authority": "SYNTHETIC_FIXTURE_ONLY"
+}

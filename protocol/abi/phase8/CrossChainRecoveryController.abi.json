@@ -1,0 +1,1502 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract CrossChainCoordinator",
+        "name": "coordinator_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract RouteRegistry",
+        "name": "routeRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract SyntheticFinalityVerifier",
+        "name": "finalityVerifier_",
+        "type": "address"
+      },
+      {
+        "internalType": "address[3]",
+        "name": "recoverySigners_",
+        "type": "address[3]"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "existingRecoveryId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "ConflictingRecovery",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ECDSAInvalidSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "length",
+        "type": "uint256"
+      }
+    ],
+    "name": "ECDSAInvalidSignatureLength",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "s",
+        "type": "bytes32"
+      }
+    ],
+    "name": "ECDSAInvalidSignatureS",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsufficientRecoveryAuthorization",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidRecovery",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidRecoveryConfiguration",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "cancellationId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "loanRouter",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "authorizationNonce",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "reasonCode",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "signerBitmap",
+        "type": "uint8"
+      }
+    ],
+    "name": "LoanCancellationAuthorized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "recoveryId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint64",
+        "name": "recoveryNonce",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "reasonCode",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "signerBitmap",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "tombstoneEventHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RecoveryTombstoneRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "recoveryId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "resultHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "SourceCompensated",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "AUTHORIZER_SET_VERSION",
+    "outputs": [
+      {
+        "internalType": "uint32",
+        "name": "",
+        "type": "uint32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "RECOVERY_THRESHOLD",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "authorizerSetHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "loanRouter",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "cancellationForLoan",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "cancellationId",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "schemaVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "protocolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "laneId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "aggregateId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainTypes.CrossChainActionType",
+            "name": "actionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "payloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "createdAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterSetPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "correlationId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "causationMessageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "supersededMessageId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.MessageEnvelope",
+        "name": "envelope",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "envelopeHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "assetAmountCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceStateCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationStateCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "compensationPayloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "messageExpiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "recoveryNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "reasonCode",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainRecoveryController.RecoveryAction",
+            "name": "action",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "authorizerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "authorizerSetVersion",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct CrossChainRecoveryController.RecoveryRequest",
+        "name": "request",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes[]",
+        "name": "signatures",
+        "type": "bytes[]"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "expectedTombstoneEventHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes",
+        "name": "compensationPayload",
+        "type": "bytes"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "sourceBlockHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceBlockNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceBlockTimestamp",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "transactionHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "transactionIndex",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "receiptRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "receiptProofHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "logIndex",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "eventHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "finalityHeadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "finalityHeadNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "requiredDepth",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "headerAuthorityHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "observerSignedHeaderCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "observerSignature",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "finalityPolicyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.SourceEventProof",
+        "name": "proof",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceProofHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "signerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "signerSetVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "signatures",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.FinalityCertificate",
+        "name": "certificate",
+        "type": "tuple"
+      }
+    ],
+    "name": "compensateSource",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "resultHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "loanRouter",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "fundingLockId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "disbursementMessageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "disbursementTombstoneHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "authorizationNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validUntil",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "reasonCode",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "authorizerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "authorizerSetVersion",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.LoanCancellationAuthorization",
+        "name": "request",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes[]",
+        "name": "signatures",
+        "type": "bytes[]"
+      }
+    ],
+    "name": "consumeLoanCancellationAuthorization",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "cancellationId",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "coordinator",
+    "outputs": [
+      {
+        "internalType": "contract CrossChainCoordinator",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "destinationTombstone",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "tombstoneEventHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "finalityVerifier",
+    "outputs": [
+      {
+        "internalType": "contract SyntheticFinalityVerifier",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "loanRouter",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "fundingLockId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "disbursementMessageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "disbursementTombstoneHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "authorizationNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validUntil",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "reasonCode",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "authorizerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "authorizerSetVersion",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.LoanCancellationAuthorization",
+        "name": "request",
+        "type": "tuple"
+      }
+    ],
+    "name": "loanCancellationAuthorizationDigest",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "cancellationId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "loanCancellationSignerBitmap",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "signerBitmap",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "loanRouter",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "nextLoanCancellationNonce",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "nonce",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "laneId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "nextRecoveryNonce",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "nonce",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "schemaVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "protocolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "laneId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "aggregateId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainTypes.CrossChainActionType",
+            "name": "actionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "payloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "createdAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterSetPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "correlationId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "causationMessageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "supersededMessageId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.MessageEnvelope",
+        "name": "envelope",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "envelopeHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "assetAmountCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceStateCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationStateCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "compensationPayloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "messageExpiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "recoveryNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "reasonCode",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainRecoveryController.RecoveryAction",
+            "name": "action",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "authorizerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "authorizerSetVersion",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct CrossChainRecoveryController.RecoveryRequest",
+        "name": "request",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes[]",
+        "name": "signatures",
+        "type": "bytes[]"
+      }
+    ],
+    "name": "recordDestinationTombstone",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "tombstoneEventHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "schemaVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "protocolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "laneId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "aggregateId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainTypes.CrossChainActionType",
+            "name": "actionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "payloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "createdAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterSetPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "correlationId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "causationMessageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "supersededMessageId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.MessageEnvelope",
+        "name": "envelope",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "envelopeHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "assetAmountCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceStateCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationStateCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "compensationPayloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "messageExpiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "recoveryNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "reasonCode",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainRecoveryController.RecoveryAction",
+            "name": "action",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "authorizerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "authorizerSetVersion",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct CrossChainRecoveryController.RecoveryRequest",
+        "name": "request",
+        "type": "tuple"
+      }
+    ],
+    "name": "recoveryAuthorizationDigest",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "recoveryForMessage",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "recoveryId",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "envelopeHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "assetAmountCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceStateCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationStateCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "compensationPayloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "messageExpiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "recoveryNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "reasonCode",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainRecoveryController.RecoveryAction",
+            "name": "action",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "authorizerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "authorizerSetVersion",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct CrossChainRecoveryController.RecoveryRequest",
+        "name": "request",
+        "type": "tuple"
+      }
+    ],
+    "name": "recoveryId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "recoveryId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "recoveryRecords",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "requestDigest",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint8",
+        "name": "signerBitmap",
+        "type": "uint8"
+      },
+      {
+        "internalType": "enum CrossChainRecoveryController.RecoveryState",
+        "name": "state",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "tombstoneEventHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "compensationPayloadHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "compensationResult",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "recoverySigners",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "routeRegistry",
+    "outputs": [
+      {
+        "internalType": "contract RouteRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "sourceCompensation",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "compensationResult",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

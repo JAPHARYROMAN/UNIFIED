@@ -42,3 +42,19 @@ import {
 import {
     FixedMatureExternalSettlementPolicy
 } from "./payment/FixedMatureExternalSettlementPolicy.sol";
+import { BridgeExposurePolicy } from "./crosschain/BridgeExposurePolicy.sol";
+import { ChainRegistry } from "./crosschain/ChainRegistry.sol";
+import { CrossChainCoordinator } from "./crosschain/CrossChainCoordinator.sol";
+import { CrossChainLoanAccount } from "./crosschain/CrossChainLoanAccount.sol";
+import { CrossChainLoanAccountDeployer } from "./crosschain/CrossChainLoanAccountDeployer.sol";
+import { CrossChainLoanFactory } from "./crosschain/CrossChainLoanFactory.sol";
+import { CrossChainLoanPolicy } from "./crosschain/CrossChainLoanPolicy.sol";
+import { CrossChainRecoveryController } from "./crosschain/CrossChainRecoveryController.sol";
+import { Phase8LocalSyntheticToken } from "./crosschain/Phase8LocalSyntheticToken.sol";
+import { RouteRegistry } from "./crosschain/RouteRegistry.sol";
+import { SatelliteCollateralVault } from "./crosschain/SatelliteCollateralVault.sol";
+import { SatelliteLoanComponent } from "./crosschain/SatelliteLoanComponent.sol";
+import { SatelliteSettlementVault } from "./crosschain/SatelliteSettlementVault.sol";
+import { SyntheticFinalityVerifier } from "./crosschain/SyntheticFinalityVerifier.sol";
+import { UFTBridgeHub } from "./crosschain/UFTBridgeHub.sol";
+import { WrappedUFT } from "./crosschain/WrappedUFT.sol";
