@@ -1,0 +1,434 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "roleManager_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IUnifiedToken",
+        "name": "canonicalUFT_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "dimension",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "exposure",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "limit",
+        "type": "uint256"
+      }
+    ],
+    "name": "ExposureLimitExceeded",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidExposurePolicy",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unauthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "policyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnknownExposurePolicy",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "policyHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "circulatingSupplyReference",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "evidenceHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "activeFrom",
+        "type": "uint64"
+      }
+    ],
+    "name": "ExposurePolicyRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "policyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RouteExposurePolicyActivated",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "MINIMUM_RISK_INCREASE_DELAY",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "policyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "activateForRoute",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "activePolicyForRoute",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "exposurePolicyHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "canonicalUFT",
+    "outputs": [
+      {
+        "internalType": "contract IUnifiedToken",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "policyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "policy",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "circulatingSupplyReference",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "circulatingSupplyEvidenceHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "routeAbsoluteCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chainAbsoluteCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "adapterAbsoluteCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "aggregateAbsoluteCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint16",
+            "name": "routePercentageCeilingBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "aggregatePercentageCeilingBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "activationDelay",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "activeFrom",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct BridgeExposurePolicy.ExposureConfig",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "policyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "policyPreviouslyActivated",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "used",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "policyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "policyRegisteredAt",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "registeredAt",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "circulatingSupplyReference",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "circulatingSupplyEvidenceHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "routeAbsoluteCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "chainAbsoluteCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "adapterAbsoluteCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "aggregateAbsoluteCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint16",
+            "name": "routePercentageCeilingBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "aggregatePercentageCeilingBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint64",
+            "name": "activationDelay",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "activeFrom",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct BridgeExposurePolicy.ExposureConfig",
+        "name": "config",
+        "type": "tuple"
+      }
+    ],
+    "name": "registerPolicy",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "policyHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "roleManager",
+    "outputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "routePolicyVersion",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "version",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "routeExposure",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chainExposure",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "adapterExposure",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "aggregateExposure",
+        "type": "uint256"
+      }
+    ],
+    "name": "validateLock",
+    "outputs": [],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

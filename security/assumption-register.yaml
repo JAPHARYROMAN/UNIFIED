@@ -1,5 +1,5 @@
 version: 1
-reviewed_at: 2026-07-24
+reviewed_at: 2026-07-25
 assumptions:
   - id: ASM-001
     assumption: Foundation execution is local-only and carries no real value.
@@ -176,3 +176,59 @@ assumptions:
     expiry: 2026-10-24
     downstream_impact: Gateway-event authority reverted-transaction authority finality reorganization and accounting confirmation
     validation: Authority-derived consumer-pinned finality policy exact signed-header verification strict canonical receipt and trie inclusion same-header nonconflicting enrichment monotonic signed observation checks aggregate input limits alternate-key rejection full restart-safe reorg provenance finality-depth checks and reorg removal tests
+  - id: ASM-026
+    assumption: Every Phase 8 chain provider token collateral party key and balance is synthetic and local.
+    owner: Release Authority
+    evidence: infrastructure/local/cross-chain/domains.json
+    expiry: 2026-10-25
+    downstream_impact: All Phase 8 trust value privacy deployment and recovery claims
+    validation: Two local chain identifiers transport-only mock providers no production credentials and contains-real-value rejection
+  - id: ASM-027
+    assumption: Each local observer key remains uncompromised and signs only finalized headers for its configured domain.
+    owner: Security Authority
+    evidence: services/chain-indexer/projection/evmproof.go
+    expiry: 2026-10-25
+    downstream_impact: Cross-domain source inclusion ordering and finality authority
+    validation: Distinct pinned observer identities canonical signed headers domain checks and alternate-key rejection
+  - id: ASM-028
+    assumption: Anvil verifies state-machine and reorganization mechanics but is not a production consensus or finality model.
+    owner: Protocol Architecture Authority
+    evidence: infrastructure/local/compose.yaml
+    expiry: 2026-10-25
+    downstream_impact: Interpretation of local finality reorg and signer results
+    validation: Local chain IDs and explicit production-chain finality deferral in ADR 0018
+  - id: ASM-029
+    assumption: UFT and wrapped UFT share denomination and precision and convert one-to-one with zero fee slippage or rounding.
+    owner: Accounting and Economic Risk Authority
+    evidence: models/foundation_model/tests/test_cross_chain.py
+    expiry: 2026-10-25
+    downstream_impact: Bridge backing loan disbursement repayment lender release and accounting conservation
+    validation: Exact integer equality fixed decimals fee-token rejection and round-trip conservation tests
+  - id: ASM-030
+    assumption: Wrapped UFT has no governance staking collateral reserve or treasury role.
+    owner: Program Authority
+    evidence: adr/0018-phase-8-cross-chain-and-wrapped-uft-boundary.md
+    expiry: 2026-10-25
+    downstream_impact: Governance power exposure calculations and economic claims
+    validation: Narrow token interface privileged-surface review and no wrapped-token dependency in governance or collateral components
+  - id: ASM-031
+    assumption: Accepted finalized headers do not reorganize beyond the local finality assumption while every pre-finality reorganization is handled and tested.
+    owner: Security Authority
+    evidence: services/chain-indexer/crosschain/projector_test.go
+    expiry: 2026-10-25
+    downstream_impact: Destination execution acknowledgement accounting and recovery finality
+    validation: Finality-depth checks canonical replacement provenance pre-finality removal and post-finality dispute tests
+  - id: ASM-032
+    assumption: Each local two-of-three ECDSA finality and recovery signer set remains uncompromised and signs only the complete observer-authenticated proof for its pinned policy.
+    owner: Security Authority
+    evidence: security/reviews/phase-8-internal-review.md
+    expiry: 2026-10-25
+    downstream_impact: Destination execution tombstone recovery and source compensation authority
+    validation: Distinct three-signer set unique-signature threshold full-proof digest policy binding and wrong-set rejection
+  - id: ASM-033
+    assumption: The frozen local circulating-supply reference and evidence are synthetic fixtures used only to test the five-percent route and fifteen-percent aggregate caps.
+    owner: Accounting and Economic Risk Authority
+    evidence: infrastructure/local/cross-chain/domains.json
+    expiry: 2026-10-25
+    downstream_impact: Route chain adapter and aggregate bridge exposure limits
+    validation: Immutable fixture digest exact cap-boundary tests and production supply-oracle deferral

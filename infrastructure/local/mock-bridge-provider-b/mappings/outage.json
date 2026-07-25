@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/v1/faults/outage"
+  },
+  "response": {
+    "status": 503,
+    "jsonBody": {
+      "provider": "mock-bridge-provider-b",
+      "authority": "TRANSPORT_ONLY",
+      "contains_real_value": false,
+      "delivery_status": "OUTAGE"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

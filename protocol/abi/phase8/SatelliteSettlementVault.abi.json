@@ -1,0 +1,616 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "component_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ICrossChainCoordinator",
+        "name": "coordinator_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "wrappedUFT_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidSatelliteSettlement",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "SafeERC20FailedOperation",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SatelliteSettlementBalanceMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "caller",
+        "type": "address"
+      }
+    ],
+    "name": "UnauthorizedSatelliteSettlementCaller",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "cancellationId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "disbursementMessageId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "escrowBurnResultHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "reportMessageId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "SatelliteFundingCancelled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "fundingLockId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "SatelliteFundingDisbursed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "fundingLockId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "SatelliteFundingEscrowed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "paymentId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "SatelliteRepaymentAuthorizationReversed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "paymentId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "SatelliteRepaymentAuthorized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "fundingLockId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "principalAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "SatelliteSettlementProvisioned",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paymentId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "authorizeRepaymentBurn",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "lender",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "homeLoanRouter",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "backingRoutePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "repaymentRoutePolicyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct ISatelliteRepaymentAuthorizer.RepaymentAuthorization",
+        "name": "authorization",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "component",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "paymentId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "consumedPayment",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "consumed",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "coordinator",
+    "outputs": [
+      {
+        "internalType": "contract ICrossChainCoordinator",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "enum CrossChainTypes.CrossChainActionType",
+        "name": "actionType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "bytes",
+        "name": "payload",
+        "type": "bytes"
+      }
+    ],
+    "name": "handleCrossChainMessage",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "resultHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "lockId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "onWrappedMint",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "fundingLockId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "homeLoanAccount",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "homeLoanRouter",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "lender",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "wrappedToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateralToken",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "collateralId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "principalAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "collateralAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "repaymentRoutePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.SatelliteLoanProvisioning",
+        "name": "provisioning",
+        "type": "tuple"
+      }
+    ],
+    "name": "provisionLoan",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "paymentId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "reverseRepaymentBurn",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "settlementRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "fundingLockId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "homeLoanAccount",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "homeLoanRouter",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "lender",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "principalAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "escrowedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "disbursedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "authorizedRepaymentAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "cancellationId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "cancelledAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "repaymentRoutePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct SatelliteSettlementVault.SettlementRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "wrappedUFT",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

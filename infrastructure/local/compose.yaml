@@ -5,19 +5,25 @@ x-unified-labels: &unified-labels
   com.unified.contains-real-value: "false"
 
 services:
-  anvil:
+  home-anvil:
     image: ghcr.io/foundry-rs/foundry:v1.7.1
-    command:
-      - anvil
-      - --host
-      - 0.0.0.0
-      - --chain-id
-      - "31337"
-      - --block-time
-      - "1"
-      - --silent
+    entrypoint: ["anvil"]
+    command: ["--host", "0.0.0.0", "--chain-id", "31337", "--block-time", "1", "--silent"]
     ports:
       - "127.0.0.1:8545:8545"
+    labels: *unified-labels
+    healthcheck:
+      test: ["CMD", "cast", "block-number", "--rpc-url", "http://127.0.0.1:8545"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  satellite-anvil:
+    image: ghcr.io/foundry-rs/foundry:v1.7.1
+    entrypoint: ["anvil"]
+    command: ["--host", "0.0.0.0", "--chain-id", "31338", "--block-time", "1", "--silent"]
+    ports:
+      - "127.0.0.1:8546:8545"
     labels: *unified-labels
     healthcheck:
       test: ["CMD", "cast", "block-number", "--rpc-url", "http://127.0.0.1:8545"]
@@ -104,6 +110,34 @@ services:
       timeout: 3s
       retries: 20
 
+  mock-bridge-provider-a:
+    image: wiremock/wiremock:3.13.1
+    command: ["--global-response-templating", "--verbose"]
+    ports:
+      - "127.0.0.1:58081:8080"
+    volumes:
+      - ./mock-bridge-provider-a:/home/wiremock:ro
+    labels: *unified-labels
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8080/__admin/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mock-bridge-provider-b:
+    image: wiremock/wiremock:3.13.1
+    command: ["--global-response-templating", "--verbose"]
+    ports:
+      - "127.0.0.1:58082:8080"
+    volumes:
+      - ./mock-bridge-provider-b:/home/wiremock:ro
+    labels: *unified-labels
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8080/__admin/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
 volumes:
   postgres-data:
     labels: *unified-labels
@@ -112,3 +146,6 @@ volumes:
   minio-data:
     labels: *unified-labels
 
+networks:
+  default:
+    labels: *unified-labels

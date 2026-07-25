@@ -1,0 +1,853 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "roleManager_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ChainRegistry",
+        "name": "chainRegistry_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "ECDSAInvalidSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "length",
+        "type": "uint256"
+      }
+    ],
+    "name": "ECDSAInvalidSignatureLength",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "s",
+        "type": "bytes32"
+      }
+    ],
+    "name": "ECDSAInvalidSignatureS",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "valid",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "required",
+        "type": "uint256"
+      }
+    ],
+    "name": "InsufficientFinalityAttestations",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidFinalityPolicy",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidFinalityProof",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidSignerSet",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unauthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "policyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnknownFinalityPolicy",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "signerSetHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnknownSignerSet",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "policyHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "signerSetHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bool",
+        "name": "destinationEvidence",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "evidenceChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "evidenceChainVersion",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "requiredDepth",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "actionFamily",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint32",
+        "name": "allowedActionsBitmap",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "evidenceChainConfigurationHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "FinalityPolicyRegistered",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "signerSetHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "SignerSetDisabled",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "signerSetHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "observerAuthorityHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint32",
+        "name": "version",
+        "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address[3]",
+        "name": "signers",
+        "type": "address[3]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "validFrom",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "validUntil",
+        "type": "uint64"
+      }
+    ],
+    "name": "SignerSetRegistered",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "SIGNER_COUNT",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "THRESHOLD",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "chainRegistry",
+    "outputs": [
+      {
+        "internalType": "contract ChainRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "signerSetHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "disableSignerSet",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "policyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "finalityPolicy",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "destinationEvidence",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "evidenceChainVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "evidenceChainConfigurationHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "actionFamily",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "allowedActionsBitmap",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "requiredDepth",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "observerAuthorityHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "signerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "signerSetVersion",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct SyntheticFinalityVerifier.FinalityPolicyConfig",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "destinationEvidence",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "evidenceChainVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "evidenceChainConfigurationHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "actionFamily",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "allowedActionsBitmap",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "requiredDepth",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "observerAuthorityHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "signerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "signerSetVersion",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct SyntheticFinalityVerifier.FinalityPolicyConfig",
+        "name": "config",
+        "type": "tuple"
+      }
+    ],
+    "name": "registerFinalityPolicy",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "policyHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "observerAuthorityHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint32",
+        "name": "version",
+        "type": "uint32"
+      },
+      {
+        "internalType": "address[3]",
+        "name": "signers",
+        "type": "address[3]"
+      },
+      {
+        "internalType": "uint64",
+        "name": "validFrom",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "validUntil",
+        "type": "uint64"
+      }
+    ],
+    "name": "registerSignerSet",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "signerSetHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "roleManager",
+    "outputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "signerSetHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "signerSetRecord",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "signerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "observerAuthorityHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "version",
+            "type": "uint32"
+          },
+          {
+            "internalType": "address[3]",
+            "name": "signers",
+            "type": "address[3]"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validFrom",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validUntil",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bool",
+            "name": "active",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct SyntheticFinalityVerifier.SignerSet",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "schemaVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "protocolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "laneId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "aggregateId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainTypes.CrossChainActionType",
+            "name": "actionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "payloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "createdAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterSetPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "correlationId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "causationMessageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "supersededMessageId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.MessageEnvelope",
+        "name": "envelope",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "sourceBlockHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceBlockNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceBlockTimestamp",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "transactionHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "transactionIndex",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "receiptRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "receiptProofHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "logIndex",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "eventHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "finalityHeadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "finalityHeadNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "requiredDepth",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "headerAuthorityHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "observerSignedHeaderCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "observerSignature",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "finalityPolicyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.SourceEventProof",
+        "name": "proof",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceProofHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "signerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "signerSetVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "signatures",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.FinalityCertificate",
+        "name": "certificate",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "expectedSignerSetHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "expectedFinalityPolicyHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "expectedEventHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "verify",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

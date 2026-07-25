@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/v1/faults/fabricated-authority"
+  },
+  "response": {
+    "status": 202,
+    "jsonBody": {
+      "provider": "mock-bridge-provider-b",
+      "authority": "FABRICATED_FINALITY",
+      "contains_real_value": false,
+      "delivery_status": "DELIVERED"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

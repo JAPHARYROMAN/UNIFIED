@@ -1,4 +1,4 @@
-"""Reject oversized deployable Phase 2 runtime bytecode from Foundry artifacts."""
+"""Reject oversized production runtime bytecode from all Foundry artifacts."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ NON_PRODUCTION = {
     "DeployPhase6A",
     "DeployPhase6B",
     "DeployPhase7C",
+    "DeployPhase8Local",
     "FoundationProbeTest",
     "FeeSettlementToken",
     "Phase2KernelTest",
@@ -29,6 +30,11 @@ NON_PRODUCTION = {
     "Phase6IdentityTest",
     "Phase6UnderwrittenLoanTest",
     "Phase7CanonicalSettlementTest",
+    "Phase8CrossChainCoreTest",
+    "Phase8CrossChainFlowTest",
+    "Phase8CrossChainFuzzTest",
+    "Phase8CrossChainInvariantTest",
+    "Phase8CrossChainRecoveryOrderingTest",
     "UFTSupplyInvariantTest",
     "BurnHandler",
     "TestSettlementToken",
@@ -52,6 +58,22 @@ NON_PRODUCTION = {
     "Phase6BUnderwrittenPolicy",
     "Phase6BZeroInterestPolicy",
     "Phase7SettlementToken",
+    "Phase8BridgeInvariantHandler",
+    "Phase8CollateralInvariantHandler",
+    "Phase8CoreReceiver",
+    "Phase8CoreUFT",
+    "Phase8FlowToken",
+    "Phase8FuzzUFT",
+    "Phase8InvariantCollateralComponent",
+    "Phase8InvariantCoordinator",
+    "Phase8InvariantRecovery",
+    "Phase8InvariantToken",
+    "Phase8LocalSyntheticToken",
+    "Phase8MaliciousWrappedSource",
+    "Phase8OrderingHub",
+    "Phase8OrderingRegistry",
+    "Phase8OrderingRouter",
+    "Phase8OrderingToken",
     "ZeroInterestPolicy",
 }
 
@@ -60,7 +82,10 @@ def main() -> None:
     failures: list[str] = []
     checked = 0
     for artifact in OUT.rglob("*.json"):
-        if "build-info" in artifact.parts:
+        if (
+            "build-info" in artifact.parts
+            or artifact.parent.name.endswith((".t.sol", ".s.sol"))
+        ):
             continue
         payload = json.loads(artifact.read_text(encoding="utf-8"))
         contract_name = artifact.stem

@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "artifact_role": "NON_AUTHORITATIVE_LOCAL_FIXTURE_INPUTS",
+  "runtime_authority": "protocol/deployments/local/phase8-release-evidence.json",
+  "environment": "local",
+  "contains_real_value": false,
+  "home": {
+    "chain_id": 31337,
+    "rpc_url": "http://127.0.0.1:8545",
+    "observer_fixture": "home-observer-ed25519",
+    "observer_domain": "home",
+    "confirmation_depth": 12
+  },
+  "satellite": {
+    "chain_id": 31338,
+    "rpc_url": "http://127.0.0.1:8546",
+    "observer_fixture": "satellite-observer-ed25519",
+    "observer_domain": "satellite",
+    "confirmation_depth": 12
+  },
+  "finality": {
+    "threshold": 2,
+    "signer_count": 3,
+    "signer_fixture_set": "local-cross-chain-ecdsa-2-of-3",
+    "sorted_signer_addresses": [
+      "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+      "0x6813eb9362372eef6200f3b1dbc3f819671cba69",
+      "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
+    ]
+  },
+  "recovery": {
+    "action": "TOMBSTONE_THEN_COMPENSATE",
+    "threshold": 2,
+    "authorizer_set_version": 1,
+    "sorted_authorizer_addresses": [
+      "0x2b5ad5c4795c026514f8317c7a215e218dccd6cf",
+      "0x6813eb9362372eef6200f3b1dbc3f819671cba69",
+      "0x7e5f4552091a69125d5dfcb7b8c2659029395bdf"
+    ]
+  },
+  "route_inputs": {
+    "required_purposes": [
+      "mint",
+      "report",
+      "repayment",
+      "alternate_repayment",
+      "bridge_exit",
+      "disbursement",
+      "collateral_release"
+    ]
+  },
+  "exposure": {
+    "circulating_supply_reference_units": "1000000000000000000000000000",
+    "evidence_path": "infrastructure/local/cross-chain/circulating-supply-reference.json",
+    "evidence_sha256": "2bcdee0766df2c371ec48b1538c846cbaaaa6fd9507569c278cf4be8dd9dcba3",
+    "route_cap_bps": 500,
+    "aggregate_cap_bps": 1500,
+    "conversion_numerator": 1,
+    "conversion_denominator": 1
+  },
+  "providers": [
+    {
+      "id": "mock-bridge-provider-a",
+      "url": "http://127.0.0.1:58081",
+      "authority": "TRANSPORT_ONLY"
+    },
+    {
+      "id": "mock-bridge-provider-b",
+      "url": "http://127.0.0.1:58082",
+      "authority": "TRANSPORT_ONLY"
+    }
+  ]
+}

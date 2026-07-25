@@ -1,5 +1,5 @@
 version: 1
-reviewed_at: 2026-07-24
+reviewed_at: 2026-07-25
 risks:
   - id: RISK-FOUNDATION-001
     severity: EXISTENTIAL
@@ -468,4 +468,94 @@ risks:
     expiry: 2026-10-24
     downstream_impact: False canonical repayment false payment reversal permanent claim tombstone incorrect journals unsafe collateral rights and local projection denial of service
     validation: Pinned signed headers consumer-pinned finality policy strict canonical legacy and typed receipts canonical Merkle-Patricia child references transaction and receipt inclusion same-header nonconflicting enrichment monotonic append replacement and reorg time alternate-authority rejection full durable reorg provenance and per-proof plus aggregate input bounds
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE8-001
+    severity: EXISTENTIAL
+    title: Forged or alternate-authority destination action
+    owner: Security Authority
+    evidence: security/reviews/phase-8-internal-review.md
+    expiry: 2026-10-25
+    downstream_impact: Unauthorized mint disbursement repayment collateral release or home-loan mutation
+    validation: Domain-pinned observer proof plus independent two-of-three attestation and alternate-authority rejection tests
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE8-002
+    severity: EXISTENTIAL
+    title: Message replay domain confusion nonce collision or reordering
+    owner: Protocol Architecture Authority
+    evidence: services/cross-chain-coordinator/message/message_test.go
+    expiry: 2026-10-25
+    downstream_impact: Duplicate execution or action applied to the wrong route aggregate or policy
+    validation: Canonical domain-separated digest lane nonce immutable envelope exact replay consumed registry and conflicting-reuse tests
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE8-003
+    severity: EXISTENTIAL
+    title: Unbacked wrapped UFT or duplicate canonical release
+    owner: Accounting and Economic Risk Authority
+    evidence: models/foundation_model/tests/test_cross_chain.py
+    expiry: 2026-10-25
+    downstream_impact: Insolvent bridge borrower or lender loss and inflated synthetic supply
+    validation: Lock-before-mint burn-before-release consumed proof exact recipient exposure caps and backing-equality simulations
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE8-004
+    severity: CRITICAL
+    title: Duplicate or incomplete loan activation disbursement or repayment
+    owner: Protocol Architecture Authority
+    evidence: security/reviews/phase-8-internal-review.md
+    expiry: 2026-10-25
+    downstream_impact: Debt without borrower value value without debt or duplicated lender payment
+    validation: Policy-bound typed actions finalized acknowledgements at-most-once aggregate transitions and crash-restart tests
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE8-005
+    severity: CRITICAL
+    title: Remote collateral reuse trapping or double release
+    owner: Security Authority
+    evidence: security/reviews/phase-8-internal-review.md
+    expiry: 2026-10-25
+    downstream_impact: Unsecured debt borrower loss or competing liens over one asset
+    validation: Exclusive canonical lien identity finalized home release authorization exact borrower recipient and consumed release tests
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE8-006
+    severity: EXISTENTIAL
+    title: Timeout or recovery unlocks value on both domains
+    owner: Security Authority
+    evidence: services/cross-chain-coordinator/recovery/recovery_test.go
+    expiry: 2026-10-25
+    downstream_impact: Double spend unbacked wrapped supply and unrecoverable protocol loss
+    validation: Finalized destination tombstone before source compensation recovery threshold exact original message binding and race tests
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE8-007
+    severity: CRITICAL
+    title: Adapter compromise reorganization or finality substitution
+    owner: Security Authority
+    evidence: services/chain-indexer/crosschain/projector_test.go
+    expiry: 2026-10-25
+    downstream_impact: Transport fabricates authority or provisional chain data becomes irreversible protocol state
+    validation: Transport-only adapters authenticated receipts independent proof threshold pinned policy reorg handling and provider failover tests
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE8-008
+    severity: CRITICAL
+    title: Exposure cap or backing reconciliation bypass
+    owner: Accounting and Economic Risk Authority
+    evidence: services/foundation-ledger/internal/crosschainaccounting/accounting_test.go
+    expiry: 2026-10-25
+    downstream_impact: Excess synthetic exposure hidden insolvency or unsupported wrapped supply
+    validation: Frozen supply evidence absolute chain route and aggregate caps plus exact backing supply and control-account reconciliation
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE8-009
+    severity: CRITICAL
+    title: Coordinator projection and ledger divergence
+    owner: Accounting and Economic Risk Authority
+    evidence: services/foundation-ledger/migrations/tests/000010_000012_crosschain_foundation_test.sql
+    expiry: 2026-10-25
+    downstream_impact: Chain value debt custody and financial books disagree after retries or restarts
+    validation: Immutable evidence deterministic journals compare-and-set transitions least-privilege SQL and aged difference ownership
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE8-010
+    severity: CRITICAL
+    title: Satellite or recovery authority rewrites canonical home economics
+    owner: Protocol Architecture Authority
+    evidence: security/reviews/phase-8-internal-review.md
+    expiry: 2026-10-25
+    downstream_impact: Unauthorized debt interest recipient maturity or collateral-right changes
+    validation: Immutable home policy typed bounded satellite actions recovery limited to original instruction effects and direct-home repayment preservation
     status: CONTROLLED_LOCAL_ONLY

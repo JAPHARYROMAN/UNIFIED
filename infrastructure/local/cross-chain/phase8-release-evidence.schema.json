@@ -1,0 +1,1178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unified.local/schemas/phase8-release-evidence-v1.json",
+  "title": "UNIFIED Phase 8 local release evidence",
+  "description": "Final completed form of the sole authoritative local release bundle. Receipt identity is checked against live local RPCs and independently against Ed25519-authenticated local headers with transaction/receipt MPT inclusion. The local header authority is not EVM consensus or a production light client. Live semantic checks are enforced by tools/check_phase8_release_evidence.py.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_type",
+    "environment",
+    "contains_real_value",
+    "run_id",
+    "protocol_id",
+    "proof_boundary",
+    "generated_at",
+    "source_commit",
+    "deployment_flow_sha256",
+    "domains",
+    "routes",
+    "exposure_policy",
+    "recovery",
+    "providers",
+    "flow",
+    "durable",
+    "reset",
+    "validation"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "artifact_type": { "const": "PHASE8_RELEASE_EVIDENCE" },
+    "environment": { "const": "local" },
+    "contains_real_value": { "const": false },
+    "run_id": { "$ref": "#/$defs/text" },
+    "protocol_id": { "$ref": "#/$defs/hex32" },
+    "proof_boundary": { "const": "AUTHENTICATED_SIGNED_HEADER_TX_RECEIPT_MPT" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "source_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "deployment_flow_sha256": { "$ref": "#/$defs/sha256" },
+    "domains": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["home", "satellite"],
+      "properties": {
+        "home": { "$ref": "#/$defs/domain" },
+        "satellite": { "$ref": "#/$defs/domain" }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": { "$ref": "#/$defs/route" }
+    },
+    "exposure_policy": { "$ref": "#/$defs/exposurePolicy" },
+    "recovery": { "$ref": "#/$defs/recovery" },
+    "providers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "$ref": "#/$defs/provider" }
+    },
+    "flow": { "$ref": "#/$defs/flow" },
+    "durable": { "$ref": "#/$defs/durable" },
+    "reset": { "$ref": "#/$defs/reset" },
+    "validation": { "$ref": "#/$defs/validation" }
+  },
+  "$defs": {
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hex20": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{40}$"
+    },
+    "hex32": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{64}$"
+    },
+    "hexBytes": {
+      "type": "string",
+      "pattern": "^0x(?:[0-9a-f]{2})+$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "uint": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "positiveUint": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "decimal": {
+      "type": "string",
+      "pattern": "^(?:0|[1-9][0-9]*)$"
+    },
+    "addressReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain", "chain_id", "address"],
+      "properties": {
+        "domain": { "enum": ["home", "satellite"] },
+        "chain_id": { "$ref": "#/$defs/positiveUint" },
+        "address": { "$ref": "#/$defs/hex20" }
+      }
+    },
+    "creationEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "emitter",
+        "signature",
+        "topic0",
+        "indexed_id",
+        "indexed_id_topic_position",
+        "indexed_address_topic_position"
+      ],
+      "properties": {
+        "emitter": { "$ref": "#/$defs/hex20" },
+        "signature": {
+          "const": "CrossChainLoanCreated(bytes32,address,address,address,bytes32)"
+        },
+        "topic0": { "$ref": "#/$defs/hex32" },
+        "indexed_id": { "$ref": "#/$defs/hex32" },
+        "indexed_id_topic_position": { "const": 1 },
+        "indexed_address_topic_position": { "const": 2 }
+      }
+    },
+    "contract": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "address",
+            "runtime_code_hash",
+            "abi_path",
+            "abi_sha256",
+            "deployment_kind",
+            "deployment_tx_hash",
+            "deployment_block_number"
+          ],
+          "properties": {
+            "address": { "$ref": "#/$defs/hex20" },
+            "runtime_code_hash": { "$ref": "#/$defs/hex32" },
+            "abi_path": { "$ref": "#/$defs/text" },
+            "abi_sha256": { "$ref": "#/$defs/sha256" },
+            "deployment_kind": { "const": "CREATE_TRANSACTION" },
+            "deployment_tx_hash": { "$ref": "#/$defs/hex32" },
+            "deployment_block_number": { "$ref": "#/$defs/positiveUint" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "address",
+            "runtime_code_hash",
+            "abi_path",
+            "abi_sha256",
+            "deployment_kind",
+            "deployment_tx_hash",
+            "deployment_block_number",
+            "creation_event"
+          ],
+          "properties": {
+            "address": { "$ref": "#/$defs/hex20" },
+            "runtime_code_hash": { "$ref": "#/$defs/hex32" },
+            "abi_path": { "$ref": "#/$defs/text" },
+            "abi_sha256": { "$ref": "#/$defs/sha256" },
+            "deployment_kind": { "const": "INTERNAL_CREATE2" },
+            "deployment_tx_hash": { "$ref": "#/$defs/hex32" },
+            "deployment_block_number": { "$ref": "#/$defs/positiveUint" },
+            "creation_event": { "$ref": "#/$defs/creationEvent" }
+          }
+        }
+      ]
+    },
+    "signerSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "hash",
+        "threshold",
+        "valid_from",
+        "valid_until",
+        "sorted_addresses"
+      ],
+      "properties": {
+        "version": { "const": 1 },
+        "hash": { "$ref": "#/$defs/hex32" },
+        "threshold": { "const": 2 },
+        "valid_from": { "$ref": "#/$defs/positiveUint" },
+        "valid_until": { "$ref": "#/$defs/positiveUint" },
+        "sorted_addresses": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "$ref": "#/$defs/hex20" }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route_purpose",
+        "policy_hash",
+        "destination_evidence",
+        "source_chain_id",
+        "source_coordinator",
+        "source_component",
+        "destination_chain_id",
+        "destination_coordinator",
+        "destination_component",
+        "evidence_chain_version",
+        "evidence_chain_configuration_hash",
+        "action_family",
+        "allowed_actions_bitmap",
+        "required_depth",
+        "observer_authority_hash",
+        "signer_set_hash",
+        "signer_set_version"
+      ],
+      "properties": {
+        "route_purpose": { "$ref": "#/$defs/text" },
+        "policy_hash": { "$ref": "#/$defs/hex32" },
+        "destination_evidence": { "type": "boolean" },
+        "source_chain_id": { "$ref": "#/$defs/positiveUint" },
+        "source_coordinator": { "$ref": "#/$defs/hex20" },
+        "source_component": { "$ref": "#/$defs/hex20" },
+        "destination_chain_id": { "$ref": "#/$defs/positiveUint" },
+        "destination_coordinator": { "$ref": "#/$defs/hex20" },
+        "destination_component": { "$ref": "#/$defs/hex20" },
+        "evidence_chain_version": { "$ref": "#/$defs/positiveUint" },
+        "evidence_chain_configuration_hash": { "$ref": "#/$defs/hex32" },
+        "action_family": { "$ref": "#/$defs/hex32" },
+        "allowed_actions_bitmap": { "$ref": "#/$defs/positiveUint" },
+        "required_depth": { "$ref": "#/$defs/positiveUint" },
+        "observer_authority_hash": { "$ref": "#/$defs/hex32" },
+        "signer_set_hash": { "$ref": "#/$defs/hex32" },
+        "signer_set_version": { "$ref": "#/$defs/positiveUint" }
+      }
+    },
+    "domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chain_id",
+        "chain_version",
+        "rpc_url",
+        "genesis_hash",
+        "configuration_hash",
+        "activation_block",
+        "activation_timestamp",
+        "registry_status",
+        "observer_fixture",
+        "observer_public_key_ed25519",
+        "observer_authority_hash",
+        "confirmation_depth",
+        "signer_set",
+        "contracts",
+        "registry_bindings",
+        "finality_policies"
+      ],
+      "properties": {
+        "chain_id": { "$ref": "#/$defs/positiveUint" },
+        "chain_version": { "const": 1 },
+        "rpc_url": { "type": "string", "pattern": "^http://(?:127\\.0\\.0\\.1|localhost|\\[::1\\]):[0-9]+$" },
+        "genesis_hash": { "$ref": "#/$defs/hex32" },
+        "configuration_hash": { "$ref": "#/$defs/hex32" },
+        "activation_block": { "$ref": "#/$defs/uint" },
+        "activation_timestamp": { "$ref": "#/$defs/positiveUint" },
+        "registry_status": { "const": "ACTIVE" },
+        "observer_fixture": { "$ref": "#/$defs/text" },
+        "observer_public_key_ed25519": { "$ref": "#/$defs/hex32" },
+        "observer_authority_hash": { "$ref": "#/$defs/hex32" },
+        "confirmation_depth": { "$ref": "#/$defs/positiveUint" },
+        "signer_set": { "$ref": "#/$defs/signerSet" },
+        "contracts": {
+          "type": "object",
+          "minProperties": 12,
+          "additionalProperties": { "$ref": "#/$defs/contract" }
+        },
+        "registry_bindings": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "route_registry_chain_registry",
+            "finality_verifier_chain_registry"
+          ],
+          "properties": {
+            "route_registry_chain_registry": { "$ref": "#/$defs/hex20" },
+            "finality_verifier_chain_registry": { "$ref": "#/$defs/hex20" }
+          }
+        },
+        "finality_policies": {
+          "type": "array",
+          "minItems": 14,
+          "maxItems": 14,
+          "items": { "$ref": "#/$defs/policy" }
+        }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "purpose",
+        "version",
+        "route_policy_hash",
+        "source_domain",
+        "destination_domain",
+        "source_chain_version",
+        "destination_chain_version",
+        "source_chain_id",
+        "source_coordinator",
+        "source_component",
+        "source_component_code_hash",
+        "destination_chain_id",
+        "destination_coordinator",
+        "destination_component",
+        "destination_component_code_hash",
+        "action_family",
+        "allowed_actions_bitmap",
+        "adapter_id",
+        "adapter_code_hash",
+        "adapter_set_policy_hash",
+        "source_finality_policy_hash",
+        "destination_finality_policy_hash",
+        "source_signer_set_hash",
+        "destination_signer_set_hash",
+        "absolute_cap_units",
+        "chain_cap_units",
+        "adapter_cap_units",
+        "activated_at",
+        "home_registration_tx_hash",
+        "home_registration_block_number",
+        "satellite_registration_tx_hash",
+        "satellite_registration_block_number",
+        "home_registry_hash",
+        "satellite_registry_hash"
+      ],
+      "properties": {
+        "purpose": { "enum": ["MINT", "REPORT", "REPAYMENT", "ALTERNATE_REPAYMENT", "BRIDGE_EXIT", "DISBURSEMENT", "COLLATERAL_RELEASE"] },
+        "version": { "const": 1 },
+        "route_policy_hash": { "$ref": "#/$defs/hex32" },
+        "source_domain": { "enum": ["home", "satellite"] },
+        "destination_domain": { "enum": ["home", "satellite"] },
+        "source_chain_version": { "const": 1 },
+        "destination_chain_version": { "const": 1 },
+        "source_chain_id": { "$ref": "#/$defs/positiveUint" },
+        "source_coordinator": { "$ref": "#/$defs/hex20" },
+        "source_component": { "$ref": "#/$defs/hex20" },
+        "source_component_code_hash": { "$ref": "#/$defs/hex32" },
+        "destination_chain_id": { "$ref": "#/$defs/positiveUint" },
+        "destination_coordinator": { "$ref": "#/$defs/hex20" },
+        "destination_component": { "$ref": "#/$defs/hex20" },
+        "destination_component_code_hash": { "$ref": "#/$defs/hex32" },
+        "action_family": { "$ref": "#/$defs/hex32" },
+        "allowed_actions_bitmap": { "$ref": "#/$defs/positiveUint" },
+        "adapter_id": { "$ref": "#/$defs/hex32" },
+        "adapter_code_hash": { "$ref": "#/$defs/hex32" },
+        "adapter_set_policy_hash": { "$ref": "#/$defs/hex32" },
+        "source_finality_policy_hash": { "$ref": "#/$defs/hex32" },
+        "destination_finality_policy_hash": { "$ref": "#/$defs/hex32" },
+        "source_signer_set_hash": { "$ref": "#/$defs/hex32" },
+        "destination_signer_set_hash": { "$ref": "#/$defs/hex32" },
+        "absolute_cap_units": { "$ref": "#/$defs/decimal" },
+        "chain_cap_units": { "$ref": "#/$defs/decimal" },
+        "adapter_cap_units": { "$ref": "#/$defs/decimal" },
+        "activated_at": { "$ref": "#/$defs/positiveUint" },
+        "home_registration_tx_hash": { "$ref": "#/$defs/hex32" },
+        "home_registration_block_number": { "$ref": "#/$defs/positiveUint" },
+        "satellite_registration_tx_hash": { "$ref": "#/$defs/hex32" },
+        "satellite_registration_block_number": { "$ref": "#/$defs/positiveUint" },
+        "home_registry_hash": { "$ref": "#/$defs/hex32" },
+        "satellite_registry_hash": { "$ref": "#/$defs/hex32" }
+      }
+    },
+    "exposurePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_version",
+        "policy_hash",
+        "circulating_supply_reference_units",
+        "circulating_supply_evidence_hash",
+        "route_absolute_cap_units",
+        "chain_absolute_cap_units",
+        "adapter_absolute_cap_units",
+        "aggregate_absolute_cap_units",
+        "route_percentage_ceiling_basis_points",
+        "aggregate_percentage_ceiling_basis_points",
+        "activation_delay",
+        "active_from"
+      ],
+      "properties": {
+        "policy_version": { "const": 1 },
+        "policy_hash": { "$ref": "#/$defs/hex32" },
+        "circulating_supply_reference_units": { "$ref": "#/$defs/decimal" },
+        "circulating_supply_evidence_hash": { "$ref": "#/$defs/hex32" },
+        "route_absolute_cap_units": { "$ref": "#/$defs/decimal" },
+        "chain_absolute_cap_units": { "$ref": "#/$defs/decimal" },
+        "adapter_absolute_cap_units": { "$ref": "#/$defs/decimal" },
+        "aggregate_absolute_cap_units": { "$ref": "#/$defs/decimal" },
+        "route_percentage_ceiling_basis_points": { "const": 500 },
+        "aggregate_percentage_ceiling_basis_points": { "const": 1500 },
+        "activation_delay": { "const": 0 },
+        "active_from": { "$ref": "#/$defs/positiveUint" }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "action",
+        "threshold",
+        "authorizer_set_version",
+        "authorizer_set_hash",
+        "sorted_authorizer_addresses"
+      ],
+      "properties": {
+        "action": { "const": "TOMBSTONE_THEN_COMPENSATE" },
+        "threshold": { "const": 2 },
+        "authorizer_set_version": { "const": 1 },
+        "authorizer_set_hash": { "$ref": "#/$defs/hex32" },
+        "sorted_authorizer_addresses": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": { "$ref": "#/$defs/hex20" }
+        }
+      }
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "url", "authority"],
+      "properties": {
+        "id": { "enum": ["mock-bridge-provider-a", "mock-bridge-provider-b"] },
+        "url": { "type": "string", "pattern": "^http://(?:127\\.0\\.0\\.1|localhost|\\[::1\\]):[0-9]+$" },
+        "authority": { "const": "TRANSPORT_ONLY" }
+      }
+    },
+    "envelope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "message_id",
+        "protocol_id",
+        "source_chain_id",
+        "source_coordinator",
+        "source_component",
+        "destination_chain_id",
+        "destination_coordinator",
+        "destination_component",
+        "lane_id",
+        "source_nonce",
+        "aggregate_id",
+        "action_ordinal",
+        "payload_hash",
+        "created_at",
+        "expires_at",
+        "route_policy_hash",
+        "adapter_set_policy_hash",
+        "source_finality_policy_hash",
+        "destination_finality_policy_hash",
+        "correlation_id",
+        "causation_message_id",
+        "superseded_message_id"
+      ],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "message_id": { "$ref": "#/$defs/hex32" },
+        "protocol_id": { "$ref": "#/$defs/hex32" },
+        "source_chain_id": { "$ref": "#/$defs/positiveUint" },
+        "source_coordinator": { "$ref": "#/$defs/hex20" },
+        "source_component": { "$ref": "#/$defs/hex20" },
+        "destination_chain_id": { "$ref": "#/$defs/positiveUint" },
+        "destination_coordinator": { "$ref": "#/$defs/hex20" },
+        "destination_component": { "$ref": "#/$defs/hex20" },
+        "lane_id": { "$ref": "#/$defs/hex32" },
+        "source_nonce": { "$ref": "#/$defs/positiveUint" },
+        "aggregate_id": { "$ref": "#/$defs/hex32" },
+        "action_ordinal": { "$ref": "#/$defs/positiveUint" },
+        "payload_hash": { "$ref": "#/$defs/hex32" },
+        "created_at": { "$ref": "#/$defs/positiveUint" },
+        "expires_at": { "$ref": "#/$defs/positiveUint" },
+        "route_policy_hash": { "$ref": "#/$defs/hex32" },
+        "adapter_set_policy_hash": { "$ref": "#/$defs/hex32" },
+        "source_finality_policy_hash": { "$ref": "#/$defs/hex32" },
+        "destination_finality_policy_hash": { "$ref": "#/$defs/hex32" },
+        "correlation_id": { "$ref": "#/$defs/hex32" },
+        "causation_message_id": { "$ref": "#/$defs/hex32" },
+        "superseded_message_id": { "$ref": "#/$defs/hex32" }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_block_hash",
+        "source_block_number",
+        "source_block_timestamp",
+        "transaction_hash",
+        "transaction_index",
+        "receipt_root",
+        "receipt_proof_hash",
+        "log_index",
+        "event_hash",
+        "finality_head_hash",
+        "finality_head_number",
+        "required_depth",
+        "header_authority_hash",
+        "observer_signed_header_commitment",
+        "observer_signature",
+        "finality_policy_hash"
+      ],
+      "properties": {
+        "source_block_hash": { "$ref": "#/$defs/hex32" },
+        "source_block_number": { "$ref": "#/$defs/positiveUint" },
+        "source_block_timestamp": { "$ref": "#/$defs/positiveUint" },
+        "transaction_hash": { "$ref": "#/$defs/hex32" },
+        "transaction_index": { "$ref": "#/$defs/uint" },
+        "receipt_root": { "$ref": "#/$defs/hex32" },
+        "receipt_proof_hash": { "$ref": "#/$defs/hex32" },
+        "log_index": { "$ref": "#/$defs/uint" },
+        "event_hash": { "$ref": "#/$defs/hex32" },
+        "finality_head_hash": { "$ref": "#/$defs/hex32" },
+        "finality_head_number": { "$ref": "#/$defs/positiveUint" },
+        "required_depth": { "$ref": "#/$defs/positiveUint" },
+        "header_authority_hash": { "$ref": "#/$defs/hex32" },
+        "observer_signed_header_commitment": { "$ref": "#/$defs/hex32" },
+        "observer_signature": {
+          "type": "string",
+          "pattern": "^0x[0-9a-f]{128}$"
+        },
+        "finality_policy_hash": { "$ref": "#/$defs/hex32" }
+      }
+    },
+    "authenticatedHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "header_rlp",
+        "header_observed_at_unix_nanos",
+        "header_signature_ed25519"
+      ],
+      "properties": {
+        "header_rlp": { "$ref": "#/$defs/hexBytes" },
+        "header_observed_at_unix_nanos": { "$ref": "#/$defs/decimal" },
+        "header_signature_ed25519": {
+          "type": "string",
+          "pattern": "^0x[0-9a-f]{128}$"
+        }
+      }
+    },
+    "receiptInclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transaction_index",
+        "transaction_rlp",
+        "transaction_proof_nodes",
+        "receipt_rlp",
+        "receipt_proof_nodes"
+      ],
+      "properties": {
+        "transaction_index": { "$ref": "#/$defs/uint" },
+        "transaction_rlp": { "$ref": "#/$defs/hexBytes" },
+        "transaction_proof_nodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/hexBytes" }
+        },
+        "receipt_rlp": { "$ref": "#/$defs/hexBytes" },
+        "receipt_proof_nodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": { "$ref": "#/$defs/hexBytes" }
+        }
+      }
+    },
+    "authenticatedInclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "header_rlp",
+        "header_observed_at_unix_nanos",
+        "header_signature_ed25519",
+        "receipts",
+        "confirmation_headers"
+      ],
+      "properties": {
+        "header_rlp": { "$ref": "#/$defs/hexBytes" },
+        "header_observed_at_unix_nanos": { "$ref": "#/$defs/decimal" },
+        "header_signature_ed25519": {
+          "type": "string",
+          "pattern": "^0x[0-9a-f]{128}$"
+        },
+        "receipts": {
+          "type": "array",
+          "description": "Prefix-complete transaction/receipt inclusions at indices 0 through proof.transaction_index. The last element is the target receipt; target_index is therefore proof.transaction_index and is not independently caller-selectable.",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": { "$ref": "#/$defs/receiptInclusion" }
+        },
+        "confirmation_headers": {
+          "type": "array",
+          "description": "Exactly proof.required_depth signed headers, beginning at source_block_number + 1, parent-linked to the inclusion header, and ending at proof.finality_head_hash/number.",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": { "$ref": "#/$defs/authenticatedHeader" }
+        }
+      }
+    },
+    "certificate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message_id",
+        "source_proof_hash",
+        "signer_set_hash",
+        "signer_set_version",
+        "signatures"
+      ],
+      "properties": {
+        "message_id": { "$ref": "#/$defs/hex32" },
+        "source_proof_hash": { "$ref": "#/$defs/hex32" },
+        "signer_set_hash": { "$ref": "#/$defs/hex32" },
+        "signer_set_version": { "const": 1 },
+        "signatures": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 3,
+          "items": {
+            "type": "string",
+            "pattern": "^0x[0-9a-f]{130}$"
+          }
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chain_id",
+        "transaction_hash",
+        "block_hash",
+        "block_number",
+        "transaction_index",
+        "log_index",
+        "raw_evidence_object_hash",
+        "proof_id",
+        "proof_hash",
+        "certificate_id",
+        "certificate_hash",
+        "proof",
+        "certificate",
+        "authenticated_inclusion"
+      ],
+      "properties": {
+        "chain_id": { "$ref": "#/$defs/positiveUint" },
+        "transaction_hash": { "$ref": "#/$defs/hex32" },
+        "block_hash": { "$ref": "#/$defs/hex32" },
+        "block_number": { "$ref": "#/$defs/positiveUint" },
+        "transaction_index": { "$ref": "#/$defs/uint" },
+        "log_index": { "$ref": "#/$defs/uint" },
+        "raw_evidence_object_hash": { "$ref": "#/$defs/hex32" },
+        "proof_id": { "$ref": "#/$defs/text" },
+        "proof_hash": { "$ref": "#/$defs/hex32" },
+        "certificate_id": { "$ref": "#/$defs/text" },
+        "certificate_hash": { "$ref": "#/$defs/hex32" },
+        "proof": { "$ref": "#/$defs/proof" },
+        "certificate": { "$ref": "#/$defs/certificate" },
+        "authenticated_inclusion": { "$ref": "#/$defs/authenticatedInclusion" }
+      }
+    },
+    "destination": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chain_id",
+        "transaction_hash",
+        "block_hash",
+        "block_number",
+        "transaction_index",
+        "log_index",
+        "result_hash"
+      ],
+      "properties": {
+        "chain_id": { "$ref": "#/$defs/positiveUint" },
+        "transaction_hash": { "$ref": "#/$defs/hex32" },
+        "block_hash": { "$ref": "#/$defs/hex32" },
+        "block_number": { "$ref": "#/$defs/positiveUint" },
+        "transaction_index": { "$ref": "#/$defs/uint" },
+        "log_index": { "$ref": "#/$defs/uint" },
+        "result_hash": { "$ref": "#/$defs/hex32" }
+      }
+    },
+    "acknowledgement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "transaction_hash",
+        "block_hash",
+        "block_number",
+        "transaction_index",
+        "log_index",
+        "commitment",
+        "finalized",
+        "proof_id",
+        "proof_hash",
+        "certificate_id",
+        "certificate_hash",
+        "raw_evidence_object_hash",
+        "proof",
+        "certificate",
+        "authenticated_inclusion"
+      ],
+      "properties": {
+        "transaction_hash": { "$ref": "#/$defs/hex32" },
+        "block_hash": { "$ref": "#/$defs/hex32" },
+        "block_number": { "$ref": "#/$defs/positiveUint" },
+        "transaction_index": { "$ref": "#/$defs/uint" },
+        "log_index": { "$ref": "#/$defs/uint" },
+        "commitment": { "$ref": "#/$defs/hex32" },
+        "finalized": { "const": true },
+        "proof_id": { "$ref": "#/$defs/text" },
+        "proof_hash": { "$ref": "#/$defs/hex32" },
+        "certificate_id": { "$ref": "#/$defs/text" },
+        "certificate_hash": { "$ref": "#/$defs/hex32" },
+        "raw_evidence_object_hash": { "$ref": "#/$defs/hex32" },
+        "proof": { "$ref": "#/$defs/proof" },
+        "certificate": { "$ref": "#/$defs/certificate" },
+        "authenticated_inclusion": { "$ref": "#/$defs/authenticatedInclusion" }
+      }
+    },
+    "providerAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider_id",
+        "attempt_number",
+        "status",
+        "retryable",
+        "message_id",
+        "payload_hash",
+        "source_proof_hash",
+        "transport_receipt_hash"
+      ],
+      "properties": {
+        "provider_id": { "enum": ["mock-bridge-provider-a", "mock-bridge-provider-b"] },
+        "attempt_number": { "$ref": "#/$defs/positiveUint" },
+        "status": { "enum": ["REQUESTED", "DELIVERED", "FAILED"] },
+        "retryable": { "type": "boolean" },
+        "message_id": { "$ref": "#/$defs/hex32" },
+        "payload_hash": { "$ref": "#/$defs/hex32" },
+        "source_proof_hash": { "$ref": "#/$defs/hex32" },
+        "transport_receipt_hash": { "$ref": "#/$defs/hex32" }
+      }
+    },
+    "message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "route_purpose",
+        "envelope",
+        "payload",
+        "source",
+        "provider_attempts",
+        "destination",
+        "acknowledgement",
+        "source_final",
+        "destination_executed"
+      ],
+      "properties": {
+        "sequence": { "$ref": "#/$defs/positiveUint" },
+        "route_purpose": { "$ref": "#/$defs/text" },
+        "envelope": { "$ref": "#/$defs/envelope" },
+        "payload": { "$ref": "#/$defs/hexBytes" },
+        "source": { "$ref": "#/$defs/source" },
+        "provider_attempts": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/providerAttempt" }
+        },
+        "destination": { "$ref": "#/$defs/destination" },
+        "acknowledgement": { "$ref": "#/$defs/acknowledgement" },
+        "source_final": { "const": true },
+        "destination_executed": { "const": true }
+      }
+    },
+    "replay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "purpose",
+        "message_id",
+        "destination_chain_id",
+        "transaction_hash",
+        "block_hash",
+        "block_number",
+        "original_result_hash",
+        "replay_result_hash",
+        "economic_effect_delta_units",
+        "duplicate_prevented"
+      ],
+      "properties": {
+        "purpose": { "enum": ["MINT", "REPAYMENT", "COLLATERAL_RELEASE"] },
+        "message_id": { "$ref": "#/$defs/hex32" },
+        "destination_chain_id": { "$ref": "#/$defs/positiveUint" },
+        "transaction_hash": { "$ref": "#/$defs/hex32" },
+        "block_hash": { "$ref": "#/$defs/hex32" },
+        "block_number": { "$ref": "#/$defs/positiveUint" },
+        "original_result_hash": { "$ref": "#/$defs/hex32" },
+        "replay_result_hash": { "$ref": "#/$defs/hex32" },
+        "economic_effect_delta_units": { "const": "0" },
+        "duplicate_prevented": { "const": true }
+      }
+    },
+    "finalState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "loan_state",
+        "outstanding_principal_units",
+        "bridge_backing_units",
+        "loan_backing_units",
+        "wrapped_supply_units",
+        "route_exposure_units",
+        "aggregate_exposure_units",
+        "settlement_vault_units",
+        "collateral_vault_units",
+        "collateral_released",
+        "borrower_received_principal_units",
+        "lender_received_repayment_units",
+        "duplicate_economic_effects"
+      ],
+      "properties": {
+        "loan_state": { "const": "CLOSED" },
+        "outstanding_principal_units": { "const": "0" },
+        "bridge_backing_units": { "const": "0" },
+        "loan_backing_units": { "const": "0" },
+        "wrapped_supply_units": { "const": "0" },
+        "route_exposure_units": { "const": "0" },
+        "aggregate_exposure_units": { "const": "0" },
+        "settlement_vault_units": { "const": "0" },
+        "collateral_vault_units": { "const": "0" },
+        "collateral_released": { "const": true },
+        "borrower_received_principal_units": { "$ref": "#/$defs/decimal" },
+        "lender_received_repayment_units": { "$ref": "#/$defs/decimal" },
+        "duplicate_economic_effects": { "const": "0" }
+      }
+    },
+    "flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "loan_id",
+        "loan_account",
+        "funding_lock_id",
+        "collateral_id",
+        "principal_units",
+        "collateral_units",
+        "canonical_asset",
+        "wrapped_asset",
+        "collateral_asset",
+        "messages",
+        "replays",
+        "final_state"
+      ],
+      "properties": {
+        "loan_id": { "$ref": "#/$defs/hex32" },
+        "loan_account": { "$ref": "#/$defs/addressReference" },
+        "funding_lock_id": { "$ref": "#/$defs/hex32" },
+        "collateral_id": { "$ref": "#/$defs/hex32" },
+        "principal_units": { "$ref": "#/$defs/decimal" },
+        "collateral_units": { "$ref": "#/$defs/decimal" },
+        "canonical_asset": { "$ref": "#/$defs/addressReference" },
+        "wrapped_asset": { "$ref": "#/$defs/addressReference" },
+        "collateral_asset": { "$ref": "#/$defs/addressReference" },
+        "messages": {
+          "type": "array",
+          "minItems": 8,
+          "items": { "$ref": "#/$defs/message" }
+        },
+        "replays": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "$ref": "#/$defs/replay" }
+        },
+        "final_state": { "$ref": "#/$defs/finalState" }
+      }
+    },
+    "tableEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["row_count", "ordered_sha256"],
+      "properties": {
+        "row_count": { "$ref": "#/$defs/uint" },
+        "ordered_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "durable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_deployment_flow_sha256",
+        "sql",
+        "ledger",
+        "object_store",
+        "restart",
+        "reconciliation",
+        "state_parity"
+      ],
+      "properties": {
+        "input_deployment_flow_sha256": { "$ref": "#/$defs/sha256" },
+        "sql": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state_sha256", "allowed_empty_tables", "tables"],
+          "properties": {
+            "state_sha256": { "$ref": "#/$defs/sha256" },
+            "allowed_empty_tables": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/text" },
+              "uniqueItems": true
+            },
+            "tables": {
+              "type": "object",
+              "minProperties": 49,
+              "maxProperties": 49,
+              "propertyNames": {
+                "enum": [
+                  "crosschain.acknowledgements",
+                  "crosschain.action_projections",
+                  "crosschain.bridge_backing_snapshots",
+                  "crosschain.bridge_exposure_policies",
+                  "crosschain.bridge_exposure_snapshots",
+                  "crosschain.bridge_locks",
+                  "crosschain.bridge_reconciliation_differences",
+                  "crosschain.bridge_reconciliations",
+                  "crosschain.canonical_burns",
+                  "crosschain.canonical_releases",
+                  "crosschain.chain_versions",
+                  "crosschain.chains",
+                  "crosschain.collateral_positions",
+                  "crosschain.collateral_release_authorizations",
+                  "crosschain.collateral_release_results",
+                  "crosschain.compensations",
+                  "crosschain.direct_home_repayment_evidence",
+                  "crosschain.direct_home_repayment_results",
+                  "crosschain.disbursement_authorizations",
+                  "crosschain.disbursement_results",
+                  "crosschain.execution_results",
+                  "crosschain.finality_certificates",
+                  "crosschain.header_observations",
+                  "crosschain.incidents",
+                  "crosschain.inbox",
+                  "crosschain.loan_cancellation_completions",
+                  "crosschain.loan_cancellation_requests",
+                  "crosschain.loan_routes",
+                  "crosschain.message_transitions",
+                  "crosschain.messages",
+                  "crosschain.outbox",
+                  "crosschain.provider_attempts",
+                  "crosschain.repayment_results",
+                  "crosschain.recovery_authorizer_sets",
+                  "crosschain.recovery_requests",
+                  "crosschain.reorganizations",
+                  "crosschain.route_versions",
+                  "crosschain.routes",
+                  "crosschain.signer_sets",
+                  "crosschain.source_proofs",
+                  "crosschain.tombstones",
+                  "crosschain.wrapped_burns",
+                  "crosschain.wrapped_mints",
+                  "ledger.bridge_journal_links",
+                  "ledger.crosschain_recovery_journal_links",
+                  "ledger.satellite_custody_links",
+                  "ledger.satellite_settlement_links",
+                  "public.journal",
+                  "public.journal_entry"
+                ]
+              },
+              "additionalProperties": { "$ref": "#/$defs/tableEvidence" }
+            }
+          }
+        },
+        "ledger": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "journal_set_sha256",
+            "journal_count",
+            "entry_count",
+            "total_debits_units",
+            "total_credits_units",
+            "balanced"
+          ],
+          "properties": {
+            "journal_set_sha256": { "$ref": "#/$defs/sha256" },
+            "journal_count": { "$ref": "#/$defs/positiveUint" },
+            "entry_count": { "$ref": "#/$defs/positiveUint" },
+            "total_debits_units": { "$ref": "#/$defs/decimal" },
+            "total_credits_units": { "$ref": "#/$defs/decimal" },
+            "balanced": { "const": true }
+          }
+        },
+        "object_store": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bucket",
+            "object_count",
+            "object_set_sha256",
+            "rehydrated",
+            "objects"
+          ],
+          "properties": {
+            "bucket": { "const": "crosschain-evidence" },
+            "object_count": { "const": 16 },
+            "object_set_sha256": { "$ref": "#/$defs/sha256" },
+            "rehydrated": { "const": true },
+            "objects": {
+              "type": "object",
+              "minProperties": 16,
+              "maxProperties": 16,
+              "additionalProperties": false,
+              "patternProperties": {
+                "^phase8/authenticated-inclusion/v1/[0-9a-f]{64}/(?:source|acknowledgement)/[0-9a-f]{64}\\.json$": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["keccak256", "size_bytes"],
+                  "properties": {
+                    "keccak256": { "$ref": "#/$defs/hex32" },
+                    "size_bytes": { "$ref": "#/$defs/positiveUint" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "restart": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pre_state_sha256",
+            "post_state_sha256",
+            "rehydrated",
+            "duplicate_prevented",
+            "provider_delivery_count_before",
+            "provider_delivery_count_after"
+          ],
+          "properties": {
+            "pre_state_sha256": { "$ref": "#/$defs/sha256" },
+            "post_state_sha256": { "$ref": "#/$defs/sha256" },
+            "rehydrated": { "const": true },
+            "duplicate_prevented": { "const": true },
+            "provider_delivery_count_before": { "const": 9 },
+            "provider_delivery_count_after": { "const": 9 }
+          }
+        },
+        "reconciliation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["run_id", "evidence_hash", "status", "difference_count"],
+          "properties": {
+            "run_id": { "$ref": "#/$defs/text" },
+            "evidence_hash": { "$ref": "#/$defs/hex32" },
+            "status": { "const": "MATCHED" },
+            "difference_count": { "const": 0 }
+          }
+        },
+        "state_parity": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "evm_snapshot_hash",
+            "sql_snapshot_hash",
+            "ledger_snapshot_hash",
+            "comparison_hash",
+            "status",
+            "difference_count"
+          ],
+          "properties": {
+            "evm_snapshot_hash": { "$ref": "#/$defs/hex32" },
+            "sql_snapshot_hash": { "$ref": "#/$defs/hex32" },
+            "ledger_snapshot_hash": { "$ref": "#/$defs/hex32" },
+            "comparison_hash": { "$ref": "#/$defs/hex32" },
+            "status": { "const": "MATCHED" },
+            "difference_count": { "const": 0 }
+          }
+        }
+      }
+    },
+    "resetCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "labeled_containers",
+        "labeled_volumes",
+        "labeled_networks",
+        "deployment_artifacts"
+      ],
+      "properties": {
+        "labeled_containers": { "$ref": "#/$defs/uint" },
+        "labeled_volumes": { "$ref": "#/$defs/uint" },
+        "labeled_networks": { "$ref": "#/$defs/uint" },
+        "deployment_artifacts": { "$ref": "#/$defs/uint" }
+      }
+    },
+    "reset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "required_before",
+        "expected_after",
+        "remove_deployment_directory",
+        "remove_cache_directory"
+      ],
+      "properties": {
+        "command": { "const": "pwsh ./scripts/local-reset.ps1" },
+        "required_before": { "$ref": "#/$defs/resetCounts" },
+        "expected_after": { "$ref": "#/$defs/resetCounts" },
+        "remove_deployment_directory": { "const": true },
+        "remove_cache_directory": { "const": true }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deployment_complete",
+        "rpc_code_verified",
+        "trust_consistent",
+        "synthetic_boundary_explicit",
+        "authenticated_inclusion_verified",
+        "solidity_hashes_recomputed",
+        "full_flow_complete",
+        "replay_complete",
+        "restart_complete",
+        "journals_balanced",
+        "reconciliation_matched",
+        "state_parity_matched"
+      ],
+      "properties": {
+        "deployment_complete": { "const": true },
+        "rpc_code_verified": { "const": true },
+        "trust_consistent": { "const": true },
+        "synthetic_boundary_explicit": { "const": true },
+        "authenticated_inclusion_verified": { "const": true },
+        "solidity_hashes_recomputed": { "const": true },
+        "full_flow_complete": { "const": true },
+        "replay_complete": { "const": true },
+        "restart_complete": { "const": true },
+        "journals_balanced": { "const": true },
+        "reconciliation_matched": { "const": true },
+        "state_parity_matched": { "const": true }
+      }
+    }
+  }
+}

@@ -4,6 +4,7 @@ import {
   AssetIdSchema,
   MoneySchema,
 } from "../../../packages/generated/typescript/unified/v1/types_pb.js";
+import { verifyCrossChainGoldenVectors } from "./crosschainGolden.js";
 
 export function foundationAmount(units: string) {
   return create(MoneySchema, {
@@ -17,3 +18,4 @@ if (amount.units !== "1000") {
   throw new Error("generated money binding did not preserve exact units");
 }
 
+verifyCrossChainGoldenVectors();

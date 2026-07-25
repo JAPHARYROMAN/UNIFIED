@@ -16,7 +16,7 @@
   },
   "include": [
     "apps/**/*.ts",
+    "packages/crosschain/**/*.ts",
     "packages/generated/typescript/**/*.ts"
   ]
 }
-

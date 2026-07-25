@@ -1,0 +1,257 @@
+[
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "protocolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "homeChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "satelliteChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "homeCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "satelliteCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "homeLoanRouter",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "homeBridgeHub",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "wrappedUFT",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "satelliteComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "satelliteCollateralVault",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "satelliteSettlementVault",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "canonicalUFT",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateralToken",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "mintRouteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "reportRouteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "repaymentRouteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "disbursementRouteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "collateralReleaseRouteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct ICrossChainLoanPolicy.Configuration",
+        "name": "config",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidCrossChainLoanPolicy",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "configuration",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "protocolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "homeChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "satelliteChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "homeCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "satelliteCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "homeLoanRouter",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "homeBridgeHub",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "wrappedUFT",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "satelliteComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "satelliteCollateralVault",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "satelliteSettlementVault",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "canonicalUFT",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "collateralToken",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "mintRouteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "reportRouteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "repaymentRouteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "disbursementRouteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "collateralReleaseRouteHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct ICrossChainLoanPolicy.Configuration",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "configurationHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes4",
+        "name": "interfaceId",
+        "type": "bytes4"
+      }
+    ],
+    "name": "supportsInterface",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  }
+]

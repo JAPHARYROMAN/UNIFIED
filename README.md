@@ -142,13 +142,29 @@ production ledger-listener wiring. Its bounded engineering exit is recorded in
 `docs/reviews/phase-7c-exit-review.md`; live-provider, production-chain, reserve-backed,
 public-network, collateral-release, and real-fund authority remain prohibited.
 
-The accepted Phase 8 engineering boundary is recorded in
+The implemented Phase 8 local engineering boundary is recorded in
 `adr/0018-phase-8-cross-chain-and-wrapped-uft-boundary.md` and
 `docs/architecture/phase-8-cross-chain-protocol.md`, with authoritative layouts in
-`docs/architecture/phase-8-data-layouts.md`. It governs a complete synthetic/local
-two-domain flow with one canonical home authority, typed at-most-once messages,
-transport-only provider failover, fully backed and exposure-capped wUFT, bounded
-satellite custody/disbursement/repayment, and destination-tombstone recovery. It does
-not select a production chain, light client, bridge provider, or signing service and
-does not authorize public networks, production keys, real UFT, collateral, loans, or
-funds.
+`docs/architecture/phase-8-data-layouts.md`. The bounded implementation runs a complete
+synthetic/local two-domain flow with one canonical home authority, typed at-most-once
+messages, transport-only provider failover, fully backed and exposure-capped wUFT,
+bounded satellite custody/disbursement/repayment, destination-tombstone recovery, and a
+typed cancellation-accounting path.
+
+The internal security decision is recorded in
+`security/reviews/phase-8-internal-review.md`, and the authoritative live-evidence,
+restart, reconciliation, and reset contract is documented in
+`docs/architecture/phase-8-local-release-evidence.md`. Deterministic Protobuf
+derivatives cover Solidity, Go, TypeScript, and Python. The durable release commitment
+binds exactly 49 SQL tables, balanced evidence-linked journals, sixteen
+content-addressed authenticated-inclusion objects, exact replay behavior, state
+rehydration across service restart, matched cross-domain reconciliation, and a
+reset-controlled local topology. `UNI-REVIEW-011` remains `TODO` for the separate
+bounded engineering exit.
+
+Phase 8 does not select or authorize a production home or satellite chain, consensus
+or light-client system, bridge provider, relayer, RPC, oracle, identity provider,
+signing service, HSM/KMS custody, public testnet, mainnet, production key, real UFT,
+real collateral, live loan, treasury asset, or real fund. Every such production
+decision requires separate architecture, threat-model, operational-control,
+key-ceremony, due-diligence, and independent-review authority.

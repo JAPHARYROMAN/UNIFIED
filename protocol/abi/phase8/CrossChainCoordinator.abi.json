@@ -1,0 +1,1768 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "roleManager_",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "protocolId_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "localChainId_",
+        "type": "uint256"
+      },
+      {
+        "internalType": "contract RouteRegistry",
+        "name": "routeRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "contract SyntheticFinalityVerifier",
+        "name": "finalityVerifier_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "laneId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "nonce",
+        "type": "uint64"
+      }
+    ],
+    "name": "ConflictingMessage",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidCoordinatorConfiguration",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidExecutionResult",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidMessage",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "laneId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "expected",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "actual",
+        "type": "uint64"
+      }
+    ],
+    "name": "InvalidMessageOrder",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "routePolicyHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "InvalidRoute",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "MessageAlreadyTombstoned",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "MessageExpired",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "role",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unauthorized",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "caller",
+        "type": "address"
+      }
+    ],
+    "name": "UnauthorizedRecoveryController",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "destinationResultHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "acknowledgementCommitment",
+        "type": "bytes32"
+      }
+    ],
+    "name": "MessageAcknowledged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "laneId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint64",
+        "name": "sourceNonce",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "destinationComponent",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "resultHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "MessageExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "laneId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint64",
+        "name": "sourceNonce",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "aggregateId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum CrossChainTypes.CrossChainActionType",
+        "name": "actionType",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "payloadHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "destinationComponent",
+        "type": "address"
+      }
+    ],
+    "name": "MessageSent",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "uint64",
+        "name": "recoveryNonce",
+        "type": "uint64"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "reasonCode",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "tombstoneEventHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "MessageTombstoned",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "controller",
+        "type": "address"
+      }
+    ],
+    "name": "RecoveryControllerConfigured",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_PAYLOAD_BYTES",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "acknowledgementCommitment",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "commitment",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "schemaVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "protocolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "laneId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "aggregateId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainTypes.CrossChainActionType",
+            "name": "actionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "payloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "createdAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterSetPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "correlationId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "causationMessageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "supersededMessageId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.MessageEnvelope",
+        "name": "envelope",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "destinationResultHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "acknowledgementEventHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "controller",
+        "type": "address"
+      }
+    ],
+    "name": "configureRecoveryController",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "schemaVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "protocolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "laneId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "aggregateId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainTypes.CrossChainActionType",
+            "name": "actionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "payloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "createdAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterSetPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "correlationId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "causationMessageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "supersededMessageId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.MessageEnvelope",
+        "name": "envelope",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "payload",
+        "type": "bytes"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "sourceBlockHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceBlockNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceBlockTimestamp",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "transactionHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "transactionIndex",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "receiptRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "receiptProofHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "logIndex",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "eventHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "finalityHeadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "finalityHeadNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "requiredDepth",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "headerAuthorityHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "observerSignedHeaderCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "observerSignature",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "finalityPolicyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.SourceEventProof",
+        "name": "proof",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceProofHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "signerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "signerSetVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "signatures",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.FinalityCertificate",
+        "name": "certificate",
+        "type": "tuple"
+      }
+    ],
+    "name": "executeMessage",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "resultHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "executionResult",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "resultHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "finalityVerifier",
+    "outputs": [
+      {
+        "internalType": "contract SyntheticFinalityVerifier",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "laneNonceKey",
+        "type": "bytes32"
+      }
+    ],
+    "name": "inboundMessageAt",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "localChainId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId_",
+        "type": "bytes32"
+      }
+    ],
+    "name": "messageEnvelope",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "schemaVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "protocolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "laneId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "aggregateId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainTypes.CrossChainActionType",
+            "name": "actionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "payloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "createdAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterSetPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "correlationId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "causationMessageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "supersededMessageId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.MessageEnvelope",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId_",
+        "type": "bytes32"
+      }
+    ],
+    "name": "messageState",
+    "outputs": [
+      {
+        "internalType": "enum CrossChainTypes.MessageState",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "laneId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "nextInboundNonce",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "nonce",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "laneId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "nextOutboundNonce",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "nonce",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "protocolId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "schemaVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "protocolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "laneId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "aggregateId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainTypes.CrossChainActionType",
+            "name": "actionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "payloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "createdAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterSetPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "correlationId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "causationMessageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "supersededMessageId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.MessageEnvelope",
+        "name": "envelope",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "destinationResultHash",
+        "type": "bytes32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "sourceBlockHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceBlockNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceBlockTimestamp",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "transactionHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "transactionIndex",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "receiptRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "receiptProofHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "logIndex",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "eventHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "finalityHeadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "finalityHeadNumber",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "requiredDepth",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "headerAuthorityHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "observerSignedHeaderCommitment",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "observerSignature",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "finalityPolicyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.SourceEventProof",
+        "name": "proof",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceProofHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "signerSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "signerSetVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes[]",
+            "name": "signatures",
+            "type": "bytes[]"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.FinalityCertificate",
+        "name": "certificate",
+        "type": "tuple"
+      }
+    ],
+    "name": "recordAcknowledgement",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "commitment",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "schemaVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "protocolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "laneId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "aggregateId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainTypes.CrossChainActionType",
+            "name": "actionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "payloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "createdAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterSetPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "correlationId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "causationMessageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "supersededMessageId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.MessageEnvelope",
+        "name": "envelope",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint64",
+        "name": "recoveryNonce",
+        "type": "uint64"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "reasonCode",
+        "type": "bytes32"
+      }
+    ],
+    "name": "recordTombstone",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "tombstoneEventHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "recoveryController",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "roleManager",
+    "outputs": [
+      {
+        "internalType": "contract IRoleManager",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "routeRegistry",
+    "outputs": [
+      {
+        "internalType": "contract RouteRegistry",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "schemaVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "protocolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "laneId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "aggregateId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainTypes.CrossChainActionType",
+            "name": "actionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "payloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "createdAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterSetPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "correlationId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "causationMessageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "supersededMessageId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.MessageEnvelope",
+        "name": "envelope",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes",
+        "name": "payload",
+        "type": "bytes"
+      }
+    ],
+    "name": "sendMessage",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId_",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint32",
+            "name": "schemaVersion",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "messageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "protocolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "sourceChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "sourceComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "destinationChainId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationCoordinator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destinationComponent",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "laneId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "sourceNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "aggregateId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum CrossChainTypes.CrossChainActionType",
+            "name": "actionType",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "payloadHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "createdAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "routePolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adapterSetPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "sourceFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "destinationFinalityPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "correlationId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "causationMessageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "supersededMessageId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct CrossChainTypes.MessageEnvelope",
+        "name": "envelope",
+        "type": "tuple"
+      }
+    ],
+    "name": "sourceMessageEventHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "messageId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "tombstoneHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "tombstoneHash",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

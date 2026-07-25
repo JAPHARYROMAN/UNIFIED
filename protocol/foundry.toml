@@ -13,6 +13,13 @@ deny = "warnings"
 # 3860/5574 arise only from test/script harnesses that embed many deployment bytecodes.
 # Production deployed-size limits are checked separately in scripts/check-contract-sizes.py.
 ignored_error_codes = [3860, 5574, 6335]
+fs_permissions = [{ access = "read-write", path = "./deployments" }]
+
+[invariant]
+# Keep stateful coverage substantial while bounding the quadratic message-history
+# assertions in the Phase 8 handlers for reproducible local and CI execution.
+runs = 128
+depth = 64
 
 [fmt]
 line_length = 100

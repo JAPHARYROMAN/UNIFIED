@@ -1,0 +1,738 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+// CrossChainMessageState is the canonical Phase 8 durable message vocabulary.
+enum CrossChainMessageState {
+  CROSS_CHAIN_MESSAGE_STATE_UNSPECIFIED = 0;
+  CROSS_CHAIN_MESSAGE_STATE_CREATED = 1;
+  CROSS_CHAIN_MESSAGE_STATE_SOURCE_FINALIZING = 2;
+  CROSS_CHAIN_MESSAGE_STATE_SOURCE_FINAL = 3;
+  CROSS_CHAIN_MESSAGE_STATE_SENT = 4;
+  CROSS_CHAIN_MESSAGE_STATE_RELAYED = 5;
+  CROSS_CHAIN_MESSAGE_STATE_VERIFIED = 6;
+  CROSS_CHAIN_MESSAGE_STATE_EXECUTED = 7;
+  CROSS_CHAIN_MESSAGE_STATE_ACK_PENDING = 8;
+  CROSS_CHAIN_MESSAGE_STATE_ACKNOWLEDGED = 9;
+  CROSS_CHAIN_MESSAGE_STATE_REJECTED = 10;
+  CROSS_CHAIN_MESSAGE_STATE_FAILED = 11;
+  CROSS_CHAIN_MESSAGE_STATE_EXPIRED = 12;
+  CROSS_CHAIN_MESSAGE_STATE_RECOVERY_PENDING = 13;
+  CROSS_CHAIN_MESSAGE_STATE_DESTINATION_TOMBSTONED = 14;
+  CROSS_CHAIN_MESSAGE_STATE_SOURCE_COMPENSATED = 15;
+  CROSS_CHAIN_MESSAGE_STATE_RECOVERED = 16;
+  CROSS_CHAIN_MESSAGE_STATE_DISPUTED = 17;
+}
+
+enum CrossChainRecoveryState {
+  CROSS_CHAIN_RECOVERY_STATE_UNSPECIFIED = 0;
+  CROSS_CHAIN_RECOVERY_STATE_REQUESTED = 1;
+  CROSS_CHAIN_RECOVERY_STATE_DESTINATION_CHECKED = 2;
+  CROSS_CHAIN_RECOVERY_STATE_TOMBSTONED = 3;
+  CROSS_CHAIN_RECOVERY_STATE_COMPENSATED = 4;
+  CROSS_CHAIN_RECOVERY_STATE_RECOVERED = 5;
+  CROSS_CHAIN_RECOVERY_STATE_DISPUTED = 6;
+}
+
+// RecoveryAction is the closed action vocabulary committed by the canonical
+// UNIFIED_XCHAIN_RECOVERY_AUTHORIZATION_V2 authorization digest.
+enum RecoveryAction {
+  RECOVERY_ACTION_UNSPECIFIED = 0;
+  RECOVERY_ACTION_TOMBSTONE_THEN_COMPENSATE = 1;
+}
+
+// RecoveryState is monotonic. One authorization progresses through exactly
+// AUTHORIZED -> DESTINATION_TOMBSTONED -> SOURCE_COMPENSATED.
+enum RecoveryState {
+  // NONE in the Solidity enum; the suffix satisfies the protobuf zero-value
+  // convention without changing the consensus ordinal.
+  RECOVERY_STATE_NONE_UNSPECIFIED = 0;
+  RECOVERY_STATE_AUTHORIZED = 1;
+  RECOVERY_STATE_DESTINATION_TOMBSTONED = 2;
+  RECOVERY_STATE_SOURCE_COMPENSATED = 3;
+}
+
+enum CrossChainActionType {
+  CROSS_CHAIN_ACTION_TYPE_UNSPECIFIED = 0;
+  CROSS_CHAIN_ACTION_TYPE_CANONICAL_UFT_LOCKED_V1 = 1;
+  CROSS_CHAIN_ACTION_TYPE_WRAPPED_UFT_MINTED_V1 = 2;
+  CROSS_CHAIN_ACTION_TYPE_WRAPPED_UFT_BURNED_V1 = 3;
+  CROSS_CHAIN_ACTION_TYPE_CANONICAL_UFT_RELEASED_V1 = 4;
+  CROSS_CHAIN_ACTION_TYPE_SATELLITE_COLLATERAL_LOCKED_V1 = 5;
+  CROSS_CHAIN_ACTION_TYPE_HOME_DISBURSEMENT_AUTHORIZED_V1 = 6;
+  CROSS_CHAIN_ACTION_TYPE_SATELLITE_DISBURSEMENT_SETTLED_V1 = 7;
+  CROSS_CHAIN_ACTION_TYPE_SATELLITE_REPAYMENT_BURNED_V1 = 8;
+  CROSS_CHAIN_ACTION_TYPE_HOME_COLLATERAL_RELEASE_AUTHORIZED_V1 = 9;
+  CROSS_CHAIN_ACTION_TYPE_SATELLITE_COLLATERAL_RELEASED_V1 = 10;
+  CROSS_CHAIN_ACTION_TYPE_STATE_ACKNOWLEDGED_V1 = 11;
+  CROSS_CHAIN_ACTION_TYPE_CANCELLATION_REQUESTED_V1 = 12;
+  CROSS_CHAIN_ACTION_TYPE_DESTINATION_TOMBSTONED_V1 = 13;
+  CROSS_CHAIN_ACTION_TYPE_SOURCE_COMPENSATED_V1 = 14;
+  CROSS_CHAIN_ACTION_TYPE_SATELLITE_UFT_PERMANENT_BURNED_V1 = 15;
+  CROSS_CHAIN_ACTION_TYPE_ROUTE_GOVERNANCE_V1 = 16;
+}
+
+enum CrossChainFailureClass {
+  CROSS_CHAIN_FAILURE_CLASS_UNSPECIFIED = 0;
+  CROSS_CHAIN_FAILURE_CLASS_RETRYABLE_TRANSPORT = 1;
+  CROSS_CHAIN_FAILURE_CLASS_RETRYABLE_TARGET = 2;
+  CROSS_CHAIN_FAILURE_CLASS_REJECTED = 3;
+  CROSS_CHAIN_FAILURE_CLASS_EXPIRED = 4;
+  CROSS_CHAIN_FAILURE_CLASS_NONRETRYABLE = 5;
+  CROSS_CHAIN_FAILURE_CLASS_SAFETY_CONTRADICTION = 6;
+}
+
+enum CrossChainGovernanceActionType {
+  CROSS_CHAIN_GOVERNANCE_ACTION_TYPE_UNSPECIFIED = 0;
+  CROSS_CHAIN_GOVERNANCE_ACTION_TYPE_REGISTER_ROUTE_VERSION = 1;
+  CROSS_CHAIN_GOVERNANCE_ACTION_TYPE_DEPRECATE_ROUTE_VERSION = 2;
+  CROSS_CHAIN_GOVERNANCE_ACTION_TYPE_PAUSE_NEW_EXPOSURE = 3;
+  CROSS_CHAIN_GOVERNANCE_ACTION_TYPE_RESUME_NEW_EXPOSURE = 4;
+  CROSS_CHAIN_GOVERNANCE_ACTION_TYPE_LOWER_EXPOSURE_CAP = 5;
+  CROSS_CHAIN_GOVERNANCE_ACTION_TYPE_ACTIVATE_DELAYED_EXPOSURE_POLICY = 6;
+}
+
+enum CrossChainSignerSetStatus {
+  CROSS_CHAIN_SIGNER_SET_STATUS_UNSPECIFIED = 0;
+  CROSS_CHAIN_SIGNER_SET_STATUS_ACTIVE = 1;
+  CROSS_CHAIN_SIGNER_SET_STATUS_DEPRECATED = 2;
+  CROSS_CHAIN_SIGNER_SET_STATUS_COMPROMISED = 3;
+}
+
+message CrossChainDomain {
+  string chain_id = 1;
+  bytes coordinator = 2;
+  bytes configuration_hash = 3;
+  bytes finality_verifier = 4;
+  uint64 version = 5;
+}
+
+message CrossChainLane {
+  bytes lane_id = 1;
+  string source_chain_id = 2;
+  bytes source_component = 3;
+  string destination_chain_id = 4;
+  bytes destination_component = 5;
+  bytes aggregate_id = 6;
+  string action_family = 7;
+}
+
+// CrossChainSignerSet is the canonical authority-set binding used by route
+// policy. Signer addresses are exactly three distinct 20-byte values in
+// bytewise order and threshold is exactly two for the Phase 8 baseline.
+message CrossChainSignerSet {
+  bytes signer_set_hash = 1;
+  uint32 version = 2;
+  uint32 threshold = 3;
+  repeated bytes signer_addresses = 4;
+  bytes observer_authority_hash = 5;
+  google.protobuf.Timestamp valid_from = 6;
+  google.protobuf.Timestamp valid_until = 7;
+  CrossChainSignerSetStatus status = 8;
+}
+
+message CrossChainRoutePolicy {
+  Identifier route_id = 1;
+  uint64 route_version = 2;
+  CrossChainDomain source_domain = 3;
+  CrossChainDomain destination_domain = 4;
+  repeated CrossChainActionType allowed_actions = 5;
+  bytes adapter_set_policy_hash = 6;
+  bytes source_finality_policy_hash = 7;
+  bytes destination_finality_policy_hash = 8;
+  // Retained for wire compatibility. New route versions bind both directional
+  // signer sets through fields 16-19.
+  bytes signer_set_hash = 9 [deprecated = true];
+  uint32 signer_threshold = 10;
+  uint64 timeout_seconds = 11;
+  string route_absolute_cap_units = 12;
+  string chain_absolute_cap_units = 13;
+  string adapter_absolute_cap_units = 14;
+  bytes policy_hash = 15;
+  bytes source_signer_set_hash = 16;
+  uint32 source_signer_set_version = 17;
+  bytes destination_signer_set_hash = 18;
+  uint32 destination_signer_set_version = 19;
+}
+
+// CrossChainMessageEnvelope contains every field in the canonical non-recursive
+// message digest. message_id is the digest and is not part of its own preimage.
+message CrossChainMessageEnvelope {
+  uint32 schema_version = 1;
+  bytes message_id = 2;
+  bytes protocol_id = 3;
+  string source_chain_id = 4;
+  bytes source_coordinator = 5;
+  bytes source_component = 6;
+  string destination_chain_id = 7;
+  bytes destination_coordinator = 8;
+  bytes destination_component = 9;
+  bytes lane_id = 10;
+  uint64 source_nonce = 11;
+  bytes aggregate_id = 12;
+  CrossChainActionType action_type = 13;
+  bytes typed_action_payload = 14;
+  bytes payload_hash = 15;
+  google.protobuf.Timestamp created_at = 16;
+  google.protobuf.Timestamp expires_at = 17;
+  bytes route_policy_hash = 18;
+  bytes adapter_set_policy_hash = 19;
+  bytes source_finality_policy_hash = 20;
+  bytes destination_finality_policy_hash = 21;
+  bytes correlation_id = 22;
+  bytes causation_message_id = 23;
+  bytes superseded_message_id = 24;
+  oneof typed_action {
+    CanonicalUftLockPayload canonical_uft_lock = 30;
+    WrappedUftMintedPayload wrapped_uft_minted = 31;
+    WrappedUftBurnedPayload wrapped_uft_burned = 32;
+    CanonicalUftReleasedPayload canonical_uft_released = 33;
+    SatelliteCollateralLockedPayload satellite_collateral_locked = 34;
+    HomeDisbursementAuthorizedPayload home_disbursement_authorized = 35;
+    SatelliteDisbursementSettledPayload satellite_disbursement_settled = 36;
+    SatelliteRepaymentBurnedPayload satellite_repayment_burned = 37;
+    HomeCollateralReleaseAuthorizedPayload home_collateral_release_authorized = 38;
+    SatelliteCollateralReleasedPayload satellite_collateral_released = 39;
+    LoanCancellationRequestedPayload loan_cancellation_requested = 40;
+    SatelliteFundingCancelledPayload satellite_funding_cancelled = 42;
+    SatelliteUftPermanentBurnedPayload satellite_uft_permanent_burned = 44;
+  }
+}
+
+message CrossChainSourceEventProof {
+  bytes message_id = 1;
+  string source_chain_id = 2;
+  bytes source_contract = 3;
+  bytes source_block_hash = 4;
+  uint64 source_block_number = 5;
+  google.protobuf.Timestamp source_block_timestamp = 6;
+  bytes transaction_hash = 7;
+  uint64 transaction_index = 8;
+  bytes receipt_root = 9;
+  bytes receipt_proof_hash = 10;
+  uint64 log_index = 11;
+  bytes event_hash = 12;
+  bytes finality_head_hash = 13;
+  uint64 finality_head_number = 14;
+  uint64 required_depth = 15;
+  bytes header_authority_hash = 16;
+  bytes observer_signature = 17;
+  bytes finality_policy_hash = 18;
+  bytes observer_signed_header_commitment = 19;
+}
+
+message CrossChainFinalityCertificate {
+  bytes message_id = 1;
+  bytes source_proof_hash = 2;
+  bytes signer_set_hash = 3;
+  uint32 signer_set_version = 4;
+  uint32 threshold = 5;
+  repeated bytes signatures = 6;
+  google.protobuf.Timestamp valid_from = 7;
+  google.protobuf.Timestamp valid_until = 8;
+  bytes certificate_hash = 9;
+}
+
+message CrossChainProviderDeliveryAttempt {
+  bytes message_id = 1;
+  string provider_id = 2;
+  uint32 attempt_number = 3;
+  bytes serialized_envelope_hash = 4;
+  bytes source_proof_hash = 5;
+  string status = 6;
+  bytes provider_receipt_hash = 7;
+  google.protobuf.Timestamp attempted_at = 8;
+}
+
+message CrossChainExecutionResult {
+  bytes message_id = 1;
+  bytes lane_id = 2;
+  uint64 source_nonce = 3;
+  CrossChainActionType action_type = 4;
+  bytes target = 5;
+  bytes result_hash = 6;
+  string destination_chain_id = 7;
+  bytes transaction_hash = 8;
+  uint64 log_index = 9;
+  google.protobuf.Timestamp executed_at = 10;
+}
+
+message CrossChainAcknowledgement {
+  bytes message_id = 1;
+  bytes execution_result_hash = 2;
+  CrossChainSourceEventProof destination_execution_proof = 3;
+  CrossChainFinalityCertificate finality_certificate = 4;
+  google.protobuf.Timestamp acknowledged_at = 5;
+}
+
+message CrossChainTransitionEvidence {
+  bytes message_id = 1;
+  CrossChainMessageState from_state = 2;
+  CrossChainMessageState to_state = 3;
+  uint64 state_version = 4;
+  CrossChainFailureClass failure_class = 5;
+  bytes evidence_hash = 6;
+  google.protobuf.Timestamp occurred_at = 7;
+}
+
+message CrossChainCancellationRequest {
+  Identifier recovery_id = 1;
+  bytes original_message_id = 2;
+  bytes immutable_envelope_hash = 3;
+  uint64 recovery_nonce = 4;
+  string reason_code = 5;
+  bytes source_state_commitment = 6;
+  bytes destination_state_commitment = 7;
+  string bounded_units = 8;
+  AssetId asset_id = 9;
+  uint64 route_version = 10;
+  bytes authorizer_set_hash = 11;
+  repeated bytes authorizer_signatures = 12;
+  google.protobuf.Timestamp requested_at = 13;
+}
+
+// CrossChainRecoveryRequestV2 mirrors the Solidity RecoveryRequest ABI tuple.
+// Field order and scalar widths are consensus-sensitive:
+// seven bytes32 values, uint64, uint64, bytes32, RecoveryAction, bytes32,
+// uint32.
+message CrossChainRecoveryRequestV2 {
+  bytes message_id = 1;
+  bytes envelope_hash = 2;
+  bytes route_policy_hash = 3;
+  bytes asset_amount_commitment = 4;
+  bytes source_state_commitment = 5;
+  bytes destination_state_commitment = 6;
+  bytes compensation_payload_hash = 7;
+  uint64 message_expires_at = 8;
+  uint64 recovery_nonce = 9;
+  bytes reason_code = 10;
+  RecoveryAction action = 11;
+  bytes authorizer_set_hash = 12;
+  uint32 authorizer_set_version = 13;
+}
+
+// CrossChainRecoveryAuthorizationV2 carries the external digest domain plus
+// the exact ABI request and its 2-of-3 authorization evidence. Its digest is:
+// keccak256(abi.encode(
+//   "UNIFIED_XCHAIN_RECOVERY_AUTHORIZATION_V2",
+//   protocol_id,
+//   source_chain_id,
+//   source_coordinator,
+//   destination_chain_id,
+//   destination_coordinator,
+//   request
+// )).
+message CrossChainRecoveryAuthorizationV2 {
+  bytes protocol_id = 1;
+  string source_chain_id = 2;
+  bytes source_coordinator = 3;
+  string destination_chain_id = 4;
+  bytes destination_coordinator = 5;
+  CrossChainRecoveryRequestV2 request = 6;
+  repeated bytes authorizer_signatures = 7;
+  uint32 signer_bitmap = 8;
+}
+
+// CrossChainRecoveryAuthorizerSetV2 is hashed with the fixed
+// UNIFIED_XCHAIN_RECOVERY_AUTHORIZER_SET_V1 domain. threshold must be two and
+// authorizers must contain exactly three distinct addresses in bytewise order.
+message CrossChainRecoveryAuthorizerSetV2 {
+  uint32 version = 1;
+  uint32 threshold = 2;
+  repeated bytes authorizers = 3;
+  bytes set_hash = 4;
+}
+
+// CrossChainRecoveryRecordV2 is the durable monotonic recovery projection.
+message CrossChainRecoveryRecordV2 {
+  bytes recovery_id = 1;
+  bytes request_digest = 2;
+  uint32 signer_bitmap = 3;
+  RecoveryState state = 4;
+  bytes tombstone_event_hash = 5;
+  bytes compensation_payload_hash = 6;
+  bytes compensation_result = 7;
+}
+
+message CrossChainTombstone {
+  Identifier recovery_id = 1;
+  bytes original_message_id = 2;
+  bytes immutable_envelope_hash = 3;
+  uint64 recovery_nonce = 4;
+  string reason_code = 5;
+  bytes destination_state_commitment = 6;
+  bytes tombstone_hash = 7;
+  google.protobuf.Timestamp tombstoned_at = 8;
+}
+
+message CrossChainCompensation {
+  Identifier recovery_id = 1;
+  bytes original_message_id = 2;
+  bytes tombstone_hash = 3;
+  string compensation_type = 4;
+  AssetId asset_id = 5;
+  string units = 6;
+  PartyId recipient = 7;
+  bytes result_hash = 8;
+  google.protobuf.Timestamp compensated_at = 9;
+}
+
+message CrossChainRecoveryRecord {
+  Identifier recovery_id = 1;
+  bytes original_message_id = 2;
+  CrossChainRecoveryState state = 3;
+  CrossChainCancellationRequest request = 4;
+  CrossChainTombstone tombstone = 5;
+  CrossChainCompensation compensation = 6;
+  bytes superseding_message_id = 7;
+  uint64 version = 8;
+}
+
+// The following payload records mirror Solidity abi.encode struct field order
+// and scalar widths exactly. Amount strings are canonical positive uint256
+// decimal values; identifiers are bytes32 and addresses are 20 bytes.
+message CanonicalUftLockPayload {
+  bytes lock_id = 1;
+  bytes loan_id = 2;
+  bytes canonical_token = 3;
+  bytes home_bridge_hub = 4;
+  bytes wrapped_token = 5;
+  bytes destination_recipient = 6;
+  string amount = 7;
+}
+
+message WrappedUftMintedPayload {
+  bytes loan_id = 1;
+  bytes lock_id = 2;
+  bytes home_loan_account = 3;
+  bytes borrower = 4;
+  bytes lender = 5;
+  bytes wrapped_token = 6;
+  string amount = 7;
+  bytes policy_hash = 8;
+}
+
+message WrappedUftBurnedPayload {
+  bytes burn_id = 1;
+  bytes backing_route_policy_hash = 2;
+  bytes canonical_token = 3;
+  bytes home_bridge_hub = 4;
+  bytes wrapped_token = 5;
+  bytes recipient = 6;
+  string amount = 7;
+}
+
+message CanonicalUftReleasedPayload {
+  bytes burn_id = 1;
+  bytes canonical_token = 2;
+  bytes recipient = 3;
+  string amount = 4;
+  bytes wrapped_burn_message_id = 5;
+}
+
+message SatelliteCollateralLockedPayload {
+  bytes loan_id = 1;
+  bytes collateral_id = 2;
+  bytes home_loan_account = 3;
+  bytes borrower = 4;
+  bytes lender = 5;
+  bytes collateral_token = 6;
+  string amount = 7;
+  bytes policy_hash = 8;
+}
+
+message HomeDisbursementAuthorizedPayload {
+  bytes loan_id = 1;
+  bytes funding_lock_id = 2;
+  bytes home_loan_account = 3;
+  bytes borrower = 4;
+  bytes lender = 5;
+  bytes wrapped_token = 6;
+  string amount = 7;
+  bytes policy_hash = 8;
+}
+
+message SatelliteDisbursementSettledPayload {
+  bytes loan_id = 1;
+  bytes funding_lock_id = 2;
+  bytes home_loan_account = 3;
+  bytes borrower = 4;
+  bytes lender = 5;
+  bytes wrapped_token = 6;
+  string amount = 7;
+  bytes policy_hash = 8;
+}
+
+message SatelliteRepaymentBurnedPayload {
+  bytes burn_id = 1;
+  bytes loan_id = 2;
+  bytes payment_id = 3;
+  bytes backing_route_policy_hash = 4;
+  bytes canonical_token = 5;
+  bytes home_bridge_hub = 6;
+  bytes wrapped_token = 7;
+  bytes lender = 8;
+  string amount = 9;
+}
+
+message HomeCollateralReleaseAuthorizedPayload {
+  bytes loan_id = 1;
+  bytes collateral_id = 2;
+  bytes home_loan_account = 3;
+  bytes borrower = 4;
+  bytes lender = 5;
+  bytes collateral_token = 6;
+  string amount = 7;
+  bytes policy_hash = 8;
+}
+
+message SatelliteCollateralReleasedPayload {
+  bytes loan_id = 1;
+  bytes collateral_id = 2;
+  bytes home_loan_account = 3;
+  bytes borrower = 4;
+  bytes lender = 5;
+  bytes collateral_token = 6;
+  string amount = 7;
+  bytes policy_hash = 8;
+}
+
+// LoanCancellationAuthorization is the exact typed projection of
+// CrossChainTypes.LoanCancellationAuthorization. Signatures are deliberately
+// excluded: they are separate authority inputs to the consuming call.
+message LoanCancellationAuthorization {
+  bytes loan_router = 1;
+  bytes loan_id = 2;
+  bytes funding_lock_id = 3;
+  bytes disbursement_message_id = 4;
+  bytes disbursement_tombstone_hash = 5;
+  string amount = 6;
+  bytes policy_hash = 7;
+  uint64 authorization_nonce = 8;
+  uint64 valid_until = 9;
+  bytes reason_code = 10;
+  bytes authorizer_set_hash = 11;
+  uint32 authorizer_set_version = 12;
+}
+
+// LoanCancellationRequestedPayload is action ordinal 12. It is valid only on
+// the reviewed disbursement route from the home loan router to the satellite
+// settlement vault.
+message LoanCancellationRequestedPayload {
+  bytes cancellation_id = 1;
+  bytes loan_id = 2;
+  bytes funding_lock_id = 3;
+  bytes disbursement_message_id = 4;
+  bytes disbursement_tombstone_hash = 5;
+  bytes home_loan_account = 6;
+  bytes lender = 7;
+  bytes wrapped_token = 8;
+  string amount = 9;
+  bytes policy_hash = 10;
+  bytes reason_code = 11;
+}
+
+// SatelliteFundingCancelledPayload is the reviewed action-14 completion
+// report. Route, source component, and authority-stage checks distinguish it
+// from generic recovery compensation using the same action ordinal.
+message SatelliteFundingCancelledPayload {
+  bytes cancellation_id = 1;
+  bytes loan_id = 2;
+  bytes funding_lock_id = 3;
+  bytes disbursement_message_id = 4;
+  bytes disbursement_tombstone_hash = 5;
+  bytes escrow_burn_result_hash = 6;
+  bytes home_loan_account = 7;
+  bytes lender = 8;
+  bytes wrapped_token = 9;
+  string amount = 10;
+  bytes policy_hash = 11;
+}
+
+message SatelliteUftPermanentBurnedPayload {
+  bytes burn_id = 1;
+  bytes backing_route_policy_hash = 2;
+  bytes canonical_token = 3;
+  bytes home_bridge_hub = 4;
+  bytes wrapped_token = 5;
+  string amount = 6;
+}
+
+message CrossChainLoanTerms {
+  LoanId loan_id = 1;
+  PartyId borrower = 2;
+  PartyId lender = 3;
+  AssetId principal_asset_id = 4;
+  string principal_units = 5;
+  AssetId collateral_asset_id = 6;
+  string collateral_units = 7;
+  bytes home_loan = 8;
+  bytes satellite_component = 9;
+  bytes immutable_policy_hash = 10;
+  uint64 policy_version = 11;
+}
+
+message CrossChainLoanState {
+  CrossChainLoanTerms terms = 1;
+  string outstanding_principal_units = 2;
+  string lifecycle_state = 3;
+  uint64 state_nonce = 4;
+  bytes disbursement_message_id = 5;
+  repeated bytes repayment_message_ids = 6;
+  bytes collateral_release_message_id = 7;
+  bytes state_commitment = 8;
+}
+
+message SatelliteCollateralPosition {
+  Identifier position_id = 1;
+  LoanId loan_id = 2;
+  PartyId borrower = 3;
+  AssetId asset_id = 4;
+  string units = 5;
+  bytes satellite_vault = 6;
+  string status = 7;
+  bytes custody_commitment = 8;
+}
+
+message BridgeExposureSnapshot {
+  Identifier route_id = 1;
+  uint64 policy_version = 2;
+  string route_escrow_units = 3;
+  string chain_escrow_units = 4;
+  string adapter_escrow_units = 5;
+  string aggregate_escrow_units = 6;
+  string circulating_supply_reference_units = 7;
+  bytes circulating_supply_evidence_hash = 8;
+  string route_absolute_cap_units = 9;
+  string chain_absolute_cap_units = 10;
+  string adapter_absolute_cap_units = 11;
+  string aggregate_absolute_cap_units = 12;
+  uint32 route_percentage_basis_points = 13;
+  uint32 aggregate_percentage_basis_points = 14;
+  bytes block_hash = 15;
+  uint64 block_number = 16;
+}
+
+message WrappedUftBackingSnapshot {
+  Identifier route_id = 1;
+  AssetId canonical_uft_asset_id = 2;
+  AssetId wrapped_uft_asset_id = 3;
+  string canonical_escrow_units = 4;
+  string wrapped_supply_units = 5;
+  string pending_mint_units = 6;
+  string pending_burn_units = 7;
+  bytes home_block_hash = 8;
+  bytes satellite_block_hash = 9;
+  bytes evidence_hash = 10;
+}
+
+message CrossChainLedgerPostingIntent {
+  Identifier posting_intent_id = 1;
+  bytes message_id = 2;
+  string source_chain_id = 3;
+  string destination_chain_id = 4;
+  Identifier route_id = 5;
+  uint64 route_version = 6;
+  LoanId loan_id = 7;
+  string entry_type = 8;
+  AssetId asset_id = 9;
+  string units = 10;
+  repeated string debit_account_codes = 11;
+  repeated string credit_account_codes = 12;
+  bytes source_evidence_hash = 13;
+  string idempotency_key = 14;
+  Identifier correlation_id = 15;
+  bytes causation_message_id = 16;
+  google.protobuf.Timestamp effective_at = 17;
+}
+
+message CrossChainReconciliationDifference {
+  Identifier difference_id = 1;
+  Identifier run_id = 2;
+  string dimension = 3;
+  string reason_code = 4;
+  AssetId asset_id = 5;
+  string expected_units = 6;
+  string observed_units = 7;
+  bytes message_id = 8;
+  LoanId loan_id = 9;
+  string severity = 10;
+  string owner = 11;
+  google.protobuf.Timestamp detected_at = 12;
+  google.protobuf.Timestamp resolution_deadline = 13;
+  bytes evidence_hash = 14;
+  string status = 15;
+}
+
+message CrossChainReconciliationRun {
+  Identifier run_id = 1;
+  string home_chain_id = 2;
+  string satellite_chain_id = 3;
+  uint64 route_version = 4;
+  bytes home_head_hash = 5;
+  bytes satellite_head_hash = 6;
+  WrappedUftBackingSnapshot backing = 7;
+  BridgeExposureSnapshot exposure = 8;
+  repeated CrossChainReconciliationDifference differences = 9;
+  google.protobuf.Timestamp started_at = 10;
+  google.protobuf.Timestamp completed_at = 11;
+  string status = 12;
+}
+
+message CrossChainGovernanceAction {
+  Identifier governance_action_id = 1;
+  CrossChainGovernanceActionType action_type = 2;
+  Identifier route_id = 3;
+  uint64 current_route_version = 4;
+  uint64 proposed_route_version = 5;
+  bytes exact_payload_hash = 6;
+  bytes authority_set_hash = 7;
+  google.protobuf.Timestamp executable_after = 8;
+  google.protobuf.Timestamp expires_at = 9;
+  bytes superseded_policy_hash = 10;
+}
+
+message CrossChainReorganizationEvidence {
+  string chain_id = 1;
+  bytes orphaned_block_hash = 2;
+  bytes replacement_block_hash = 3;
+  bytes detected_head_hash = 4;
+  uint64 block_number = 5;
+  uint64 detected_head_number = 6;
+  repeated bytes affected_message_ids = 7;
+  bytes evidence_hash = 8;
+  google.protobuf.Timestamp detected_at = 9;
+  CrossChainSourceEventProof orphaned_source_proof = 10;
+  bytes orphaned_event_evidence_hash = 11;
+  uint64 replacement_block_number = 12;
+  bytes replacement_header_authority_hash = 13;
+  bytes replacement_observer_signed_header_commitment = 14;
+  bytes replacement_observer_signature = 15;
+  bytes detected_head_header_authority_hash = 16;
+  bytes detected_head_observer_signed_header_commitment = 17;
+  bytes detected_head_observer_signature = 18;
+  bytes finality_policy_hash = 19;
+  CrossChainFinalityCertificate orphaned_finality_certificate = 20;
+  // The following three arrays are sorted and index-aligned with
+  // affected_message_ids. Fields 10, 11, and 20 remain the first-item anchor
+  // for wire compatibility and must equal array element zero.
+  repeated CrossChainSourceEventProof affected_orphaned_source_proofs = 21;
+  repeated bytes affected_orphaned_event_evidence_hashes = 22;
+  repeated CrossChainFinalityCertificate affected_orphaned_finality_certificates = 23;
+}
+
+message CrossChainIncident {
+  Identifier incident_id = 1;
+  Identifier route_id = 2;
+  repeated bytes affected_message_ids = 3;
+  string reason_code = 4;
+  string owner = 5;
+  bytes evidence_hash = 6;
+  google.protobuf.Timestamp opened_at = 7;
+  string status = 8;
+}

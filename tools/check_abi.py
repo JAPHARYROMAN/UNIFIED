@@ -227,6 +227,32 @@ ABI_PAIRS = {
     ),
 }
 
+for _phase8_contract in (
+    "BridgeExposurePolicy",
+    "ChainRegistry",
+    "CrossChainCoordinator",
+    "CrossChainLoanAccount",
+    "CrossChainLoanAccountDeployer",
+    "CrossChainLoanFactory",
+    "CrossChainLoanPolicy",
+    "CrossChainRecoveryController",
+    "Phase8LocalSyntheticToken",
+    "RouteRegistry",
+    "SatelliteCollateralVault",
+    "SatelliteLoanComponent",
+    "SatelliteSettlementVault",
+    "SyntheticFinalityVerifier",
+    "UFTBridgeHub",
+    "WrappedUFT",
+):
+    ABI_PAIRS[_phase8_contract] = (
+        ROOT
+        / ".cache"
+        / "solc"
+        / (f"protocol_src_crosschain_{_phase8_contract}_sol_{_phase8_contract}.abi"),
+        ROOT / "protocol" / "abi" / "phase8" / f"{_phase8_contract}.abi.json",
+    )
+
 
 def main() -> None:
     failures: list[str] = []
