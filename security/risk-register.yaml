@@ -415,3 +415,57 @@ risks:
     downstream_impact: Understated debt duplicate restoration or inconsistent lender and refund liabilities
     validation: Exact stored allocation reuse versioned debt restoration linked opposite batch and replay test
     status: CONTROLLED
+  - id: RISK-PHASE7C-001
+    severity: EXISTENTIAL
+    title: External evidence creates false or duplicate canonical loan repayment
+    owner: Security Authority
+    evidence: protocol/test/Phase7CanonicalSettlement.t.sol
+    expiry: 2026-10-24
+    downstream_impact: Unfunded debt closure duplicate payout borrower over-refund and unsafe collateral release
+    validation: Mature policy independent attestation exact-token delivery state nonce digest replay and Phase 7B allocation-mode exclusion tests
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE7C-002
+    severity: CRITICAL
+    title: Provider chain coordinator and ledger saga diverge or posts twice
+    owner: Protocol Architecture Authority
+    evidence: services/foundation-ledger/migrations/tests/000009_canonical_external_settlement_test.sql
+    expiry: 2026-10-24
+    downstream_impact: Canonical debt and operational accounting disagree after crash retry reorg or outage
+    validation: One supported callable replay-safe SQL success commit exact durable CONFIRMED or submitted-origin INCIDENT snapshot authority deterministic IDs shared digest restart repository full coordinator-issued reorg provenance claim-race atomic quarantine and reversal resolution atomic deep compensation and no EVM retry on ledger failure
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE7C-003
+    severity: CRITICAL
+    title: Source provider asset and target-token custody fail to conserve
+    owner: Accounting and Economic Risk Authority
+    evidence: services/foundation-ledger/internal/settlementaccounting/accounting_test.go
+    expiry: 2026-10-24
+    downstream_impact: Hidden FX loss unsupported token payout or false derecognition of provider assets
+    validation: Authoritative Phase 7A evidence distinct assets fixed one-to-one units derived source journals exact target custody seven/eight balanced journals and deep-reorg opposites
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE7C-004
+    severity: CRITICAL
+    title: Late provider contradiction reopens terminal debt or reverses settled journals
+    owner: Security Authority
+    evidence: services/payment-orchestrator/payment/payment_test.go
+    expiry: 2026-10-24
+    downstream_impact: Duplicate borrower obligation abnormal payables and collateral rights inconsistent with canonical history
+    validation: Durable quarantine exact submitted-transaction failure proof single-transaction Phase 7A reversal and tombstone confirmed incident handling and suppression before Phase 7B reversal
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE7C-005
+    severity: CRITICAL
+    title: Lender payout or borrower excess refund is diverted or duplicated
+    owner: Security Authority
+    evidence: protocol/test/Phase7CanonicalSettlement.t.sol
+    expiry: 2026-10-24
+    downstream_impact: Direct asset loss incorrect lender rights borrower loss and insolvent settlement custody
+    validation: Canonical recipients event and SQL party provenance exact journal roles no caller redirection atomic rollback refund bound and replay tests
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE7C-006
+    severity: CRITICAL
+    title: Caller-authored malformed or reordered chain data forges or destabilizes canonical evidence
+    owner: Security Authority
+    evidence: services/chain-indexer/projection/indexer_test.go
+    expiry: 2026-10-24
+    downstream_impact: False canonical repayment false payment reversal permanent claim tombstone incorrect journals unsafe collateral rights and local projection denial of service
+    validation: Pinned signed headers consumer-pinned finality policy strict canonical legacy and typed receipts canonical Merkle-Patricia child references transaction and receipt inclusion same-header nonconflicting enrichment monotonic append replacement and reorg time alternate-authority rejection full durable reorg provenance and per-proof plus aggregate input bounds
+    status: CONTROLLED_LOCAL_ONLY

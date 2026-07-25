@@ -197,6 +197,34 @@ ABI_PAIRS = {
         / "protocol_src_loan_UnderwrittenLoanFactory_sol_UnderwrittenLoanFactory.abi",
         ROOT / "protocol" / "abi" / "phase6" / "UnderwrittenLoanFactory.abi.json",
     ),
+    "CanonicalExternalSettlementGateway": (
+        ROOT
+        / ".cache"
+        / "solc"
+        / (
+            "protocol_src_payment_CanonicalExternalSettlementGateway_sol_"
+            "CanonicalExternalSettlementGateway.abi"
+        ),
+        ROOT
+        / "protocol"
+        / "abi"
+        / "phase7"
+        / "CanonicalExternalSettlementGateway.abi.json",
+    ),
+    "FixedMatureExternalSettlementPolicy": (
+        ROOT
+        / ".cache"
+        / "solc"
+        / (
+            "protocol_src_payment_FixedMatureExternalSettlementPolicy_sol_"
+            "FixedMatureExternalSettlementPolicy.abi"
+        ),
+        ROOT
+        / "protocol"
+        / "abi"
+        / "phase7"
+        / "FixedMatureExternalSettlementPolicy.abi.json",
+    ),
 }
 
 

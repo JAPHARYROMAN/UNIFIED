@@ -2,7 +2,7 @@
 pragma solidity 0.8.36;
 
 // Code generated from schemas/proto/unified/v1. DO NOT EDIT.
-// Source SHA-256: c9f173d45e49850617762967501010f35e1e8d3aba76ee667c3aafd9330c405b
+// Source SHA-256: b5a4611707835a2c58ca73ff423c1a1d6d8c86ac3d8f6a9d3417b68fecc77b46
 library FoundationTypes {
     enum CollateralKind { UNSPECIFIED, NATIVE, ERC20, ERC721, ERC1155 }
 
@@ -45,6 +45,14 @@ library FoundationTypes {
     enum ProviderStatementKind { UNSPECIFIED, SETTLED, REVERSED }
 
     enum ReconciliationStatus { UNSPECIFIED, MATCHED, EXCEPTION, RESOLVED }
+
+    enum PaymentAllocationMode { UNSPECIFIED, SYNTHETIC_PROJECTION, CANONICAL_GATEWAY }
+
+    enum CanonicalizationState { UNSPECIFIED, PREPARED, SUBMITTED, CONFIRMED, FAILED, QUARANTINED, INCIDENT }
+
+    enum CanonicalSettlementReorgKind { UNSPECIFIED, SHALLOW, DEEP }
+
+    enum CanonicalTransactionReceiptStatus { UNSPECIFIED, REVERTED }
 
     enum ScheduleKind { UNSPECIFIED, BULLET, EQUAL_PRINCIPAL, ANNUITY, INTEREST_ONLY, BALLOON, CUSTOM }
 
@@ -604,6 +612,373 @@ library FoundationTypes {
         bool allocationReversed;
         bytes evidenceHash;
         int64 evaluatedAt;
+    }
+
+    struct PaymentAllocationModeClaimEvidence {
+        Identifier claimId;
+        Identifier paymentId;
+        PaymentAllocationMode mode;
+        uint64 expectedVersion;
+        uint64 claimedVersion;
+        bool priorAllocationAbsent;
+        uint32 priorAllocationJournalCount;
+        bytes evidenceHash;
+        int64 claimedAt;
+        Identifier allocationId;
+        bytes instructionDigest;
+        bytes claimDigest;
+    }
+
+    struct CanonicalizationEligibilityEvidence {
+        Identifier eligibilityId;
+        Identifier allocationModeClaimId;
+        Identifier paymentId;
+        LoanId loanId;
+        string providerId;
+        string providerReference;
+        Money sourcePayment;
+        Money targetTokens;
+        Identifier reconciliationId;
+        Identifier[] originalJournalIds;
+        bytes finalityPolicyHash;
+        bytes conversionPolicyHash;
+        bytes waterfallPolicyHash;
+        bytes policySetHash;
+        int64 reversalDeadline;
+        bool eligible;
+        bytes evidenceHash;
+        int64 evaluatedAt;
+        Identifier paymentFinalEventId;
+        Identifier providerStatementEntryId;
+    }
+
+    struct CanonicalizationPlanEvidence {
+        Identifier canonicalizationId;
+        Identifier allocationModeClaimId;
+        Identifier allocationId;
+        Identifier paymentId;
+        LoanId loanId;
+        Money sourcePayment;
+        Money targetTokens;
+        Money expectedDebt;
+        Money principalAllocation;
+        Money refundableExcess;
+        uint64 expectedStateNonce;
+        PartyId finalizerId;
+        string targetChainDomain;
+        string gatewayAddress;
+        bytes instructionDigest;
+        bytes accountingAttestation;
+        bytes evidenceHash;
+        int64 preparedAt;
+        PartyId borrowerId;
+        PartyId lenderId;
+    }
+
+    struct CanonicalizationSubmissionEvidence {
+        Identifier canonicalizationId;
+        CanonicalizationState state;
+        string targetChainDomain;
+        string gatewayAddress;
+        PartyId senderId;
+        uint64 senderNonce;
+        bytes calldataHash;
+        bytes transactionHash;
+        bytes evidenceHash;
+        int64 submittedAt;
+    }
+
+    struct CanonicalSettlementConversionEvidence {
+        Identifier conversionId;
+        Identifier canonicalizationId;
+        Identifier paymentId;
+        string providerId;
+        string providerReference;
+        Money sourcePayment;
+        Money targetTokens;
+        string rateNumerator;
+        string rateDenominator;
+        string sourceAccountCode;
+        Identifier[] originalJournalIds;
+        PartyId finalizerId;
+        bytes gatewayTransactionHash;
+        bool providerAssetIrrevocablyAcquired;
+        bool laterReversalRiskAssumed;
+        bytes evidenceHash;
+        int64 convertedAt;
+    }
+
+    struct CanonicalizationConfirmationEvidence {
+        Identifier canonicalizationId;
+        Identifier allocationId;
+        Identifier paymentId;
+        LoanId loanId;
+        CanonicalizationState state;
+        string targetChainDomain;
+        string gatewayAddress;
+        bytes transactionHash;
+        Identifier gatewayEventId;
+        bytes blockHash;
+        uint64 blockNumber;
+        uint32 logIndex;
+        Money targetTokens;
+        Money principalAllocation;
+        Money refundableExcess;
+        Money debtBefore;
+        Money debtAfter;
+        Identifier[] journalIds;
+        bytes evidenceHash;
+        int64 confirmedAt;
+        bytes instructionDigest;
+        PartyId borrowerId;
+        PartyId lenderId;
+        uint64 confirmationDepth;
+        uint64 finalityHeadBlock;
+        bytes finalityHeadHash;
+        bytes finalityEvidenceHash;
+        FinalizedCanonicalSettlementEvidence finalizedSettlement;
+    }
+
+    struct CanonicalLenderPayoutEvidence {
+        Identifier payoutId;
+        Identifier canonicalizationId;
+        LoanId loanId;
+        PartyId lenderId;
+        Money amount;
+        bytes gatewayTransactionHash;
+        Identifier gatewayEventId;
+        Identifier journalId;
+        bytes evidenceHash;
+        int64 paidAt;
+    }
+
+    struct CanonicalBorrowerRefundEvidence {
+        Identifier refundId;
+        Identifier canonicalizationId;
+        LoanId loanId;
+        PartyId borrowerId;
+        Money amount;
+        bytes gatewayTransactionHash;
+        Identifier gatewayEventId;
+        Identifier journalId;
+        bytes evidenceHash;
+        int64 refundedAt;
+    }
+
+    struct CanonicalSettlementIncidentEvidence {
+        Identifier incidentId;
+        Identifier canonicalizationId;
+        Identifier paymentId;
+        string providerId;
+        Identifier providerEventId;
+        PaymentStatus reportedStatus;
+        CanonicalizationState canonicalizationState;
+        string reasonCode;
+        string owner;
+        bool paymentStateUnchanged;
+        bool economicJournalsSuppressed;
+        bytes rawPayloadHash;
+        bytes evidenceHash;
+        int64 observedAt;
+        int64 resolutionDeadline;
+        Identifier quarantineId;
+        Identifier resolutionId;
+        FinalizedCanonicalSettlementEvidence finalizedSettlement;
+    }
+
+    struct CanonicalSettlementReorgEvidence {
+        Identifier reorgId;
+        Identifier canonicalizationId;
+        bytes orphanedTransactionHash;
+        Identifier orphanedGatewayEventId;
+        bytes orphanedBlockHash;
+        uint64 orphanedBlockNumber;
+        uint64 replacementBlockNumber;
+        CanonicalSettlementReorgKind kind;
+        bool compensationRequired;
+        bytes orphanedEventEvidenceHash;
+        bytes evidenceHash;
+        int64 detectedAt;
+        bytes paymentId;
+        bytes allocationId;
+        bytes instructionDigest;
+        bytes replacementBlockHash;
+        uint64 confirmationDepth;
+        uint64 detectedHeadBlockNumber;
+        bytes detectedHeadBlockHash;
+        bytes orphanedRawPayloadHash;
+        string chainId;
+        string gatewayAddress;
+        uint64 orphanedTransactionIndex;
+        bytes orphanedReceiptsRoot;
+        bytes orphanedInclusionProofHash;
+        bytes orphanedReceiptHeaderSignatureHash;
+        bytes finalityPolicyHash;
+        bytes headerAuthorityHash;
+        bytes replacementHeaderSignatureHash;
+        bytes detectedHeadHeaderSignatureHash;
+    }
+
+    struct CanonicalSettlementReorgCompensationEvidence {
+        Identifier compensationId;
+        Identifier canonicalizationId;
+        bytes orphanedTransactionHash;
+        Identifier orphanedGatewayEventId;
+        bytes orphanedBlockHash;
+        Identifier[] originalJournalIds;
+        Identifier[] reversalJournalIds;
+        bytes evidenceHash;
+        int64 detectedAt;
+        Identifier reorgId;
+        Identifier incidentId;
+    }
+
+    struct CanonicalSettlementInstruction {
+        bytes paymentId;
+        bytes allocationId;
+        bytes loanId;
+        bytes sourceAssetId;
+        bytes targetAssetId;
+        string sourceUnits;
+        string targetUnits;
+        bytes providerIdHash;
+        bytes providerReferenceHash;
+        bytes reconciliationId;
+        bytes reconciliationCommitment;
+        bytes originalJournalSetHash;
+        bytes conversionPolicyHash;
+        bytes finalityPolicyHash;
+        bytes evidenceHash;
+        bytes journalRef;
+        uint64 finalizedAtUnixSeconds;
+        uint64 reversalDeadlineUnixSeconds;
+        string expectedDebtUnits;
+        uint64 expectedStateNonce;
+        string attesterAddress;
+    }
+
+    struct CanonicalSettlementDigestContext {
+        bytes eligibilityDomainHash;
+        string chainId;
+        string gatewayAddress;
+        string finalizerAddress;
+        bytes policySetHash;
+        CanonicalSettlementInstruction instruction;
+        bytes instructionDigest;
+    }
+
+    struct CanonicalSettlementExecutedEventData {
+        bytes instructionDigest;
+        bytes policySetHash;
+        string loanAccountAddress;
+        string finalizerAddress;
+        string attesterAddress;
+        bytes sourceAssetId;
+        bytes targetAssetId;
+        string targetTokenAddress;
+        string sourceUnits;
+        string grossUnits;
+        bytes providerIdHash;
+        bytes providerReferenceHash;
+        bytes reconciliationId;
+        bytes reconciliationCommitment;
+        bytes originalJournalSetHash;
+        bytes conversionPolicyHash;
+        bytes finalityPolicyHash;
+        bytes instructionEvidenceHash;
+        bytes journalRef;
+        uint64 finalizedAtUnixSeconds;
+        uint64 reversalDeadlineUnixSeconds;
+        string debtBeforeUnits;
+        string principalUnits;
+        string refundableExcessUnits;
+        string debtAfterUnits;
+        uint64 stateNonceBefore;
+        uint64 stateNonceAfter;
+        string lenderAddress;
+        string borrowerAddress;
+    }
+
+    struct CanonicalSettlementLogEnvelope {
+        string chainId;
+        string gatewayAddress;
+        bytes transactionHash;
+        bytes gatewayEventId;
+        uint32 logIndex;
+        uint64 blockNumber;
+        bytes blockHash;
+        bytes rawPayloadHash;
+        bytes paymentId;
+        bytes allocationId;
+        bytes loanId;
+        CanonicalSettlementExecutedEventData settlement;
+        uint64 transactionIndex;
+        bytes receiptsRoot;
+        bytes inclusionProofHash;
+        bytes receiptHeaderSignatureHash;
+    }
+
+    struct CanonicalSettlementFinalityProof {
+        uint64 confirmationDepth;
+        uint64 headBlockNumber;
+        bytes headBlockHash;
+        bytes evidenceHash;
+        int64 observedAt;
+        bytes finalityPolicyHash;
+        bytes headerAuthorityHash;
+        bytes headHeaderSignatureHash;
+    }
+
+    struct FinalizedCanonicalSettlementEvidence {
+        CanonicalSettlementLogEnvelope eventEnvelope;
+        CanonicalSettlementFinalityProof finality;
+    }
+
+    struct CanonicalSubmittedTransactionFailureEvidence {
+        Identifier canonicalizationId;
+        bytes paymentId;
+        bytes allocationId;
+        bytes instructionDigest;
+        string chainId;
+        string gatewayAddress;
+        bytes transactionHash;
+        CanonicalTransactionReceiptStatus receiptStatus;
+        bytes receiptPayloadHash;
+        uint64 blockNumber;
+        bytes blockHash;
+        uint64 confirmationDepth;
+        uint64 headBlockNumber;
+        bytes headBlockHash;
+        bytes evidenceHash;
+        int64 observedAt;
+        uint64 transactionIndex;
+        bytes receiptsRoot;
+        bytes inclusionProofHash;
+        bytes finalityPolicyHash;
+        bytes headerAuthorityHash;
+        bytes receiptHeaderSignatureHash;
+        bytes headHeaderSignatureHash;
+    }
+
+    struct CanonicalReversalResolutionEvidence {
+        Identifier resolutionId;
+        Identifier quarantineId;
+        Identifier canonicalizationId;
+        bytes paymentId;
+        bytes allocationId;
+        bytes instructionDigest;
+        CanonicalizationState originState;
+        CanonicalSubmittedTransactionFailureEvidence submittedTransactionFailure;
+        ProviderPaymentCallback providerReversalEvent;
+        ProviderCallbackReceipt providerReversalReceipt;
+        Identifier phase7aReversalEventId;
+        Identifier[] phase7aReversalJournalIds;
+        uint64 coordinatorVersionBefore;
+        uint64 coordinatorVersionAfter;
+        bool permanentTombstone;
+        string resolvedBy;
+        bytes evidenceHash;
+        int64 resolvedAt;
     }
 
     struct OracleObservation {

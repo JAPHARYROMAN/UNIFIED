@@ -122,12 +122,20 @@ collateral-eligibility proof. Canonical loan mutation, refunds, payouts, collate
 release, live providers, and real funds remain prohibited. Its bounded engineering exit
 is recorded in `docs/reviews/phase-7b-exit-review.md`.
 
-The accepted Phase 7C boundary is recorded in
+The Phase 7C boundary and bounded implementation are recorded in
 `adr/0017-phase-7c-canonical-external-settlement-boundary.md` and
 `docs/architecture/phase-7c-canonical-external-settlement.md`. It permits implementation
-of a synthetic mature-only, exact-token gateway and recoverable canonicalization saga.
-Canonical mutation must wait through the reversal deadline, deliver the registered loan
-token, and atomically pay the lender and refund excess. The source provider asset and
-target token remain explicitly distinct under a fixed one-to-one first-slice conversion.
-Reserve-backed early settlement, cross-denomination FX, live providers, automatic
-collateral release, and real funds remain prohibited.
+of a synthetic mature-only, exact-token gateway and recoverable canonicalization saga,
+with layouts in `docs/architecture/phase-7c-data-layouts.md`. Canonical mutation waits
+through the reversal deadline, delivers the registered loan token, and atomically pays
+the lender and refunds excess. The source provider asset and target token remain
+explicitly distinct under a fixed one-to-one first-slice conversion. Reserve-backed
+early settlement, cross-denomination FX, live providers, automatic collateral release,
+and real funds remain prohibited. The supported durable projection path is one
+exact-snapshot, replay-safe SQL success transaction; reorganization authority retains its
+complete signed receipt/finality provenance across restart. The local chain indexer
+enforces canonical receipt/Merkle-Patricia encoding, same-header proof enrichment,
+monotonic signed observations, and aggregate input limits. Its pinned Ed25519 observer is
+a synthetic local/test trust root, not EVM consensus or a production light client.
+Service executables remain local skeletons without provider, EVM RPC, broker, or
+production ledger-listener wiring.

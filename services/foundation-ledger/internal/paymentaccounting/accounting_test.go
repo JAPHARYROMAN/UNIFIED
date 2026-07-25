@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/unified-finance/unified/services/foundation-ledger/internal/ledger"
+	"github.com/unified-finance/unified/services/payment-orchestrator/allocationmode"
 	"github.com/unified-finance/unified/services/payment-orchestrator/payment"
 )
 
@@ -422,6 +423,11 @@ func TestOrchestratorAndLedgerPosterIntegrateEndToEnd(t *testing.T) {
 	if err != nil {
 		t.Fatalf("generate provider key: %v", err)
 	}
+	modes := allocationmode.NewInMemory()
+	canonical, err := payment.NewLocalCanonicalReversalCoordinator(modes)
+	if err != nil {
+		t.Fatalf("new canonical reversal coordinator: %v", err)
+	}
 	orchestrator, err := payment.New([]payment.Provider{{
 		ID:               "provider-local",
 		Rail:             payment.RailBank,
@@ -430,7 +436,7 @@ func TestOrchestratorAndLedgerPosterIntegrateEndToEnd(t *testing.T) {
 		AssetID:          "asset:local:usd",
 		SupportsReversal: true,
 		Version:          1,
-	}}, poster)
+	}}, poster, modes, canonical)
 	if err != nil {
 		t.Fatalf("new orchestrator: %v", err)
 	}

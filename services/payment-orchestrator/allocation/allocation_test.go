@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/unified-finance/unified/services/payment-orchestrator/allocationmode"
 	"github.com/unified-finance/unified/services/payment-orchestrator/payment"
 )
 
@@ -49,7 +50,7 @@ func fixture(t *testing.T, debt string) (*Engine, *accountingStub, time.Time) {
 		SourceAuthority:           "SYNTHETIC_LOAN_SNAPSHOT",
 		SourceEvidenceHash:        "snapshot-evidence",
 		AsOf:                      now,
-	}}, stub)
+	}}, stub, allocationmode.NewInMemory())
 	if err != nil {
 		t.Fatalf("new allocation engine: %v", err)
 	}
@@ -65,6 +66,7 @@ func request(now time.Time, units string) Request {
 			AssetID:            "asset:local:usd",
 			Units:              units,
 			Status:             payment.StatusFinal,
+			PaymentVersion:     4,
 			ReconciliationID:   "reconciliation-001",
 			DifferenceUnits:    "0",
 			FinalityPolicyHash: "finality-policy-v1",
@@ -154,6 +156,109 @@ func TestAccountingOutageLeavesStateRetryable(t *testing.T) {
 	}
 	if _, err := engine.Allocate(input); err != nil {
 		t.Fatalf("retry allocation: %v", err)
+	}
+}
+
+func TestSyntheticClaimRejectsAlteredContentAfterAccountingOutage(
+	t *testing.T,
+) {
+	engine, stub, now := fixture(t, "1000")
+	input := request(now, "400")
+	stub.fail = true
+	if _, err := engine.Allocate(input); !errors.Is(err, ErrAccounting) {
+		t.Fatalf("expected accounting failure, got %v", err)
+	}
+	altered := input
+	altered.Payment.ProviderReference = "provider-reference-altered"
+	if altered.AllocationID != CalculateAllocationID(altered) {
+		t.Fatal("test mutation unexpectedly changed the stable allocation ID")
+	}
+	if _, err := engine.Allocate(altered); !errors.Is(
+		err,
+		ErrAllocationConflict,
+	) {
+		t.Fatalf("altered claim content replay was accepted: %v", err)
+	}
+	if _, err := engine.Allocate(input); err != nil {
+		t.Fatalf("exact outage replay was not retryable: %v", err)
+	}
+}
+
+func TestCompletedAllocationRejectsAlteredReplayContent(t *testing.T) {
+	engine, _, now := fixture(t, "1000")
+	input := request(now, "400")
+	if _, err := engine.Allocate(input); err != nil {
+		t.Fatal(err)
+	}
+	altered := input
+	altered.CorrelationID = "correlation-altered"
+	if _, err := engine.Allocate(altered); !errors.Is(
+		err,
+		ErrAllocationConflict,
+	) {
+		t.Fatalf("completed allocation accepted altered replay: %v", err)
+	}
+}
+
+func TestSharedModeClaimExcludesCanonicalAndSurvivesFailure(t *testing.T) {
+	now := time.Unix(1_760_000_000, 0).UTC()
+	modes := allocationmode.NewInMemory()
+	stub := &accountingStub{fail: true}
+	engine, err := New([]Obligation{{
+		LoanID:                    "loan-001",
+		BorrowerID:                "borrower-001",
+		LenderID:                  "lender-001",
+		AssetID:                   "asset:local:usd",
+		OutstandingPrincipalUnits: "1000",
+		Version:                   1,
+		SourceAuthority:           "SYNTHETIC_LOAN_SNAPSHOT",
+		SourceEvidenceHash:        "snapshot-evidence",
+		AsOf:                      now,
+	}}, stub, modes)
+	if err != nil {
+		t.Fatalf("new allocation engine: %v", err)
+	}
+	input := request(now, "400")
+	if _, err := engine.Allocate(input); !errors.Is(err, ErrAccounting) {
+		t.Fatalf("expected accounting failure, got %v", err)
+	}
+	if retained, exists := modes.Lookup(input.Payment.PaymentID); !exists ||
+		retained.Mode != allocationmode.ModeSyntheticProjection {
+		t.Fatalf("failed accounting lost the durable synthetic claim: %#v", retained)
+	}
+	if _, err := engine.Allocate(input); err != nil {
+		t.Fatalf("retry with exact durable mode claim: %v", err)
+	}
+
+	otherModes := allocationmode.NewInMemory()
+	if _, err := otherModes.ClaimModeWithCommit(
+		input.Payment.PaymentID,
+		"canonical-allocation",
+		allocationmode.ModeCanonicalGateway,
+		"canonical-digest",
+		input.Payment.PaymentVersion,
+		"canonical-evidence",
+		input.AllocatedAt,
+		func(allocationmode.Claim) error { return nil },
+	); err != nil {
+		t.Fatal(err)
+	}
+	blocked, err := New([]Obligation{{
+		LoanID:                    "loan-001",
+		BorrowerID:                "borrower-001",
+		LenderID:                  "lender-001",
+		AssetID:                   "asset:local:usd",
+		OutstandingPrincipalUnits: "1000",
+		Version:                   1,
+		SourceAuthority:           "SYNTHETIC_LOAN_SNAPSHOT",
+		SourceEvidenceHash:        "snapshot-evidence",
+		AsOf:                      now,
+	}}, &accountingStub{}, otherModes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := blocked.Allocate(input); !errors.Is(err, ErrAllocationConflict) {
+		t.Fatalf("canonical claim did not block synthetic allocation: %v", err)
 	}
 }
 

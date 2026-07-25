@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/unified-finance/unified/services/payment-orchestrator/allocationmode"
 	"github.com/unified-finance/unified/services/payment-orchestrator/payment"
 )
 
@@ -42,6 +43,7 @@ type FinalPayment struct {
 	AssetID            string
 	Units              string
 	Status             payment.Status
+	PaymentVersion     uint64
 	ReconciliationID   string
 	DifferenceUnits    string
 	UnmatchedItems     uint32
@@ -69,6 +71,9 @@ type Allocation struct {
 	ProviderID              string
 	ProviderReference       string
 	AssetID                 string
+	PaymentVersion          uint64
+	PaymentEvidenceHash     string
+	PaymentFinalizedAt      time.Time
 	GrossUnits              string
 	PrincipalUnits          string
 	RefundableExcessUnits   string
@@ -82,6 +87,7 @@ type Allocation struct {
 	ReversalDeadline        time.Time
 	CorrelationID           string
 	EvidenceHash            string
+	ClaimDigest             string
 	JournalIDs              []string
 	AllocatedAt             time.Time
 }
@@ -129,10 +135,17 @@ type Engine struct {
 	allocations map[string]Allocation
 	byPayment   map[string]string
 	reversals   map[string]Reversal
+	modes       *allocationmode.Registry
 }
 
-func New(obligations []Obligation, accounting Accounting) (*Engine, error) {
-	if len(obligations) == 0 || accounting == nil {
+// New requires the allocation-mode registry shared by Phase 7A, Phase 7B, and
+// Phase 7C. No constructor creates a private registry.
+func New(
+	obligations []Obligation,
+	accounting Accounting,
+	modes *allocationmode.Registry,
+) (*Engine, error) {
+	if len(obligations) == 0 || accounting == nil || modes == nil {
 		return nil, ErrInvalidObligation
 	}
 	records := make(map[string]Obligation, len(obligations))
@@ -148,6 +161,7 @@ func New(obligations []Obligation, accounting Accounting) (*Engine, error) {
 		allocations: make(map[string]Allocation),
 		byPayment:   make(map[string]string),
 		reversals:   make(map[string]Reversal),
+		modes:       modes,
 	}, nil
 }
 
@@ -187,8 +201,7 @@ func (engine *Engine) Allocate(request Request) (Allocation, error) {
 	defer engine.mu.Unlock()
 	if allocationID, exists := engine.byPayment[request.Payment.PaymentID]; exists {
 		existing := engine.allocations[allocationID]
-		if existing.AllocationID == request.AllocationID &&
-			existing.EvidenceHash == request.EvidenceHash {
+		if requestMatchesAllocation(request, existing) {
 			return cloneAllocation(existing), nil
 		}
 		return Allocation{}, ErrAllocationConflict
@@ -217,6 +230,9 @@ func (engine *Engine) Allocate(request Request) (Allocation, error) {
 		ProviderID:              request.Payment.ProviderID,
 		ProviderReference:       request.Payment.ProviderReference,
 		AssetID:                 obligation.AssetID,
+		PaymentVersion:          request.Payment.PaymentVersion,
+		PaymentEvidenceHash:     request.Payment.EvidenceHash,
+		PaymentFinalizedAt:      request.Payment.FinalizedAt.UTC(),
 		GrossUnits:              gross.String(),
 		PrincipalUnits:          principal.String(),
 		RefundableExcessUnits:   excess.String(),
@@ -231,6 +247,23 @@ func (engine *Engine) Allocate(request Request) (Allocation, error) {
 		CorrelationID:           request.CorrelationID,
 		EvidenceHash:            request.EvidenceHash,
 		AllocatedAt:             request.AllocatedAt.UTC(),
+	}
+	allocation.ClaimDigest = allocationClaimDigest(
+		allocation,
+		request.Payment,
+		obligation,
+	)
+	_, _, err := engine.modes.ClaimMode(
+		allocation.PaymentID,
+		allocation.AllocationID,
+		allocationmode.ModeSyntheticProjection,
+		allocation.ClaimDigest,
+		request.Payment.PaymentVersion,
+		allocation.EvidenceHash,
+		allocation.AllocatedAt,
+	)
+	if err != nil {
+		return Allocation{}, ErrAllocationConflict
 	}
 	journalIDs, err := engine.accounting.ApplyAllocation(allocation)
 	if err != nil {
@@ -358,7 +391,8 @@ func validFinalPayment(final FinalPayment) bool {
 	difference, differenceOK := canonicalNonNegative(final.DifferenceUnits)
 	return final.PaymentID != "" && final.ProviderID != "" &&
 		final.ProviderReference != "" && final.AssetID != "" &&
-		final.Status == payment.StatusFinal && final.ReconciliationID != "" &&
+		final.Status == payment.StatusFinal && final.PaymentVersion > 0 &&
+		final.ReconciliationID != "" &&
 		differenceOK && difference.Sign() == 0 && final.UnmatchedItems == 0 &&
 		final.FinalityPolicyHash != "" && final.EvidenceHash != "" &&
 		!final.FinalizedAt.IsZero() && final.ReversalDeadline.After(final.FinalizedAt) &&
@@ -383,4 +417,99 @@ func cloneAllocation(record Allocation) Allocation {
 func cloneReversal(record Reversal) Reversal {
 	record.JournalIDs = slices.Clone(record.JournalIDs)
 	return record
+}
+
+func allocationClaimDigest(
+	record Allocation,
+	final FinalPayment,
+	obligation Obligation,
+) string {
+	encoded, _ := json.Marshal(struct {
+		AllocationID                  string
+		PaymentID                     string
+		LoanID                        string
+		ProviderID                    string
+		ProviderReference             string
+		AssetID                       string
+		PaymentStatus                 payment.Status
+		PaymentVersion                uint64
+		PaymentEvidenceHash           string
+		PaymentFinalizedAt            time.Time
+		ReconciliationDifferenceUnits string
+		ReconciliationUnmatchedItems  uint32
+		GrossUnits                    string
+		PrincipalUnits                string
+		RefundableExcessUnits         string
+		DebtBeforeUnits               string
+		DebtAfterUnits                string
+		ObligationVersionBefore       uint64
+		ObligationVersionAfter        uint64
+		WaterfallPolicyHash           string
+		FinalityPolicyHash            string
+		ReconciliationID              string
+		ReversalDeadline              time.Time
+		CorrelationID                 string
+		EvidenceHash                  string
+		AllocatedAt                   time.Time
+		BorrowerID                    string
+		LenderID                      string
+		ObligationSourceAuthority     string
+		ObligationSourceEvidenceHash  string
+		ObligationAsOf                time.Time
+	}{
+		AllocationID:                  record.AllocationID,
+		PaymentID:                     record.PaymentID,
+		LoanID:                        record.LoanID,
+		ProviderID:                    record.ProviderID,
+		ProviderReference:             record.ProviderReference,
+		AssetID:                       record.AssetID,
+		PaymentStatus:                 final.Status,
+		PaymentVersion:                final.PaymentVersion,
+		PaymentEvidenceHash:           final.EvidenceHash,
+		PaymentFinalizedAt:            final.FinalizedAt.UTC(),
+		ReconciliationDifferenceUnits: final.DifferenceUnits,
+		ReconciliationUnmatchedItems:  final.UnmatchedItems,
+		GrossUnits:                    record.GrossUnits,
+		PrincipalUnits:                record.PrincipalUnits,
+		RefundableExcessUnits:         record.RefundableExcessUnits,
+		DebtBeforeUnits:               record.DebtBeforeUnits,
+		DebtAfterUnits:                record.DebtAfterUnits,
+		ObligationVersionBefore:       record.ObligationVersionBefore,
+		ObligationVersionAfter:        record.ObligationVersionAfter,
+		WaterfallPolicyHash:           record.WaterfallPolicyHash,
+		FinalityPolicyHash:            record.FinalityPolicyHash,
+		ReconciliationID:              record.ReconciliationID,
+		ReversalDeadline:              record.ReversalDeadline.UTC(),
+		CorrelationID:                 record.CorrelationID,
+		EvidenceHash:                  record.EvidenceHash,
+		AllocatedAt:                   record.AllocatedAt.UTC(),
+		BorrowerID:                    obligation.BorrowerID,
+		LenderID:                      obligation.LenderID,
+		ObligationSourceAuthority:     obligation.SourceAuthority,
+		ObligationSourceEvidenceHash:  obligation.SourceEvidenceHash,
+		ObligationAsOf:                obligation.AsOf.UTC(),
+	})
+	hash := sha256.Sum256(append([]byte("UNIFIED_PHASE7B_MODE_CLAIM_V1\x00"), encoded...))
+	return hex.EncodeToString(hash[:])
+}
+
+func requestMatchesAllocation(request Request, record Allocation) bool {
+	return record.AllocationID == request.AllocationID &&
+		record.PaymentID == request.Payment.PaymentID &&
+		record.LoanID == request.LoanID &&
+		record.ProviderID == request.Payment.ProviderID &&
+		record.ProviderReference == request.Payment.ProviderReference &&
+		record.AssetID == request.Payment.AssetID &&
+		record.PaymentVersion == request.Payment.PaymentVersion &&
+		record.PaymentEvidenceHash == request.Payment.EvidenceHash &&
+		record.PaymentFinalizedAt.Equal(request.Payment.FinalizedAt.UTC()) &&
+		record.GrossUnits == request.Payment.Units &&
+		record.ObligationVersionBefore == request.ExpectedObligationVersion &&
+		record.WaterfallPolicyHash == request.WaterfallPolicyHash &&
+		record.FinalityPolicyHash == request.Payment.FinalityPolicyHash &&
+		record.ReconciliationID == request.Payment.ReconciliationID &&
+		record.ReversalDeadline.Equal(request.Payment.ReversalDeadline.UTC()) &&
+		record.CorrelationID == request.CorrelationID &&
+		record.EvidenceHash == request.EvidenceHash &&
+		record.AllocatedAt.Equal(request.AllocatedAt.UTC())
 }

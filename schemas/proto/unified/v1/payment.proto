@@ -37,6 +37,33 @@ enum ReconciliationStatus {
   RECONCILIATION_STATUS_RESOLVED = 3;
 }
 
+enum PaymentAllocationMode {
+  PAYMENT_ALLOCATION_MODE_UNSPECIFIED = 0;
+  PAYMENT_ALLOCATION_MODE_SYNTHETIC_PROJECTION = 1;
+  PAYMENT_ALLOCATION_MODE_CANONICAL_GATEWAY = 2;
+}
+
+enum CanonicalizationState {
+  CANONICALIZATION_STATE_UNSPECIFIED = 0;
+  CANONICALIZATION_STATE_PREPARED = 1;
+  CANONICALIZATION_STATE_SUBMITTED = 2;
+  CANONICALIZATION_STATE_CONFIRMED = 3;
+  CANONICALIZATION_STATE_FAILED = 4;
+  CANONICALIZATION_STATE_QUARANTINED = 5;
+  CANONICALIZATION_STATE_INCIDENT = 6;
+}
+
+enum CanonicalSettlementReorgKind {
+  CANONICAL_SETTLEMENT_REORG_KIND_UNSPECIFIED = 0;
+  CANONICAL_SETTLEMENT_REORG_KIND_SHALLOW = 1;
+  CANONICAL_SETTLEMENT_REORG_KIND_DEEP = 2;
+}
+
+enum CanonicalTransactionReceiptStatus {
+  CANONICAL_TRANSACTION_RECEIPT_STATUS_UNSPECIFIED = 0;
+  CANONICAL_TRANSACTION_RECEIPT_STATUS_REVERTED = 1;
+}
+
 // PaymentIntentRecord contains opaque references only. It must not contain raw bank,
 // cardholder, identity, or provider credentials.
 message PaymentIntentRecord {
@@ -217,4 +244,413 @@ message CollateralReleaseEligibilityEvidence {
   bool allocation_reversed = 9;
   bytes evidence_hash = 10;
   google.protobuf.Timestamp evaluated_at = 11;
+}
+
+// PaymentAllocationModeClaimEvidence proves the exclusive compare-and-set claim that
+// prevents Phase 7B and Phase 7C from economically allocating the same payment.
+message PaymentAllocationModeClaimEvidence {
+  Identifier claim_id = 1;
+  Identifier payment_id = 2;
+  PaymentAllocationMode mode = 3;
+  uint64 expected_version = 4;
+  uint64 claimed_version = 5;
+  bool prior_allocation_absent = 6;
+  uint32 prior_allocation_journal_count = 7;
+  bytes evidence_hash = 8;
+  google.protobuf.Timestamp claimed_at = 9;
+  Identifier allocation_id = 10;
+  bytes instruction_digest = 11;
+  bytes claim_digest = 12;
+}
+
+// CanonicalizationEligibilityEvidence binds mature provider finality, reconciliation,
+// policy, original journals, and the exact one-to-one conversion boundary.
+message CanonicalizationEligibilityEvidence {
+  Identifier eligibility_id = 1;
+  Identifier allocation_mode_claim_id = 2;
+  Identifier payment_id = 3;
+  LoanId loan_id = 4;
+  string provider_id = 5;
+  string provider_reference = 6;
+  Money source_payment = 7;
+  Money target_tokens = 8;
+  Identifier reconciliation_id = 9;
+  repeated Identifier original_journal_ids = 10;
+  bytes finality_policy_hash = 11;
+  bytes conversion_policy_hash = 12;
+  bytes waterfall_policy_hash = 13;
+  bytes policy_set_hash = 14;
+  google.protobuf.Timestamp reversal_deadline = 15;
+  bool eligible = 16;
+  bytes evidence_hash = 17;
+  google.protobuf.Timestamp evaluated_at = 18;
+  Identifier payment_final_event_id = 19;
+  Identifier provider_statement_entry_id = 20;
+}
+
+// CanonicalizationPlanEvidence is a non-posting waterfall and gateway instruction plan.
+message CanonicalizationPlanEvidence {
+  Identifier canonicalization_id = 1;
+  Identifier allocation_mode_claim_id = 2;
+  Identifier allocation_id = 3;
+  Identifier payment_id = 4;
+  LoanId loan_id = 5;
+  Money source_payment = 6;
+  Money target_tokens = 7;
+  Money expected_debt = 8;
+  Money principal_allocation = 9;
+  Money refundable_excess = 10;
+  uint64 expected_state_nonce = 11;
+  PartyId finalizer_id = 12;
+  string target_chain_domain = 13;
+  string gateway_address = 14;
+  bytes instruction_digest = 15;
+  bytes accounting_attestation = 16;
+  bytes evidence_hash = 17;
+  google.protobuf.Timestamp prepared_at = 18;
+  PartyId borrower_id = 19;
+  PartyId lender_id = 20;
+}
+
+message CanonicalizationSubmissionEvidence {
+  Identifier canonicalization_id = 1;
+  CanonicalizationState state = 2;
+  string target_chain_domain = 3;
+  string gateway_address = 4;
+  PartyId sender_id = 5;
+  uint64 sender_nonce = 6;
+  bytes calldata_hash = 7;
+  bytes transaction_hash = 8;
+  bytes evidence_hash = 9;
+  google.protobuf.Timestamp submitted_at = 10;
+}
+
+// CanonicalSettlementConversionEvidence proves the finalizer acquired or discharged the
+// provider asset and delivered the distinct, same-denomination target token.
+message CanonicalSettlementConversionEvidence {
+  Identifier conversion_id = 1;
+  Identifier canonicalization_id = 2;
+  Identifier payment_id = 3;
+  string provider_id = 4;
+  string provider_reference = 5;
+  Money source_payment = 6;
+  Money target_tokens = 7;
+  string rate_numerator = 8;
+  string rate_denominator = 9;
+  string source_account_code = 10;
+  repeated Identifier original_journal_ids = 11;
+  PartyId finalizer_id = 12;
+  bytes gateway_transaction_hash = 13;
+  bool provider_asset_irrevocably_acquired = 14;
+  bool later_reversal_risk_assumed = 15;
+  bytes evidence_hash = 16;
+  google.protobuf.Timestamp converted_at = 17;
+}
+
+message CanonicalizationConfirmationEvidence {
+  Identifier canonicalization_id = 1;
+  Identifier allocation_id = 2;
+  Identifier payment_id = 3;
+  LoanId loan_id = 4;
+  CanonicalizationState state = 5;
+  string target_chain_domain = 6;
+  string gateway_address = 7;
+  bytes transaction_hash = 8;
+  Identifier gateway_event_id = 9;
+  bytes block_hash = 10;
+  uint64 block_number = 11;
+  uint32 log_index = 12;
+  Money target_tokens = 13;
+  Money principal_allocation = 14;
+  Money refundable_excess = 15;
+  Money debt_before = 16;
+  Money debt_after = 17;
+  repeated Identifier journal_ids = 18;
+  bytes evidence_hash = 19;
+  google.protobuf.Timestamp confirmed_at = 20;
+  bytes instruction_digest = 21;
+  PartyId borrower_id = 22;
+  PartyId lender_id = 23;
+  uint64 confirmation_depth = 24;
+  uint64 finality_head_block = 25;
+  bytes finality_head_hash = 26;
+  bytes finality_evidence_hash = 27;
+  // The nested authoritative envelope is mandatory for Phase 7C confirmation.
+  // Its payment, allocation, loan, transaction, event, block, log, head, depth,
+  // and evidence identities MUST exactly equal the duplicated fields above.
+  FinalizedCanonicalSettlementEvidence finalized_settlement = 28;
+}
+
+message CanonicalLenderPayoutEvidence {
+  Identifier payout_id = 1;
+  Identifier canonicalization_id = 2;
+  LoanId loan_id = 3;
+  PartyId lender_id = 4;
+  Money amount = 5;
+  bytes gateway_transaction_hash = 6;
+  Identifier gateway_event_id = 7;
+  Identifier journal_id = 8;
+  bytes evidence_hash = 9;
+  google.protobuf.Timestamp paid_at = 10;
+}
+
+message CanonicalBorrowerRefundEvidence {
+  Identifier refund_id = 1;
+  Identifier canonicalization_id = 2;
+  LoanId loan_id = 3;
+  PartyId borrower_id = 4;
+  Money amount = 5;
+  bytes gateway_transaction_hash = 6;
+  Identifier gateway_event_id = 7;
+  Identifier journal_id = 8;
+  bytes evidence_hash = 9;
+  google.protobuf.Timestamp refunded_at = 10;
+}
+
+// CanonicalSettlementIncidentEvidence retains contradictory provider evidence without
+// changing the confirmed payment state or inferring an economic reversal.
+message CanonicalSettlementIncidentEvidence {
+  Identifier incident_id = 1;
+  Identifier canonicalization_id = 2;
+  Identifier payment_id = 3;
+  string provider_id = 4;
+  Identifier provider_event_id = 5;
+  PaymentStatus reported_status = 6;
+  CanonicalizationState canonicalization_state = 7;
+  string reason_code = 8;
+  string owner = 9;
+  bool payment_state_unchanged = 10;
+  bool economic_journals_suppressed = 11;
+  bytes raw_payload_hash = 12;
+  bytes evidence_hash = 13;
+  google.protobuf.Timestamp observed_at = 14;
+  google.protobuf.Timestamp resolution_deadline = 15;
+  // Set for a serialized late-success race that consumes a submitted reversal
+  // quarantine without executing reversal accounting.
+  Identifier quarantine_id = 16;
+  Identifier resolution_id = 17;
+  // When present, this is the winning authenticated chain result. Its payment
+  // and canonicalization identities MUST match this incident; payment state
+  // remains FINAL and no reversal journal may be posted.
+  FinalizedCanonicalSettlementEvidence finalized_settlement = 18;
+}
+
+// CanonicalSettlementReorgEvidence records every observed reorganization. Shallow
+// evidence removes provisional state only; deep evidence requires linked compensation
+// and an owned incident.
+message CanonicalSettlementReorgEvidence {
+  Identifier reorg_id = 1;
+  Identifier canonicalization_id = 2;
+  bytes orphaned_transaction_hash = 3;
+  Identifier orphaned_gateway_event_id = 4;
+  bytes orphaned_block_hash = 5;
+  uint64 orphaned_block_number = 6;
+  uint64 replacement_block_number = 7;
+  CanonicalSettlementReorgKind kind = 8;
+  bool compensation_required = 9;
+  bytes orphaned_event_evidence_hash = 10;
+  bytes evidence_hash = 11;
+  google.protobuf.Timestamp detected_at = 12;
+  bytes payment_id = 13;
+  bytes allocation_id = 14;
+  bytes instruction_digest = 15;
+  bytes replacement_block_hash = 16;
+  uint64 confirmation_depth = 17;
+  uint64 detected_head_block_number = 18;
+  bytes detected_head_block_hash = 19;
+  bytes orphaned_raw_payload_hash = 20;
+  string chain_id = 21;
+  string gateway_address = 22;
+  uint64 orphaned_transaction_index = 23;
+  bytes orphaned_receipts_root = 24;
+  bytes orphaned_inclusion_proof_hash = 25;
+  bytes orphaned_receipt_header_signature_hash = 26;
+  bytes finality_policy_hash = 27;
+  bytes header_authority_hash = 28;
+  bytes replacement_header_signature_hash = 29;
+  bytes detected_head_header_signature_hash = 30;
+}
+
+message CanonicalSettlementReorgCompensationEvidence {
+  Identifier compensation_id = 1;
+  Identifier canonicalization_id = 2;
+  bytes orphaned_transaction_hash = 3;
+  Identifier orphaned_gateway_event_id = 4;
+  bytes orphaned_block_hash = 5;
+  repeated Identifier original_journal_ids = 6;
+  repeated Identifier reversal_journal_ids = 7;
+  bytes evidence_hash = 8;
+  google.protobuf.Timestamp detected_at = 9;
+  Identifier reorg_id = 10;
+  Identifier incident_id = 11;
+}
+
+// CanonicalSettlementInstruction is the exact 21-field static Solidity tuple signed by
+// the accounting attester. bytes fields are exactly bytes32, address fields are
+// canonical EVM addresses, and uint256 values use canonical unsigned decimal strings.
+message CanonicalSettlementInstruction {
+  bytes payment_id = 1;
+  bytes allocation_id = 2;
+  bytes loan_id = 3;
+  bytes source_asset_id = 4;
+  bytes target_asset_id = 5;
+  string source_units = 6;
+  string target_units = 7;
+  bytes provider_id_hash = 8;
+  bytes provider_reference_hash = 9;
+  bytes reconciliation_id = 10;
+  bytes reconciliation_commitment = 11;
+  bytes original_journal_set_hash = 12;
+  bytes conversion_policy_hash = 13;
+  bytes finality_policy_hash = 14;
+  bytes evidence_hash = 15;
+  bytes journal_ref = 16;
+  uint64 finalized_at_unix_seconds = 17;
+  uint64 reversal_deadline_unix_seconds = 18;
+  string expected_debt_units = 19;
+  uint64 expected_state_nonce = 20;
+  string attester_address = 21;
+}
+
+// CanonicalSettlementDigestContext is the exact static abi.encode input:
+// (ELIGIBILITY_DOMAIN, chainid, gateway, finalizer, policySetHash, instruction).
+// chain_id is a canonical uint256 decimal string so the schema does not narrow
+// Solidity's uint256.
+message CanonicalSettlementDigestContext {
+  bytes eligibility_domain_hash = 1;
+  string chain_id = 2;
+  string gateway_address = 3;
+  string finalizer_address = 4;
+  bytes policy_set_hash = 5;
+  CanonicalSettlementInstruction instruction = 6;
+  bytes instruction_digest = 7;
+}
+
+// CanonicalSettlementExecutedEventData is the exact 29-word unindexed Solidity event
+// tuple, in ABI order.
+message CanonicalSettlementExecutedEventData {
+  bytes instruction_digest = 1;
+  bytes policy_set_hash = 2;
+  string loan_account_address = 3;
+  string finalizer_address = 4;
+  string attester_address = 5;
+  bytes source_asset_id = 6;
+  bytes target_asset_id = 7;
+  string target_token_address = 8;
+  string source_units = 9;
+  string gross_units = 10;
+  bytes provider_id_hash = 11;
+  bytes provider_reference_hash = 12;
+  bytes reconciliation_id = 13;
+  bytes reconciliation_commitment = 14;
+  bytes original_journal_set_hash = 15;
+  bytes conversion_policy_hash = 16;
+  bytes finality_policy_hash = 17;
+  bytes instruction_evidence_hash = 18;
+  bytes journal_ref = 19;
+  uint64 finalized_at_unix_seconds = 20;
+  uint64 reversal_deadline_unix_seconds = 21;
+  string debt_before_units = 22;
+  string principal_units = 23;
+  string refundable_excess_units = 24;
+  string debt_after_units = 25;
+  uint64 state_nonce_before = 26;
+  uint64 state_nonce_after = 27;
+  string lender_address = 28;
+  string borrower_address = 29;
+}
+
+// CanonicalSettlementLogEnvelope preserves the three indexed topics and the complete
+// EVM receipt/log identity separately from the raw topics-and-data payload hash.
+message CanonicalSettlementLogEnvelope {
+  string chain_id = 1;
+  string gateway_address = 2;
+  bytes transaction_hash = 3;
+  bytes gateway_event_id = 4;
+  uint32 log_index = 5;
+  uint64 block_number = 6;
+  bytes block_hash = 7;
+  bytes raw_payload_hash = 8;
+  bytes payment_id = 9;
+  bytes allocation_id = 10;
+  bytes loan_id = 11;
+  CanonicalSettlementExecutedEventData settlement = 12;
+  uint64 transaction_index = 13;
+  bytes receipts_root = 14;
+  bytes inclusion_proof_hash = 15;
+  bytes receipt_header_signature_hash = 16;
+}
+
+message CanonicalSettlementFinalityProof {
+  uint64 confirmation_depth = 1;
+  uint64 head_block_number = 2;
+  bytes head_block_hash = 3;
+  bytes evidence_hash = 4;
+  google.protobuf.Timestamp observed_at = 5;
+  bytes finality_policy_hash = 6;
+  bytes header_authority_hash = 7;
+  bytes head_header_signature_hash = 8;
+}
+
+message FinalizedCanonicalSettlementEvidence {
+  CanonicalSettlementLogEnvelope event_envelope = 1;
+  CanonicalSettlementFinalityProof finality = 2;
+}
+
+// CanonicalSubmittedTransactionFailureEvidence can be emitted only after an
+// indexer-owned verified REVERTED receipt reaches the configured confirmation depth.
+message CanonicalSubmittedTransactionFailureEvidence {
+  Identifier canonicalization_id = 1;
+  bytes payment_id = 2;
+  bytes allocation_id = 3;
+  bytes instruction_digest = 4;
+  string chain_id = 5;
+  string gateway_address = 6;
+  bytes transaction_hash = 7;
+  CanonicalTransactionReceiptStatus receipt_status = 8;
+  bytes receipt_payload_hash = 9;
+  uint64 block_number = 10;
+  bytes block_hash = 11;
+  uint64 confirmation_depth = 12;
+  uint64 head_block_number = 13;
+  bytes head_block_hash = 14;
+  bytes evidence_hash = 15;
+  google.protobuf.Timestamp observed_at = 16;
+  uint64 transaction_index = 17;
+  bytes receipts_root = 18;
+  bytes inclusion_proof_hash = 19;
+  bytes finality_policy_hash = 20;
+  bytes header_authority_hash = 21;
+  bytes receipt_header_signature_hash = 22;
+  bytes head_header_signature_hash = 23;
+}
+
+// CanonicalReversalResolutionEvidence is the immutable proof for resolving a
+// provider-reversal quarantine into Phase 7A reversal accounting and a permanent
+// canonical-allocation tombstone. submitted_transaction_failure MUST be present when
+// origin_state is SUBMITTED and MUST be absent for a pre-submission origin. When
+// present, its canonicalization, payment, allocation, and instruction identities MUST
+// exactly match this envelope. provider_reversal_event MUST report REVERSED, and its
+// provider, event, and payment identities MUST match provider_reversal_receipt and this
+// envelope. coordinator_version_after MUST equal coordinator_version_before + 1 and
+// permanent_tombstone MUST be true.
+message CanonicalReversalResolutionEvidence {
+  Identifier resolution_id = 1;
+  Identifier quarantine_id = 2;
+  Identifier canonicalization_id = 3;
+  bytes payment_id = 4;
+  bytes allocation_id = 5;
+  bytes instruction_digest = 6;
+  CanonicalizationState origin_state = 7;
+  CanonicalSubmittedTransactionFailureEvidence submitted_transaction_failure = 8;
+  ProviderPaymentCallback provider_reversal_event = 9;
+  ProviderCallbackReceipt provider_reversal_receipt = 10;
+  Identifier phase7a_reversal_event_id = 11;
+  repeated Identifier phase7a_reversal_journal_ids = 12;
+  uint64 coordinator_version_before = 13;
+  uint64 coordinator_version_after = 14;
+  bool permanent_tombstone = 15;
+  string resolved_by = 16;
+  bytes evidence_hash = 17;
+  google.protobuf.Timestamp resolved_at = 18;
 }

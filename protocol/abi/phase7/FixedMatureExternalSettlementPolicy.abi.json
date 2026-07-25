@@ -1,0 +1,166 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "sourceAssetId_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "targetAssetId_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "conversionPolicyHash_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "finalityPolicyHash_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "minimumReversalDelay_",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidMatureSettlementPolicy",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "conversionPolicyHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "finalityPolicyHash",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minimumReversalDelay",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "sourceAssetId_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "targetAssetId_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "conversionPolicyHash_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "finalityPolicyHash_",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "finalizedAt",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "reversalDeadline",
+        "type": "uint64"
+      }
+    ],
+    "name": "permitsMatureSettlement",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "sourceAssetId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes4",
+        "name": "interfaceId",
+        "type": "bytes4"
+      }
+    ],
+    "name": "supportsInterface",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "targetAssetId",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

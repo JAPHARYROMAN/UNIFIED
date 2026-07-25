@@ -148,3 +148,31 @@ assumptions:
     expiry: 2026-10-24
     downstream_impact: Allocation arithmetic receivable lender claim refund payable and reversal restoration
     validation: Integer conservation tests and rejection of provisional mismatched stale or foreign-asset inputs
+  - id: ASM-022
+    assumption: Every Phase 7C provider record converter attestation role account token and balance is synthetic and local-only.
+    owner: Release Authority
+    evidence: security/reviews/phase-7c-internal-review.md
+    expiry: 2026-10-24
+    downstream_impact: Canonical repayment payout refund conversion custody and incident evidence
+    validation: No network adapter production credential real identifier public testnet deployment or mainnet configuration exists
+  - id: ASM-023
+    assumption: The immutable mature-settlement policy deadline extinguishes the provider contractual reversal right and the synthetic converter assumes any later contradiction risk.
+    owner: Accounting and Economic Risk Authority
+    evidence: adr/0017-phase-7c-canonical-external-settlement-boundary.md
+    expiry: 2026-10-24
+    downstream_impact: Terminal debt lender payout borrower refund collateral eligibility and no-reserve treatment
+    validation: Canonicalization rejects pre-deadline evidence and confirmed contradictions create incident evidence without debt accounting or reserve mutation
+  - id: ASM-024
+    assumption: Phase 7C source provider units and target token units share denomination and precision and convert one-to-one with zero fees slippage and rounding.
+    owner: Accounting and Economic Risk Authority
+    evidence: docs/architecture/phase-7c-canonical-external-settlement.md
+    expiry: 2026-10-24
+    downstream_impact: Conversion accounting target custody principal allocation payout refund and reconciliation
+    validation: Distinct asset identities exact unit equality immutable conversion evidence and cross-denomination or non-unit paths rejected
+  - id: ASM-025
+    assumption: The synthetic Phase 7C chain observer keeps its pinned Ed25519 header-authority key uncompromised and signs only headers from the configured local EVM chain.
+    owner: Security Authority
+    evidence: services/chain-indexer/projection/evmproof.go
+    expiry: 2026-10-24
+    downstream_impact: Gateway-event authority reverted-transaction authority finality reorganization and accounting confirmation
+    validation: Authority-derived consumer-pinned finality policy exact signed-header verification strict canonical receipt and trie inclusion same-header nonconflicting enrichment monotonic signed observation checks aggregate input limits alternate-key rejection full restart-safe reorg provenance finality-depth checks and reorg removal tests
