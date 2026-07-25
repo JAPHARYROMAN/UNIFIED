@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { Buffer } from "node:buffer";
 import { readFileSync, statSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
@@ -105,13 +106,114 @@ function repositoryPath(path) {
   return result !== ".." && !result.startsWith(`..${sep}`) && !isAbsolute(result);
 }
 
+function solidityIdentifierCharacter(character) {
+  return character !== undefined && /[A-Za-z0-9_$]/.test(character);
+}
+
+function skipSolidityComment(source, index) {
+  if (source.startsWith("//", index)) {
+    const lineEnds = ["\r", "\n"]
+      .map((marker) => source.indexOf(marker, index + 2))
+      .filter((position) => position !== -1);
+    if (lineEnds.length === 0) return source.length;
+    const end = Math.min(...lineEnds);
+    return source.startsWith("\r\n", end) ? end + 2 : end + 1;
+  }
+  if (source.startsWith("/*", index)) {
+    const end = source.indexOf("*/", index + 2);
+    if (end === -1) throw new Error("Solidity dependency source has an unterminated block comment");
+    return end + 2;
+  }
+  return null;
+}
+
+function readSolidityString(source, index) {
+  const quote = source[index];
+  let cursor = index + 1;
+  const characters = [];
+  while (cursor < source.length) {
+    const character = source[cursor];
+    if (character === "\\") {
+      if (cursor + 1 >= source.length) {
+        throw new Error("Solidity dependency source has an unterminated string escape");
+      }
+      characters.push(character, source[cursor + 1]);
+      cursor += 2;
+      continue;
+    }
+    if (character === quote) return { cursor: cursor + 1, value: characters.join("") };
+    characters.push(character);
+    cursor += 1;
+  }
+  throw new Error("Solidity dependency source has an unterminated string");
+}
+
+function readSolidityImport(source, index) {
+  let cursor = index;
+  let importPath = null;
+  while (cursor < source.length) {
+    const commentEnd = skipSolidityComment(source, cursor);
+    if (commentEnd !== null) {
+      cursor = commentEnd;
+      continue;
+    }
+    const character = source[cursor];
+    if (character === '"' || character === "'") {
+      const parsed = readSolidityString(source, cursor);
+      if (importPath !== null) {
+        throw new Error("Solidity import directive contains multiple string literals");
+      }
+      if (parsed.value.includes("\\")) {
+        throw new Error("Escaped Solidity import paths are not supported");
+      }
+      importPath = parsed.value;
+      cursor = parsed.cursor;
+      continue;
+    }
+    if (character === ";") {
+      if (importPath === null) throw new Error("Solidity import directive lacks a path");
+      return { cursor: cursor + 1, importPath };
+    }
+    cursor += 1;
+  }
+  throw new Error("Solidity import directive is unterminated");
+}
+
+export function solidityImportsFromSource(source) {
+  const imports = [];
+  let cursor = 0;
+  while (cursor < source.length) {
+    const commentEnd = skipSolidityComment(source, cursor);
+    if (commentEnd !== null) {
+      cursor = commentEnd;
+      continue;
+    }
+    const character = source[cursor];
+    if (character === '"' || character === "'") {
+      cursor = readSolidityString(source, cursor).cursor;
+      continue;
+    }
+    if (solidityIdentifierCharacter(character)) {
+      const start = cursor;
+      while (cursor < source.length && solidityIdentifierCharacter(source[cursor])) cursor += 1;
+      if (source.slice(start, cursor) === "import") {
+        const parsed = readSolidityImport(source, cursor);
+        imports.push(parsed.importPath);
+        cursor = parsed.cursor;
+      }
+      continue;
+    }
+    cursor += 1;
+  }
+  return imports;
+}
+
 function solidityImports(sourcePath) {
-  const source = readFileSync(sourcePath, "utf8")
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/\/\/[^\r\n]*/g, "");
-  const pattern =
-    /\bimport\s+(?:[^;]*?\s+from\s+)?["'](?<path>[^"']+)["'](?:\s+as\s+[A-Za-z_]\w*)?\s*;/gs;
-  return [...source.matchAll(pattern)].map((match) => match.groups.path);
+  return solidityImportsFromSource(readFileSync(sourcePath, "utf8"));
+}
+
+export function ordinalUtf8Compare(left, right) {
+  return Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
 }
 
 function repositoryImportPath(sourcePath, importPath) {
@@ -164,7 +266,7 @@ export function repositorySolidityDependencyHash(sourcePath) {
       path: relative(ROOT, path).split(sep).join("/"),
       sha256: sha256(readFileSync(path)),
     }))
-    .sort((left, right) => left.path.localeCompare(right.path));
+    .sort((left, right) => ordinalUtf8Compare(left.path, right.path));
   return sha256(canonicalJson(payload));
 }
 

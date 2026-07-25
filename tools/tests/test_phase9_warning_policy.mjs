@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  ordinalUtf8Compare,
   phase9StubContracts,
   repositorySolidityDependencyHash,
+  solidityImportsFromSource,
   validateCheckpointDependencyClosures,
   validatePhase9MutabilityDiagnostics,
 } from "../compile_phase9_storage_layouts.mjs";
@@ -191,4 +193,41 @@ test("node compilation guard verifies the current dependency closure", () => {
     () => validateCheckpointDependencyClosures(stale),
     /dependency closure hash is stale/,
   );
+});
+
+test("Solidity import lexer preserves comment markers inside strings", () => {
+  const sources = [
+    'string constant X = "x//"; import "../risk/PayoffLogic.sol";',
+    'string constant X = "x/* not a comment */"; import "../risk/PayoffLogic.sol";',
+    String.raw`string constant X = "escaped \" //"; import "../risk/PayoffLogic.sol";`,
+    String.raw`string constant X = "escaped \" /* */"; import "../risk/PayoffLogic.sol";`,
+    String.raw`string constant X = "import \"../risk/Fake.sol\"; //"; import "../risk/PayoffLogic.sol";`,
+  ];
+  for (const source of sources) {
+    assert.deepEqual(solidityImportsFromSource(source), ["../risk/PayoffLogic.sol"]);
+  }
+});
+
+test("Solidity import lexer handles LF, CR, and CRLF line comments", () => {
+  for (const lineEnd of ["\n", "\r", "\r\n"]) {
+    assert.deepEqual(
+      solidityImportsFromSource(`// hidden text${lineEnd}import "../risk/PayoffLogic.sol";`),
+      ["../risk/PayoffLogic.sol"],
+    );
+  }
+});
+
+test("dependency paths use explicit ordinal UTF-8 order", () => {
+  const paths = [
+    "protocol/src/risk/aHelper.sol",
+    "protocol/src/risk/_Helper.sol",
+    "protocol/src/risk/ZHelper.sol",
+    "protocol/src/risk/AHelper.sol",
+  ];
+  assert.deepEqual(paths.sort(ordinalUtf8Compare), [
+    "protocol/src/risk/AHelper.sol",
+    "protocol/src/risk/ZHelper.sol",
+    "protocol/src/risk/_Helper.sol",
+    "protocol/src/risk/aHelper.sol",
+  ]);
 });

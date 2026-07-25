@@ -235,6 +235,48 @@ def test_nested_extra_phase9_contract_is_rejected(
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
 
 
+@pytest.mark.parametrize(
+    "source",
+    (
+        'string constant X = "x//"; import "../risk/PayoffLogic.sol";',
+        'string constant X = "x/* not a comment */"; import "../risk/PayoffLogic.sol";',
+        'string constant X = "escaped \\" //"; import "../risk/PayoffLogic.sol";',
+        'string constant X = "escaped \\" /* */"; import "../risk/PayoffLogic.sol";',
+        'string constant X = "import \\"../risk/Fake.sol\\"; //"; '
+        'import "../risk/PayoffLogic.sol";',
+    ),
+)
+def test_solidity_import_lexer_does_not_treat_string_markers_as_comments(source: str) -> None:
+    assert checkpoints.solidity_imports_from_source(source) == ("../risk/PayoffLogic.sol",)
+
+
+@pytest.mark.parametrize("line_end", ("\n", "\r", "\r\n"))
+def test_solidity_import_lexer_handles_every_line_ending(line_end: str) -> None:
+    source = f'// hidden text{line_end}import "../risk/PayoffLogic.sol";'
+    assert checkpoints.solidity_imports_from_source(source) == ("../risk/PayoffLogic.sol",)
+
+
+def test_dependency_paths_use_explicit_ordinal_utf8_order(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(checkpoints, "ROOT", tmp_path)
+    paths = [
+        tmp_path / "protocol/src/risk/aHelper.sol",
+        tmp_path / "protocol/src/risk/_Helper.sol",
+        tmp_path / "protocol/src/risk/ZHelper.sol",
+        tmp_path / "protocol/src/risk/AHelper.sol",
+    ]
+    assert [
+        path.relative_to(tmp_path).as_posix()
+        for path in sorted(paths, key=checkpoints.ordinal_utf8_path_key)
+    ] == [
+        "protocol/src/risk/AHelper.sol",
+        "protocol/src/risk/ZHelper.sol",
+        "protocol/src/risk/_Helper.sol",
+        "protocol/src/risk/aHelper.sol",
+    ]
+
+
 def external_helper_checkpoint(
     manifest: dict[str, Any], registry: dict[str, Any], paths: dict[str, Path]
 ) -> Path:

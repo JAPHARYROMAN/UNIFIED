@@ -209,19 +209,107 @@ def verify_raw_freeze_artifacts(manifest: dict[str, Any]) -> None:
         raise SystemExit("Phase 9 historical freeze artifact bytes drifted")
 
 
+def solidity_identifier_character(character: str) -> bool:
+    return character.isascii() and (character.isalnum() or character in "_$")
+
+
+def skip_solidity_comment(source: str, index: int) -> int | None:
+    if source.startswith("//", index):
+        line_ends = [
+            position
+            for marker in ("\r", "\n")
+            if (position := source.find(marker, index + 2)) != -1
+        ]
+        if not line_ends:
+            return len(source)
+        end = min(line_ends)
+        return end + 2 if source.startswith("\r\n", end) else end + 1
+    if source.startswith("/*", index):
+        end = source.find("*/", index + 2)
+        if end == -1:
+            raise SystemExit("Solidity dependency source has an unterminated block comment")
+        return end + 2
+    return None
+
+
+def read_solidity_string(source: str, index: int) -> tuple[str, int]:
+    quote = source[index]
+    cursor = index + 1
+    characters: list[str] = []
+    while cursor < len(source):
+        character = source[cursor]
+        if character == "\\":
+            if cursor + 1 >= len(source):
+                raise SystemExit("Solidity dependency source has an unterminated string escape")
+            characters.extend((character, source[cursor + 1]))
+            cursor += 2
+            continue
+        if character == quote:
+            return "".join(characters), cursor + 1
+        characters.append(character)
+        cursor += 1
+    raise SystemExit("Solidity dependency source has an unterminated string")
+
+
+def read_solidity_import(source: str, index: int) -> tuple[str, int]:
+    cursor = index
+    import_path: str | None = None
+    while cursor < len(source):
+        comment_end = skip_solidity_comment(source, cursor)
+        if comment_end is not None:
+            cursor = comment_end
+            continue
+        character = source[cursor]
+        if character in "\"'":
+            value, cursor = read_solidity_string(source, cursor)
+            if import_path is not None:
+                raise SystemExit("Solidity import directive contains multiple string literals")
+            if "\\" in value:
+                raise SystemExit("Escaped Solidity import paths are not supported")
+            import_path = value
+            continue
+        if character == ";":
+            if import_path is None:
+                raise SystemExit("Solidity import directive lacks a path")
+            return import_path, cursor + 1
+        cursor += 1
+    raise SystemExit("Solidity import directive is unterminated")
+
+
+def solidity_imports_from_source(source: str) -> tuple[str, ...]:
+    imports: list[str] = []
+    cursor = 0
+    while cursor < len(source):
+        comment_end = skip_solidity_comment(source, cursor)
+        if comment_end is not None:
+            cursor = comment_end
+            continue
+        character = source[cursor]
+        if character in "\"'":
+            _, cursor = read_solidity_string(source, cursor)
+            continue
+        if solidity_identifier_character(character):
+            start = cursor
+            while cursor < len(source) and solidity_identifier_character(source[cursor]):
+                cursor += 1
+            if source[start:cursor] == "import":
+                import_path, cursor = read_solidity_import(source, cursor)
+                imports.append(import_path)
+            continue
+        cursor += 1
+    return tuple(imports)
+
+
 def solidity_imports(path: Path) -> tuple[str, ...]:
     try:
         source = path.read_text(encoding="utf-8")
     except FileNotFoundError as exc:
         raise SystemExit(f"{path.relative_to(ROOT)} is missing") from exc
-    source = re.sub(r"/\*.*?\*/", "", source, flags=re.DOTALL)
-    source = re.sub(r"//[^\r\n]*", "", source)
-    pattern = re.compile(
-        r"\bimport\s+(?:[^;]*?\s+from\s+)?[\"'](?P<path>[^\"']+)[\"']"
-        r"(?:\s+as\s+[A-Za-z_]\w*)?\s*;",
-        flags=re.DOTALL,
-    )
-    return tuple(match.group("path") for match in pattern.finditer(source))
+    return solidity_imports_from_source(source)
+
+
+def ordinal_utf8_path_key(path: Path) -> bytes:
+    return path.relative_to(ROOT).as_posix().encode("utf-8")
 
 
 def repository_import_path(source_path: Path, import_path: str) -> Path | None:
@@ -271,7 +359,7 @@ def repository_solidity_dependency_paths(source_path: Path) -> list[Path]:
             dependency = repository_import_path(current, import_path)
             if dependency is not None and dependency not in observed:
                 pending.append(dependency)
-    return sorted(observed, key=lambda path: path.relative_to(ROOT).as_posix())
+    return sorted(observed, key=ordinal_utf8_path_key)
 
 
 def repository_solidity_dependency_hash(source_path: Path) -> str:
