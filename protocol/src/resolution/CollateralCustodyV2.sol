@@ -20,17 +20,11 @@ contract CollateralCustodyV2 is ICollateralCustodyV2 {
         _emergencyController = emergencyController_;
     }
 
-    function recordCustody(Phase9Types.CustodyRecord calldata, bytes32)
-        external
-        override
-    {
+    function recordCustody(Phase9Types.CustodyRecord calldata, bytes32) external override {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function updateCustody(bytes32, uint256, Phase9Types.CustodyStatus, bytes32)
-        external
-        override
-    {
+    function updateCustody(bytes32, uint256, Phase9Types.CustodyStatus, bytes32) external override {
         revert Phase9ImplementationNotFrozen();
     }
 

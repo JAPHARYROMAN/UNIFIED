@@ -26,6 +26,9 @@ const PHASE9_CONTRACTS = [
   "RecoveryManager",
   "Phase9LocalSyntheticToken",
 ];
+const PHASE9_PRODUCTION_CONTRACTS = PHASE9_CONTRACTS.slice(0, -1);
+const PHASE9_MUTABILITY_WARNING_CODE = "2018";
+const EXPECTED_PHASE9_MUTABILITY_WARNINGS = 53;
 
 const COMPILER_SETTINGS = {
   evmVersion: "prague",
@@ -93,6 +96,120 @@ function revertErrorName(statement) {
   if (statement?.nodeType !== "RevertStatement") return null;
   const expression = statement.errorCall?.expression;
   return expression?.name ?? expression?.memberName ?? null;
+}
+
+function sourceRange(node) {
+  const [startText, lengthText] = String(node.src ?? "").split(":", 2);
+  const start = Number.parseInt(startText, 10);
+  const length = Number.parseInt(lengthText, 10);
+  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(length)) {
+    throw new Error(`Invalid Solidity AST source range: ${node.src}`);
+  }
+  return { end: start + length, start };
+}
+
+function functionLabel(sourceName, contractName, node) {
+  const parameterTypes = (node.parameters?.parameters ?? []).map(
+    (parameter) => parameter.typeDescriptions?.typeString ?? "?",
+  );
+  return `${sourceName}:${contractName}.${node.name}(${parameterTypes.join(",")})`;
+}
+
+function canonicalFreezeMutators(output, productionContracts) {
+  const functions = [];
+  for (const [sourceName, sourceOutput] of Object.entries(output.sources ?? {})) {
+    for (const contract of sourceOutput.ast?.nodes ?? []) {
+      if (
+        contract.nodeType !== "ContractDefinition" ||
+        !productionContracts.includes(contract.name)
+      ) {
+        continue;
+      }
+      for (const node of contract.nodes ?? []) {
+        const statements = node.body?.statements ?? [];
+        if (
+          node.nodeType !== "FunctionDefinition" ||
+          node.kind !== "function" ||
+          !["external", "public"].includes(node.visibility) ||
+          node.stateMutability !== "nonpayable" ||
+          (node.modifiers ?? []).length !== 0 ||
+          statements.length !== 1 ||
+          revertErrorName(statements[0]) !== "Phase9ImplementationNotFrozen"
+        ) {
+          continue;
+        }
+        functions.push({
+          ...sourceRange(node),
+          key: `${sourceName}:${node.id}`,
+          label: functionLabel(sourceName, contract.name, node),
+          sourceName,
+        });
+      }
+    }
+  }
+  return functions;
+}
+
+export function validatePhase9MutabilityDiagnostics(
+  output,
+  {
+    expectedCount = EXPECTED_PHASE9_MUTABILITY_WARNINGS,
+    productionContracts = PHASE9_PRODUCTION_CONTRACTS,
+  } = {},
+) {
+  const canonical = canonicalFreezeMutators(output, productionContracts);
+  if (canonical.length !== expectedCount) {
+    throw new Error(
+      `Expected ${expectedCount} canonical Phase 9 fail-closed mutators, found ${canonical.length}`,
+    );
+  }
+
+  const warnings = (output.errors ?? []).filter(
+    (diagnostic) =>
+      diagnostic.severity === "warning" &&
+      String(diagnostic.errorCode) === PHASE9_MUTABILITY_WARNING_CODE,
+  );
+  if (warnings.length !== expectedCount) {
+    throw new Error(
+      `Expected ${expectedCount} Phase 9 warning-2018 diagnostics, found ${warnings.length}`,
+    );
+  }
+
+  const matched = new Set();
+  for (const warning of warnings) {
+    const location = warning.sourceLocation;
+    if (
+      location === undefined ||
+      typeof location.file !== "string" ||
+      !Number.isSafeInteger(location.start) ||
+      !Number.isSafeInteger(location.end)
+    ) {
+      throw new Error("Warning 2018 is missing a precise source location");
+    }
+    const candidates = canonical.filter(
+      (fn) =>
+        fn.sourceName === location.file &&
+        location.start >= fn.start &&
+        location.end <= fn.end,
+    );
+    if (candidates.length !== 1) {
+      throw new Error(
+        `Warning 2018 is not scoped to one canonical Phase 9 fail-closed mutator: ${location.file}:${location.start}`,
+      );
+    }
+    const [candidate] = candidates;
+    if (matched.has(candidate.key)) {
+      throw new Error(`Duplicate warning 2018 for ${candidate.label}`);
+    }
+    matched.add(candidate.key);
+  }
+
+  const missing = canonical.filter((fn) => !matched.has(fn.key));
+  if (missing.length > 0) {
+    throw new Error(
+      `Canonical Phase 9 fail-closed mutators lack warning 2018: ${missing.map((fn) => fn.label).join(", ")}`,
+    );
+  }
 }
 
 function freezeSurface(definition) {
@@ -220,6 +337,7 @@ async function main() {
   }
   const errors = diagnostics.filter((diagnostic) => diagnostic.severity === "error");
   if (errors.length > 0) throw new Error(`Solidity compilation failed (${errors.length} errors)`);
+  validatePhase9MutabilityDiagnostics(output);
 
   const definitions = contractDefinitions(output);
   const matches = new Map();
@@ -253,4 +371,6 @@ async function main() {
   process.stdout.write(`Phase 9 storage layouts compiled (${PHASE9_CONTRACTS.length} contracts).\n`);
 }
 
-await main();
+if (process.argv[1] !== undefined && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await main();
+}

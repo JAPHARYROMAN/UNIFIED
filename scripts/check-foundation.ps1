@@ -22,6 +22,7 @@ uv run python tools/check_payment_privacy_surface.py
 uv run python tools/check_phase9_schema.py
 uv run python tools/check_phase8.py
 uv run python tools/check_phase9.py
+node --test tools/tests/test_phase9_warning_policy.mjs
 
 $solcTarget = Join-Path $workspace '.cache\solc'
 if (Test-Path -LiteralPath $solcTarget) {

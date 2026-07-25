@@ -15,17 +15,14 @@ contract PositionManagerV2 is IPositionManagerV2 {
     bytes32[] private _trancheIds;
     mapping(bytes32 positionId => Phase9Types.Position position_) private _positions;
     bytes32[] private _positionIds;
-    mapping(bytes32 positionId => Phase9Types.Checkpoint[] checkpoints)
-        private _ownerCheckpoints;
-    mapping(bytes32 positionId => Phase9Types.Checkpoint[] checkpoints)
-        private _votingPowerCheckpoints;
-    mapping(bytes32 positionId => Phase9Types.Checkpoint[] checkpoints)
-        private _claimCheckpoints;
+    mapping(bytes32 positionId => Phase9Types.Checkpoint[] checkpoints) private _ownerCheckpoints;
+    mapping(bytes32 positionId => Phase9Types.Checkpoint[] checkpoints) private
+        _votingPowerCheckpoints;
+    mapping(bytes32 positionId => Phase9Types.Checkpoint[] checkpoints) private _claimCheckpoints;
     Phase9Types.Checkpoint[] private _totalVotingPowerCheckpoints;
-    mapping(bytes32 snapshotId => Phase9Types.PositionRightSnapshot snapshot_)
-        private _snapshots;
-    mapping(bytes32 snapshotId => mapping(bytes32 positionId => bool consumed))
-        private _consumedVoteRights;
+    mapping(bytes32 snapshotId => Phase9Types.PositionRightSnapshot snapshot_) private _snapshots;
+    mapping(bytes32 snapshotId => mapping(bytes32 positionId => bool consumed)) private
+        _consumedVoteRights;
     bool private _initialized;
 
     function initialize(bytes32, address, address) external override {
@@ -44,10 +41,7 @@ contract PositionManagerV2 is IPositionManagerV2 {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function createSnapshot(Phase9Types.PositionRightSnapshot calldata)
-        external
-        override
-    {
+    function createSnapshot(Phase9Types.PositionRightSnapshot calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 

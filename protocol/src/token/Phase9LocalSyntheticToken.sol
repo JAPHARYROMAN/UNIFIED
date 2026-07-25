@@ -10,9 +10,7 @@ contract Phase9LocalSyntheticToken is ERC20 {
 
     uint256 public constant FIXED_SUPPLY_UNITS = 1_000_000_000_000_000;
 
-    constructor(address fixtureAllocator)
-        ERC20("Unified Phase 9 Local Synthetic Unit", "P9UNIT")
-    {
+    constructor(address fixtureAllocator) ERC20("Unified Phase 9 Local Synthetic Unit", "P9UNIT") {
         if (block.chainid != 31337) revert InvalidLocalChain(block.chainid);
         if (fixtureAllocator == address(0)) revert InvalidFixtureAllocator();
         _mint(fixtureAllocator, FIXED_SUPPLY_UNITS);

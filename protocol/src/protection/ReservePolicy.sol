@@ -8,8 +8,8 @@ import { Phase9ProtectionTypes } from "./Phase9ProtectionTypes.sol";
 /// @notice ABI/storage freeze stub for immutable reserve-policy versions.
 contract ReservePolicy is IReservePolicy {
     address private _policyRegistrar;
-    mapping(bytes32 policyVersionId => Phase9ProtectionTypes.ReservePolicyVersion policy_)
-        private _policies;
+    mapping(bytes32 policyVersionId => Phase9ProtectionTypes.ReservePolicyVersion policy_) private
+        _policies;
     mapping(bytes32 poolId => bytes32 policyVersionId) private _activePolicyHashes;
     mapping(bytes32 operationId => bool processed) private _processedOperationIds;
 
@@ -17,10 +17,7 @@ contract ReservePolicy is IReservePolicy {
         _policyRegistrar = policyRegistrar_;
     }
 
-    function registerPolicy(Phase9ProtectionTypes.ReservePolicyVersion calldata)
-        external
-        override
-    {
+    function registerPolicy(Phase9ProtectionTypes.ReservePolicyVersion calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 

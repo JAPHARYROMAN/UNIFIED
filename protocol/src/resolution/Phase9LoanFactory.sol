@@ -19,8 +19,8 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
     uint64 private _nextLoanNonce;
     mapping(bytes32 loanId => address account) private _loanAccounts;
     mapping(bytes32 loanId => address manager) private _positionManagers;
-    mapping(bytes32 creationId => Phase9Types.LoanCreationRequest request)
-        private _creationRequests;
+    mapping(bytes32 creationId => Phase9Types.LoanCreationRequest request) private
+        _creationRequests;
     mapping(bytes32 creationId => bool processed) private _processedCreationIds;
 
     constructor(

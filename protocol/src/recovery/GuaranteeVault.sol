@@ -10,8 +10,7 @@ contract GuaranteeVault is IGuaranteeVault {
     address private _assetRegistry;
     address private _settlementToken;
     address private _authorizedRecoveryManager;
-    mapping(bytes32 guaranteeId => Phase9RecoveryTypes.Guarantee guarantee_)
-        private _guarantees;
+    mapping(bytes32 guaranteeId => Phase9RecoveryTypes.Guarantee guarantee_) private _guarantees;
     mapping(bytes32 receiptId => bool processed) private _processedReceiptIds;
 
     constructor(
@@ -24,17 +23,11 @@ contract GuaranteeVault is IGuaranteeVault {
         _authorizedRecoveryManager = authorizedRecoveryManager_;
     }
 
-    function registerGuarantee(Phase9RecoveryTypes.Guarantee calldata)
-        external
-        override
-    {
+    function registerGuarantee(Phase9RecoveryTypes.Guarantee calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function recordGuaranteeReceipt(bytes32, bytes32, uint256, bytes32)
-        external
-        override
-    {
+    function recordGuaranteeReceipt(bytes32, bytes32, uint256, bytes32) external override {
         revert Phase9ImplementationNotFrozen();
     }
 

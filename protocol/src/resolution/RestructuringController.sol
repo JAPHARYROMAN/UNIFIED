@@ -11,17 +11,18 @@ contract RestructuringController is IRestructuringController {
     address private _amendmentPolicyRegistry;
     address private _emergencyController;
     mapping(bytes32 loanId => uint64 nonce) private _nextProposalNonce;
-    mapping(bytes32 restructureId => Phase9Types.RestructuringProposal proposal_)
-        private _proposals;
-    mapping(bytes32 restructureId => Phase9Types.BorrowerConsentRecord consent)
-        private _borrowerConsents;
-    mapping(bytes32 restructureId => mapping(bytes32 positionId => Phase9Types.VoteRecord vote_))
-        private _votes;
+    mapping(bytes32 restructureId => Phase9Types.RestructuringProposal proposal_) private
+        _proposals;
+    mapping(bytes32 restructureId => Phase9Types.BorrowerConsentRecord consent) private
+        _borrowerConsents;
+    mapping(
+        bytes32 restructureId => mapping(bytes32 positionId => Phase9Types.VoteRecord vote_)
+    ) private _votes;
     mapping(bytes32 restructureId => uint256 weight) private _supportWeight;
     mapping(bytes32 restructureId => uint256 weight) private _opposeWeight;
     mapping(bytes32 restructureId => uint256 weight) private _castWeight;
-    mapping(bytes32 restructureId => Phase9Types.RestructuringExecutionResult result)
-        private _executionResults;
+    mapping(bytes32 restructureId => Phase9Types.RestructuringExecutionResult result) private
+        _executionResults;
 
     constructor(
         address loanRegistry_,
@@ -41,10 +42,7 @@ contract RestructuringController is IRestructuringController {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function recordBorrowerConsent(Phase9Types.BorrowerConsentRecord calldata)
-        external
-        override
-    {
+    function recordBorrowerConsent(Phase9Types.BorrowerConsentRecord calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 
@@ -94,9 +92,7 @@ contract RestructuringController is IRestructuringController {
         returns (uint256 support, uint256 oppose, uint256 cast)
     {
         return (
-            _supportWeight[restructureId],
-            _opposeWeight[restructureId],
-            _castWeight[restructureId]
+            _supportWeight[restructureId], _opposeWeight[restructureId], _castWeight[restructureId]
         );
     }
 

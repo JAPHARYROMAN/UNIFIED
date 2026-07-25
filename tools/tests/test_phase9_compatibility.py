@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import sys
+import tomllib
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,11 @@ import build_phase9_compatibility_manifest as manifest  # noqa: E402
 import check_phase9 as phase9  # noqa: E402
 import check_phase9_storage_layouts as storage  # noqa: E402
 import check_privileged_surface as privileged_surface  # noqa: E402
+
+
+def foundry_config() -> dict[str, Any]:
+    with (ROOT / "protocol/foundry.toml").open("rb") as handle:
+        return tomllib.load(handle)
 
 
 def sample_layout(contract: str = "Phase9LoanFactory") -> dict[str, Any]:
@@ -176,6 +182,36 @@ def test_mutating_stub_source_must_be_exact_revert() -> None:
     """
     assert phase9.is_exact_freeze_revert(phase9.solidity_function_bodies(accepted)[0][1])
     assert not phase9.is_exact_freeze_revert(phase9.solidity_function_bodies(rejected)[0][1])
+
+
+def test_phase9_foundry_warning_policy_is_exact() -> None:
+    phase9.check_phase9_foundry_warning_policy(
+        phase9.protocol_compilation_imports(), foundry_config()
+    )
+
+
+@pytest.mark.parametrize("mutation", ("expansion", "removal", "global", "broad"))
+def test_phase9_foundry_warning_policy_rejects_scope_drift(mutation: str) -> None:
+    config = copy.deepcopy(foundry_config())
+    default = config["profile"]["default"]
+    entries = default["ignored_error_codes_from"]
+    if mutation == "expansion":
+        entries.append(["src/resolution/Unrelated.sol", [2018]])
+        message = "exception set drifted"
+    elif mutation == "removal":
+        entries.pop()
+        message = "exception set drifted"
+    elif mutation == "global":
+        default["ignored_error_codes"].append(2018)
+        message = "must not be ignored globally"
+    else:
+        default["ignored_warnings_from"] = ["src/resolution"]
+        message = "broad path warning ignores"
+
+    with pytest.raises(SystemExit, match=message):
+        phase9.check_phase9_foundry_warning_policy(
+            phase9.protocol_compilation_imports(), config
+        )
 
 
 def test_manifest_hash_is_semantic_and_deterministic() -> None:

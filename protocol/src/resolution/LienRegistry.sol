@@ -19,11 +19,7 @@ contract LienRegistry is ILienRegistry {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function beginHandoff(bytes32, bytes32, bytes32, uint64)
-        external
-        override
-        returns (bytes32)
-    {
+    function beginHandoff(bytes32, bytes32, bytes32, uint64) external override returns (bytes32) {
         revert Phase9ImplementationNotFrozen();
     }
 
@@ -39,12 +35,7 @@ contract LienRegistry is ILienRegistry {
         return _registeredRefinanceCoordinator;
     }
 
-    function lien(bytes32 collateralId)
-        external
-        view
-        override
-        returns (Phase9Types.Lien memory)
-    {
+    function lien(bytes32 collateralId) external view override returns (Phase9Types.Lien memory) {
         return _liens[collateralId];
     }
 

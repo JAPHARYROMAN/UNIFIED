@@ -10,9 +10,18 @@ interface IPositionManagerV2 {
 
     event PositionManagerInitialized(bytes32 indexed loanId, address indexed loanAccount);
     event TrancheRegistered(bytes32 indexed trancheId, uint32 priority, uint256 originalClaim);
-    event PositionIssued(bytes32 indexed positionId, bytes32 indexed trancheId, address indexed owner, uint256 claim);
-    event PositionTransferred(bytes32 indexed positionId, address indexed oldOwner, address indexed newOwner);
-    event PositionSnapshotCreated(bytes32 indexed snapshotId, bytes32 indexed loanId, uint64 snapshotBlock, bytes32 positionRoot);
+    event PositionIssued(
+        bytes32 indexed positionId, bytes32 indexed trancheId, address indexed owner, uint256 claim
+    );
+    event PositionTransferred(
+        bytes32 indexed positionId, address indexed oldOwner, address indexed newOwner
+    );
+    event PositionSnapshotCreated(
+        bytes32 indexed snapshotId,
+        bytes32 indexed loanId,
+        uint64 snapshotBlock,
+        bytes32 positionRoot
+    );
 
     function initialize(bytes32 loanId, address loanAccount, address settlementToken) external;
     function registerTranche(Phase9Types.Tranche calldata tranche_) external;
@@ -24,10 +33,19 @@ interface IPositionManagerV2 {
     function trancheIds() external view returns (bytes32[] memory);
     function position(bytes32 positionId) external view returns (Phase9Types.Position memory);
     function positionIds() external view returns (bytes32[] memory);
-    function snapshot(bytes32 snapshotId) external view returns (Phase9Types.PositionRightSnapshot memory);
-    function votingRightConsumed(bytes32 snapshotId, bytes32 positionId) external view returns (bool);
+    function snapshot(bytes32 snapshotId)
+        external
+        view
+        returns (Phase9Types.PositionRightSnapshot memory);
+    function votingRightConsumed(bytes32 snapshotId, bytes32 positionId)
+        external
+        view
+        returns (bool);
     function positionOwnerAt(bytes32 positionId, uint64 blockNumber) external view returns (address);
-    function positionVotingPowerAt(bytes32 positionId, uint64 blockNumber) external view returns (uint256);
+    function positionVotingPowerAt(bytes32 positionId, uint64 blockNumber)
+        external
+        view
+        returns (uint256);
     function positionClaimAt(bytes32 positionId, uint64 blockNumber) external view returns (uint256);
     function totalVotingPowerAt(uint64 blockNumber) external view returns (uint256);
 }

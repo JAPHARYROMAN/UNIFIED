@@ -11,14 +11,17 @@ contract RecoveryManager is IRecoveryManager {
     address private _settlementToken;
     address private _authorizedReceiptManager;
     mapping(bytes32 lossId => Phase9RecoveryTypes.LossRecord record) private _losses;
-    mapping(bytes32 recoverySourceId => Phase9RecoveryTypes.RecoverySourceEvidence source)
-        private _recoverySources;
-    mapping(bytes32 lossId => mapping(bytes32 entitlementId => Phase9RecoveryTypes.RecoveryEntitlement entitlement_))
-        private _entitlements;
-    mapping(bytes32 allocationId => Phase9RecoveryTypes.RecoveryAllocation allocation_)
-        private _allocations;
-    mapping(bytes32 writeoffId => Phase9RecoveryTypes.WriteOffEvidence writeoff)
-        private _writeOffs;
+    mapping(bytes32 recoverySourceId => Phase9RecoveryTypes.RecoverySourceEvidence source) private
+        _recoverySources;
+    mapping(
+        bytes32 lossId
+            => mapping(
+            bytes32 entitlementId => Phase9RecoveryTypes.RecoveryEntitlement entitlement_
+        )
+    ) private _entitlements;
+    mapping(bytes32 allocationId => Phase9RecoveryTypes.RecoveryAllocation allocation_) private
+        _allocations;
+    mapping(bytes32 writeoffId => Phase9RecoveryTypes.WriteOffEvidence writeoff) private _writeOffs;
     mapping(bytes32 sourceId => bool processed) private _processedSourceIds;
     mapping(bytes32 operationId => bool processed) private _processedOperationIds;
 
@@ -32,10 +35,7 @@ contract RecoveryManager is IRecoveryManager {
         _authorizedReceiptManager = authorizedReceiptManager_;
     }
 
-    function openLoss(bytes32, Phase9RecoveryTypes.LossRecord calldata)
-        external
-        override
-    {
+    function openLoss(bytes32, Phase9RecoveryTypes.LossRecord calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 
@@ -46,17 +46,11 @@ contract RecoveryManager is IRecoveryManager {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function setEntitlement(Phase9RecoveryTypes.RecoveryEntitlement calldata)
-        external
-        override
-    {
+    function setEntitlement(Phase9RecoveryTypes.RecoveryEntitlement calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function allocateRecovery(Phase9RecoveryTypes.RecoveryAllocation calldata)
-        external
-        override
-    {
+    function allocateRecovery(Phase9RecoveryTypes.RecoveryAllocation calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 

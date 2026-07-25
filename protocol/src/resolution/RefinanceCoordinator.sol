@@ -20,11 +20,10 @@ contract RefinanceCoordinator is IRefinanceCoordinator {
     mapping(bytes32 oldLoanId => uint64 nonce) private _nextRefinanceNonce;
     mapping(bytes32 refinanceId => Phase9Types.RefinanceRecord record) private _refinances;
     mapping(bytes32 refinanceId => bytes32[] commitmentIds_) private _commitmentIds;
-    mapping(bytes32 commitmentId => Phase9Types.FundingCommitment commitment)
-        private _commitments;
+    mapping(bytes32 commitmentId => Phase9Types.FundingCommitment commitment) private _commitments;
     mapping(bytes32 refinanceId => uint256 units) private _escrowedUnits;
-    mapping(bytes32 refinanceId => Phase9Types.RefinanceTerminalResult result)
-        private _terminalResults;
+    mapping(bytes32 refinanceId => Phase9Types.RefinanceTerminalResult result) private
+        _terminalResults;
     mapping(bytes32 operationId => bool processed) private _processedOperationIds;
 
     constructor(
@@ -57,10 +56,7 @@ contract RefinanceCoordinator is IRefinanceCoordinator {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function recordFundingCommitment(Phase9Types.FundingCommitment calldata)
-        external
-        override
-    {
+    function recordFundingCommitment(Phase9Types.FundingCommitment calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 
@@ -98,12 +94,7 @@ contract RefinanceCoordinator is IRefinanceCoordinator {
         return _commitments[commitmentId];
     }
 
-    function commitmentIds(bytes32 refinanceId)
-        external
-        view
-        override
-        returns (bytes32[] memory)
-    {
+    function commitmentIds(bytes32 refinanceId) external view override returns (bytes32[] memory) {
         return _commitmentIds[refinanceId];
     }
 

@@ -29,14 +29,11 @@ contract Phase9PayoffQuoteGoldenTest {
             uint64(1_900_003_600),
             uint64(9)
         );
-        bytes memory stringTail = abi.encode(
-            uint256(23), bytes32("UNIFIED_PAYOFF_QUOTE_V1")
-        );
+        bytes memory stringTail = abi.encode(uint256(23), bytes32("UNIFIED_PAYOFF_QUOTE_V1"));
         bytes32 expected = keccak256(bytes.concat(firstHead, secondHead, stringTail));
 
         require(
-            expected
-                == 0xd09375e057dfcc27ec52eb62e16d0c0ea99ce3827d9577aa78e15d0dcc48b79b,
+            expected == 0xd09375e057dfcc27ec52eb62e16d0c0ea99ce3827d9577aa78e15d0dcc48b79b,
             "quote preimage drift"
         );
     }

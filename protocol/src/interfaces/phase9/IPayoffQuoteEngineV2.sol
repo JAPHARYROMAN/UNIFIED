@@ -2,7 +2,13 @@
 pragma solidity 0.8.36;
 
 interface IPayoffQuoteEngineV2 {
-    enum QuoteState { NONE, ISSUED, CONSUMED, EXPIRED, INVALIDATED }
+    enum QuoteState {
+        NONE,
+        ISSUED,
+        CONSUMED,
+        EXPIRED,
+        INVALIDATED
+    }
     enum ComponentKind {
         NONE,
         PRINCIPAL,
@@ -75,9 +81,7 @@ interface IPayoffQuoteEngineV2 {
         uint64 recordedAt
     );
 
-    function issueQuote(bytes32 loanId, uint64 validUntil)
-        external
-        returns (bytes32 quoteId);
+    function issueQuote(bytes32 loanId, uint64 validUntil) external returns (bytes32 quoteId);
     function consumeQuote(
         bytes32 quoteId,
         bytes32 refinanceId,

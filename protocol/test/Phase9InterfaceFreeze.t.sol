@@ -64,8 +64,7 @@ contract Phase9InterfaceFreezeTest {
                 )
             ),
             abi.encodeCall(
-                IPayoffQuoteEngineV2.invalidateQuote,
-                (bytes32(uint256(1)), bytes32(uint256(2)))
+                IPayoffQuoteEngineV2.invalidateQuote, (bytes32(uint256(1)), bytes32(uint256(2)))
             )
         );
         _requireFrozen(
@@ -97,22 +96,19 @@ contract Phase9InterfaceFreezeTest {
                 )
             ),
             abi.encodeCall(
-                IRefinanceCoordinator.cancelRefinance,
-                (bytes32(uint256(1)), bytes32(uint256(2)))
+                IRefinanceCoordinator.cancelRefinance, (bytes32(uint256(1)), bytes32(uint256(2)))
             )
         );
         _requireFrozen(
             address(new PositionManagerV2()),
             abi.encodeCall(
-                IPositionManagerV2.initialize,
-                (bytes32(uint256(1)), address(1), address(2))
+                IPositionManagerV2.initialize, (bytes32(uint256(1)), address(1), address(2))
             )
         );
         _requireFrozen(
             address(new RestructuringController(address(0), address(0), address(0))),
             abi.encodeCall(
-                IRestructuringController.execute,
-                (bytes32(uint256(1)), bytes32(uint256(2)))
+                IRestructuringController.execute, (bytes32(uint256(1)), bytes32(uint256(2)))
             )
         );
 
@@ -165,28 +161,19 @@ contract Phase9InterfaceFreezeTest {
         address authorizedManager = address(0xA07);
 
         LienRegistry liens = new LienRegistry(authorizedManager);
-        require(
-            liens.registeredRefinanceCoordinator() == authorizedManager,
-            "lien coordinator"
-        );
+        require(liens.registeredRefinanceCoordinator() == authorizedManager, "lien coordinator");
 
         GuaranteeVault guarantees =
             new GuaranteeVault(assetRegistry, settlementToken, authorizedManager);
         require(guarantees.assetRegistry() == assetRegistry, "guarantee asset registry");
         require(guarantees.settlementToken() == settlementToken, "guarantee token");
-        require(
-            guarantees.authorizedRecoveryManager() == authorizedManager,
-            "guarantee manager"
-        );
+        require(guarantees.authorizedRecoveryManager() == authorizedManager, "guarantee manager");
 
         RecoveryManager recovery =
             new RecoveryManager(assetRegistry, settlementToken, authorizedManager);
         require(recovery.assetRegistry() == assetRegistry, "recovery asset registry");
         require(recovery.settlementToken() == settlementToken, "recovery token");
-        require(
-            recovery.authorizedReceiptManager() == authorizedManager,
-            "recovery manager"
-        );
+        require(recovery.authorizedReceiptManager() == authorizedManager, "recovery manager");
     }
 
     function _requireFrozen(address target, bytes memory callData) private {

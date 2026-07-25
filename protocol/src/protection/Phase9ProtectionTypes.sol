@@ -3,10 +3,43 @@ pragma solidity 0.8.36;
 
 /// @notice Shared funded-protection policy, coverage, claim, and payment ABI types.
 library Phase9ProtectionTypes {
-    enum ReservePolicyState { NONE, SCHEDULED, ACTIVE, RESTRICTED, EXPIRED, DEPRECATED }
-    enum CoverageState { NONE, DRAFT, PREMIUM_PENDING, ACTIVE, CLAIM_PENDING, EXHAUSTED, EXPIRED, CANCELLED }
-    enum PremiumState { NONE, DUE, FUNDED, APPLIED, REFUNDED }
-    enum InsuranceClaimState { NONE, SUBMITTED, UNDER_REVIEW, APPROVED, PARTIALLY_APPROVED, REJECTED, EXPIRED, DISPUTED, PAYMENT_PENDING, PAID }
+    enum ReservePolicyState {
+        NONE,
+        SCHEDULED,
+        ACTIVE,
+        RESTRICTED,
+        EXPIRED,
+        DEPRECATED
+    }
+    enum CoverageState {
+        NONE,
+        DRAFT,
+        PREMIUM_PENDING,
+        ACTIVE,
+        CLAIM_PENDING,
+        EXHAUSTED,
+        EXPIRED,
+        CANCELLED
+    }
+    enum PremiumState {
+        NONE,
+        DUE,
+        FUNDED,
+        APPLIED,
+        REFUNDED
+    }
+    enum InsuranceClaimState {
+        NONE,
+        SUBMITTED,
+        UNDER_REVIEW,
+        APPROVED,
+        PARTIALLY_APPROVED,
+        REJECTED,
+        EXPIRED,
+        DISPUTED,
+        PAYMENT_PENDING,
+        PAID
+    }
 
     struct ReservePolicyVersion {
         bytes32 policyVersionId;

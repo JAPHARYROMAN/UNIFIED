@@ -11,16 +11,14 @@ contract InsuranceManager is IInsuranceManager {
     address private _reservePolicy;
     address private _recoveryManager;
     address private _settlementToken;
-    mapping(bytes32 policyHash => Phase9ProtectionTypes.ReservePolicyVersion policy_)
-        private _policyVersions;
+    mapping(bytes32 policyHash => Phase9ProtectionTypes.ReservePolicyVersion policy_) private
+        _policyVersions;
     mapping(bytes32 poolId => bytes32 policyHash) private _activePolicyHashes;
-    mapping(bytes32 coverageId => Phase9ProtectionTypes.LoanCoverage coverage_)
-        private _coverages;
+    mapping(bytes32 coverageId => Phase9ProtectionTypes.LoanCoverage coverage_) private _coverages;
     mapping(bytes32 claimId => Phase9ProtectionTypes.InsuranceClaim claim_) private _claims;
-    mapping(bytes32 decisionId => Phase9ProtectionTypes.ClaimDecision decision_)
-        private _decisions;
-    mapping(bytes32 claimPaymentId => Phase9ProtectionTypes.ClaimPayment payment)
-        private _claimPayments;
+    mapping(bytes32 decisionId => Phase9ProtectionTypes.ClaimDecision decision_) private _decisions;
+    mapping(bytes32 claimPaymentId => Phase9ProtectionTypes.ClaimPayment payment) private
+        _claimPayments;
     mapping(bytes32 adjudicatorSetHash => Phase9ProtectionTypes.AdjudicatorSet adjudicatorSet)
         private _adjudicatorSets;
     mapping(bytes32 signatureId => bool processed) private _processedSignatureIds;
@@ -49,17 +47,11 @@ contract InsuranceManager is IInsuranceManager {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function createCoverage(Phase9ProtectionTypes.LoanCoverage calldata)
-        external
-        override
-    {
+    function createCoverage(Phase9ProtectionTypes.LoanCoverage calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function submitClaim(Phase9ProtectionTypes.InsuranceClaim calldata)
-        external
-        override
-    {
+    function submitClaim(Phase9ProtectionTypes.InsuranceClaim calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 
@@ -70,10 +62,7 @@ contract InsuranceManager is IInsuranceManager {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function recordClaimPayment(Phase9ProtectionTypes.ClaimPayment calldata)
-        external
-        override
-    {
+    function recordClaimPayment(Phase9ProtectionTypes.ClaimPayment calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 

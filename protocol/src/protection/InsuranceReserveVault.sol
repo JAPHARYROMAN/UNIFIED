@@ -10,34 +10,25 @@ contract InsuranceReserveVault is IInsuranceReserveVault {
     address private _assetRegistry;
     address private _insuranceManager;
     mapping(bytes32 poolId => mapping(bytes32 assetId => uint256 units)) private _custodyUnits;
-    mapping(bytes32 fundingEventId => Phase9ProtectionTypes.ReserveFundingResult result)
-        private _fundingResults;
-    mapping(bytes32 claimPaymentId => Phase9ProtectionTypes.ClaimPayment result)
-        private _claimPayments;
+    mapping(bytes32 fundingEventId => Phase9ProtectionTypes.ReserveFundingResult result) private
+        _fundingResults;
+    mapping(bytes32 claimPaymentId => Phase9ProtectionTypes.ClaimPayment result) private
+        _claimPayments;
 
     constructor(address assetRegistry_, address insuranceManager_) {
         _assetRegistry = assetRegistry_;
         _insuranceManager = insuranceManager_;
     }
 
-    function fundReserve(Phase9ProtectionTypes.ReserveFundingResult calldata)
-        external
-        override
-    {
+    function fundReserve(Phase9ProtectionTypes.ReserveFundingResult calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function fundPremium(Phase9ProtectionTypes.PremiumEvidence calldata)
-        external
-        override
-    {
+    function fundPremium(Phase9ProtectionTypes.PremiumEvidence calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function payClaim(Phase9ProtectionTypes.ClaimPayment calldata)
-        external
-        override
-    {
+    function payClaim(Phase9ProtectionTypes.ClaimPayment calldata) external override {
         revert Phase9ImplementationNotFrozen();
     }
 

@@ -22,8 +22,8 @@ contract PayoffQuoteEngine is IPayoffQuoteEngineV2 {
     address private _refinanceCoordinator;
     mapping(bytes32 loanId => uint64 nonce) private _nextQuoteNonce;
     mapping(bytes32 quoteId => IPayoffQuoteEngineV2.PayoffQuoteV2 quote_) private _quotes;
-    mapping(bytes32 quoteId => IPayoffQuoteEngineV2.PayoffComponentV2[] components)
-        private _quoteComponents;
+    mapping(bytes32 quoteId => IPayoffQuoteEngineV2.PayoffComponentV2[] components) private
+        _quoteComponents;
     mapping(bytes32 quoteId => QuoteDispositionV2 disposition) private _quoteDispositions;
     mapping(bytes32 loanId => bytes32 quoteId) private _latestQuoteId;
 

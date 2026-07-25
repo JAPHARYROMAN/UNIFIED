@@ -53,19 +53,14 @@ contract Phase9LoanAccount is IPhase9LoanAccount {
     mapping(bytes32 operationId => bool processed) private _processedOperationIds;
     bool private _initialized;
 
-    function initialize(
-        Phase9Types.LoanConfiguration calldata,
-        Phase9Types.DebtState calldata
-    ) external override {
+    function initialize(Phase9Types.LoanConfiguration calldata, Phase9Types.DebtState calldata)
+        external
+        override
+    {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function configuration()
-        external
-        view
-        override
-        returns (Phase9Types.LoanConfiguration memory)
-    {
+    function configuration() external view override returns (Phase9Types.LoanConfiguration memory) {
         return Phase9Types.LoanConfiguration({
             factory: _factory,
             loanRegistry: _loanRegistry,
@@ -134,10 +129,7 @@ contract Phase9LoanAccount is IPhase9LoanAccount {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function applyRestructuring(Phase9Types.LoanAmendment calldata, bytes32)
-        external
-        override
-    {
+    function applyRestructuring(Phase9Types.LoanAmendment calldata, bytes32) external override {
         revert Phase9ImplementationNotFrozen();
     }
 

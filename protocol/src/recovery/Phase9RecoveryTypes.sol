@@ -3,11 +3,53 @@ pragma solidity 0.8.36;
 
 /// @notice Shared guarantee, loss, write-off, recovery, and entitlement ABI types.
 library Phase9RecoveryTypes {
-    enum GuaranteeState { NONE, PROPOSED, ACCEPTED, ACTIVE, CLAIM_PENDING, PARTIALLY_PAID, PAID, EXPIRED, RELEASED, EXHAUSTED }
-    enum RecoveryCaseState { NONE, OPEN, RECOVERY_PENDING, LOSS_FINALIZED, WRITE_OFF_PENDING, WRITTEN_OFF, RECOVERY_OPEN, RECOVERED, CLOSED_WITH_UNRECOVERED_LOSS, DISPUTED }
-    enum RecoverySourceType { NONE, COLLATERAL, GUARANTOR, INSURANCE, MOCKED_LEGAL_RECEIPT, OTHER_AUTHORIZED_RECEIPT }
-    enum RecoverySourceState { NONE, OBSERVED, FINAL, ALLOCATED, REJECTED, DISPUTED }
-    enum RecoveryEntitlementKind { NONE, LENDER_UNCOVERED, PRODUCT_POOL_SUBROGATION, GUARANTOR_SUBROGATION, BORROWER_SURPLUS }
+    enum GuaranteeState {
+        NONE,
+        PROPOSED,
+        ACCEPTED,
+        ACTIVE,
+        CLAIM_PENDING,
+        PARTIALLY_PAID,
+        PAID,
+        EXPIRED,
+        RELEASED,
+        EXHAUSTED
+    }
+    enum RecoveryCaseState {
+        NONE,
+        OPEN,
+        RECOVERY_PENDING,
+        LOSS_FINALIZED,
+        WRITE_OFF_PENDING,
+        WRITTEN_OFF,
+        RECOVERY_OPEN,
+        RECOVERED,
+        CLOSED_WITH_UNRECOVERED_LOSS,
+        DISPUTED
+    }
+    enum RecoverySourceType {
+        NONE,
+        COLLATERAL,
+        GUARANTOR,
+        INSURANCE,
+        MOCKED_LEGAL_RECEIPT,
+        OTHER_AUTHORIZED_RECEIPT
+    }
+    enum RecoverySourceState {
+        NONE,
+        OBSERVED,
+        FINAL,
+        ALLOCATED,
+        REJECTED,
+        DISPUTED
+    }
+    enum RecoveryEntitlementKind {
+        NONE,
+        LENDER_UNCOVERED,
+        PRODUCT_POOL_SUBROGATION,
+        GUARANTOR_SUBROGATION,
+        BORROWER_SURPLUS
+    }
 
     struct Guarantee {
         bytes32 guaranteeId;

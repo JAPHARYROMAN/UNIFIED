@@ -6,8 +6,10 @@ import argparse
 import csv
 import json
 import re
+import tomllib
 from collections.abc import Iterable
 from pathlib import Path
+from typing import cast
 
 from build_phase9_compatibility_manifest import (
     MANIFEST_PATH as PHASE9_COMPATIBILITY_MANIFEST_PATH,
@@ -42,6 +44,7 @@ PHASE8_EXIT_PATH = ROOT / "docs/reviews/phase-8-exit-review.md"
 FOUNDATION_CHECK_PATH = ROOT / "scripts/check-foundation.ps1"
 CONTRACT_SIZE_CHECK_PATH = ROOT / "scripts/check-contract-sizes.py"
 PROTOCOL_COMPILATION_PATH = ROOT / "protocol/src/ProtocolCompilation.sol"
+FOUNDRY_CONFIG_PATH = ROOT / "protocol/foundry.toml"
 PHASE9_ABI_PATH = ROOT / "protocol/abi/phase9"
 PHASE9_STORAGE_PATH = ROOT / "protocol/storage-layout/phase9"
 PHASE9_STORAGE_CHECK_PATH = ROOT / "tools/check_phase9_storage_layouts.py"
@@ -69,6 +72,7 @@ PHASE9_PRODUCTION_CONTRACTS = (
     "RecoveryManager",
 )
 PHASE9_CONTRACTS = (*PHASE9_PRODUCTION_CONTRACTS, "Phase9LocalSyntheticToken")
+PHASE9_FOUNDRY_WARNING_CODE = 2018
 
 EXPECTED_QUOTE_PREIMAGE = (
     '"UNIFIED_PAYOFF_QUOTE_V1"',
@@ -1260,6 +1264,83 @@ def check_phase9_stub_sources(imports: dict[str, Path]) -> None:
             )
 
 
+def check_phase9_foundry_warning_policy(
+    imports: dict[str, Path], config: dict[str, object] | None = None
+) -> None:
+    if config is None:
+        with FOUNDRY_CONFIG_PATH.open("rb") as handle:
+            config = cast(dict[str, object], tomllib.load(handle))
+
+    profile = config.get("profile")
+    require(isinstance(profile, dict), "Foundry config has no profile table")
+    profile_table = cast(dict[str, object], profile)
+    default = profile_table.get("default")
+    require(isinstance(default, dict), "Foundry config has no default profile")
+    default_table = cast(dict[str, object], default)
+
+    require(
+        default_table.get("deny") == "warnings",
+        "Foundry must continue to deny all non-exempt compiler warnings",
+    )
+    global_codes = default_table.get("ignored_error_codes", [])
+    require(isinstance(global_codes, list), "Foundry global warning policy is malformed")
+    global_code_list = cast(list[object], global_codes)
+    normalized_global_codes = {str(code).strip().lower() for code in global_code_list}
+    require(
+        not normalized_global_codes.intersection({"2018", "func-mutability"}),
+        "Foundry warning 2018 must not be ignored globally",
+    )
+    broad_paths = default_table.get("ignored_warnings_from", [])
+    require(
+        isinstance(broad_paths, list) and not broad_paths,
+        "Foundry broad path warning ignores are prohibited for Phase 9",
+    )
+
+    raw_entries = default_table.get("ignored_error_codes_from", [])
+    require(
+        isinstance(raw_entries, list),
+        "Foundry path-scoped warning policy is malformed",
+    )
+    raw_entry_list = cast(list[object], raw_entries)
+    actual: set[tuple[str, tuple[str, ...]]] = set()
+    for entry in raw_entry_list:
+        require(
+            isinstance(entry, list) and len(entry) == 2,
+            "Foundry path-scoped warning entry is malformed",
+        )
+        entry_items = cast(list[object], entry)
+        source_path, codes = entry_items
+        require(
+            isinstance(source_path, str) and isinstance(codes, list),
+            "Foundry path-scoped warning entry has invalid types",
+        )
+        normalized_path = cast(str, source_path).replace("\\", "/").removeprefix("./")
+        normalized_codes = tuple(
+            str(code).strip().lower() for code in cast(list[object], codes)
+        )
+        actual.add((normalized_path, normalized_codes))
+    require(
+        len(actual) == len(raw_entry_list),
+        "Foundry path-scoped warning policy contains duplicate entries",
+    )
+
+    protocol_root = ROOT / "protocol"
+    expected = {
+        (
+            imports[contract].relative_to(protocol_root).as_posix(),
+            (str(PHASE9_FOUNDRY_WARNING_CODE),),
+        )
+        for contract in PHASE9_PRODUCTION_CONTRACTS
+    }
+    missing = expected - actual
+    unexpected = actual - expected
+    require(
+        not missing and not unexpected,
+        "Foundry Phase 9 warning exception set drifted: "
+        f"missing={sorted(missing)} unexpected={sorted(unexpected)}",
+    )
+
+
 def check_phase9_compatibility_review() -> None:
     require_paths(
         (PHASE9_COMPATIBILITY_MANIFEST_PATH, PHASE9_FREEZE_REVIEW_PATH),
@@ -1367,6 +1448,7 @@ def check_pre_code_freeze(by_id: dict[str, dict[str, str]]) -> None:
     check_phase9_formatting_scope(imports)
     check_phase9_contract_size_coverage()
     check_phase9_stub_sources(imports)
+    check_phase9_foundry_warning_policy(imports)
     check_phase9_local_token_source(imports)
     check_phase9_compatibility_review()
 
