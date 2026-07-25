@@ -1,0 +1,294 @@
+{
+  "compiler": {
+    "openzeppelinVersion": "5.6.1",
+    "settings": {
+      "evmVersion": "prague",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "viaIR": false
+    },
+    "settingsHash": "sha256:0e0b5553d328d2bcca346b1c4c6662f419766d011fc75a7148f1ab9e2a398fb3",
+    "version": "0.8.36+commit.8a079791.Emscripten.clang"
+  },
+  "contract": "CollateralCustodyV2",
+  "freezeSurface": {
+    "functions": [
+      {
+        "bodyStatementKinds": [
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement"
+        ],
+        "implemented": true,
+        "kind": "constructor",
+        "modifiers": [],
+        "name": "",
+        "revertError": null,
+        "stateMutability": "nonpayable",
+        "visibility": "public"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recordCustody",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "updateCustody",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "custody",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "totalCustody",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "operationProcessed",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      }
+    ],
+    "stateVariables": [
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_assetRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_lienRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_emergencyController",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_custody",
+        "type": "mapping(bytes32 => struct Phase9Types.CustodyRecord)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_totalExactCustody",
+        "type": "mapping(bytes32 => uint256)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_processedCustodyOperationIds",
+        "type": "mapping(bytes32 => bool)",
+        "visibility": "private"
+      }
+    ]
+  },
+  "linearizedBases": [
+    "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+    "protocol/src/interfaces/phase9/ICollateralCustodyV2.sol:ICollateralCustodyV2"
+  ],
+  "schemaVersion": 1,
+  "source": "protocol/src/resolution/CollateralCustodyV2.sol",
+  "storageLayout": {
+    "storage": [
+      {
+        "contract": "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+        "label": "_assetRegistry",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+        "label": "_lienRegistry",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+        "label": "_emergencyController",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+        "label": "_custody",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_mapping(t_bytes32,t_struct(CustodyRecord)60175_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+        "label": "_totalExactCustody",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_mapping(t_bytes32,t_uint256)"
+      },
+      {
+        "contract": "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+        "label": "_processedCustodyOperationIds",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_mapping(t_bytes32,t_bool)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_enum(CustodyStatus)59972": {
+        "encoding": "inplace",
+        "label": "enum Phase9Types.CustodyStatus",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_bytes32,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_bytes32,t_struct(CustodyRecord)60175_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.CustodyRecord)",
+        "numberOfBytes": "32",
+        "value": "t_struct(CustodyRecord)60175_storage"
+      },
+      "t_mapping(t_bytes32,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_struct(CustodyRecord)60175_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.CustodyRecord",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+            "label": "collateralId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+            "label": "assetId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+            "label": "token",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+            "label": "borrower",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+            "label": "quantity",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+            "label": "status",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_enum(CustodyStatus)59972"
+          },
+          {
+            "contract": "protocol/src/resolution/CollateralCustodyV2.sol:CollateralCustodyV2",
+            "label": "identityHash",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "224"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@
 pragma solidity 0.8.36;
 
 // Code generated from schemas/proto/unified/v1. DO NOT EDIT.
-// Source SHA-256: be288c30a0144cb44c19ef70b22e0e02c4e2d73023d5922fca06e5b9309c702d
+// Source SHA-256: 3c04a2c9e3665835cd0f8a1e602b57181f0236ad75b2e8c8d11c4732f61841ca
 library FoundationTypes {
     enum CollateralKind { UNSPECIFIED, NATIVE, ERC20, ERC721, ERC1155 }
 
@@ -69,6 +69,38 @@ library FoundationTypes {
     enum CanonicalSettlementReorgKind { UNSPECIFIED, SHALLOW, DEEP }
 
     enum CanonicalTransactionReceiptStatus { UNSPECIFIED, REVERTED }
+
+    enum ReservePolicyState { UNSPECIFIED, SCHEDULED, ACTIVE, RESTRICTED, EXPIRED, DEPRECATED }
+
+    enum CoverageState { UNSPECIFIED, DRAFT, PREMIUM_PENDING, ACTIVE, CLAIM_PENDING, EXHAUSTED, EXPIRED, CANCELLED }
+
+    enum PremiumState { UNSPECIFIED, DUE, FUNDED, APPLIED, REFUNDED }
+
+    enum InsuranceClaimState { UNSPECIFIED, SUBMITTED, UNDER_REVIEW, APPROVED, PARTIALLY_APPROVED, REJECTED, EXPIRED, DISPUTED, PAYMENT_PENDING, PAID }
+
+    enum GuaranteeState { UNSPECIFIED, PROPOSED, ACCEPTED, ACTIVE, CLAIM_PENDING, PARTIALLY_PAID, PAID, EXPIRED, RELEASED, EXHAUSTED }
+
+    enum RecoveryCaseState { UNSPECIFIED, OPEN, RECOVERY_PENDING, LOSS_FINALIZED, WRITE_OFF_PENDING, WRITTEN_OFF, RECOVERY_OPEN, RECOVERED, CLOSED_WITH_UNRECOVERED_LOSS, DISPUTED }
+
+    enum RecoverySourceType { UNSPECIFIED, COLLATERAL, GUARANTOR, INSURANCE, MOCKED_LEGAL_RECEIPT, OTHER_AUTHORIZED_RECEIPT }
+
+    enum RecoverySourceState { UNSPECIFIED, OBSERVED, FINAL, ALLOCATED, REJECTED, DISPUTED }
+
+    enum RecoveryEntitlementKind { UNSPECIFIED, LENDER_UNCOVERED, PRODUCT_POOL_SUBROGATION, GUARANTOR_SUBROGATION, BORROWER_SURPLUS }
+
+    enum PayoffComponentKind { UNSPECIFIED, PRINCIPAL, ACCRUED_INTEREST, CAPITALIZED_INTEREST, FEE, PENALTY, RECOVERABLE_COST, CREDIT }
+
+    enum PayoffQuoteState { UNSPECIFIED, ISSUED, CONSUMED, EXPIRED, INVALIDATED }
+
+    enum RefinanceState { UNSPECIFIED, REQUESTED, QUOTED, OFFERED, ACCEPTED, FUNDING_ESCROWED, EXECUTING, COMPLETED, REJECTED, EXPIRED, CANCELLED, REFUNDABLE, REFUNDED, DISPUTED }
+
+    enum FundingCommitmentState { UNSPECIFIED, OFFERED, ACCEPTED, FUNDED, REFUNDABLE, REFUNDED, CONSUMED }
+
+    enum LienHandoffState { UNSPECIFIED, ACTIVE_OLD, EXECUTING, ACTIVE_NEW, REVERTED, DISPUTED }
+
+    enum RestructuringState { UNSPECIFIED, PROPOSED, REVIEW, VOTING, APPROVED, EXECUTING, EFFECTIVE, REJECTED, EXPIRED, WITHDRAWN, DISPUTED }
+
+    enum RestructuringVoteChoice { UNSPECIFIED, SUPPORT, OPPOSE, ABSTAIN }
 
     enum ScheduleKind { UNSPECIFIED, BULLET, EQUAL_PRINCIPAL, ANNUITY, INTEREST_ONLY, BALLOON, CUSTOM }
 
@@ -1584,6 +1616,476 @@ library FoundationTypes {
         string resolvedBy;
         bytes evidenceHash;
         int64 resolvedAt;
+    }
+
+    struct ReservePolicyVersion {
+        Identifier policyVersionId;
+        Identifier poolId;
+        AssetId settlementAssetId;
+        string tokenAddress;
+        uint32 stressHaircutBasisPoints;
+        Money modeledLossAtTargetConfidence;
+        uint32 targetConfidenceBasisPoints;
+        uint32 maximumCoverageBasisPoints;
+        Money maximumSinglePolicy;
+        Money aggregateCommitmentLimit;
+        string minimumReserveRatioRay;
+        string minimumCommitmentRatioRay;
+        uint64 coveredEventMask;
+        Money minimumDeductible;
+        Money maximumDeductible;
+        bytes premiumPolicyHash;
+        bytes adjudicatorSetHash;
+        bytes payoutWaterfallHash;
+        bytes recoveryWaterfallHash;
+        int64 effectiveAt;
+        int64 expiresAt;
+        ReservePolicyState state;
+        bytes contentHash;
+    }
+
+    struct ReserveBalanceSnapshot {
+        Identifier snapshotId;
+        Identifier poolId;
+        AssetId assetId;
+        Money grossCustody;
+        Money eligibleRiskAdjustedAssets;
+        Money unclaimedCommitments;
+        Money approvedUnpaidClaims;
+        Money availablePayoutLiquidity;
+        Money availableUnderwritingCapacity;
+        Identifier policyVersionId;
+        uint64 blockNumber;
+        bytes blockHash;
+        bytes custodyEvidenceHash;
+        int64 observedAt;
+    }
+
+    struct ReserveSolvencySnapshot {
+        Identifier solvencySnapshotId;
+        ReserveBalanceSnapshot balance;
+        Money modeledLossAtTargetConfidence;
+        string reserveCoverageRatioRay;
+        string commitmentCoverageRatioRay;
+        string status;
+        bytes modelEvidenceHash;
+    }
+
+    struct LoanCoverage {
+        Identifier coverageId;
+        Identifier poolId;
+        LoanId loanId;
+        PartyId beneficiaryId;
+        AssetId settlementAssetId;
+        uint64 coveredEventMask;
+        Money deductible;
+        uint32 coverageBasisPoints;
+        Money coverageLimit;
+        Money remainingLimit;
+        Money premium;
+        uint32 lossPriority;
+        uint32 subrogationPriority;
+        int64 validFrom;
+        int64 expiresAt;
+        uint64 coverageNonce;
+        Identifier policyVersionId;
+        bytes coverageDigest;
+        CoverageState state;
+        bytes reservePolicyHash;
+    }
+
+    struct PremiumEvidence {
+        Identifier premiumEventId;
+        Identifier coverageId;
+        Identifier poolId;
+        PartyId payerId;
+        Money amount;
+        bytes transactionHash;
+        uint32 logIndex;
+        bytes balanceDeltaHash;
+        int64 fundedAt;
+        PremiumState state;
+    }
+
+    struct InsuranceClaim {
+        Identifier claimId;
+        Identifier coverageId;
+        Identifier lossId;
+        PartyId claimantId;
+        Money requestedAmount;
+        Money eligibleUncoveredLoss;
+        bytes evidenceHash;
+        uint64 claimNonce;
+        int64 submittedAt;
+        InsuranceClaimState state;
+        bytes claimDigest;
+    }
+
+    struct ClaimDecision {
+        Identifier decisionId;
+        Identifier claimId;
+        Money adjudicatedAmount;
+        Money approvalCap;
+        Money beneficiaryCoveredUnresolvedEntitlement;
+        Money approvedAmount;
+        Money authorizedCosts;
+        bytes beneficiaryEntitlementHash;
+        bytes evidenceHash;
+        uint64 adjudicationNonce;
+        int64 validUntil;
+        bytes adjudicatorSetHash;
+        bytes[] signatures;
+        bytes decisionDigest;
+        uint64 lossStateVersion;
+    }
+
+    struct ClaimPayment {
+        Identifier claimPaymentId;
+        Identifier claimId;
+        Identifier decisionId;
+        Identifier poolId;
+        PartyId beneficiaryId;
+        Money amount;
+        Money unpaidApprovedAmount;
+        bytes transactionHash;
+        uint32 logIndex;
+        bytes balanceDeltaHash;
+        bytes subrogationEntitlementHash;
+        int64 paidAt;
+        uint64 paymentNonce;
+    }
+
+    struct Guarantee {
+        Identifier guaranteeId;
+        LoanId loanId;
+        Identifier lossId;
+        PartyId guarantorId;
+        AssetId assetId;
+        Money maximumAmount;
+        uint64 coveredEventMask;
+        uint32 priority;
+        bytes subrogationPolicyHash;
+        int64 validFrom;
+        int64 expiresAt;
+        Money committedAmount;
+        Money paidAmount;
+        GuaranteeState state;
+        bytes guaranteeDigest;
+    }
+
+    struct RecoveryCase {
+        Identifier recoveryCaseId;
+        Identifier lossId;
+        LoanId loanId;
+        uint64 debtStateVersion;
+        Identifier defaultEventId;
+        AssetId settlementAssetId;
+        Money grossCoveredLossExposure;
+        Money collateralCredited;
+        Money guarantorCredited;
+        Money insuranceCredited;
+        Money otherRecoveryCredited;
+        Money forgivenessRecognized;
+        Money residualLossExposure;
+        Money realizedLossRecognized;
+        Money writeoffRecognized;
+        bytes positionSnapshotRoot;
+        bytes waterfallPolicyHash;
+        RecoveryCaseState state;
+        uint64 stateVersion;
+    }
+
+    struct RecoverySourceEvidence {
+        Identifier recoverySourceId;
+        Identifier lossId;
+        RecoverySourceType sourceType;
+        PartyId sourcePartyId;
+        string sourceReference;
+        Money amount;
+        bytes transactionHash;
+        uint32 logIndex;
+        bytes balanceDeltaHash;
+        bytes descriptiveEvidenceHash;
+        RecoverySourceState state;
+        int64 finalizedAt;
+    }
+
+    struct RecoveryEntitlement {
+        Identifier entitlementId;
+        Identifier lossId;
+        RecoveryEntitlementKind kind;
+        PartyId beneficiaryId;
+        Money originalAmount;
+        Money remainingAmount;
+        uint32 priority;
+        bytes policyHash;
+    }
+
+    struct RecoveryAllocation {
+        Identifier allocationId;
+        Identifier lossId;
+        Identifier recoverySourceId;
+        Identifier entitlementId;
+        PartyId beneficiaryId;
+        Money amount;
+        uint32 allocationSequence;
+        Money receiptResidual;
+        bytes waterfallPolicyHash;
+        bytes allocationDigest;
+    }
+
+    struct WriteOffEvidence {
+        Identifier writeoffId;
+        Identifier lossId;
+        LoanId loanId;
+        uint64 debtStateVersion;
+        Money residualLossExposure;
+        Money writeoffAmount;
+        bytes positionAllocationHash;
+        bytes recoveryAssessmentHash;
+        string reasonCode;
+        PolicyReference approvalPolicy;
+        uint64 writeoffNonce;
+        bytes approvalEvidenceHash;
+        int64 recognizedAt;
+    }
+
+    struct RecoveryReconciliationEvidence {
+        Identifier reconciliationId;
+        Identifier lossId;
+        Money grossLoss;
+        Money uniqueCreditedSources;
+        Money residualLoss;
+        Money writeoff;
+        Money laterReceipts;
+        Money allocatedToEntitlements;
+        Money borrowerSurplus;
+        bytes entitlementSetHash;
+        bytes journalSetHash;
+        bytes evidenceHash;
+        int64 reconciledAt;
+    }
+
+    struct CanonicalDebtSnapshot {
+        LoanId loanId;
+        Identifier loanAccountId;
+        Money principal;
+        Money accruedInterest;
+        Money capitalizedInterest;
+        Money fees;
+        Money penalties;
+        Money recoverableCosts;
+        Money credits;
+        uint64 debtStateVersion;
+        int64 asOf;
+        bytes policySetHash;
+        bytes snapshotHash;
+    }
+
+    struct PayoffComponent {
+        PayoffComponentKind kind;
+        Money amount;
+        PartyId beneficiaryId;
+        string obligationCode;
+    }
+
+    struct PayoffQuote {
+        Identifier quoteId;
+        LoanId loanId;
+        CanonicalDebtSnapshot debt;
+        PayoffComponent[] components;
+        Money grossPayoff;
+        Money credits;
+        Money netPayoff;
+        bytes componentBeneficiaryHash;
+        bytes settlementRouteHash;
+        int64 issuedAt;
+        int64 validUntil;
+        uint64 quoteNonce;
+        PolicyReference quotePolicy;
+        bytes quoteDigest;
+        PayoffQuoteState state;
+    }
+
+    struct RefinanceRequest {
+        Identifier refinanceId;
+        LoanId oldLoanId;
+        LoanId newLoanId;
+        PartyId borrowerId;
+        PartyId oldLenderId;
+        Identifier quoteId;
+        Money oldNetPayoff;
+        Money newPrincipal;
+        Money fundingAmount;
+        Money refinanceFee;
+        Money borrowerProceeds;
+        bytes componentBeneficiaryHash;
+        Identifier[] collateralIds;
+        bytes collateralSetHash;
+        uint64 lienVersion;
+        bytes proposedTermsHash;
+        bytes newPolicySetHash;
+        int64 expiresAt;
+        uint64 refinanceNonce;
+        PolicyReference refinancePolicy;
+        bytes requestDigest;
+        RefinanceState state;
+        uint64 newLoanNonce;
+    }
+
+    struct RefinanceFundingCommitment {
+        Identifier commitmentId;
+        Identifier refinanceId;
+        Identifier positionId;
+        Identifier trancheId;
+        PartyId funderId;
+        Money amount;
+        uint64 commitmentNonce;
+        bytes commitmentDigest;
+        FundingCommitmentState state;
+    }
+
+    struct CollateralLienHandoff {
+        Identifier handoffId;
+        Identifier refinanceId;
+        Identifier collateralId;
+        LoanId oldLoanId;
+        LoanId newLoanId;
+        uint64 priorLienVersion;
+        uint64 nextLienVersion;
+        LienHandoffState state;
+        bytes evidenceHash;
+    }
+
+    struct RefinanceExecutionEvidence {
+        Identifier refinanceId;
+        Identifier quoteId;
+        Identifier executionEventId;
+        LoanId oldLoanId;
+        LoanId newLoanId;
+        Money fundingAmount;
+        Money oldNetPayoff;
+        Money refinanceFee;
+        Money borrowerProceeds;
+        CollateralLienHandoff[] lienHandoffs;
+        bytes oldDebtResultHash;
+        bytes newActivationResultHash;
+        bytes recipientBalanceDeltaHash;
+        bytes componentPayoutHash;
+        bytes journalBatchHash;
+        int64 executedAt;
+    }
+
+    struct RefinanceRefundEvidence {
+        Identifier refinanceId;
+        Identifier commitmentId;
+        Identifier refundId;
+        PartyId funderId;
+        Money amount;
+        bytes balanceDeltaHash;
+        int64 refundedAt;
+    }
+
+    struct PositionRightSnapshot {
+        Identifier snapshotId;
+        LoanId loanId;
+        uint64 termsVersion;
+        uint64 snapshotBlock;
+        bytes positionRoot;
+        string eligibleWeight;
+        uint32 positionCount;
+        uint32 quorumBasisPoints;
+        uint32 approvalBasisPoints;
+        bytes policyHash;
+    }
+
+    struct PositionRight {
+        Identifier snapshotId;
+        Identifier positionId;
+        Identifier trancheId;
+        PartyId ownerId;
+        Money claim;
+        string votingWeight;
+        bytes proofHash;
+    }
+
+    struct RestructuringProposal {
+        Identifier restructureId;
+        LoanId loanId;
+        PartyId proposerId;
+        uint64 activeTermsVersion;
+        uint64 debtStateVersion;
+        PolicyReference amendmentPolicy;
+        uint64 modificationMask;
+        bytes amendedTermsHash;
+        bytes amendedScheduleHash;
+        bytes disclosureHash;
+        bytes accountingDeltaHash;
+        PositionRightSnapshot positionSnapshot;
+        PartyId borrowerId;
+        int64 reviewStartsAt;
+        int64 votingEndsAt;
+        int64 executeBy;
+        uint64 proposalNonce;
+        bytes proposalDigest;
+        RestructuringState state;
+    }
+
+    struct RestructuringVote {
+        Identifier voteId;
+        Identifier restructureId;
+        PositionRight positionRight;
+        RestructuringVoteChoice choice;
+        bytes authorizationHash;
+        int64 recordedAt;
+    }
+
+    struct BorrowerRestructuringConsent {
+        Identifier consentId;
+        Identifier restructureId;
+        LoanId loanId;
+        PartyId borrowerId;
+        uint64 activeTermsVersion;
+        bytes amendedTermsHash;
+        bytes disclosureHash;
+        bytes accountingDeltaHash;
+        uint64 consentNonce;
+        int64 validUntil;
+        bytes signature;
+        bytes consentDigest;
+    }
+
+    struct LoanAmendment {
+        Identifier amendmentId;
+        Identifier restructureId;
+        LoanId loanId;
+        uint64 priorTermsVersion;
+        uint64 nextTermsVersion;
+        uint64 priorDebtStateVersion;
+        uint64 nextDebtStateVersion;
+        bytes priorAgreementHash;
+        bytes amendedTermsHash;
+        bytes amendedScheduleHash;
+        bytes accountingDeltaHash;
+        Money capitalizedInterest;
+        Money waivedFees;
+        Money waivedPenalties;
+        Money forgivenAmount;
+        bytes amendmentDigest;
+    }
+
+    struct RestructuringExecutionEvidence {
+        Identifier restructureId;
+        Identifier executionEventId;
+        LoanAmendment amendment;
+        string eligibleWeight;
+        string castWeight;
+        string supportWeight;
+        string opposeWeight;
+        bytes borrowerConsentDigest;
+        bytes positionSnapshotRoot;
+        bytes journalBatchHash;
+        int64 executedAt;
     }
 
     struct OracleObservation {

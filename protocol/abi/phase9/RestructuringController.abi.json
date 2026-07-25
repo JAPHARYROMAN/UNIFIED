@@ -1,0 +1,1135 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "loanRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "amendmentPolicyRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "emergencyController_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidRestructuring",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Phase9ImplementationNotFrozen",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "restructureId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RestructuringVoteReplay",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "restructureId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnknownRestructuring",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "restructureId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "consentDigest",
+        "type": "bytes32"
+      }
+    ],
+    "name": "BorrowerConsentRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "restructureId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "executionEventId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "amendmentDigest",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RestructuringExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "restructureId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "snapshotId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "RestructuringProposed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "restructureId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum Phase9Types.VoteChoice",
+        "name": "choice",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "weight",
+        "type": "uint256"
+      }
+    ],
+    "name": "RestructuringVoteRecorded",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "restructureId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "borrowerConsent",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "consentId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "restructureId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "activeTermsVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendedTermsHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "disclosureHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "accountingDeltaHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "consentNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validUntil",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "consentDigest",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.BorrowerConsentRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "voteId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "restructureId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "positionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "weight",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum Phase9Types.VoteChoice",
+            "name": "choice",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "authorizationHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "recordedAt",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct Phase9Types.VoteRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "castVote",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "execute",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "restructureId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "executionEventId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendmentDigest",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "journalBatchHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "executedAt",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct Phase9Types.RestructuringExecutionResult",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "restructureId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "executionResult",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "restructureId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "executionEventId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendmentDigest",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "journalBatchHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "executedAt",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct Phase9Types.RestructuringExecutionResult",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "restructureId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "proposal",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "restructureId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "proposer",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "activeTermsVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "debtStateVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendmentPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "modificationMask",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "maturityExtensionSeconds",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "newRateRay",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "paymentHolidayPeriods",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "paymentHolidayScheduleHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeWaiverAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "penaltyWaiverAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "arrearsCapitalizationAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "newPrincipalCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "addedCollateralCommitmentHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "partialForgivenessAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "positionLossAllocationHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendedTermsHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendedScheduleHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "disclosureHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "accountingDeltaHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "positionSnapshotId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "positionSnapshotRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "positionSnapshotBlock",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "eligibleWeight",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "quorumBasisPoints",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "approvalBasisPoints",
+            "type": "uint32"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "reviewStartsAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "votingEndsAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "executeBy",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "proposalNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "proposalDigest",
+            "type": "bytes32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "amendmentId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "restructureId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "loanId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint64",
+                "name": "priorTermsVersion",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "nextTermsVersion",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "priorDebtStateVersion",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "nextDebtStateVersion",
+                "type": "uint64"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "priorAgreementHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "amendedTermsHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "amendedScheduleHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "accountingDeltaHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint256",
+                "name": "capitalizedInterest",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "waivedFees",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "waivedPenalties",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "forgivenAmount",
+                "type": "uint256"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "amendmentDigest",
+                "type": "bytes32"
+              }
+            ],
+            "internalType": "struct Phase9Types.LoanAmendment",
+            "name": "amendment",
+            "type": "tuple"
+          },
+          {
+            "internalType": "enum Phase9Types.RestructuringState",
+            "name": "state",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct Phase9Types.RestructuringProposal",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "restructureId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "proposer",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "activeTermsVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "debtStateVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendmentPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "modificationMask",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "maturityExtensionSeconds",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "newRateRay",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "paymentHolidayPeriods",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "paymentHolidayScheduleHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "feeWaiverAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "penaltyWaiverAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "arrearsCapitalizationAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "newPrincipalCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "addedCollateralCommitmentHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "partialForgivenessAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "positionLossAllocationHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendedTermsHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendedScheduleHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "disclosureHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "accountingDeltaHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "positionSnapshotId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "positionSnapshotRoot",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "positionSnapshotBlock",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "eligibleWeight",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "quorumBasisPoints",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "approvalBasisPoints",
+            "type": "uint32"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "reviewStartsAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "votingEndsAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "executeBy",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "proposalNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "proposalDigest",
+            "type": "bytes32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "amendmentId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "restructureId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "loanId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint64",
+                "name": "priorTermsVersion",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "nextTermsVersion",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "priorDebtStateVersion",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "nextDebtStateVersion",
+                "type": "uint64"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "priorAgreementHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "amendedTermsHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "amendedScheduleHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "accountingDeltaHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint256",
+                "name": "capitalizedInterest",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "waivedFees",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "waivedPenalties",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "forgivenAmount",
+                "type": "uint256"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "amendmentDigest",
+                "type": "bytes32"
+              }
+            ],
+            "internalType": "struct Phase9Types.LoanAmendment",
+            "name": "amendment",
+            "type": "tuple"
+          },
+          {
+            "internalType": "enum Phase9Types.RestructuringState",
+            "name": "state",
+            "type": "uint8"
+          }
+        ],
+        "internalType": "struct Phase9Types.RestructuringProposal",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "propose",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "consentId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "restructureId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "uint64",
+            "name": "activeTermsVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "amendedTermsHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "disclosureHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "accountingDeltaHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "consentNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validUntil",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "consentDigest",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.BorrowerConsentRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "recordBorrowerConsent",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "restructureId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "positionId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "vote",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "voteId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "restructureId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "positionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "weight",
+            "type": "uint256"
+          },
+          {
+            "internalType": "enum Phase9Types.VoteChoice",
+            "name": "choice",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "authorizationHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "recordedAt",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct Phase9Types.VoteRecord",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "restructureId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "voteWeights",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "support",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "oppose",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "cast",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

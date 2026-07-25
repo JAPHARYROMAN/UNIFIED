@@ -1,0 +1,396 @@
+{
+  "compiler": {
+    "openzeppelinVersion": "5.6.1",
+    "settings": {
+      "evmVersion": "prague",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "viaIR": false
+    },
+    "settingsHash": "sha256:0e0b5553d328d2bcca346b1c4c6662f419766d011fc75a7148f1ab9e2a398fb3",
+    "version": "0.8.36+commit.8a079791.Emscripten.clang"
+  },
+  "contract": "InsuranceReserveVault",
+  "freezeSurface": {
+    "functions": [
+      {
+        "bodyStatementKinds": [
+          "ExpressionStatement",
+          "ExpressionStatement"
+        ],
+        "implemented": true,
+        "kind": "constructor",
+        "modifiers": [],
+        "name": "",
+        "revertError": null,
+        "stateMutability": "nonpayable",
+        "visibility": "public"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "fundReserve",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "fundPremium",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "payClaim",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "custody",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "fundingResult",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "claimPayment",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      }
+    ],
+    "stateVariables": [
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_assetRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_insuranceManager",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_custodyUnits",
+        "type": "mapping(bytes32 => mapping(bytes32 => uint256))",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_fundingResults",
+        "type": "mapping(bytes32 => struct Phase9ProtectionTypes.ReserveFundingResult)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_claimPayments",
+        "type": "mapping(bytes32 => struct Phase9ProtectionTypes.ClaimPayment)",
+        "visibility": "private"
+      }
+    ]
+  },
+  "linearizedBases": [
+    "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+    "protocol/src/interfaces/phase9/IInsuranceReserveVault.sol:IInsuranceReserveVault"
+  ],
+  "schemaVersion": 1,
+  "source": "protocol/src/protection/InsuranceReserveVault.sol",
+  "storageLayout": {
+    "storage": [
+      {
+        "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+        "label": "_assetRegistry",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+        "label": "_insuranceManager",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+        "label": "_custodyUnits",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_bytes32,t_mapping(t_bytes32,t_uint256))"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+        "label": "_fundingResults",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_mapping(t_bytes32,t_struct(ReserveFundingResult)59091_storage)"
+      },
+      {
+        "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+        "label": "_claimPayments",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_mapping(t_bytes32,t_struct(ClaimPayment)59235_storage)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_mapping(t_bytes32,t_mapping(t_bytes32,t_uint256))": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => mapping(bytes32 => uint256))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_bytes32,t_uint256)"
+      },
+      "t_mapping(t_bytes32,t_struct(ClaimPayment)59235_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9ProtectionTypes.ClaimPayment)",
+        "numberOfBytes": "32",
+        "value": "t_struct(ClaimPayment)59235_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(ReserveFundingResult)59091_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9ProtectionTypes.ReserveFundingResult)",
+        "numberOfBytes": "32",
+        "value": "t_struct(ReserveFundingResult)59091_storage"
+      },
+      "t_mapping(t_bytes32,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_struct(ClaimPayment)59235_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9ProtectionTypes.ClaimPayment",
+        "members": [
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "claimPaymentId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "claimId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "decisionId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "poolId",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "beneficiary",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "amount",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "unpaidApprovedAmount",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "transactionHash",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "logIndex",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "balanceDeltaHash",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "subrogationEntitlementHash",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "paidAt",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "paymentNonce",
+            "offset": 8,
+            "slot": "11",
+            "type": "t_uint64"
+          }
+        ],
+        "numberOfBytes": "384"
+      },
+      "t_struct(ReserveFundingResult)59091_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9ProtectionTypes.ReserveFundingResult",
+        "members": [
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "fundingEventId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "poolId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "assetId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "payer",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "amount",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "balanceDeltaHash",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/protection/InsuranceReserveVault.sol:InsuranceReserveVault",
+            "label": "fundedAt",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint64"
+          }
+        ],
+        "numberOfBytes": "224"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint32": {
+        "encoding": "inplace",
+        "label": "uint32",
+        "numberOfBytes": "4"
+      },
+      "t_uint64": {
+        "encoding": "inplace",
+        "label": "uint64",
+        "numberOfBytes": "8"
+      }
+    }
+  }
+}

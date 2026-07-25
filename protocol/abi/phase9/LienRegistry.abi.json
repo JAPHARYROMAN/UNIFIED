@@ -1,0 +1,461 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "registeredRefinanceCoordinator_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidLien",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "collateralId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "lienVersion",
+        "type": "uint64"
+      }
+    ],
+    "name": "InvalidLienHandoff",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Phase9ImplementationNotFrozen",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "collateralId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "UnknownLien",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "collateralId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "oldLoanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "newLoanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "lienVersion",
+        "type": "uint64"
+      }
+    ],
+    "name": "LienHandoffCompleted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "collateralId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "targetLoanId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "LienHandoffPending",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "collateralId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "seniorLoanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "lienVersion",
+        "type": "uint64"
+      }
+    ],
+    "name": "LienRegistered",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "name": "beginHandoff",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "completeHandoff",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "handoffId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "refinanceId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "collateralId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "oldLoanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "newLoanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "priorLienVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "nextLienVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum Phase9Types.LienHandoffState",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "evidenceHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.LienHandoffResult",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "handoffId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "handoff",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "handoffId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "refinanceId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "collateralId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "oldLoanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "newLoanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "priorLienVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "nextLienVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum Phase9Types.LienHandoffState",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "evidenceHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.LienHandoffResult",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "collateralId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "lien",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "collateralId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "collateralManager",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "vault",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "assetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "quantity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "seniorLoanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "lienVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum Phase9Types.LienStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "pendingRefinanceId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "pendingTargetLoanId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.Lien",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "collateralId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "collateralManager",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "vault",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "assetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "quantity",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "borrower",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "seniorLoanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "lienVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum Phase9Types.LienStatus",
+            "name": "status",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "pendingRefinanceId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "pendingTargetLoanId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.Lien",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "registerLien",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "registeredRefinanceCoordinator",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

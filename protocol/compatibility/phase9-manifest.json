@@ -1,0 +1,261 @@
+{
+  "contracts": [
+    {
+      "abiPath": "protocol/abi/phase9/Phase9LoanFactory.abi.json",
+      "abiSha256": "sha256:bcc99f2d16ae00446d7f865590786d05ae55c56db6e09ea4e96829efcd00f1ba",
+      "contract": "Phase9LoanFactory",
+      "sourcePath": "protocol/src/resolution/Phase9LoanFactory.sol",
+      "sourceSha256": "sha256:1a12aeb26d7d122018c48bd62731ea1c2d62460168c2b2e202050c546e6a92a8",
+      "storagePath": "protocol/storage-layout/phase9/Phase9LoanFactory.storage.json",
+      "storageSha256": "sha256:ca84c7ba721b9b2326aef72e3e514a91f79d3f063e4dae314a04b5ad6178317c"
+    },
+    {
+      "abiPath": "protocol/abi/phase9/Phase9LoanAccount.abi.json",
+      "abiSha256": "sha256:0fb3ab0352d6c9ae7efb731e8d4ee93200cbe75fcde3a20b07d370086eb2a03d",
+      "contract": "Phase9LoanAccount",
+      "sourcePath": "protocol/src/resolution/Phase9LoanAccount.sol",
+      "sourceSha256": "sha256:1db2e82e595d01df56bdbe53b551ba52a7d108301b9f385508658ad5b84abbdd",
+      "storagePath": "protocol/storage-layout/phase9/Phase9LoanAccount.storage.json",
+      "storageSha256": "sha256:aa264ad8861a9e36cf5aed5ba377424e727faae25f1a086cf834a7a7c7599edb"
+    },
+    {
+      "abiPath": "protocol/abi/phase9/PayoffQuoteEngine.abi.json",
+      "abiSha256": "sha256:27dd06f73d3bd649a4ed6c84c39306a6ac13b1c9e30b4d772a43b0e5a9938137",
+      "contract": "PayoffQuoteEngine",
+      "sourcePath": "protocol/src/resolution/PayoffQuoteEngine.sol",
+      "sourceSha256": "sha256:800e85370245dda3c66e05f777b096779f724e74cb6d3938409f4281983341e1",
+      "storagePath": "protocol/storage-layout/phase9/PayoffQuoteEngine.storage.json",
+      "storageSha256": "sha256:e9ba039decf9c91e9396c9c5ca797bd50cea2823efa93ec7dc20c9beac81a57c"
+    },
+    {
+      "abiPath": "protocol/abi/phase9/CollateralCustodyV2.abi.json",
+      "abiSha256": "sha256:2bf357004fb001633e577085714e97f94b45791117430ba6ff43c7e6d7239a5b",
+      "contract": "CollateralCustodyV2",
+      "sourcePath": "protocol/src/resolution/CollateralCustodyV2.sol",
+      "sourceSha256": "sha256:ab40b91854124fcdf6b0b8b63661a194594a328d76280f755c0c8c0bf0679bc6",
+      "storagePath": "protocol/storage-layout/phase9/CollateralCustodyV2.storage.json",
+      "storageSha256": "sha256:7612220265c3e82281320d177b57bdadc6e9fa06b4fdb7d7d9adae98dc746d19"
+    },
+    {
+      "abiPath": "protocol/abi/phase9/LienRegistry.abi.json",
+      "abiSha256": "sha256:3fe4b1ac0d325b338fd2ee6d527391263e424512a8a2aa53d8a4ca53223afff1",
+      "contract": "LienRegistry",
+      "sourcePath": "protocol/src/resolution/LienRegistry.sol",
+      "sourceSha256": "sha256:fefbc6e6562479962a3248bebfe45a0dd6fcc9e91ac9fb43ba2e2ad2ae16b462",
+      "storagePath": "protocol/storage-layout/phase9/LienRegistry.storage.json",
+      "storageSha256": "sha256:68ccae641c3b883ff66f4f0d8816dbcaf614dd0646f2585fd9be908057248bb1"
+    },
+    {
+      "abiPath": "protocol/abi/phase9/RefinanceCoordinator.abi.json",
+      "abiSha256": "sha256:fc77726228a906f7b1c6bf64eea39955efe24d2b7a87deb2e85ad1c63ea61d11",
+      "contract": "RefinanceCoordinator",
+      "sourcePath": "protocol/src/resolution/RefinanceCoordinator.sol",
+      "sourceSha256": "sha256:d5687a7d070b763db136186be589717c5d964dde312758f1c415a202755b2854",
+      "storagePath": "protocol/storage-layout/phase9/RefinanceCoordinator.storage.json",
+      "storageSha256": "sha256:50c6e87bbbb848adbbdec201729a0ad4fe39259dc1c89fd982a5c8b852ee213e"
+    },
+    {
+      "abiPath": "protocol/abi/phase9/PositionManagerV2.abi.json",
+      "abiSha256": "sha256:6c08ceb4d37ecccca535f173b35a196bd8b62fe240b61ec4fd2f5ee4c14bea31",
+      "contract": "PositionManagerV2",
+      "sourcePath": "protocol/src/resolution/PositionManagerV2.sol",
+      "sourceSha256": "sha256:5733b6f62f41f62d06c5a22804322a8ea94e8f121946d6820c52d4755e021e79",
+      "storagePath": "protocol/storage-layout/phase9/PositionManagerV2.storage.json",
+      "storageSha256": "sha256:bf3b999fdb9d6858399084384c8c6f0f8152e8c1dfc0094bb6dd7a810aac2f1a"
+    },
+    {
+      "abiPath": "protocol/abi/phase9/RestructuringController.abi.json",
+      "abiSha256": "sha256:13e0281b05257c03365bca911545528dfecc5d3294b72a9a5acb4037d31472fb",
+      "contract": "RestructuringController",
+      "sourcePath": "protocol/src/resolution/RestructuringController.sol",
+      "sourceSha256": "sha256:c8395720bdad511fb0835ea751f6b98d80af1012a7a27a0353691b132a0e94e9",
+      "storagePath": "protocol/storage-layout/phase9/RestructuringController.storage.json",
+      "storageSha256": "sha256:c5cea31fd57a1e60ca283ec786da09405984da6f9d3ca9b7157dc9a07e61de16"
+    },
+    {
+      "abiPath": "protocol/abi/phase9/InsuranceReserveVault.abi.json",
+      "abiSha256": "sha256:1a04d6f8194f82872dced43648e2f9510c503029dca6b9647ab4944b64cc8b51",
+      "contract": "InsuranceReserveVault",
+      "sourcePath": "protocol/src/protection/InsuranceReserveVault.sol",
+      "sourceSha256": "sha256:df96766436308b72a549e65f7afdcaa9dd0f03e4977f6b7d028f7229350753ef",
+      "storagePath": "protocol/storage-layout/phase9/InsuranceReserveVault.storage.json",
+      "storageSha256": "sha256:6ab21d59e5d3cf613bd3a0a27233457a0ee723c697c2a03864271efbd3e2dc61"
+    },
+    {
+      "abiPath": "protocol/abi/phase9/ReservePolicy.abi.json",
+      "abiSha256": "sha256:58e546c75b97af0be3d0261029dda3a7fc767666654e5106b870d4f530929499",
+      "contract": "ReservePolicy",
+      "sourcePath": "protocol/src/protection/ReservePolicy.sol",
+      "sourceSha256": "sha256:41949de667971b7b146a4ecfa5a103bb9a58339a290c235a64942caed369d9a9",
+      "storagePath": "protocol/storage-layout/phase9/ReservePolicy.storage.json",
+      "storageSha256": "sha256:80600567ad6e850a370ceaca82ad813cf653b845fc8d3c3567d8bcebe9402e82"
+    },
+    {
+      "abiPath": "protocol/abi/phase9/InsuranceManager.abi.json",
+      "abiSha256": "sha256:ad964d9d94f6fc7a023b8e285d4f51776175473e2a8659f1c5785e3cddc42cde",
+      "contract": "InsuranceManager",
+      "sourcePath": "protocol/src/protection/InsuranceManager.sol",
+      "sourceSha256": "sha256:8629268c2a06c15341a7a61660c8c7f0e1ce4143990964048347e646bcb0dbda",
+      "storagePath": "protocol/storage-layout/phase9/InsuranceManager.storage.json",
+      "storageSha256": "sha256:6995a22fd26930906c7780484e7d79377f057d48796555c5fce4a22ab28fb991"
+    },
+    {
+      "abiPath": "protocol/abi/phase9/GuaranteeVault.abi.json",
+      "abiSha256": "sha256:cc9ba6d067b7fb6f1fdacb9042b5595414971b2ad6b12f22ad6ed3190e691922",
+      "contract": "GuaranteeVault",
+      "sourcePath": "protocol/src/recovery/GuaranteeVault.sol",
+      "sourceSha256": "sha256:4eaadf10cd82ba311e13b1d7aba4dbcc4b715fa2adb8b7425f6d9204ab42fd4b",
+      "storagePath": "protocol/storage-layout/phase9/GuaranteeVault.storage.json",
+      "storageSha256": "sha256:1c0964098e35e34e8e13cffe7b9e3c94c12c16cd57362a42514684959930ff8f"
+    },
+    {
+      "abiPath": "protocol/abi/phase9/RecoveryManager.abi.json",
+      "abiSha256": "sha256:f10c8b1f4ce8066bfbb8e0879a8327627c9d47426d237820c621802648f262bc",
+      "contract": "RecoveryManager",
+      "sourcePath": "protocol/src/recovery/RecoveryManager.sol",
+      "sourceSha256": "sha256:5a0795369601a70af8b71d6a91bef3b26e20178373f5133e15349d68835d50bd",
+      "storagePath": "protocol/storage-layout/phase9/RecoveryManager.storage.json",
+      "storageSha256": "sha256:b7ba54596570b7e3858d26eeac1bf60f0ef4bdc3630415aab24d50ce5dd91e0b"
+    },
+    {
+      "abiPath": "protocol/abi/phase9/Phase9LocalSyntheticToken.abi.json",
+      "abiSha256": "sha256:d4741ed32c90d28f7a2fef6a16d675ffca3efa2398a079027581982ef07b85f0",
+      "contract": "Phase9LocalSyntheticToken",
+      "sourcePath": "protocol/src/token/Phase9LocalSyntheticToken.sol",
+      "sourceSha256": "sha256:93bd1101d71bb64dc1c9c1ebad46408fa9b1f41260f8bcafd79f20144a7fe932",
+      "storagePath": "protocol/storage-layout/phase9/Phase9LocalSyntheticToken.storage.json",
+      "storageSha256": "sha256:3d72ab9b17796f7bdfed26d1d0da66ba78edb2930463fd9ac31b52fd4191969b"
+    }
+  ],
+  "schemaVersion": 2,
+  "sources": [
+    {
+      "path": "protocol/src/interfaces/phase9/ICollateralCustodyV2.sol",
+      "sha256": "sha256:6752957ed0a17101f6e03ad282b88b7756999fb9d2aaff07e5e5e39dd14ae359"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/IGuaranteeVault.sol",
+      "sha256": "sha256:2bda7844cdfbd0d9f637137475bf67120ac041abad4f759e3f804ab1f9742028"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/IInsuranceManager.sol",
+      "sha256": "sha256:53f938640ee3d4ef069813758feaa1e5ee222bfa962025b7dfb4cb2725ad97a8"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/IInsuranceReserveVault.sol",
+      "sha256": "sha256:26e033ff2798a946d86a9bec3ea650e2abde8603db0fff0119953756f08ad8a8"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/ILienRegistry.sol",
+      "sha256": "sha256:22b158433d79266f0dc754f0ac4663f501a8591aa3957b5edd2dff87734fe3ad"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/IPayoffQuoteEngineV2.sol",
+      "sha256": "sha256:1ac755141b4a16091468a3c3c5bf1855116be6b0707dea0fb6512cb6298991cd"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/IPhase9LoanAccount.sol",
+      "sha256": "sha256:97f98112b1b31294fb571d59d89b67895331e235e25e22014396e5ccdd3f852a"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/IPhase9LoanFactory.sol",
+      "sha256": "sha256:81fb4f859eac6e3129d50b51fcb3225f57b59d3deeabb8245b3a3fdb62a14fcb"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/IPhase9LocalSyntheticToken.sol",
+      "sha256": "sha256:813337661492d4ea4505ca50dc10c2aebd91101fba34ac642b0ed9dde2d08198"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/IPositionManagerV2.sol",
+      "sha256": "sha256:7f8ce06a57cbc58863950588a83ea0cb1166f410f2aa25342cd5d4fcaf5694bb"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/IRecoveryManager.sol",
+      "sha256": "sha256:2fc35e835727978739443b26ff8cf8a7cf3e780903adffd5695285688b20e836"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/IRefinanceCoordinator.sol",
+      "sha256": "sha256:77fdef056a1b6a746ea59d9667666b9f4c9cea96ecb7bbf69b3f317dd8e771c5"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/IReservePolicy.sol",
+      "sha256": "sha256:c9b289e9571ad6c13ce8c0f3ac80d237640782f7577ad7bdf7ae9f83180e4b6f"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/IRestructuringController.sol",
+      "sha256": "sha256:13118e6a457ff02c899ebdc86c51722e4345c9bd2223646904ffe9d1b6741b35"
+    },
+    {
+      "path": "protocol/src/interfaces/phase9/Phase9Errors.sol",
+      "sha256": "sha256:a73411444d287e00aad9a5c1ee438d6a2066148d6009bb4aeaa9abea39942fb2"
+    },
+    {
+      "path": "protocol/src/protection/InsuranceManager.sol",
+      "sha256": "sha256:8629268c2a06c15341a7a61660c8c7f0e1ce4143990964048347e646bcb0dbda"
+    },
+    {
+      "path": "protocol/src/protection/InsuranceReserveVault.sol",
+      "sha256": "sha256:df96766436308b72a549e65f7afdcaa9dd0f03e4977f6b7d028f7229350753ef"
+    },
+    {
+      "path": "protocol/src/protection/Phase9ProtectionTypes.sol",
+      "sha256": "sha256:ec47a48fa8f78656d87a7c38eab88430d277a06ef0475aece0db1d767ee781d0"
+    },
+    {
+      "path": "protocol/src/protection/ReservePolicy.sol",
+      "sha256": "sha256:41949de667971b7b146a4ecfa5a103bb9a58339a290c235a64942caed369d9a9"
+    },
+    {
+      "path": "protocol/src/recovery/GuaranteeVault.sol",
+      "sha256": "sha256:4eaadf10cd82ba311e13b1d7aba4dbcc4b715fa2adb8b7425f6d9204ab42fd4b"
+    },
+    {
+      "path": "protocol/src/recovery/Phase9RecoveryTypes.sol",
+      "sha256": "sha256:131c6e65075670de6821702c8da98c59a55e73211411d63d7fa65d0c8dc29991"
+    },
+    {
+      "path": "protocol/src/recovery/RecoveryManager.sol",
+      "sha256": "sha256:5a0795369601a70af8b71d6a91bef3b26e20178373f5133e15349d68835d50bd"
+    },
+    {
+      "path": "protocol/src/resolution/CollateralCustodyV2.sol",
+      "sha256": "sha256:ab40b91854124fcdf6b0b8b63661a194594a328d76280f755c0c8c0bf0679bc6"
+    },
+    {
+      "path": "protocol/src/resolution/LienRegistry.sol",
+      "sha256": "sha256:fefbc6e6562479962a3248bebfe45a0dd6fcc9e91ac9fb43ba2e2ad2ae16b462"
+    },
+    {
+      "path": "protocol/src/resolution/PayoffQuoteEngine.sol",
+      "sha256": "sha256:800e85370245dda3c66e05f777b096779f724e74cb6d3938409f4281983341e1"
+    },
+    {
+      "path": "protocol/src/resolution/Phase9LoanAccount.sol",
+      "sha256": "sha256:1db2e82e595d01df56bdbe53b551ba52a7d108301b9f385508658ad5b84abbdd"
+    },
+    {
+      "path": "protocol/src/resolution/Phase9LoanFactory.sol",
+      "sha256": "sha256:1a12aeb26d7d122018c48bd62731ea1c2d62460168c2b2e202050c546e6a92a8"
+    },
+    {
+      "path": "protocol/src/resolution/Phase9Types.sol",
+      "sha256": "sha256:7226bd36149781426a6385bf72219165a1db7cbb2b21fc05d7700b99402d84b5"
+    },
+    {
+      "path": "protocol/src/resolution/PositionManagerV2.sol",
+      "sha256": "sha256:5733b6f62f41f62d06c5a22804322a8ea94e8f121946d6820c52d4755e021e79"
+    },
+    {
+      "path": "protocol/src/resolution/RefinanceCoordinator.sol",
+      "sha256": "sha256:d5687a7d070b763db136186be589717c5d964dde312758f1c415a202755b2854"
+    },
+    {
+      "path": "protocol/src/resolution/RestructuringController.sol",
+      "sha256": "sha256:c8395720bdad511fb0835ea751f6b98d80af1012a7a27a0353691b132a0e94e9"
+    },
+    {
+      "path": "protocol/src/token/Phase9LocalSyntheticToken.sol",
+      "sha256": "sha256:93bd1101d71bb64dc1c9c1ebad46408fa9b1f41260f8bcafd79f20144a7fe932"
+    }
+  ]
+}

@@ -9,6 +9,14 @@ import re
 from collections.abc import Iterable
 from pathlib import Path
 
+from build_phase9_compatibility_manifest import (
+    MANIFEST_PATH as PHASE9_COMPATIBILITY_MANIFEST_PATH,
+)
+from build_phase9_compatibility_manifest import (
+    check_manifest,
+    manifest_hash,
+    source_set_hash,
+)
 from check_abi import ABI_PAIRS
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,6 +51,7 @@ PHASE9_RELEASE_SCHEMA_PATH = (
     ROOT / "infrastructure/local/resolution/phase9-release-evidence.schema.json"
 )
 PHASE9_RELEASE_DOC_PATH = ROOT / "docs/architecture/phase-9-local-release-evidence.md"
+PHASE9_FREEZE_REVIEW_PATH = ROOT / "security/reviews/phase-9-interface-freeze.md"
 
 PHASE9_PRODUCTION_CONTRACTS = (
     "Phase9LoanFactory",
@@ -1086,7 +1095,8 @@ def check_phase9_local_token_source(imports: dict[str, Path]) -> None:
     )
     require(
         re.search(
-            r"uint256\s+public\s+constant\s+FIXED_SUPPLY_UNITS\s*=\s*"
+            r"uint256\s+public\s+constant\s+(?:override\s+)?"
+            r"FIXED_SUPPLY_UNITS\s*=\s*"
             r"1_000_000_000_000_000\s*;",
             token_source,
         )
@@ -1103,7 +1113,8 @@ def check_phase9_local_token_source(imports: dict[str, Path]) -> None:
         "Phase9LocalSyntheticToken does not reject the zero fixture allocator",
     )
     decimals_match = re.search(
-        r"function\s+decimals\s*\(\s*\)\s+public\s+(?:pure|view)\s+override\s+"
+        r"function\s+decimals\s*\(\s*\)\s+public\s+(?:pure|view)\s+override"
+        r"(?:\s*\([^)]*\))?\s+"
         r"returns\s*\(\s*uint8\s*\)\s*\{\s*return\s+6\s*;\s*\}",
         token_source,
     )
@@ -1191,6 +1202,100 @@ def check_phase9_local_token_source(imports: dict[str, Path]) -> None:
     )
 
 
+def solidity_function_bodies(source: str) -> list[tuple[str, str]]:
+    functions: list[tuple[str, str]] = []
+    for match in re.finditer(r"\bfunction\b(?P<header>[^;{]+)\{", source, re.DOTALL):
+        depth = 1
+        cursor = match.end()
+        while cursor < len(source) and depth:
+            if source[cursor] == "{":
+                depth += 1
+            elif source[cursor] == "}":
+                depth -= 1
+            cursor += 1
+        require(depth == 0, "Phase 9 Solidity function body is not parseable")
+        functions.append((match.group("header"), source[match.end() : cursor - 1]))
+    return functions
+
+
+def is_exact_freeze_revert(body: str) -> bool:
+    return (
+        re.fullmatch(
+            r"\s*revert\s+Phase9ImplementationNotFrozen\s*\(\s*\)\s*;\s*",
+            body,
+        )
+        is not None
+    )
+
+
+def check_phase9_stub_sources(imports: dict[str, Path]) -> None:
+    forbidden = ("delegatecall", "selfdestruct", "assembly", "Phase8")
+    for contract in PHASE9_PRODUCTION_CONTRACTS:
+        source = strip_solidity_comments(read(imports[contract]))
+        require_tokens(
+            source,
+            (f"contract {contract}", "Phase9ImplementationNotFrozen"),
+            f"{contract} freeze stub",
+        )
+        present = [token for token in forbidden if token.lower() in source.lower()]
+        require(
+            not present,
+            f"{contract} contains prohibited freeze-stub mechanisms: {', '.join(present)}",
+        )
+        require(
+            re.search(r"\b(?:fallback|receive)\s*\(", source) is None,
+            f"{contract} exposes a fallback or receive function",
+        )
+        for header, body in solidity_function_bodies(source):
+            header_words = set(re.findall(r"[A-Za-z_]\w*", header))
+            if not ({"public", "external"} & header_words):
+                continue
+            if {"view", "pure"} & header_words:
+                continue
+            function_name = re.match(r"\s*([A-Za-z_]\w*)", header)
+            label = function_name.group(1) if function_name else "<unknown>"
+            require(
+                is_exact_freeze_revert(body),
+                f"{contract}.{label} has a successful or non-canonical mutating stub path",
+            )
+
+
+def check_phase9_compatibility_review() -> None:
+    require_paths(
+        (PHASE9_COMPATIBILITY_MANIFEST_PATH, PHASE9_FREEZE_REVIEW_PATH),
+        "Phase 9 compatibility manifest and freeze review",
+    )
+    manifest = check_manifest()
+    review = normalized(read(PHASE9_FREEZE_REVIEW_PATH))
+    require_tokens(
+        review,
+        (
+            "decision: pass",
+            "architecture review: pass",
+            "security review: pass",
+            manifest_hash(manifest),
+            source_set_hash(manifest),
+        ),
+        "Phase 9 interface-freeze review",
+    )
+    contracts = manifest.get("contracts")
+    if not isinstance(contracts, list):
+        raise SystemExit("ERROR: Phase 9 compatibility manifest contracts are malformed")
+    for entry in contracts:
+        if not isinstance(entry, dict):
+            raise SystemExit("ERROR: Phase 9 compatibility manifest entry is malformed")
+        require_tokens(
+            review,
+            (
+                str(entry.get("contract", "")),
+                str(entry.get("abiSha256", "")),
+                str(entry.get("sourceSha256", "")),
+                str(entry.get("storageSha256", "")),
+            ),
+            "Phase 9 interface-freeze review hash table",
+        )
+
+
 def check_phase9_local_token_evidence(smoke_scripts: list[Path]) -> None:
     deploy_script = read(PHASE9_DEPLOY_SCRIPT_PATH)
     require_tokens(
@@ -1261,7 +1366,9 @@ def check_pre_code_freeze(by_id: dict[str, dict[str, str]]) -> None:
     check_phase9_storage_layouts()
     check_phase9_formatting_scope(imports)
     check_phase9_contract_size_coverage()
+    check_phase9_stub_sources(imports)
     check_phase9_local_token_source(imports)
+    check_phase9_compatibility_review()
 
 
 def check_implementation_artifacts() -> None:

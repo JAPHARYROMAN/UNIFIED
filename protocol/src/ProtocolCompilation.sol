@@ -58,3 +58,17 @@ import { SatelliteSettlementVault } from "./crosschain/SatelliteSettlementVault.
 import { SyntheticFinalityVerifier } from "./crosschain/SyntheticFinalityVerifier.sol";
 import { UFTBridgeHub } from "./crosschain/UFTBridgeHub.sol";
 import { WrappedUFT } from "./crosschain/WrappedUFT.sol";
+import { Phase9LoanFactory } from "./resolution/Phase9LoanFactory.sol";
+import { Phase9LoanAccount } from "./resolution/Phase9LoanAccount.sol";
+import { PayoffQuoteEngine } from "./resolution/PayoffQuoteEngine.sol";
+import { CollateralCustodyV2 } from "./resolution/CollateralCustodyV2.sol";
+import { LienRegistry } from "./resolution/LienRegistry.sol";
+import { RefinanceCoordinator } from "./resolution/RefinanceCoordinator.sol";
+import { PositionManagerV2 } from "./resolution/PositionManagerV2.sol";
+import { RestructuringController } from "./resolution/RestructuringController.sol";
+import { InsuranceReserveVault } from "./protection/InsuranceReserveVault.sol";
+import { ReservePolicy } from "./protection/ReservePolicy.sol";
+import { InsuranceManager } from "./protection/InsuranceManager.sol";
+import { GuaranteeVault } from "./recovery/GuaranteeVault.sol";
+import { RecoveryManager } from "./recovery/RecoveryManager.sol";
+import { Phase9LocalSyntheticToken } from "./token/Phase9LocalSyntheticToken.sol";

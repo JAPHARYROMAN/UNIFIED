@@ -1,0 +1,131 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+enum RestructuringState {
+  RESTRUCTURING_STATE_UNSPECIFIED = 0;
+  RESTRUCTURING_STATE_PROPOSED = 1;
+  RESTRUCTURING_STATE_REVIEW = 2;
+  RESTRUCTURING_STATE_VOTING = 3;
+  RESTRUCTURING_STATE_APPROVED = 4;
+  RESTRUCTURING_STATE_EXECUTING = 5;
+  RESTRUCTURING_STATE_EFFECTIVE = 6;
+  RESTRUCTURING_STATE_REJECTED = 7;
+  RESTRUCTURING_STATE_EXPIRED = 8;
+  RESTRUCTURING_STATE_WITHDRAWN = 9;
+  RESTRUCTURING_STATE_DISPUTED = 10;
+}
+
+enum RestructuringVoteChoice {
+  RESTRUCTURING_VOTE_CHOICE_UNSPECIFIED = 0;
+  RESTRUCTURING_VOTE_CHOICE_SUPPORT = 1;
+  RESTRUCTURING_VOTE_CHOICE_OPPOSE = 2;
+  RESTRUCTURING_VOTE_CHOICE_ABSTAIN = 3;
+}
+
+message PositionRightSnapshot {
+  Identifier snapshot_id = 1;
+  LoanId loan_id = 2;
+  uint64 terms_version = 3;
+  uint64 snapshot_block = 4;
+  bytes position_root = 5;
+  string eligible_weight = 6;
+  uint32 position_count = 7;
+  uint32 quorum_basis_points = 8;
+  uint32 approval_basis_points = 9;
+  bytes policy_hash = 10;
+}
+
+message PositionRight {
+  Identifier snapshot_id = 1;
+  Identifier position_id = 2;
+  Identifier tranche_id = 3;
+  PartyId owner_id = 4;
+  Money claim = 5;
+  string voting_weight = 6;
+  bytes proof_hash = 7;
+}
+
+message RestructuringProposal {
+  Identifier restructure_id = 1;
+  LoanId loan_id = 2;
+  PartyId proposer_id = 3;
+  uint64 active_terms_version = 4;
+  uint64 debt_state_version = 5;
+  PolicyReference amendment_policy = 6;
+  uint64 modification_mask = 7;
+  bytes amended_terms_hash = 8;
+  bytes amended_schedule_hash = 9;
+  bytes disclosure_hash = 10;
+  bytes accounting_delta_hash = 11;
+  PositionRightSnapshot position_snapshot = 12;
+  PartyId borrower_id = 13;
+  google.protobuf.Timestamp review_starts_at = 14;
+  google.protobuf.Timestamp voting_ends_at = 15;
+  google.protobuf.Timestamp execute_by = 16;
+  uint64 proposal_nonce = 17;
+  bytes proposal_digest = 18;
+  RestructuringState state = 19;
+}
+
+message RestructuringVote {
+  Identifier vote_id = 1;
+  Identifier restructure_id = 2;
+  PositionRight position_right = 3;
+  RestructuringVoteChoice choice = 4;
+  bytes authorization_hash = 5;
+  google.protobuf.Timestamp recorded_at = 6;
+}
+
+message BorrowerRestructuringConsent {
+  Identifier consent_id = 1;
+  Identifier restructure_id = 2;
+  LoanId loan_id = 3;
+  PartyId borrower_id = 4;
+  uint64 active_terms_version = 5;
+  bytes amended_terms_hash = 6;
+  bytes disclosure_hash = 7;
+  bytes accounting_delta_hash = 8;
+  uint64 consent_nonce = 9;
+  google.protobuf.Timestamp valid_until = 10;
+  bytes signature = 11;
+  bytes consent_digest = 12;
+}
+
+message LoanAmendment {
+  Identifier amendment_id = 1;
+  Identifier restructure_id = 2;
+  LoanId loan_id = 3;
+  uint64 prior_terms_version = 4;
+  uint64 next_terms_version = 5;
+  uint64 prior_debt_state_version = 6;
+  uint64 next_debt_state_version = 7;
+  bytes prior_agreement_hash = 8;
+  bytes amended_terms_hash = 9;
+  bytes amended_schedule_hash = 10;
+  bytes accounting_delta_hash = 11;
+  Money capitalized_interest = 12;
+  Money waived_fees = 13;
+  Money waived_penalties = 14;
+  Money forgiven_amount = 15;
+  bytes amendment_digest = 16;
+}
+
+message RestructuringExecutionEvidence {
+  Identifier restructure_id = 1;
+  Identifier execution_event_id = 2;
+  LoanAmendment amendment = 3;
+  string eligible_weight = 4;
+  string cast_weight = 5;
+  string support_weight = 6;
+  string oppose_weight = 7;
+  bytes borrower_consent_digest = 8;
+  bytes position_snapshot_root = 9;
+  bytes journal_batch_hash = 10;
+  google.protobuf.Timestamp executed_at = 11;
+}

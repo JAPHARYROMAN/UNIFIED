@@ -1,0 +1,1137 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "reserveVault_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "reservePolicy_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recoveryManager_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "settlementToken_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "operationId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "InsuranceOperationReplay",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidClaimDecision",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidCoverage",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidInsuranceClaim",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Phase9ImplementationNotFrozen",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "decisionId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "claimId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "approvedAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "ClaimDecisionRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "claimPaymentId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "claimId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "beneficiary",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "ClaimPaymentRecorded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "claimId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "coverageId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "lossId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "requestedAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "ClaimSubmitted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "coverageId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "poolId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "beneficiary",
+        "type": "address"
+      }
+    ],
+    "name": "CoverageCreated",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "poolId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "activePolicy",
+    "outputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "claimId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "claim",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "claimId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "coverageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "lossId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "claimant",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "requestedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "eligibleUncoveredLoss",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "evidenceHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "claimNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "submittedAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum Phase9ProtectionTypes.InsuranceClaimState",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "claimDigest",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9ProtectionTypes.InsuranceClaim",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "claimPaymentId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "claimPayment",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "claimPaymentId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "claimId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "decisionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "poolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "beneficiary",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "unpaidApprovedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "transactionHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "logIndex",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "balanceDeltaHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "subrogationEntitlementHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "paidAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "paymentNonce",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct Phase9ProtectionTypes.ClaimPayment",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "coverageId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "coverage",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "coverageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "poolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "beneficiary",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "coveredEventMask",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deductible",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "coverageBasisPoints",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "coverageLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "remainingLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "premium",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "lossPriority",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "subrogationPriority",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validFrom",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "coverageNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyVersionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "coverageDigest",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum Phase9ProtectionTypes.CoverageState",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "reservePolicyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9ProtectionTypes.LoanCoverage",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "coverageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "poolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "loanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "beneficiary",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "coveredEventMask",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "deductible",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "coverageBasisPoints",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "coverageLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "remainingLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "premium",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "lossPriority",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "subrogationPriority",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validFrom",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "coverageNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "policyVersionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "coverageDigest",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "enum Phase9ProtectionTypes.CoverageState",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "reservePolicyHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9ProtectionTypes.LoanCoverage",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "createCoverage",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "decisionId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "decision",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "decisionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "claimId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "adjudicatedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "approvalCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "beneficiaryCoveredUnresolvedEntitlement",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "approvedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "authorizedCosts",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "beneficiaryEntitlementHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "evidenceHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "adjudicationNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validUntil",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adjudicatorSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "lossStateVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "decisionDigest",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9ProtectionTypes.ClaimDecision",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "operationId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "operationProcessed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "claimPaymentId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "claimId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "decisionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "poolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "beneficiary",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "unpaidApprovedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "transactionHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "logIndex",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "balanceDeltaHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "subrogationEntitlementHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "paidAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "paymentNonce",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct Phase9ProtectionTypes.ClaimPayment",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "recordClaimPayment",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "decisionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "claimId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "adjudicatedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "approvalCap",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "beneficiaryCoveredUnresolvedEntitlement",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "approvedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "authorizedCosts",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "beneficiaryEntitlementHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "evidenceHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "adjudicationNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validUntil",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adjudicatorSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "lossStateVersion",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "decisionDigest",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9ProtectionTypes.ClaimDecision",
+        "name": "",
+        "type": "tuple"
+      },
+      {
+        "internalType": "bytes[]",
+        "name": "",
+        "type": "bytes[]"
+      }
+    ],
+    "name": "recordDecision",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "adjudicatorSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address[3]",
+            "name": "adjudicators",
+            "type": "address[3]"
+          },
+          {
+            "internalType": "uint8",
+            "name": "threshold",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validFrom",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "validUntil",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct Phase9ProtectionTypes.AdjudicatorSet",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "registerAdjudicatorSet",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "policyVersionId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "poolId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "settlementAssetId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "stressHaircutBasisPoints",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "modeledLossAtTargetConfidence",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint32",
+            "name": "targetConfidenceBasisPoints",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "maximumCoverageBasisPoints",
+            "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maximumSinglePolicy",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "aggregateCommitmentLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minimumReserveRatioRay",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minimumCommitmentRatioRay",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "coveredEventMask",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minimumDeductible",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maximumDeductible",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "premiumPolicyHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "adjudicatorSetHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "payoutWaterfallHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "recoveryWaterfallHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "effectiveAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "expiresAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum Phase9ProtectionTypes.ReservePolicyState",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "contentHash",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9ProtectionTypes.ReservePolicyVersion",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "registerPolicyVersion",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "setActivePolicy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "claimId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "coverageId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "lossId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "claimant",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "requestedAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "eligibleUncoveredLoss",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "evidenceHash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "claimNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "submittedAt",
+            "type": "uint64"
+          },
+          {
+            "internalType": "enum Phase9ProtectionTypes.InsuranceClaimState",
+            "name": "state",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "claimDigest",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9ProtectionTypes.InsuranceClaim",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "submitClaim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

@@ -1,0 +1,363 @@
+{
+  "compiler": {
+    "openzeppelinVersion": "5.6.1",
+    "settings": {
+      "evmVersion": "prague",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "viaIR": false
+    },
+    "settingsHash": "sha256:0e0b5553d328d2bcca346b1c4c6662f419766d011fc75a7148f1ab9e2a398fb3",
+    "version": "0.8.36+commit.8a079791.Emscripten.clang"
+  },
+  "contract": "GuaranteeVault",
+  "freezeSurface": {
+    "functions": [
+      {
+        "bodyStatementKinds": [
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement"
+        ],
+        "implemented": true,
+        "kind": "constructor",
+        "modifiers": [],
+        "name": "",
+        "revertError": null,
+        "stateMutability": "nonpayable",
+        "visibility": "public"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "registerGuarantee",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recordGuaranteeReceipt",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "assetRegistry",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "settlementToken",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "authorizedRecoveryManager",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "guarantee",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "receiptProcessed",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      }
+    ],
+    "stateVariables": [
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_assetRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_settlementToken",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_authorizedRecoveryManager",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_guarantees",
+        "type": "mapping(bytes32 => struct Phase9RecoveryTypes.Guarantee)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_processedReceiptIds",
+        "type": "mapping(bytes32 => bool)",
+        "visibility": "private"
+      }
+    ]
+  },
+  "linearizedBases": [
+    "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+    "protocol/src/interfaces/phase9/IGuaranteeVault.sol:IGuaranteeVault"
+  ],
+  "schemaVersion": 1,
+  "source": "protocol/src/recovery/GuaranteeVault.sol",
+  "storageLayout": {
+    "storage": [
+      {
+        "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+        "label": "_assetRegistry",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+        "label": "_settlementToken",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+        "label": "_authorizedRecoveryManager",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+        "label": "_guarantees",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_mapping(t_bytes32,t_struct(Guarantee)59577_storage)"
+      },
+      {
+        "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+        "label": "_processedReceiptIds",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_mapping(t_bytes32,t_bool)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_enum(GuaranteeState)59514": {
+        "encoding": "inplace",
+        "label": "enum Phase9RecoveryTypes.GuaranteeState",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_bytes32,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_bytes32,t_struct(Guarantee)59577_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9RecoveryTypes.Guarantee)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Guarantee)59577_storage"
+      },
+      "t_struct(Guarantee)59577_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9RecoveryTypes.Guarantee",
+        "members": [
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "guaranteeId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "loanId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "lossId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "guarantor",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "assetId",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "maximumAmount",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "coveredEventMask",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "priority",
+            "offset": 8,
+            "slot": "6",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "subrogationPolicyHash",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "validFrom",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "expiresAt",
+            "offset": 8,
+            "slot": "8",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "committedAmount",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "paidAmount",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "state",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_enum(GuaranteeState)59514"
+          },
+          {
+            "contract": "protocol/src/recovery/GuaranteeVault.sol:GuaranteeVault",
+            "label": "guaranteeDigest",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "416"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint32": {
+        "encoding": "inplace",
+        "label": "uint32",
+        "numberOfBytes": "4"
+      },
+      "t_uint64": {
+        "encoding": "inplace",
+        "label": "uint64",
+        "numberOfBytes": "8"
+      }
+    }
+  }
+}

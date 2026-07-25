@@ -1,0 +1,466 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "contract ILoanRegistry",
+        "name": "loanRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "loanAccountImplementation_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "positionManagerImplementation_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "quotePolicyRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "refinancePolicyRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "amendmentPolicyRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "protectionPolicyRegistry_",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "recoveryPolicyRegistry_",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidPhase9LoanConfiguration",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Phase9ImplementationNotFrozen",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "Phase9LoanAlreadyExists",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "refinanceId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "loanAccount",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "positionManager",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "oldLoanId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "newLoanNonce",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "loanNonce",
+        "type": "uint64"
+      }
+    ],
+    "name": "Phase9LoanCreated",
+    "type": "event"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "oldLoanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "newLoanNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "refinanceId",
+            "type": "bytes32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "factory",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "loanRegistry",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "settlementToken",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "settlementAssetId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "address",
+                "name": "borrower",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "positionManager",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "collateralCustody",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "lienRegistry",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "payoffQuoteEngine",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "refinanceCoordinator",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "restructuringController",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "insuranceManager",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "recoveryManager",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "loanId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "agreementHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "policySetHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "amendmentPolicyHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "protectionPolicyHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "recoveryPolicyHash",
+                "type": "bytes32"
+              }
+            ],
+            "internalType": "struct Phase9Types.LoanConfiguration",
+            "name": "configuration",
+            "type": "tuple"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "creationId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.LoanCreationRequest",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "name": "createLoan",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "creationId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "creationRequest",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "oldLoanId",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint64",
+            "name": "newLoanNonce",
+            "type": "uint64"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "refinanceId",
+            "type": "bytes32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "factory",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "loanRegistry",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "settlementToken",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "settlementAssetId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "address",
+                "name": "borrower",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "positionManager",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "collateralCustody",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "lienRegistry",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "payoffQuoteEngine",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "refinanceCoordinator",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "restructuringController",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "insuranceManager",
+                "type": "address"
+              },
+              {
+                "internalType": "address",
+                "name": "recoveryManager",
+                "type": "address"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "loanId",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "agreementHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "policySetHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "amendmentPolicyHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "protectionPolicyHash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "bytes32",
+                "name": "recoveryPolicyHash",
+                "type": "bytes32"
+              }
+            ],
+            "internalType": "struct Phase9Types.LoanConfiguration",
+            "name": "configuration",
+            "type": "tuple"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "creationId",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct Phase9Types.LoanCreationRequest",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "loanAccount",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "nextLoanNonce",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "loanId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "positionManager",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

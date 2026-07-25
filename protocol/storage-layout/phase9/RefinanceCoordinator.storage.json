@@ -1,0 +1,825 @@
+{
+  "compiler": {
+    "openzeppelinVersion": "5.6.1",
+    "settings": {
+      "evmVersion": "prague",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "viaIR": false
+    },
+    "settingsHash": "sha256:0e0b5553d328d2bcca346b1c4c6662f419766d011fc75a7148f1ab9e2a398fb3",
+    "version": "0.8.36+commit.8a079791.Emscripten.clang"
+  },
+  "contract": "RefinanceCoordinator",
+  "freezeSurface": {
+    "functions": [
+      {
+        "bodyStatementKinds": [
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement"
+        ],
+        "implemented": true,
+        "kind": "constructor",
+        "modifiers": [],
+        "name": "",
+        "revertError": null,
+        "stateMutability": "nonpayable",
+        "visibility": "public"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "requestRefinance",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recordFundingCommitment",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "executeRefinance",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "cancelRefinance",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "refundCommitment",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "refinance",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "fundingCommitment",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "commitmentIds",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "escrowedUnits",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "terminalResult",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "operationProcessed",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      }
+    ],
+    "stateVariables": [
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_loanRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_phase9LoanFactory",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_payoffQuoteEngine",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_lienRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_assetRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_policyRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_emergencyController",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_treasuryFeeRecipient",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_settlementToken",
+        "type": "contract IERC20",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_nextRefinanceNonce",
+        "type": "mapping(bytes32 => uint64)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_refinances",
+        "type": "mapping(bytes32 => struct Phase9Types.RefinanceRecord)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_commitmentIds",
+        "type": "mapping(bytes32 => bytes32[])",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_commitments",
+        "type": "mapping(bytes32 => struct Phase9Types.FundingCommitment)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_escrowedUnits",
+        "type": "mapping(bytes32 => uint256)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_terminalResults",
+        "type": "mapping(bytes32 => struct Phase9Types.RefinanceTerminalResult)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_processedOperationIds",
+        "type": "mapping(bytes32 => bool)",
+        "visibility": "private"
+      }
+    ]
+  },
+  "linearizedBases": [
+    "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+    "protocol/src/interfaces/phase9/IRefinanceCoordinator.sol:IRefinanceCoordinator"
+  ],
+  "schemaVersion": 1,
+  "source": "protocol/src/resolution/RefinanceCoordinator.sol",
+  "storageLayout": {
+    "storage": [
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_loanRegistry",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_phase9LoanFactory",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_payoffQuoteEngine",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_lienRegistry",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_assetRegistry",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_policyRegistry",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_emergencyController",
+        "offset": 0,
+        "slot": "6",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_treasuryFeeRecipient",
+        "offset": 0,
+        "slot": "7",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_settlementToken",
+        "offset": 0,
+        "slot": "8",
+        "type": "t_contract(IERC20)51928"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_nextRefinanceNonce",
+        "offset": 0,
+        "slot": "9",
+        "type": "t_mapping(t_bytes32,t_uint64)"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_refinances",
+        "offset": 0,
+        "slot": "10",
+        "type": "t_mapping(t_bytes32,t_struct(RefinanceRecord)60275_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_commitmentIds",
+        "offset": 0,
+        "slot": "11",
+        "type": "t_mapping(t_bytes32,t_array(t_bytes32)dyn_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_commitments",
+        "offset": 0,
+        "slot": "12",
+        "type": "t_mapping(t_bytes32,t_struct(FundingCommitment)60297_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_escrowedUnits",
+        "offset": 0,
+        "slot": "13",
+        "type": "t_mapping(t_bytes32,t_uint256)"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_terminalResults",
+        "offset": 0,
+        "slot": "14",
+        "type": "t_mapping(t_bytes32,t_struct(RefinanceTerminalResult)60309_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+        "label": "_processedOperationIds",
+        "offset": 0,
+        "slot": "15",
+        "type": "t_mapping(t_bytes32,t_bool)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_bytes32)dyn_storage": {
+        "base": "t_bytes32",
+        "encoding": "dynamic_array",
+        "label": "bytes32[]",
+        "numberOfBytes": "32"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_contract(IERC20)51928": {
+        "encoding": "inplace",
+        "label": "contract IERC20",
+        "numberOfBytes": "20"
+      },
+      "t_enum(FundingCommitmentState)60001": {
+        "encoding": "inplace",
+        "label": "enum Phase9Types.FundingCommitmentState",
+        "numberOfBytes": "1"
+      },
+      "t_enum(RefinanceState)59993": {
+        "encoding": "inplace",
+        "label": "enum Phase9Types.RefinanceState",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_bytes32,t_array(t_bytes32)dyn_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => bytes32[])",
+        "numberOfBytes": "32",
+        "value": "t_array(t_bytes32)dyn_storage"
+      },
+      "t_mapping(t_bytes32,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_bytes32,t_struct(FundingCommitment)60297_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.FundingCommitment)",
+        "numberOfBytes": "32",
+        "value": "t_struct(FundingCommitment)60297_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(RefinanceRecord)60275_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.RefinanceRecord)",
+        "numberOfBytes": "32",
+        "value": "t_struct(RefinanceRecord)60275_storage"
+      },
+      "t_mapping(t_bytes32,t_struct(RefinanceTerminalResult)60309_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.RefinanceTerminalResult)",
+        "numberOfBytes": "32",
+        "value": "t_struct(RefinanceTerminalResult)60309_storage"
+      },
+      "t_mapping(t_bytes32,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_mapping(t_bytes32,t_uint64)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => uint64)",
+        "numberOfBytes": "32",
+        "value": "t_uint64"
+      },
+      "t_struct(FundingCommitment)60297_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.FundingCommitment",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "commitmentId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "refinanceId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "positionId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "trancheId",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "funder",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "amount",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "commitmentNonce",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "commitmentDigest",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "state",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_enum(FundingCommitmentState)60001"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "fundingResultHash",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "320"
+      },
+      "t_struct(RefinanceRecord)60275_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.RefinanceRecord",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "refinanceId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "oldLoanId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "newLoanId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "borrower",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "oldLender",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "newPositionManager",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "quoteId",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "componentBeneficiaryHash",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "oldNetPayoff",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "newPrincipal",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "settlementAssetId",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "collateralSetHash",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "lienVersion",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "proposedTermsHash",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "newPolicySetHash",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "fundingAmount",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "refinanceFee",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "borrowerProceeds",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "expiresAt",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "refinanceNonce",
+            "offset": 8,
+            "slot": "18",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "refinancePolicyHash",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "newLoanNonce",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "state",
+            "offset": 8,
+            "slot": "20",
+            "type": "t_enum(RefinanceState)59993"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "stateVersion",
+            "offset": 9,
+            "slot": "20",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "acceptedFunding",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_uint256"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "executionAttempts",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_uint32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "terminalEvidenceHash",
+            "offset": 0,
+            "slot": "23",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "768"
+      },
+      "t_struct(RefinanceTerminalResult)60309_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.RefinanceTerminalResult",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "refinanceId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "executionEventId",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "resultHash",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "recordedAt",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/RefinanceCoordinator.sol:RefinanceCoordinator",
+            "label": "state",
+            "offset": 8,
+            "slot": "3",
+            "type": "t_enum(RefinanceState)59993"
+          }
+        ],
+        "numberOfBytes": "128"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint32": {
+        "encoding": "inplace",
+        "label": "uint32",
+        "numberOfBytes": "4"
+      },
+      "t_uint64": {
+        "encoding": "inplace",
+        "label": "uint64",
+        "numberOfBytes": "8"
+      }
+    }
+  }
+}

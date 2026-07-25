@@ -38,6 +38,22 @@
       "sha256": "a9c5ddee8de63a857a4770d5f7f3e61a095b60047fe7aabadb2a96ea9863f76d"
     },
     {
+      "path": "packages/generated/go/unified/v1/protection.pb.go",
+      "sha256": "21861235a971ba1bbda324d2bdf0bbf0fe83330747dfd21724cff986538cdd37"
+    },
+    {
+      "path": "packages/generated/go/unified/v1/recovery.pb.go",
+      "sha256": "ff5a4a0e743948c28b368d85ea0b9cb25f02e4c7e87a0791993f0c62003fd453"
+    },
+    {
+      "path": "packages/generated/go/unified/v1/refinance.pb.go",
+      "sha256": "242c70600c8bf45a9470e4cc16887cb9dad97364deb24cc2e3702da169fa60c6"
+    },
+    {
+      "path": "packages/generated/go/unified/v1/restructuring.pb.go",
+      "sha256": "13d9be1414fe72b7e0f61ff5256128586d345121002ec3c7da4f95c9141a7bde"
+    },
+    {
       "path": "packages/generated/go/unified/v1/risk.pb.go",
       "sha256": "88f21facfcb77f242b58fa6f137ec20c1d7495698c1a07517c4f1041693f7562"
     },
@@ -84,6 +100,22 @@
     {
       "path": "packages/generated/typescript/unified/v1/payment_pb.ts",
       "sha256": "f36043699205f6647378f990bbaad6884de26c004dcd6ca03dc5a2ca3f55279f"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/protection_pb.ts",
+      "sha256": "fa6335c33c6f07389a7f07bcf9da7d5a716afde19631e03e69fbfe98400aed98"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/recovery_pb.ts",
+      "sha256": "2191a3eec4966c7e4604e66180230dd2ea87e8caea1f2bc33a230f182da95bf2"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/refinance_pb.ts",
+      "sha256": "31c6b78faa0e9cb1c7043de25557666bf95bb3a77b5740bd1e0102564e98df23"
+    },
+    {
+      "path": "packages/generated/typescript/unified/v1/restructuring_pb.ts",
+      "sha256": "4ff3e8797beea22ce0a2fd129fc0303c5bbd6b61cc1d2465c4db559c8af6b4c9"
     },
     {
       "path": "packages/generated/typescript/unified/v1/risk_pb.ts",
@@ -142,6 +174,22 @@
       "sha256": "cf4f724e4eef01b74d074eaa1d5067d5509fd6465dbb6e4066a4dbbc7bc9c2ec"
     },
     {
+      "path": "packages/generated/python/unified/v1/protection_pb2.py",
+      "sha256": "0c20bc774840d89acf2cacbf6b7c45d5c10a2c0a6a5f0adb2471819624f24d4f"
+    },
+    {
+      "path": "packages/generated/python/unified/v1/recovery_pb2.py",
+      "sha256": "6506e59f1c332cc874b33bd0d2c67c269b1775fb41a21edb350b77c2abcd8c43"
+    },
+    {
+      "path": "packages/generated/python/unified/v1/refinance_pb2.py",
+      "sha256": "1108fcb23fddd06cda43f1727e5e8743f3229474b691378fc0e30f3711162aff"
+    },
+    {
+      "path": "packages/generated/python/unified/v1/restructuring_pb2.py",
+      "sha256": "2af89f2c9169328680bca527e5861a3652722a78e04ef7f28a4770bc69f017b5"
+    },
+    {
       "path": "packages/generated/python/unified/v1/risk_pb2.py",
       "sha256": "f8fded0eda918d40bcabcc91cda7c992b6ff53a97331a5c6fa3e0d87d90333a7"
     },
@@ -155,7 +203,7 @@
     },
     {
       "path": "protocol/src/generated/FoundationTypes.sol",
-      "sha256": "ab09e52e48e9c4ada54cbf66733a540233854330eaf53f439e6acde5c0d92c54"
+      "sha256": "ae1d17f0e390eacb751730cc51d7dc82c892e680562a576977a659142b9b1308"
     }
   ]
 }

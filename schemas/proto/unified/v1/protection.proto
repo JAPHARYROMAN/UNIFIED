@@ -1,0 +1,186 @@
+syntax = "proto3";
+
+package unified.v1;
+
+import "google/protobuf/timestamp.proto";
+import "unified/v1/types.proto";
+
+option go_package = "github.com/unified-finance/unified/packages/generated/go/unified/v1;unifiedv1";
+
+enum ReservePolicyState {
+  RESERVE_POLICY_STATE_UNSPECIFIED = 0;
+  RESERVE_POLICY_STATE_SCHEDULED = 1;
+  RESERVE_POLICY_STATE_ACTIVE = 2;
+  RESERVE_POLICY_STATE_RESTRICTED = 3;
+  RESERVE_POLICY_STATE_EXPIRED = 4;
+  RESERVE_POLICY_STATE_DEPRECATED = 5;
+}
+
+enum CoverageState {
+  COVERAGE_STATE_UNSPECIFIED = 0;
+  COVERAGE_STATE_DRAFT = 1;
+  COVERAGE_STATE_PREMIUM_PENDING = 2;
+  COVERAGE_STATE_ACTIVE = 3;
+  COVERAGE_STATE_CLAIM_PENDING = 4;
+  COVERAGE_STATE_EXHAUSTED = 5;
+  COVERAGE_STATE_EXPIRED = 6;
+  COVERAGE_STATE_CANCELLED = 7;
+}
+
+enum PremiumState {
+  PREMIUM_STATE_UNSPECIFIED = 0;
+  PREMIUM_STATE_DUE = 1;
+  PREMIUM_STATE_FUNDED = 2;
+  PREMIUM_STATE_APPLIED = 3;
+  PREMIUM_STATE_REFUNDED = 4;
+}
+
+enum InsuranceClaimState {
+  INSURANCE_CLAIM_STATE_UNSPECIFIED = 0;
+  INSURANCE_CLAIM_STATE_SUBMITTED = 1;
+  INSURANCE_CLAIM_STATE_UNDER_REVIEW = 2;
+  INSURANCE_CLAIM_STATE_APPROVED = 3;
+  INSURANCE_CLAIM_STATE_PARTIALLY_APPROVED = 4;
+  INSURANCE_CLAIM_STATE_REJECTED = 5;
+  INSURANCE_CLAIM_STATE_EXPIRED = 6;
+  INSURANCE_CLAIM_STATE_DISPUTED = 7;
+  INSURANCE_CLAIM_STATE_PAYMENT_PENDING = 8;
+  INSURANCE_CLAIM_STATE_PAID = 9;
+}
+
+message ReservePolicyVersion {
+  Identifier policy_version_id = 1;
+  Identifier pool_id = 2;
+  AssetId settlement_asset_id = 3;
+  string token_address = 4;
+  uint32 stress_haircut_basis_points = 5;
+  Money modeled_loss_at_target_confidence = 6;
+  uint32 target_confidence_basis_points = 7;
+  uint32 maximum_coverage_basis_points = 8;
+  Money maximum_single_policy = 9;
+  Money aggregate_commitment_limit = 10;
+  string minimum_reserve_ratio_ray = 11;
+  string minimum_commitment_ratio_ray = 12;
+  uint64 covered_event_mask = 13;
+  Money minimum_deductible = 14;
+  Money maximum_deductible = 15;
+  bytes premium_policy_hash = 16;
+  bytes adjudicator_set_hash = 17;
+  bytes payout_waterfall_hash = 18;
+  bytes recovery_waterfall_hash = 19;
+  google.protobuf.Timestamp effective_at = 20;
+  google.protobuf.Timestamp expires_at = 21;
+  ReservePolicyState state = 22;
+  bytes content_hash = 23;
+}
+
+message ReserveBalanceSnapshot {
+  Identifier snapshot_id = 1;
+  Identifier pool_id = 2;
+  AssetId asset_id = 3;
+  Money gross_custody = 4;
+  Money eligible_risk_adjusted_assets = 5;
+  Money unclaimed_commitments = 6;
+  Money approved_unpaid_claims = 7;
+  Money available_payout_liquidity = 8;
+  Money available_underwriting_capacity = 9;
+  Identifier policy_version_id = 10;
+  uint64 block_number = 11;
+  bytes block_hash = 12;
+  bytes custody_evidence_hash = 13;
+  google.protobuf.Timestamp observed_at = 14;
+}
+
+message ReserveSolvencySnapshot {
+  Identifier solvency_snapshot_id = 1;
+  ReserveBalanceSnapshot balance = 2;
+  Money modeled_loss_at_target_confidence = 3;
+  string reserve_coverage_ratio_ray = 4;
+  string commitment_coverage_ratio_ray = 5;
+  string status = 6;
+  bytes model_evidence_hash = 7;
+}
+
+message LoanCoverage {
+  Identifier coverage_id = 1;
+  Identifier pool_id = 2;
+  LoanId loan_id = 3;
+  PartyId beneficiary_id = 4;
+  AssetId settlement_asset_id = 5;
+  uint64 covered_event_mask = 6;
+  Money deductible = 7;
+  uint32 coverage_basis_points = 8;
+  Money coverage_limit = 9;
+  Money remaining_limit = 10;
+  Money premium = 11;
+  uint32 loss_priority = 12;
+  uint32 subrogation_priority = 13;
+  google.protobuf.Timestamp valid_from = 14;
+  google.protobuf.Timestamp expires_at = 15;
+  uint64 coverage_nonce = 16;
+  Identifier policy_version_id = 17;
+  bytes coverage_digest = 18;
+  CoverageState state = 19;
+  bytes reserve_policy_hash = 20;
+}
+
+message PremiumEvidence {
+  Identifier premium_event_id = 1;
+  Identifier coverage_id = 2;
+  Identifier pool_id = 3;
+  PartyId payer_id = 4;
+  Money amount = 5;
+  bytes transaction_hash = 6;
+  uint32 log_index = 7;
+  bytes balance_delta_hash = 8;
+  google.protobuf.Timestamp funded_at = 9;
+  PremiumState state = 10;
+}
+
+message InsuranceClaim {
+  Identifier claim_id = 1;
+  Identifier coverage_id = 2;
+  Identifier loss_id = 3;
+  PartyId claimant_id = 4;
+  Money requested_amount = 5;
+  Money eligible_uncovered_loss = 6;
+  bytes evidence_hash = 7;
+  uint64 claim_nonce = 8;
+  google.protobuf.Timestamp submitted_at = 9;
+  InsuranceClaimState state = 10;
+  bytes claim_digest = 11;
+}
+
+message ClaimDecision {
+  Identifier decision_id = 1;
+  Identifier claim_id = 2;
+  Money adjudicated_amount = 3;
+  Money approval_cap = 4;
+  Money beneficiary_covered_unresolved_entitlement = 5;
+  Money approved_amount = 6;
+  Money authorized_costs = 7;
+  bytes beneficiary_entitlement_hash = 8;
+  bytes evidence_hash = 9;
+  uint64 adjudication_nonce = 10;
+  google.protobuf.Timestamp valid_until = 11;
+  bytes adjudicator_set_hash = 12;
+  repeated bytes signatures = 13;
+  bytes decision_digest = 14;
+  uint64 loss_state_version = 15;
+}
+
+message ClaimPayment {
+  Identifier claim_payment_id = 1;
+  Identifier claim_id = 2;
+  Identifier decision_id = 3;
+  Identifier pool_id = 4;
+  PartyId beneficiary_id = 5;
+  Money amount = 6;
+  Money unpaid_approved_amount = 7;
+  bytes transaction_hash = 8;
+  uint32 log_index = 9;
+  bytes balance_delta_hash = 10;
+  bytes subrogation_entitlement_hash = 11;
+  google.protobuf.Timestamp paid_at = 12;
+  uint64 payment_nonce = 13;
+}

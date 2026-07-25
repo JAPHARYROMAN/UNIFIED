@@ -1,0 +1,860 @@
+{
+  "compiler": {
+    "openzeppelinVersion": "5.6.1",
+    "settings": {
+      "evmVersion": "prague",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "viaIR": false
+    },
+    "settingsHash": "sha256:0e0b5553d328d2bcca346b1c4c6662f419766d011fc75a7148f1ab9e2a398fb3",
+    "version": "0.8.36+commit.8a079791.Emscripten.clang"
+  },
+  "contract": "Phase9LoanAccount",
+  "freezeSurface": {
+    "functions": [
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "initialize",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "configuration",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "debtState",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "agreementVersionHash",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "operationProcessed",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recordRefinancePayoff",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "activateReplacementLoan",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "applyRestructuring",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recordCoveredLoss",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recordRealizedLoss",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recordWriteOff",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "recordPostWriteOffRecovery",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "closeLoan",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      }
+    ],
+    "stateVariables": [
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_factory",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_loanRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_settlementToken",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_settlementAssetId",
+        "type": "bytes32",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_borrower",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_positionManager",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_collateralCustody",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_lienRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_payoffQuoteEngine",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_refinanceCoordinator",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_restructuringController",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_insuranceManager",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_recoveryManager",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_loanId",
+        "type": "bytes32",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_agreementHash",
+        "type": "bytes32",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_policySetHash",
+        "type": "bytes32",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_amendmentPolicyHash",
+        "type": "bytes32",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_protectionPolicyHash",
+        "type": "bytes32",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_recoveryPolicyHash",
+        "type": "bytes32",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_protocolVersion",
+        "type": "uint32",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_lifecycle",
+        "type": "enum Phase9Types.LoanLifecycle",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_servicingState",
+        "type": "enum Phase9Types.ServicingState",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_termsVersion",
+        "type": "uint64",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_debtStateVersion",
+        "type": "uint64",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_stateNonce",
+        "type": "uint64",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_commencementTime",
+        "type": "uint64",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_maturityTime",
+        "type": "uint64",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_scheduleHash",
+        "type": "bytes32",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_outstandingPrincipal",
+        "type": "uint256",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_accruedInterest",
+        "type": "uint256",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_capitalizedInterest",
+        "type": "uint256",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_accruedFees",
+        "type": "uint256",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_accruedPenalties",
+        "type": "uint256",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_recoverableCosts",
+        "type": "uint256",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_unappliedCredit",
+        "type": "uint256",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_coveredLossExposure",
+        "type": "uint256",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_realizedLoss",
+        "type": "uint256",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_writtenOffAmount",
+        "type": "uint256",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_recoveredAfterWriteoff",
+        "type": "uint256",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_activeRefinanceId",
+        "type": "bytes32",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_activeRestructureId",
+        "type": "bytes32",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_agreementVersionHashes",
+        "type": "mapping(uint64 => bytes32)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_processedOperationIds",
+        "type": "mapping(bytes32 => bool)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_initialized",
+        "type": "bool",
+        "visibility": "private"
+      }
+    ]
+  },
+  "linearizedBases": [
+    "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+    "protocol/src/interfaces/phase9/IPhase9LoanAccount.sol:IPhase9LoanAccount"
+  ],
+  "schemaVersion": 1,
+  "source": "protocol/src/resolution/Phase9LoanAccount.sol",
+  "storageLayout": {
+    "storage": [
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_factory",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_loanRegistry",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_settlementToken",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_settlementAssetId",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_bytes32"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_borrower",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_positionManager",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_collateralCustody",
+        "offset": 0,
+        "slot": "6",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_lienRegistry",
+        "offset": 0,
+        "slot": "7",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_payoffQuoteEngine",
+        "offset": 0,
+        "slot": "8",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_refinanceCoordinator",
+        "offset": 0,
+        "slot": "9",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_restructuringController",
+        "offset": 0,
+        "slot": "10",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_insuranceManager",
+        "offset": 0,
+        "slot": "11",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_recoveryManager",
+        "offset": 0,
+        "slot": "12",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_loanId",
+        "offset": 0,
+        "slot": "13",
+        "type": "t_bytes32"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_agreementHash",
+        "offset": 0,
+        "slot": "14",
+        "type": "t_bytes32"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_policySetHash",
+        "offset": 0,
+        "slot": "15",
+        "type": "t_bytes32"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_amendmentPolicyHash",
+        "offset": 0,
+        "slot": "16",
+        "type": "t_bytes32"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_protectionPolicyHash",
+        "offset": 0,
+        "slot": "17",
+        "type": "t_bytes32"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_recoveryPolicyHash",
+        "offset": 0,
+        "slot": "18",
+        "type": "t_bytes32"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_protocolVersion",
+        "offset": 0,
+        "slot": "19",
+        "type": "t_uint32"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_lifecycle",
+        "offset": 4,
+        "slot": "19",
+        "type": "t_enum(LoanLifecycle)59962"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_servicingState",
+        "offset": 5,
+        "slot": "19",
+        "type": "t_enum(ServicingState)59968"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_termsVersion",
+        "offset": 6,
+        "slot": "19",
+        "type": "t_uint64"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_debtStateVersion",
+        "offset": 14,
+        "slot": "19",
+        "type": "t_uint64"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_stateNonce",
+        "offset": 22,
+        "slot": "19",
+        "type": "t_uint64"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_commencementTime",
+        "offset": 0,
+        "slot": "20",
+        "type": "t_uint64"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_maturityTime",
+        "offset": 8,
+        "slot": "20",
+        "type": "t_uint64"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_scheduleHash",
+        "offset": 0,
+        "slot": "21",
+        "type": "t_bytes32"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_outstandingPrincipal",
+        "offset": 0,
+        "slot": "22",
+        "type": "t_uint256"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_accruedInterest",
+        "offset": 0,
+        "slot": "23",
+        "type": "t_uint256"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_capitalizedInterest",
+        "offset": 0,
+        "slot": "24",
+        "type": "t_uint256"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_accruedFees",
+        "offset": 0,
+        "slot": "25",
+        "type": "t_uint256"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_accruedPenalties",
+        "offset": 0,
+        "slot": "26",
+        "type": "t_uint256"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_recoverableCosts",
+        "offset": 0,
+        "slot": "27",
+        "type": "t_uint256"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_unappliedCredit",
+        "offset": 0,
+        "slot": "28",
+        "type": "t_uint256"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_coveredLossExposure",
+        "offset": 0,
+        "slot": "29",
+        "type": "t_uint256"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_realizedLoss",
+        "offset": 0,
+        "slot": "30",
+        "type": "t_uint256"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_writtenOffAmount",
+        "offset": 0,
+        "slot": "31",
+        "type": "t_uint256"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_recoveredAfterWriteoff",
+        "offset": 0,
+        "slot": "32",
+        "type": "t_uint256"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_activeRefinanceId",
+        "offset": 0,
+        "slot": "33",
+        "type": "t_bytes32"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_activeRestructureId",
+        "offset": 0,
+        "slot": "34",
+        "type": "t_bytes32"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_agreementVersionHashes",
+        "offset": 0,
+        "slot": "35",
+        "type": "t_mapping(t_uint64,t_bytes32)"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_processedOperationIds",
+        "offset": 0,
+        "slot": "36",
+        "type": "t_mapping(t_bytes32,t_bool)"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanAccount.sol:Phase9LoanAccount",
+        "label": "_initialized",
+        "offset": 0,
+        "slot": "37",
+        "type": "t_bool"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_enum(LoanLifecycle)59962": {
+        "encoding": "inplace",
+        "label": "enum Phase9Types.LoanLifecycle",
+        "numberOfBytes": "1"
+      },
+      "t_enum(ServicingState)59968": {
+        "encoding": "inplace",
+        "label": "enum Phase9Types.ServicingState",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_bytes32,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_uint64,t_bytes32)": {
+        "encoding": "mapping",
+        "key": "t_uint64",
+        "label": "mapping(uint64 => bytes32)",
+        "numberOfBytes": "32",
+        "value": "t_bytes32"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint32": {
+        "encoding": "inplace",
+        "label": "uint32",
+        "numberOfBytes": "4"
+      },
+      "t_uint64": {
+        "encoding": "inplace",
+        "label": "uint64",
+        "numberOfBytes": "8"
+      }
+    }
+  }
+}

@@ -1,0 +1,523 @@
+{
+  "compiler": {
+    "openzeppelinVersion": "5.6.1",
+    "settings": {
+      "evmVersion": "prague",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "viaIR": false
+    },
+    "settingsHash": "sha256:0e0b5553d328d2bcca346b1c4c6662f419766d011fc75a7148f1ab9e2a398fb3",
+    "version": "0.8.36+commit.8a079791.Emscripten.clang"
+  },
+  "contract": "Phase9LoanFactory",
+  "freezeSurface": {
+    "functions": [
+      {
+        "bodyStatementKinds": [
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement",
+          "ExpressionStatement"
+        ],
+        "implemented": true,
+        "kind": "constructor",
+        "modifiers": [],
+        "name": "",
+        "revertError": null,
+        "stateMutability": "nonpayable",
+        "visibility": "public"
+      },
+      {
+        "bodyStatementKinds": [
+          "RevertStatement"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "createLoan",
+        "revertError": "Phase9ImplementationNotFrozen",
+        "stateMutability": "nonpayable",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "loanAccount",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "positionManager",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "creationRequest",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      },
+      {
+        "bodyStatementKinds": [
+          "Return"
+        ],
+        "implemented": true,
+        "kind": "function",
+        "modifiers": [],
+        "name": "nextLoanNonce",
+        "revertError": null,
+        "stateMutability": "view",
+        "visibility": "external"
+      }
+    ],
+    "stateVariables": [
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_loanRegistry",
+        "type": "contract ILoanRegistry",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_loanAccountImplementation",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_positionManagerImplementation",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_quotePolicyRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_refinancePolicyRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_amendmentPolicyRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_protectionPolicyRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_recoveryPolicyRegistry",
+        "type": "address",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_nextLoanNonce",
+        "type": "uint64",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_loanAccounts",
+        "type": "mapping(bytes32 => address)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_positionManagers",
+        "type": "mapping(bytes32 => address)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_creationRequests",
+        "type": "mapping(bytes32 => struct Phase9Types.LoanCreationRequest)",
+        "visibility": "private"
+      },
+      {
+        "constant": false,
+        "immutable": false,
+        "name": "_processedCreationIds",
+        "type": "mapping(bytes32 => bool)",
+        "visibility": "private"
+      }
+    ]
+  },
+  "linearizedBases": [
+    "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+    "protocol/src/interfaces/phase9/IPhase9LoanFactory.sol:IPhase9LoanFactory"
+  ],
+  "schemaVersion": 1,
+  "source": "protocol/src/resolution/Phase9LoanFactory.sol",
+  "storageLayout": {
+    "storage": [
+      {
+        "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+        "label": "_loanRegistry",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_contract(ILoanRegistry)51991"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+        "label": "_loanAccountImplementation",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+        "label": "_positionManagerImplementation",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+        "label": "_quotePolicyRegistry",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+        "label": "_refinancePolicyRegistry",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+        "label": "_amendmentPolicyRegistry",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+        "label": "_protectionPolicyRegistry",
+        "offset": 0,
+        "slot": "6",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+        "label": "_recoveryPolicyRegistry",
+        "offset": 0,
+        "slot": "7",
+        "type": "t_address"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+        "label": "_nextLoanNonce",
+        "offset": 20,
+        "slot": "7",
+        "type": "t_uint64"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+        "label": "_loanAccounts",
+        "offset": 0,
+        "slot": "8",
+        "type": "t_mapping(t_bytes32,t_address)"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+        "label": "_positionManagers",
+        "offset": 0,
+        "slot": "9",
+        "type": "t_mapping(t_bytes32,t_address)"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+        "label": "_creationRequests",
+        "offset": 0,
+        "slot": "10",
+        "type": "t_mapping(t_bytes32,t_struct(LoanCreationRequest)60081_storage)"
+      },
+      {
+        "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+        "label": "_processedCreationIds",
+        "offset": 0,
+        "slot": "11",
+        "type": "t_mapping(t_bytes32,t_bool)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_contract(ILoanRegistry)51991": {
+        "encoding": "inplace",
+        "label": "contract ILoanRegistry",
+        "numberOfBytes": "20"
+      },
+      "t_mapping(t_bytes32,t_address)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => address)",
+        "numberOfBytes": "32",
+        "value": "t_address"
+      },
+      "t_mapping(t_bytes32,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_bytes32,t_struct(LoanCreationRequest)60081_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct Phase9Types.LoanCreationRequest)",
+        "numberOfBytes": "32",
+        "value": "t_struct(LoanCreationRequest)60081_storage"
+      },
+      "t_struct(LoanConfiguration)60069_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.LoanConfiguration",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "factory",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "loanRegistry",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "settlementToken",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "settlementAssetId",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "borrower",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "positionManager",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "collateralCustody",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "lienRegistry",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "payoffQuoteEngine",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "refinanceCoordinator",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "restructuringController",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "insuranceManager",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "recoveryManager",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_address"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "loanId",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "agreementHash",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "policySetHash",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "amendmentPolicyHash",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "protectionPolicyHash",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "recoveryPolicyHash",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "608"
+      },
+      "t_struct(LoanCreationRequest)60081_storage": {
+        "encoding": "inplace",
+        "label": "struct Phase9Types.LoanCreationRequest",
+        "members": [
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "oldLoanId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "newLoanNonce",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint64"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "refinanceId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "configuration",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_struct(LoanConfiguration)60069_storage"
+          },
+          {
+            "contract": "protocol/src/resolution/Phase9LoanFactory.sol:Phase9LoanFactory",
+            "label": "creationId",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "736"
+      },
+      "t_uint64": {
+        "encoding": "inplace",
+        "label": "uint64",
+        "numberOfBytes": "8"
+      }
+    }
+  }
+}

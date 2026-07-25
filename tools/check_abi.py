@@ -253,6 +253,35 @@ for _phase8_contract in (
         ROOT / "protocol" / "abi" / "phase8" / f"{_phase8_contract}.abi.json",
     )
 
+_PHASE9_CONTRACT_SOURCES = {
+    "Phase9LoanFactory": "resolution",
+    "Phase9LoanAccount": "resolution",
+    "PayoffQuoteEngine": "resolution",
+    "CollateralCustodyV2": "resolution",
+    "LienRegistry": "resolution",
+    "RefinanceCoordinator": "resolution",
+    "PositionManagerV2": "resolution",
+    "RestructuringController": "resolution",
+    "InsuranceReserveVault": "protection",
+    "ReservePolicy": "protection",
+    "InsuranceManager": "protection",
+    "GuaranteeVault": "recovery",
+    "RecoveryManager": "recovery",
+    "Phase9LocalSyntheticToken": "token",
+}
+
+for _phase9_contract, _phase9_source in _PHASE9_CONTRACT_SOURCES.items():
+    ABI_PAIRS[_phase9_contract] = (
+        ROOT
+        / ".cache"
+        / "solc"
+        / (
+            f"protocol_src_{_phase9_source}_{_phase9_contract}_sol_"
+            f"{_phase9_contract}.abi"
+        ),
+        ROOT / "protocol" / "abi" / "phase9" / f"{_phase9_contract}.abi.json",
+    )
+
 
 def main() -> None:
     failures: list[str] = []
