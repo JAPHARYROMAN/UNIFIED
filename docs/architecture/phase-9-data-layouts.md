@@ -18,6 +18,8 @@ an exact local synthetic token receipt.
 
 Authority does not move between storage systems:
 
+- `Phase9LocalSyntheticToken` is the sole Phase 9 local settlement-token fixture; its
+  fixed supply and ERC-20 balances are authoritative for synthetic value movement;
 - `Phase9LoanAccount` is authoritative for debt components, debt state version, terms
   version, servicing state, and loan closure;
 - `PayoffQuoteEngine` is authoritative for immutable quote content and disposition
@@ -44,6 +46,39 @@ Authority does not move between storage systems:
 All monetary fields use canonical base-10 integer units in one explicit registered asset.
 Every durable fact has a schema version, source authority, immutable content digest,
 correlation and causation identifiers, source-event identity, and UTC timestamp.
+
+## Phase 9 local settlement-token authority
+
+The exact accepted token is `Phase9LocalSyntheticToken` deployed on chain ID `31337`.
+It has name `Unified Phase 9 Local Synthetic Unit`, symbol `P9UNIT`, six decimals, and
+fixed supply `1_000_000_000_000_000` base units, minted once by
+`constructor(address fixtureAllocator)`. The constructor rejects another chain or the
+zero allocator. There is no later mint, burn, fee, rebase, callback, permit, pause,
+deny-list, role, upgrade, rescue, bridge, faucet, or administrator transfer path.
+
+The token name and symbol are neutral fixture labels. They create no currency
+denomination, fiat or USD peg, redemption, backing, exchange rate, market value,
+payment claim, legal tender status, or provider obligation.
+
+Its exact external selectors, events, and eight custom errors are frozen in the Phase 9
+architecture: the two Phase 9 constructor errors plus the six OpenZeppelin `IERC20Errors`
+errors. The implementation is OpenZeppelin Contracts `5.6.1` ERC-20 with only the
+six-decimal override and fixed constructor mint. Its inherited storage is exactly:
+
+```solidity
+mapping(address account => uint256) private _balances;                         // slot 0
+mapping(address account => mapping(address spender => uint256)) private _allowances; // slot 1
+uint256 private _totalSupply;                                                   // slot 2
+string private _name;                                                          // slot 3
+string private _symbol;                                                        // slot 4
+```
+
+The derived contract declares no non-constant storage. Compiler storage-layout output
+is still authoritative for encoding metadata and MUST match these five entries. Every
+Phase 9 component constructor and active policy binds the exact token address and asset
+ID. Phase 8 registries, routes, hubs, wrapped-token components, workers, and manifests
+must contain neither; Phase 9 never accepts `Phase8LocalSyntheticToken`, `WrappedUFT`,
+or `UnifiedToken` as a substitute.
 
 ## Frozen local numerical fixture
 
@@ -444,9 +479,51 @@ and decision.
 Compiler and optimizer settings remain those pinned by the repository. All Phase 9
 contracts are non-upgradeable. Per-instance configuration initialized once is immutable
 for the lifetime of the instance even where clone-compatible storage is used. The field
-orders below are canonical. Implementation must capture compiler storage-layout
-artifacts and fail ABI/storage checks if an existing field is reordered, removed, or
-retyped.
+inventories below are mandatory logical state, but they are not permission to infer an
+untyped compiler layout. Except for the exact token and payoff engine declarations
+frozen below, the mandatory pre-code freeze in the Phase 9 architecture must replace
+each inventory with a compileable typed declaration before any state-changing business
+logic is accepted. The compiler artifact then becomes the exact slot/offset/type
+authority. Implementation must fail ABI/storage checks if a frozen field is reordered,
+removed, retyped, or encoded differently.
+
+Every implementation MUST capture compiler storage-layout artifacts and fail
+ABI/storage checks on incompatible drift; a prose inventory or nonempty snapshot
+directory is not evidence.
+
+### Exact `PayoffQuoteEngine` storage declaration
+
+The first-slice payoff engine uses the exact `IPayoffQuoteEngineV2` types frozen in the
+architecture and the following declaration order. All members are private; no generated
+public getter may add an unreviewed selector.
+
+```solidity
+struct QuoteDispositionV2 {
+    IPayoffQuoteEngineV2.QuoteState state;
+    bytes32 sourceEventId;
+    bytes32 refinanceId;
+    uint64 debtStateVersion;
+    uint64 recordedAt;
+}
+
+ILoanRegistry private _loanRegistry;
+address private _quotePolicyRegistry;
+uint64 private _maximumQuoteValidity;
+address private _approvedPhase9Factory;
+address private _refinanceCoordinator;
+mapping(bytes32 loanId => uint64 nonce) private _nextQuoteNonce;
+mapping(bytes32 quoteId => IPayoffQuoteEngineV2.PayoffQuoteV2 quote_) private _quotes;
+mapping(bytes32 quoteId => IPayoffQuoteEngineV2.PayoffComponentV2[] components)
+    private _quoteComponents;
+mapping(bytes32 quoteId => QuoteDispositionV2 disposition) private _quoteDispositions;
+mapping(bytes32 loanId => bytes32 quoteId) private _latestQuoteId;
+```
+
+Configuration is constructor-set and never mutated. Quote tuples and component arrays
+are inserted once; the tuple's stored state is `ISSUED`. Only the disposition mapping
+changes once from `NONE` to one terminal state. The external `quote(bytes32)` getter
+returns memory copies, overlays the effective disposition state on the returned tuple,
+and never exposes Solidity-generated mapping getters.
 
 ### `Phase9LoanAccount`
 
@@ -764,6 +841,38 @@ processed source and operation IDs
 
 Every credited source shares one `loss_id`. A source reference can affect one loss once.
 Write-off cannot exceed residual exposure and does not erase later recovery rights.
+
+### Mandatory typed-layout freeze for remaining components
+
+Before any Phase 9 state-changing logic other than the exact local token constructor is
+accepted, a dedicated interface/storage freeze PR MUST convert every remaining logical
+inventory above into compileable Solidity declarations. Acceptance requires all of the
+following in the same PR:
+
+- exact interfaces, errors, events, tuple types, selector mutability, and event indexing
+  under `protocol/src/interfaces/phase9/`;
+- shared enum/struct declarations under `protocol/src/resolution/`,
+  `protocol/src/protection/`, and `protocol/src/recovery/`, with no shadow tuple types;
+- explicit mapping key/value, array element, enum, integer-width, timestamp, checkpoint,
+  boolean, initializer, and immutable/configuration types for every stored member;
+- compiler-produced artifacts at
+  `protocol/storage-layout/phase9/<Contract>.storage.json` for every deployable Phase 9
+  contract, including the token and every clone implementation;
+- a deterministic checker that compares compiler/settings hash, inheritance order,
+  slot, offset, encoding, type ID, byte width, and the recursive member/key/value/base
+  graph, and rejects a missing, extra, reordered, or retyped member;
+- reviewed ABI snapshots for every Phase 9 contract plus explicit compiled/snapshot
+  mappings in `tools/check_abi.py`; a nonempty directory is insufficient;
+- imports for every Phase 9 deployable in `ProtocolCompilation.sol`, formatter coverage
+  for all Phase 9 source/interface/test/script directories, and contract-size coverage;
+  and
+- clean-checkout regeneration and protected CI execution of both ABI and storage-layout
+  checks before Foundry business-logic tests.
+
+All non-token state-changing stubs revert `Phase9ImplementationNotFrozen()` until this
+gate passes. The freeze commits each ABI hash and storage-layout hash into the Phase 9
+release schema. Any later change requires explicit additive compatibility review. A
+boundary-only document checker cannot waive this pre-code dependency.
 
 ## Canonical Protobuf schema
 
@@ -2275,6 +2384,8 @@ git commit and clean-checkout assertion
 toolchain lock and generated-manifest hashes
 chain ID 31337, finalized head, and synthetic-only marker
 contract address, deployment transaction, bytecode, ABI, and storage-layout hashes
+Phase9LocalSyntheticToken address, asset ID, metadata, fixed supply, allocator, initial
+  allocation, terminal balances, deployment hash, ABI hash, and storage-layout hash
 policy, adjudicator-set, and fixture signer hashes
 four Protobuf source hashes and four-language generated binding hashes
 migration hashes and exact owned-table counts 17, 21, 7, total 45
@@ -2304,14 +2415,23 @@ missing or extra row, a row-count mismatch, a row-content mismatch, or a mismatc
 aggregate hash.
 
 Post-reset validation proves the generated manifest, Phase 9 cache, database rows,
-topics, objects, synthetic keys, contract broadcast artifacts, and local token balances
-are absent or returned to the declared clean fixture state. Reset never targets a path
-outside the repository's explicit local cache, deployment, broadcast, or named
-container-volume roots.
+topics, objects, synthetic keys, contract broadcast artifacts,
+`Phase9LocalSyntheticToken` deployment record, asset registration, allowances, and
+balances are absent or returned to the declared clean fixture state by resetting the
+disposable local chain. Reset never calls a token burn, rescue, or administrator path
+and never targets a path outside the repository's explicit local cache, deployment,
+broadcast, or named container-volume roots.
 
 ## Storage acceptance properties
 
 - the four additive proto files generate deterministic bindings in all four languages;
+- the dedicated six-decimal `P9UNIT` fixture is deployed only on chain `31337`, has its
+  exact fixed supply and constructor allocation, is absent from every Phase 8 route and
+  manifest, and is fully committed by release/reset evidence;
+- no non-token Phase 9 business logic is accepted before exact interfaces, typed storage
+  declarations, ABI snapshots/checker mappings, compiler storage-layout snapshots and
+  checker, `ProtocolCompilation.sol` imports, formatter scope, and clean-regeneration CI
+  all pass;
 - one quote nonce and debt version produce one immutable quote and one terminal
   disposition;
 - new-loan and refinance identifiers have acyclic preimages, and one immutable

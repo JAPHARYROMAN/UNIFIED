@@ -36,7 +36,8 @@ complete state machines, conservation rules, accounting, and recovery controls.
 The complete first product runs on the existing isolated local EVM home domain with
 chain ID `31337`. It uses:
 
-- one synthetic fungible settlement asset with exact balance-delta semantics;
+- one dedicated `Phase9LocalSyntheticToken` settlement asset with exact balance-delta
+  semantics and no Phase 8 inheritance, address, role, or backing dependency;
 - one synthetic fungible collateral asset under canonical local custody;
 - one old secured loan with a canonical debt-component snapshot;
 - one proposed replacement loan and new lender;
@@ -119,17 +120,21 @@ The quote preimage binds:
 
 ```text
 "UNIFIED_PAYOFF_QUOTE_V1"
+payoff quote engine address
+chain ID
 loan ID
-loan implementation and policy-set hash
+loan account address
+quote policy hash
 debt state version
 principal
 accrued interest
 fees
 penalties
 credits
-net payoff amount
-settlement asset
 canonical component-beneficiary vector
+net payoff amount
+settlement asset ID
+settlement token address
 settlement route hash
 issued at
 valid until
@@ -436,11 +441,14 @@ collateral and guarantor value.
 Phase 9 uses append-only migrations `000013` through `000015`:
 
 - `000013_resolution_core.sql`: debt snapshots, quotes, refinance, lien handoff,
-  replacement-loan activation, restructuring, consent, snapshots, and votes;
+  replacement-loan activation, restructuring, consent, snapshots, votes, and the
+  Phase 9 resolution inbox/outbox;
 - `000014_protection_recovery.sql`: pools, assets, coverage, premium, guarantees,
-  losses, claims, adjudication, write-offs, subrogation, receipts, and allocations; and
+  losses, claims, adjudication, write-offs, subrogation, receipts, allocations,
+  recovery incidents, and the Phase 9 protection inbox/outbox; and
 - `000015_resolution_accounting.sql`: accounting identities, exact journal links,
-  reconciliation snapshots, differences, incidents, and release evidence.
+  reconciliation snapshots, differences, solvency reports, release commitments, and
+  runtime checkpoints.
 
 Runtime roles are separated for resolution projection, consent verification, claim
 adjudication verification, reserve custody projection, recovery receipt verification,
@@ -526,7 +534,8 @@ The assumption register must include:
 - `ASM-034`: every Phase 9 asset, balance, loan, position, reserve, guarantee, claim,
   recovery, party, key, and provider is synthetic and local;
 - `ASM-035`: registered tokens have exact balance-delta behavior with no transfer fee,
-  rebase, hook, blacklist, or external freeze;
+  rebase, hook, blacklist, or external freeze; the first settlement token is the
+  dedicated Phase 9-only local fixture and has no Phase 8 backing or authority;
 - `ASM-036`: canonical debt uses deterministic local time and fixed, complete principal,
   accrued-interest, fee, penalty, and credit inputs; all accounting uses one exact
   denomination with no live benchmark, FX, slippage, rounding, tax, legal cost, or
@@ -558,6 +567,11 @@ only.
 Tests must prove:
 
 - exact quote equation, expiry, version invalidation, component and recipient binding;
+- exact typed Phase 9 contract ABI, event, error, storage-layout, compilation-root, and
+  deterministic snapshot checks pass before any contract business logic is accepted;
+- the always-run boundary checker rejects any Phase 9 production source or compilation
+  import unless `UNI-SCHEMA-013` and `UNI-ABI-009` are complete and the full pre-code
+  ABI/storage freeze gate passes; no later implementation row may complete first;
 - refinance replay, competing refinance, funding, payoff, lien, activation, proceeds,
   cancellation, expiry, refund, callback, and revert safety;
 - no independent double senior lien at any observable state;
@@ -584,6 +598,8 @@ Tests must prove:
 - randomized interruption and substitution sequences for all five work packages;
 - a clean local end-to-end product, exact release evidence, one-command reset, and
   post-reset absence; and
+- the dedicated `Phase9LocalSyntheticToken` is deployed only on Anvil, is included in
+  release evidence, and is removed with all Phase 9 state by reset; and
 - no production credential, real identity, external provider, public network, real
   asset, real reserve, live insurance promise, enforceable guarantee, legal recovery,
   or real fund.

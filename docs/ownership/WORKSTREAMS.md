@@ -41,7 +41,8 @@ approval is mandatory before public testnet.
   funding, versioned core loan accounts, bounded liquidation execution, deterministic
   syndicate vaults, conserved lender-position rights, and synthetic-local payoff,
   refinance, lien-handoff, restructuring, funded-protection, guarantee, write-off,
-  subrogation, and recovery controls.
+  subrogation, and recovery controls; it also owns the typed Phase 9 ABI and storage
+  freeze and the dedicated fixed-supply `Phase9LocalSyntheticToken` contract.
 - **Consumes:** generated Solidity types and protocol invariants.
 - **Invariants:** no mint path; no hidden superuser; checked authority.
 - **Threats:** unsafe privilege; ABI or storage drift.

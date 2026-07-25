@@ -76,6 +76,63 @@ custody, lien, and resolution components. Existing loans retain their original
 implementation and history. Phase 8 bridge, wrapped-token, message-recovery, satellite,
 and collateral-release contracts are unreachable from every Phase 9 component.
 
+## Dedicated local settlement fixture
+
+Phase 9 deploys `Phase9LocalSyntheticToken`; it does not reuse
+`Phase8LocalSyntheticToken`, `WrappedUFT`, `UnifiedToken`, a bridge asset, treasury
+custody, or any provider-controlled asset. The exact constructor and external ABI are:
+
+```solidity
+interface IPhase9LocalSyntheticToken {
+    error InvalidLocalChain(uint256 chainId);
+    error InvalidFixtureAllocator();
+    error ERC20InsufficientBalance(address sender, uint256 balance, uint256 needed);
+    error ERC20InvalidSender(address sender);
+    error ERC20InvalidReceiver(address receiver);
+    error ERC20InsufficientAllowance(address spender, uint256 allowance, uint256 needed);
+    error ERC20InvalidApprover(address approver);
+    error ERC20InvalidSpender(address spender);
+
+    function FIXED_SUPPLY_UNITS() external view returns (uint256);
+    function name() external view returns (string memory);       // exact value below
+    function symbol() external view returns (string memory);     // exact value below
+    function decimals() external view returns (uint8);           // 6
+    function totalSupply() external view returns (uint256);
+    function balanceOf(address account) external view returns (uint256);
+    function transfer(address to, uint256 value) external returns (bool);
+    function allowance(address owner, address spender) external view returns (uint256);
+    function approve(address spender, uint256 value) external returns (bool);
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+}
+```
+
+The implementation constructor signature is exactly
+`constructor(address fixtureAllocator)`.
+Its name is exact ASCII `Unified Phase 9 Local Synthetic Unit`, symbol is exact ASCII
+`P9UNIT`, decimals are `6`, and fixed supply is `1,000,000,000` display units
+(`1_000_000_000_000_000` base units). The constructor reverts unless
+`block.chainid == 31337` and `fixtureAllocator != address(0)`, then mints the entire
+fixed supply once to that allocator. There is no post-construction mint, burn, fee,
+rebase, callback, permit, pause, deny-list, role, upgrade, rescue, bridge, faucet, or
+administrator transfer surface. OpenZeppelin Contracts `5.6.1` ERC-20 revert semantics
+are authoritative; exact sender and recipient balance deltas are required.
+
+The name and symbol are neutral fixture labels only. They confer no currency
+denomination, USD or other fiat peg, redemption, backing, exchange rate, market value,
+payment claim, legal tender status, or provider obligation.
+
+The local deployment registers this address as the only Phase 9 settlement token and
+binds every loan, escrow, reserve, claim, guarantee, and recovery policy to it. Phase 8
+registries, routes, vaults, hubs, wrapped-token contracts, and workers never receive its
+asset ID or an allowance. The release bundle commits its address, deployment
+transaction, creation/runtime bytecode hashes, ABI hash, storage-layout hash, asset ID,
+fixed supply, initial allocation, and all terminal balances. Reset removes its local
+deployment/broadcast evidence and restores the disposable chain; it never calls a burn
+or privileged cleanup function because none exists.
+
 ## Canonical local scenario
 
 All displayed values are synthetic six-decimal base units:
@@ -157,21 +214,21 @@ It never accepts caller-supplied components. Quote nonces are monotonic per loan
 ```text
 quote_id = keccak256(abi.encode(
   "UNIFIED_PAYOFF_QUOTE_V1",
-  address(this),
+  payoff_quote_engine,
   chainid,
   loan_id,
   loan_account,
   policy_hash,
   debt_state_version,
   principal,
-  interest,
+  accrued_interest,
   fees,
   penalties,
   credits,
+  component_beneficiary_hash,
   net_payoff,
   settlement_asset_id,
   settlement_token,
-  component_beneficiary_hash,
   settlement_route_hash,
   issued_at,
   valid_until,
@@ -179,12 +236,117 @@ quote_id = keccak256(abi.encode(
 ))
 ```
 
+At issuance `payoff_quote_engine` MUST equal `address(this)`; using the explicit field
+name keeps the ADR, architecture, data layout, service codec, and golden vector in one
+identical conceptual sequence.
+
 The maximum validity window is immutable policy. Stored quote content cannot be
 recalculated into a different identity.
 
 The additive `IPayoffQuoteEngineV2` surface and event return the entire stored quote.
 They preserve existing ABI meanings; the legacy total-and-expiry interface is not used
 as Phase 9 execution authority.
+
+The following first-slice ABI is exact. Solidity source uses these names, integer
+widths, tuple field order, mutability markers, errors, and non-indexed/indexed event
+fields without substitution:
+
+```solidity
+interface IPayoffQuoteEngineV2 {
+    enum QuoteState { NONE, ISSUED, CONSUMED, EXPIRED, INVALIDATED }
+    enum ComponentKind {
+        NONE,
+        PRINCIPAL,
+        ACCRUED_INTEREST,
+        CAPITALIZED_INTEREST,
+        FEE,
+        PENALTY,
+        RECOVERABLE_COST,
+        CREDIT
+    }
+
+    struct PayoffComponentV2 {
+        ComponentKind kind;
+        uint256 amount;
+        address beneficiary;
+        string obligationCode;
+    }
+
+    struct PayoffQuoteV2 {
+        bytes32 quoteId;
+        bytes32 loanId;
+        address loanAccount;
+        bytes32 policyHash;
+        uint64 debtStateVersion;
+        uint256 principal;
+        uint256 accruedInterest;
+        uint256 fees;
+        uint256 penalties;
+        uint256 credits;
+        bytes32 componentBeneficiaryHash;
+        uint256 grossPayoff;
+        uint256 netPayoff;
+        bytes32 settlementAssetId;
+        address settlementToken;
+        bytes32 settlementRouteHash;
+        uint64 issuedAt;
+        uint64 validUntil;
+        uint64 quoteNonce;
+        QuoteState state;
+    }
+
+    error InvalidQuoteInput();
+    error UnknownQuote(bytes32 quoteId);
+    error UnauthorizedQuoteCaller(address caller);
+    error StaleDebtVersion(uint64 expectedVersion, uint64 actualVersion);
+    error QuoteExpired(bytes32 quoteId, uint64 validUntil);
+    error QuoteTerminal(bytes32 quoteId, QuoteState state);
+    error QuoteReplayConflict(bytes32 quoteId);
+
+    event PayoffQuoteIssued(
+        bytes32 indexed quoteId,
+        bytes32 indexed loanId,
+        uint64 indexed debtStateVersion,
+        bytes32 componentBeneficiaryHash,
+        uint256 grossPayoff,
+        uint256 credits,
+        uint256 netPayoff,
+        bytes32 settlementAssetId,
+        address settlementToken,
+        bytes32 settlementRouteHash,
+        uint64 issuedAt,
+        uint64 validUntil,
+        uint64 quoteNonce
+    );
+    event PayoffQuoteDispositionRecorded(
+        bytes32 indexed quoteId,
+        bytes32 indexed refinanceId,
+        QuoteState state,
+        bytes32 sourceEventId,
+        uint64 recordedAt
+    );
+
+    function issueQuote(bytes32 loanId, uint64 validUntil)
+        external
+        returns (bytes32 quoteId);
+    function consumeQuote(
+        bytes32 quoteId,
+        bytes32 refinanceId,
+        uint64 expectedDebtStateVersion,
+        bytes32 sourceEventId
+    ) external returns (PayoffQuoteV2 memory storedQuote);
+    function invalidateQuote(bytes32 quoteId, bytes32 sourceEventId) external;
+    function quote(bytes32 quoteId)
+        external
+        view
+        returns (PayoffQuoteV2 memory storedQuote, PayoffComponentV2[] memory components);
+}
+```
+
+`PayoffQuoteV2` is an external return tuple; the exact quote-ID preimage remains the
+ordered list above. `grossPayoff` is derived and stored evidence, not an additional ID
+field. `componentBeneficiaryHash` appears immediately after `credits` in that preimage
+in every Solidity vector, service codec, model, and release artifact.
 
 For the canonical scenario, principal and accrued interest route 95 units to the old
 lender while the separately bound fee and penalty beneficiary receives five units.
@@ -871,6 +1033,69 @@ the invariant, reason, enforcing prohibition, owner, and expiry.
 
 ## Work packages
 
+### Mandatory pre-code ABI and storage freeze
+
+The behavioral specification intentionally does not invent selectors for the remaining
+large components in prose. Before any Phase 9 state-changing business logic is accepted,
+the first implementation PR MUST contain only compileable interfaces, typed storage
+declarations, deployment stubs, and compatibility tooling, and MUST pass independent
+architecture and security review. Until that PR is merged, every Phase 9 implementation
+backlog item other than schema/model and interface-freeze work remains blocked.
+
+That freeze PR is complete only when all of the following are true:
+
+1. `protocol/src/interfaces/phase9/` contains exact compileable interfaces for
+   `IPhase9LoanFactory`, `IPhase9LoanAccount`, `IPayoffQuoteEngineV2`,
+   `ICollateralCustodyV2`, `ILienRegistry`, `IRefinanceCoordinator`,
+   `IPositionManagerV2`, `IRestructuringController`, `IInsuranceReserveVault`,
+   `IReservePolicy`, `IInsuranceManager`, `IGuaranteeVault`, `IRecoveryManager`, and
+   `IPhase9LocalSyntheticToken`. Every externally callable function, tuple field and
+   order, integer width, mutability marker, custom error, and event field/indexing is
+   present. The payoff interface above is copied exactly rather than re-derived.
+2. `protocol/src/resolution/Phase9Types.sol`,
+   `protocol/src/protection/Phase9ProtectionTypes.sol`, and
+   `protocol/src/recovery/Phase9RecoveryTypes.sol` contain the exact enum and struct
+   definitions used by those interfaces. No contract-local shadow struct may reproduce
+   an interface tuple.
+3. Each non-upgradeable contract has one typed storage declaration matching the logical
+   inventory in `phase-9-data-layouts.md`. Mapping key/value types, array element types,
+   enum widths, timestamps, counters, booleans, and initializer placement are explicit.
+   Clone instances reserve no upgrade gap. Storage declarations may not use unstructured
+   slots, delegatecall, or proxy namespaces.
+4. The stub contracts compile with Solidity `0.8.36`, optimizer runs `200`, EVM Prague,
+   OpenZeppelin Contracts `5.6.1`, and contain no successful state-changing business
+   path except the exact token constructor. Other mutating stubs revert
+   `Phase9ImplementationNotFrozen()`.
+5. `ProtocolCompilation.sol` imports every Phase 9 contract, including
+   `Phase9LocalSyntheticToken`. The command in scripts/check-foundation.ps1 formats
+   `src/interfaces/phase9`, `src/resolution`, `src/protection`, `src/recovery`, the token,
+   tests, and scripts. Contract-size checking sees every deployable Phase 9 runtime.
+6. Reviewed ABI snapshots exist at `protocol/abi/phase9/<Contract>.abi.json` for every
+   deployable contract and interface-bearing implementation. `tools/check_abi.py`
+   contains explicit compiled/snapshot pairs for all of them; directory non-emptiness is
+   not acceptance.
+7. Deterministic compiler storage artifacts exist at
+   `protocol/storage-layout/phase9/<Contract>.storage.json`. A dedicated checker compares
+   contract name, compiler/settings hash, linearized bases, slot, offset, type ID,
+   encoding, key/value/base/member graph, and byte width. Missing, additional, reordered,
+   or retyped fields fail CI.
+8. ABI and storage checkers run from `scripts/check-foundation.ps1` and the protected CI
+   workflow. A clean checkout regenerates identical artifacts and fails on stale output.
+   Golden vectors prove the exact quote preimage order, the non-circular loan/refinance
+   identities, claim signature digest, coverage policy binding, and token metadata/supply.
+9. The freeze review records the ABI hash and storage-layout hash for every component.
+   Any later selector, event, error, tuple, or storage change requires an explicit
+   additive compatibility review before business logic can merge.
+
+This is a hard implementation dependency, not exit-review paperwork. Passing the
+boundary-only `tools/check_phase9.py` mode without Phase 9 source files does not satisfy
+it. The always-run checker detects any Phase 9 production source or
+`ProtocolCompilation.sol` import, then immediately requires `UNI-SCHEMA-013` and
+`UNI-ABI-009` to be `DONE` and runs the complete pre-code ABI/storage gate without
+waiting for the rest of the implementation backlog. It also rejects any later
+implementation row marked `DONE` while `UNI-ABI-009` is incomplete. Full implementation
+mode adds the remaining schema, service, live, security, and release-evidence gates.
+
 ### 9A — Boundary, schemas, and models
 
 - accept ADR 0019;
@@ -920,6 +1145,12 @@ the invariant, reason, enforcing prohibition, owner, and expiry.
 
 The Phase 9 exit must prove:
 
+- the exact pre-code ABI/storage freeze passed before business logic, every Phase 9
+  deployable is imported and formatted, and ABI/storage snapshots regenerate without
+  drift under their dedicated checkers;
+- `Phase9LocalSyntheticToken` has exact metadata, six decimals, fixed constructor-only
+  supply, exact ERC-20 errors and balance deltas, no privileged surface, and no Phase 8
+  registration, route, allowance, worker, or manifest reference;
 - payoff components and net amount match canonical debt at one version;
 - quote expiry and every state-changing debt event invalidate execution;
 - funding, payoff, lien handoff, activation, fee, and borrower proceeds are atomic;
