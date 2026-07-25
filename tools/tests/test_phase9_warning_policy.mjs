@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { validatePhase9MutabilityDiagnostics } from "../compile_phase9_storage_layouts.mjs";
+import {
+  phase9StubContracts,
+  validatePhase9MutabilityDiagnostics,
+} from "../compile_phase9_storage_layouts.mjs";
 
 const SOURCE = "protocol/src/resolution/Phase9LoanFactory.sol";
 
@@ -82,5 +85,82 @@ test("rejects a canonical mutator without its warning 2018", () => {
         productionContracts: ["Phase9LoanFactory"],
       }),
     /Expected 1 Phase 9 warning-2018 diagnostics, found 0/,
+  );
+});
+
+test("derives the exact stub set from implementation checkpoints", () => {
+  const stubs = phase9StubContracts({
+    implementations: [
+      {
+        backlogId: "UNI-PAYOFF-001",
+        contract: "PayoffQuoteEngine",
+        status: "PASS",
+      },
+    ],
+    schemaVersion: 1,
+  });
+  assert.equal(stubs.includes("PayoffQuoteEngine"), false);
+  assert.equal(stubs.includes("Phase9LoanAccount"), true);
+  assert.equal(stubs.length, 12);
+});
+
+test("rejects unknown or duplicate checkpoint contracts", () => {
+  assert.throws(
+    () =>
+      phase9StubContracts({
+        implementations: [{ contract: "Unexpected" }],
+        schemaVersion: 1,
+      }),
+    /contract set is invalid/,
+  );
+  assert.throws(
+    () =>
+      phase9StubContracts({
+        implementations: [
+          {
+            backlogId: "UNI-PAYOFF-001",
+            contract: "PayoffQuoteEngine",
+            status: "PASS",
+          },
+          {
+            backlogId: "UNI-PAYOFF-001",
+            contract: "PayoffQuoteEngine",
+            status: "PASS",
+          },
+        ],
+        schemaVersion: 1,
+      }),
+    /contract set is invalid/,
+  );
+});
+
+test("rejects unopened contracts and backlog substitutions", () => {
+  assert.throws(
+    () =>
+      phase9StubContracts({
+        implementations: [
+          {
+            backlogId: "UNI-REFI-001",
+            contract: "RefinanceCoordinator",
+            status: "PASS",
+          },
+        ],
+        schemaVersion: 1,
+      }),
+    /contract set is invalid/,
+  );
+  assert.throws(
+    () =>
+      phase9StubContracts({
+        implementations: [
+          {
+            backlogId: "UNI-WRONG-001",
+            contract: "PayoffQuoteEngine",
+            status: "PASS",
+          },
+        ],
+        schemaVersion: 1,
+      }),
+    /contract set is invalid/,
   );
 });

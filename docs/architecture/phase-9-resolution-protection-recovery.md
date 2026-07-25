@@ -348,6 +348,123 @@ ordered list above. `grossPayoff` is derived and stored evidence, not an additio
 field. `componentBeneficiaryHash` appears immediately after `credits` in that preimage
 in every Solidity vector, service codec, model, and release artifact.
 
+#### ADR 0020 payoff implementation activation
+
+ADR 0020 is the normative activation decision for `UNI-PAYOFF-001`. It adds no external
+engine selector and no engine storage. The constructor-bound refinance coordinator is
+the only authorized caller of `issueQuote`, `consumeQuote`, and `invalidateQuote`; every
+other caller receives `UnauthorizedQuoteCaller`.
+
+Issuance requires a registered, nonterminal protocol-version-9 loan whose account binds
+the approved factory, this engine, the same loan registry, and the constructor-bound
+coordinator. The engine independently requires the registry-resolved account to equal
+`IPhase9LoanFactory(_approvedPhase9Factory).loanAccount(loanId)`. Its lifecycle is
+`ACTIVE` and its servicing state is `CURRENT`, `DELINQUENT`, or `DEFAULTED`. The first
+slice requires zero capitalized interest and recoverable costs and enforces:
+
+```text
+gross payoff = principal + accrued interest + fees + penalties
+credits <= fees + penalties
+net payoff = gross payoff - credits
+net payoff > 0
+```
+
+The account's bound position manager must expose exactly one `ACTIVE` lender position.
+Its nonzero owner is the principal-and-interest beneficiary and its claim equals
+principal plus accrued interest.
+
+The exact internal policy-source dependency is:
+
+```solidity
+interface IPhase9PayoffQuotePolicySource {
+    function resolvePayoffQuotePolicy(bytes32 loanId, address loanAccount)
+        external
+        view
+        returns (
+            bytes32 policyHash,
+            bytes32 boundPolicySetHash,
+            address feePenaltyBeneficiary,
+            bytes32 settlementAssetId,
+            address settlementToken,
+            uint64 maximumValidity,
+            bool active
+        );
+}
+```
+
+The existing `_quotePolicyRegistry` address is the immutable source. The response must
+be active and nonzero, bind the account's exact policy-set hash and settlement asset and
+token, and return a maximum validity equal to the constructor-bound maximum. The surface
+is not added to `IPayoffQuoteEngineV2` and creates no engine getter or storage.
+
+The engine stores exactly five components, including zero amounts, in this order:
+
+```text
+PRINCIPAL          lender beneficiary       "PRINCIPAL"
+ACCRUED_INTEREST   lender beneficiary       "ACCRUED_INTEREST"
+FEE                fee/penalty beneficiary  "FEE"
+PENALTY            fee/penalty beneficiary  "PENALTY"
+CREDIT             fee/penalty beneficiary  "FEE_PENALTY_CREDIT"
+```
+
+Their amounts are the corresponding canonical debt fields. Credit is applied only to
+the fee-and-penalty route. The exact commitments are:
+
+```solidity
+componentBeneficiaryHash = keccak256(abi.encode(
+    "UNIFIED_PAYOFF_COMPONENT_BENEFICIARIES_V1",
+    components
+));
+
+settlementRouteHash = keccak256(abi.encode(
+    "UNIFIED_PAYOFF_SETTLEMENT_ROUTE_V1",
+    block.chainid,
+    address(this),
+    refinanceCoordinator,
+    loanId,
+    loanAccount,
+    settlementAssetId,
+    settlementToken,
+    lenderBeneficiary,
+    feePenaltyBeneficiary,
+    policyHash
+));
+```
+
+Quote nonce zero is reserved. The first successful quote per loan uses nonce one, and a
+nonce advances only after successful issuance. At most one quote per loan is effectively
+`ISSUED`: a second issue while the latest quote is unexpired and unterminated reverts
+`InvalidQuoteInput`; there is no implicit supersession. A terminal or effectively
+expired latest quote permits the next nonce. Exhaustion before another identity can be
+formed reverts `QuoteReplayConflict(bytes32(0))`.
+
+Validity is `[issuedAt, validUntil)`. The requested duration must be positive and no
+greater than the immutable maximum, with the maximum boundary accepted. At
+`block.timestamp >= validUntil`, `quote()` overlays `EXPIRED` without writing and
+consumption reverts `QuoteExpired`. Coordinator invalidation at or after that boundary
+persists `EXPIRED`; invalidation before it persists `INVALIDATED`.
+
+Consumption fully re-resolves the registry, the approved factory's independent
+loan-account result, account configuration, complete debt state, version, one active
+lender position, policy tuple, components, both commitments, and quote-ID preimage. The
+expected, stored, and live debt versions must match. Exact replay of a consume or
+invalidate disposition is idempotent and emits nothing twice. Reuse of the same terminal
+action with a changed refinance ID, consume-expected debt version, or source-event ID
+reverts `QuoteReplayConflict`; attempting another terminal action reverts
+`QuoteTerminal`. An existing terminal disposition is classified before first-consumption
+live revalidation so the exact successful consume remains replayable after its atomic
+payoff has legitimately changed the old loan; no new or changed consume receives that
+bypass.
+
+The immutable engine/coordinator constructor cycle uses one local deployer and ordinary
+sequential `CREATE`. Before either deployment, the deployer predicts the coordinator at
+the immediately next creation nonce after the engine, deploys the engine with that exact
+address, then—with no intervening creation—deploys the coordinator with the actual
+engine. The script rejects a predicted/actual mismatch and verifies both reciprocal
+bindings from recorded constructor arguments and the reviewed compiler storage-layout
+fields before creating a loan or quote. No setter, proxy, rebinding, or `CREATE2` path is
+permitted; raw local storage reads are release evidence only.
+
 For the canonical scenario, principal and accrued interest route 95 units to the old
 lender while the separately bound fee and penalty beneficiary receives five units.
 Those routes, the two-unit refinance fee, and the 18-unit borrower proceeds are fixed
@@ -739,7 +856,7 @@ not production identity or legal consent.
 ```text
 gross due = principal + interest + fees + penalties
 net payoff = gross due - credits
-0 <= credits <= gross due
+0 <= credits <= fees + penalties <= gross due
 ```
 
 ### Refinance
@@ -1095,6 +1212,33 @@ it. The always-run checker detects any Phase 9 production source or
 waiting for the rest of the implementation backlog. It also rejects any later
 implementation row marked `DONE` while `UNI-ABI-009` is incomplete. Full implementation
 mode adds the remaining schema, service, live, security, and release-evidence gates.
+
+### Historical freeze and exact-source implementation checkpoints
+
+The `UNI-ABI-009` merge is an immutable historical baseline, not a mutable pointer to the
+latest Phase 9 source. Its ABI hashes, compiler storage-layout hashes, compiler settings,
+source-set hash, manifest hash, independent review, merge commit, and tag remain
+reproducible after implementation begins.
+
+Each activated work package creates a later exact-source implementation checkpoint. The
+checkpoint regenerates and reviews current source hashes and the complete source-set hash
+while independently comparing ABI and compiler storage layout with the historical
+freeze. Review evidence names both checkpoints. A current source hash never overwrites a
+historical hash, and an implementation checkpoint cannot claim that its business logic
+existed at the freeze commit.
+
+The protected checker uses an explicit reviewed backlog-to-contract activation map. An
+unopened contract or function must retain the exact
+`Phase9ImplementationNotFrozen()` mutating body. A specifically activated implementation
+may succeed only after its activation ADR and tooling row are complete. Selector, event,
+error, tuple, base, field, slot, offset, type, compiler-setting, or storage-order drift
+remains blocked pending a separate additive compatibility decision.
+
+For the first activation, `UNI-ADR-015` accepts ADR 0020 and its checker mapping before
+`UNI-PAYOFF-001` can complete. The implementation checkpoint must prove the frozen
+external `IPayoffQuoteEngineV2` ABI and exact `PayoffQuoteEngine` storage layout remain
+compatible while its new source hashes and independent architecture/security review are
+recorded separately.
 
 ### 9A — Boundary, schemas, and models
 

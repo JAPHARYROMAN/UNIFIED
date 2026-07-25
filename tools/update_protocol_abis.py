@@ -16,10 +16,17 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    if args.phase == "phase9":
+        raise SystemExit(
+            "Phase 9 ABI snapshots are the immutable freeze baseline; add an implementation "
+            "checkpoint instead."
+        )
+
     selected = [
         (contract, compiled_path, baseline_path)
         for contract, (compiled_path, baseline_path) in ABI_PAIRS.items()
         if contract != "FoundationProbe"
+        and baseline_path.parent.name != "phase9"
         and (args.phase is None or baseline_path.parent.name == args.phase)
     ]
     if not selected:

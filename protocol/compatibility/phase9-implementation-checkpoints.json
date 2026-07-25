@@ -1,0 +1,10 @@
+{
+  "baseline": {
+    "commit": "4f01a5692df92c435ff8893840ebdcca055449f0",
+    "manifestSha256": "sha256:9237acd53b00f5e90d77bbd4f5ce09590ddb750d079c333be4b14d8e7b4238a2",
+    "sourceSetSha256": "sha256:a40ac90f75c52fc7583651d2d57d2a4d82f1899ed673be8b460d17fb7b7425cb"
+  },
+  "currentSourceSetSha256": "sha256:a40ac90f75c52fc7583651d2d57d2a4d82f1899ed673be8b460d17fb7b7425cb",
+  "implementations": [],
+  "schemaVersion": 1
+}

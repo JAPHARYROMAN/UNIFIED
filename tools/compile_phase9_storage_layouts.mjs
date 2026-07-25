@@ -9,6 +9,10 @@ import solc from "solc";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const COMPILATION_ROOT = "protocol/src/ProtocolCompilation.sol";
 const OUTPUT_PATH = resolve(ROOT, ".cache/solc/phase9-storage-layouts.json");
+const CHECKPOINT_PATH = resolve(
+  ROOT,
+  "protocol/compatibility/phase9-implementation-checkpoints.json",
+);
 
 const PHASE9_CONTRACTS = [
   "Phase9LoanFactory",
@@ -28,7 +32,7 @@ const PHASE9_CONTRACTS = [
 ];
 const PHASE9_PRODUCTION_CONTRACTS = PHASE9_CONTRACTS.slice(0, -1);
 const PHASE9_MUTABILITY_WARNING_CODE = "2018";
-const EXPECTED_PHASE9_MUTABILITY_WARNINGS = 53;
+const ACTIVATED_IMPLEMENTATIONS = new Map([["PayoffQuoteEngine", "UNI-PAYOFF-001"]]);
 
 const COMPILER_SETTINGS = {
   evmVersion: "prague",
@@ -150,17 +154,71 @@ function canonicalFreezeMutators(output, productionContracts) {
   return functions;
 }
 
+function externalMutators(output, productionContracts) {
+  const functions = [];
+  for (const [sourceName, sourceOutput] of Object.entries(output.sources ?? {})) {
+    for (const contract of sourceOutput.ast?.nodes ?? []) {
+      if (
+        contract.nodeType !== "ContractDefinition" ||
+        !productionContracts.includes(contract.name)
+      ) {
+        continue;
+      }
+      for (const node of contract.nodes ?? []) {
+        if (
+          node.nodeType === "FunctionDefinition" &&
+          node.kind === "function" &&
+          ["external", "public"].includes(node.visibility) &&
+          !["view", "pure"].includes(node.stateMutability)
+        ) {
+          functions.push(functionLabel(sourceName, contract.name, node));
+        }
+      }
+    }
+  }
+  return functions;
+}
+
+export function phase9StubContracts(payload) {
+  if (
+    payload === null ||
+    typeof payload !== "object" ||
+    payload.schemaVersion !== 1 ||
+    !Array.isArray(payload.implementations)
+  ) {
+    throw new Error("Phase 9 implementation checkpoint registry is malformed");
+  }
+  const implemented = payload.implementations.map((entry) => entry?.contract);
+  if (
+    payload.implementations.some(
+      (entry) =>
+        entry === null ||
+        typeof entry !== "object" ||
+        typeof entry.contract !== "string" ||
+        !PHASE9_PRODUCTION_CONTRACTS.includes(entry.contract) ||
+        entry.backlogId !== ACTIVATED_IMPLEMENTATIONS.get(entry.contract) ||
+        entry.status !== "PASS",
+    ) ||
+    new Set(implemented).size !== implemented.length
+  ) {
+    throw new Error("Phase 9 implementation checkpoint contract set is invalid");
+  }
+  return PHASE9_PRODUCTION_CONTRACTS.filter((contract) => !implemented.includes(contract));
+}
+
 export function validatePhase9MutabilityDiagnostics(
   output,
   {
-    expectedCount = EXPECTED_PHASE9_MUTABILITY_WARNINGS,
+    expectedCount,
     productionContracts = PHASE9_PRODUCTION_CONTRACTS,
   } = {},
 ) {
+  const mutators = externalMutators(output, productionContracts);
+  const requiredCount = expectedCount ?? mutators.length;
   const canonical = canonicalFreezeMutators(output, productionContracts);
-  if (canonical.length !== expectedCount) {
+  if (canonical.length !== requiredCount) {
     throw new Error(
-      `Expected ${expectedCount} canonical Phase 9 fail-closed mutators, found ${canonical.length}`,
+      `Expected ${requiredCount} canonical Phase 9 fail-closed mutators, found ${canonical.length}`,
     );
   }
 
@@ -169,9 +227,9 @@ export function validatePhase9MutabilityDiagnostics(
       diagnostic.severity === "warning" &&
       String(diagnostic.errorCode) === PHASE9_MUTABILITY_WARNING_CODE,
   );
-  if (warnings.length !== expectedCount) {
+  if (warnings.length !== requiredCount) {
     throw new Error(
-      `Expected ${expectedCount} Phase 9 warning-2018 diagnostics, found ${warnings.length}`,
+      `Expected ${requiredCount} Phase 9 warning-2018 diagnostics, found ${warnings.length}`,
     );
   }
 
@@ -337,7 +395,9 @@ async function main() {
   }
   const errors = diagnostics.filter((diagnostic) => diagnostic.severity === "error");
   if (errors.length > 0) throw new Error(`Solidity compilation failed (${errors.length} errors)`);
-  validatePhase9MutabilityDiagnostics(output);
+  const checkpointPayload = await readJson(CHECKPOINT_PATH);
+  const stubContracts = phase9StubContracts(checkpointPayload);
+  validatePhase9MutabilityDiagnostics(output, { productionContracts: stubContracts });
 
   const definitions = contractDefinitions(output);
   const matches = new Map();

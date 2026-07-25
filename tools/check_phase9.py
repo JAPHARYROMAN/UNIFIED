@@ -20,23 +20,26 @@ from build_phase9_compatibility_manifest import (
     source_set_hash,
 )
 from check_abi import ABI_PAIRS
+from check_phase9_implementation_checkpoints import (
+    CHECKPOINT_PATH as PHASE9_IMPLEMENTATION_CHECKPOINT_PATH,
+)
+from check_phase9_implementation_checkpoints import validate_checkpoints
 
 ROOT = Path(__file__).resolve().parents[1]
 
 ADR_PATH = ROOT / "adr/0019-phase-9-resolution-protection-and-recovery-boundary.md"
+ACTIVATION_ADR_PATH = ROOT / "adr/0020-phase-9-payoff-authority-and-implementation-activation.md"
 ARCHITECTURE_PATH = ROOT / "docs/architecture/phase-9-resolution-protection-recovery.md"
 DATA_LAYOUTS_PATH = ROOT / "docs/architecture/phase-9-data-layouts.md"
 BACKLOG_PATH = ROOT / "docs/backlog/phase-9.csv"
 WORKSTREAMS_PATH = ROOT / "docs/ownership/WORKSTREAMS.md"
 MASTER_PLAN_PATH = (
-    ROOT
-    / "docs/specifications/"
+    ROOT / "docs/specifications/"
     "Unified_Implementation_Master_Plan_Work_Breakdown_and_Parallel_Agent_"
     "Orchestration_Specification_v0.1.md"
 )
 INVARIANT_SPEC_PATH = (
-    ROOT
-    / "docs/specifications/"
+    ROOT / "docs/specifications/"
     "Unified_Protocol_Invariants_and_Formal_Verification_Specification_v0.1.md"
 )
 INVARIANT_CATALOG_PATH = ROOT / "security/invariant-catalog.csv"
@@ -103,6 +106,7 @@ BACKLOG_IDS = (
     "UNI-RESIDUAL-004",
     "UNI-SCHEMA-013",
     "UNI-ABI-009",
+    "UNI-ADR-015",
     "UNI-PAYOFF-001",
     "UNI-REFI-001",
     "UNI-REFI-002",
@@ -124,6 +128,7 @@ BOUNDARY_COMPLETE_IDS = {
     "UNI-ADR-014",
     "UNI-RESIDUAL-003",
     "UNI-RESIDUAL-004",
+    "UNI-ADR-015",
 }
 SECURITY_REVIEW_ID = "UNI-SEC-014"
 EXIT_REVIEW_ID = "UNI-REVIEW-012"
@@ -155,6 +160,7 @@ RELEASE_MANIFEST_PATH = "protocol/deployments/local/phase9-release-evidence.json
 
 BOUNDARY_PATHS = (
     ADR_PATH,
+    ACTIVATION_ADR_PATH,
     ARCHITECTURE_PATH,
     DATA_LAYOUTS_PATH,
     BACKLOG_PATH,
@@ -218,9 +224,7 @@ def check_boundary_paths() -> None:
     require_paths(BOUNDARY_PATHS, "Phase 9 boundary paths")
 
 
-def check_backlog(
-    require_implementation: bool, require_exit: bool
-) -> dict[str, dict[str, str]]:
+def check_backlog(require_implementation: bool, require_exit: bool) -> dict[str, dict[str, str]]:
     with BACKLOG_PATH.open(encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
         require(
@@ -245,9 +249,7 @@ def check_backlog(
         require(bool(row["acceptance"].strip()), f"{identifier} lacks acceptance evidence")
 
     incomplete_boundary = sorted(
-        identifier
-        for identifier in BOUNDARY_COMPLETE_IDS
-        if by_id[identifier]["status"] != "DONE"
+        identifier for identifier in BOUNDARY_COMPLETE_IDS if by_id[identifier]["status"] != "DONE"
     )
     require(
         not incomplete_boundary,
@@ -263,8 +265,7 @@ def check_backlog(
         incomplete_before_review = [
             row["id"]
             for row in rows
-            if row["id"] not in {SECURITY_REVIEW_ID, EXIT_REVIEW_ID}
-            and row["status"] != "DONE"
+            if row["id"] not in {SECURITY_REVIEW_ID, EXIT_REVIEW_ID} and row["status"] != "DONE"
         ]
         require(
             not incomplete_before_review,
@@ -274,14 +275,11 @@ def check_backlog(
 
     if require_implementation:
         incomplete_implementation = [
-            row["id"]
-            for row in rows
-            if row["id"] != EXIT_REVIEW_ID and row["status"] != "DONE"
+            row["id"] for row in rows if row["id"] != EXIT_REVIEW_ID and row["status"] != "DONE"
         ]
         require(
             not incomplete_implementation,
-            "Phase 9 implementation backlog remains open: "
-            + ", ".join(incomplete_implementation),
+            "Phase 9 implementation backlog remains open: " + ", ".join(incomplete_implementation),
         )
 
     if require_exit:
@@ -309,8 +307,20 @@ def check_backlog_precedence(by_id: dict[str, dict[str, str]]) -> None:
     ]
     require(
         abi_done or not later_done,
-        "UNI-ABI-009 must be DONE before later Phase 9 work can be DONE: "
-        + ", ".join(later_done),
+        "UNI-ABI-009 must be DONE before later Phase 9 work can be DONE: " + ", ".join(later_done),
+    )
+
+    activation_done = by_id["UNI-ADR-015"]["status"] == "DONE"
+    activation_index = BACKLOG_IDS.index("UNI-ADR-015")
+    implementation_done = [
+        identifier
+        for identifier in BACKLOG_IDS[activation_index + 1 :]
+        if by_id[identifier]["status"] == "DONE"
+    ]
+    require(
+        activation_done or not implementation_done,
+        "UNI-ADR-015 must be DONE before Phase 9 implementation work can be DONE: "
+        + ", ".join(implementation_done),
     )
 
 
@@ -364,11 +374,7 @@ def quote_preimage(text: str, label: str) -> tuple[str, ...]:
     )
     if match is None:
         raise SystemExit(f"ERROR: {label} payoff quote preimage is not parseable")
-    fields = tuple(
-        field.strip()
-        for field in match.group("fields").split(",")
-        if field.strip()
-    )
+    fields = tuple(field.strip() for field in match.group("fields").split(",") if field.strip())
     aliases = {
         "address(this)": "payoff_quote_engine",
         "interest": "accrued_interest",
@@ -882,8 +888,7 @@ def phase9_compilation_imports() -> dict[str, Path]:
     )
     require(
         not duplicate_sources,
-        "Phase 9 contracts have duplicate source declarations: "
-        + ", ".join(duplicate_sources),
+        "Phase 9 contracts have duplicate source declarations: " + ", ".join(duplicate_sources),
     )
 
     phase9_imports = {
@@ -916,9 +921,7 @@ def phase9_compilation_imports() -> dict[str, Path]:
 
 def check_phase9_abi_pairs(imports: dict[str, Path]) -> None:
     phase9_pairs = {
-        contract: pair
-        for contract, pair in ABI_PAIRS.items()
-        if pair[1].parent == PHASE9_ABI_PATH
+        contract: pair for contract, pair in ABI_PAIRS.items() if pair[1].parent == PHASE9_ABI_PATH
     }
     expected_contracts = set(PHASE9_CONTRACTS)
     actual_contracts = set(phase9_pairs)
@@ -933,15 +936,9 @@ def check_phase9_abi_pairs(imports: dict[str, Path]) -> None:
     for contract in PHASE9_CONTRACTS:
         compiled_path, baseline_path = phase9_pairs[contract]
         source_stem = (
-            imports[contract]
-            .relative_to(ROOT)
-            .with_suffix("")
-            .as_posix()
-            .replace("/", "_")
+            imports[contract].relative_to(ROOT).with_suffix("").as_posix().replace("/", "_")
         )
-        expected_compiled_path = (
-            ROOT / ".cache/solc" / f"{source_stem}_sol_{contract}.abi"
-        )
+        expected_compiled_path = ROOT / ".cache/solc" / f"{source_stem}_sol_{contract}.abi"
         expected_baseline_path = PHASE9_ABI_PATH / f"{contract}.abi.json"
         require(
             compiled_path == expected_compiled_path,
@@ -957,8 +954,7 @@ def check_phase9_abi_pairs(imports: dict[str, Path]) -> None:
 def check_phase9_storage_layouts() -> None:
     require_paths((PHASE9_STORAGE_CHECK_PATH,), "Phase 9 storage-layout checker")
     expected_snapshots = {
-        PHASE9_STORAGE_PATH / f"{contract}.storage.json"
-        for contract in PHASE9_CONTRACTS
+        PHASE9_STORAGE_PATH / f"{contract}.storage.json" for contract in PHASE9_CONTRACTS
     }
     require_paths(expected_snapshots, "Phase 9 storage-layout snapshots")
     for snapshot_path in sorted(expected_snapshots):
@@ -1005,10 +1001,7 @@ def check_phase9_formatting_scope(imports: dict[str, Path]) -> None:
     )
     if match is None:
         raise SystemExit("ERROR: foundation Solidity formatting command is not parseable")
-    scopes = {
-        token.replace("\\", "/")
-        for token in match.group("scope").replace("`", " ").split()
-    }
+    scopes = {token.replace("\\", "/") for token in match.group("scope").replace("`", " ").split()}
     phase9_sources = set(imports.values()) | set(phase9_candidate_source_files())
     uncovered: list[str] = []
     for source_path in sorted(phase9_sources):
@@ -1077,16 +1070,11 @@ def check_phase9_local_token_source(imports: dict[str, Path]) -> None:
         raise SystemExit("ERROR: Phase9LocalSyntheticToken inheritance is not parseable")
     bases = {base.strip() for base in inheritance_match.group("bases").split(",")}
     require(
-        "ERC20" in bases
-        and bases <= {"ERC20", "IPhase9LocalSyntheticToken"},
-        "Phase9LocalSyntheticToken has prohibited inheritance: "
-        + ", ".join(sorted(bases)),
+        "ERC20" in bases and bases <= {"ERC20", "IPhase9LocalSyntheticToken"},
+        "Phase9LocalSyntheticToken has prohibited inheritance: " + ", ".join(sorted(bases)),
     )
     require(
-        re.search(
-            r"constructor\s*\(\s*address\s+fixtureAllocator\s*\)", token_source
-        )
-        is not None,
+        re.search(r"constructor\s*\(\s*address\s+fixtureAllocator\s*\)", token_source) is not None,
         "Phase9LocalSyntheticToken constructor signature drifted",
     )
     require(
@@ -1112,8 +1100,7 @@ def check_phase9_local_token_source(imports: dict[str, Path]) -> None:
         "Phase9LocalSyntheticToken does not reject non-local chains",
     )
     require(
-        re.search(r"fixtureAllocator\s*==\s*address\s*\(\s*0\s*\)", token_source)
-        is not None,
+        re.search(r"fixtureAllocator\s*==\s*address\s*\(\s*0\s*\)", token_source) is not None,
         "Phase9LocalSyntheticToken does not reject the zero fixture allocator",
     )
     decimals_match = re.search(
@@ -1232,15 +1219,25 @@ def is_exact_freeze_revert(body: str) -> bool:
     )
 
 
-def check_phase9_stub_sources(imports: dict[str, Path]) -> None:
+def check_phase9_stub_sources(
+    imports: dict[str, Path], implemented: set[str] | None = None
+) -> None:
+    implemented_contracts = set() if implemented is None else implemented
     forbidden = ("delegatecall", "selfdestruct", "assembly", "Phase8")
     for contract in PHASE9_PRODUCTION_CONTRACTS:
         source = strip_solidity_comments(read(imports[contract]))
-        require_tokens(
-            source,
-            (f"contract {contract}", "Phase9ImplementationNotFrozen"),
-            f"{contract} freeze stub",
-        )
+        require_tokens(source, (f"contract {contract}",), f"{contract} Phase 9 source")
+        if contract not in implemented_contracts:
+            require_tokens(
+                source,
+                ("Phase9ImplementationNotFrozen",),
+                f"{contract} freeze stub",
+            )
+        else:
+            require(
+                "Phase9ImplementationNotFrozen" not in source,
+                f"{contract} retains fail-closed freeze behavior after activation",
+            )
         present = [token for token in forbidden if token.lower() in source.lower()]
         require(
             not present,
@@ -1250,6 +1247,8 @@ def check_phase9_stub_sources(imports: dict[str, Path]) -> None:
             re.search(r"\b(?:fallback|receive)\s*\(", source) is None,
             f"{contract} exposes a fallback or receive function",
         )
+        if contract in implemented_contracts:
+            continue
         for header, body in solidity_function_bodies(source):
             header_words = set(re.findall(r"[A-Za-z_]\w*", header))
             if not ({"public", "external"} & header_words):
@@ -1265,8 +1264,11 @@ def check_phase9_stub_sources(imports: dict[str, Path]) -> None:
 
 
 def check_phase9_foundry_warning_policy(
-    imports: dict[str, Path], config: dict[str, object] | None = None
+    imports: dict[str, Path],
+    config: dict[str, object] | None = None,
+    implemented: set[str] | None = None,
 ) -> None:
+    implemented_contracts = set() if implemented is None else implemented
     if config is None:
         with FOUNDRY_CONFIG_PATH.open("rb") as handle:
             config = cast(dict[str, object], tomllib.load(handle))
@@ -1315,9 +1317,7 @@ def check_phase9_foundry_warning_policy(
             "Foundry path-scoped warning entry has invalid types",
         )
         normalized_path = cast(str, source_path).replace("\\", "/").removeprefix("./")
-        normalized_codes = tuple(
-            str(code).strip().lower() for code in cast(list[object], codes)
-        )
+        normalized_codes = tuple(str(code).strip().lower() for code in cast(list[object], codes))
         actual.add((normalized_path, normalized_codes))
     require(
         len(actual) == len(raw_entry_list),
@@ -1331,6 +1331,7 @@ def check_phase9_foundry_warning_policy(
             (str(PHASE9_FOUNDRY_WARNING_CODE),),
         )
         for contract in PHASE9_PRODUCTION_CONTRACTS
+        if contract not in implemented_contracts
     }
     missing = expected - actual
     unexpected = actual - expected
@@ -1343,8 +1344,12 @@ def check_phase9_foundry_warning_policy(
 
 def check_phase9_compatibility_review() -> None:
     require_paths(
-        (PHASE9_COMPATIBILITY_MANIFEST_PATH, PHASE9_FREEZE_REVIEW_PATH),
-        "Phase 9 compatibility manifest and freeze review",
+        (
+            PHASE9_COMPATIBILITY_MANIFEST_PATH,
+            PHASE9_IMPLEMENTATION_CHECKPOINT_PATH,
+            PHASE9_FREEZE_REVIEW_PATH,
+        ),
+        "Phase 9 compatibility manifest, implementation checkpoints, and freeze review",
     )
     manifest = check_manifest()
     review = normalized(read(PHASE9_FREEZE_REVIEW_PATH))
@@ -1420,9 +1425,7 @@ def check_phase9_local_token_evidence(smoke_scripts: list[Path]) -> None:
         ),
         "Phase 9 release-evidence token validation",
     )
-    release_declarations = combined_text(
-        (PHASE9_RELEASE_SCHEMA_PATH, PHASE9_RELEASE_DOC_PATH)
-    )
+    release_declarations = combined_text((PHASE9_RELEASE_SCHEMA_PATH, PHASE9_RELEASE_DOC_PATH))
     require_tokens(
         release_declarations,
         ("Phase9LocalSyntheticToken", RELEASE_MANIFEST_PATH, "post-reset"),
@@ -1443,12 +1446,14 @@ def check_pre_code_freeze(by_id: dict[str, dict[str, str]]) -> None:
         return
 
     imports = phase9_compilation_imports()
+    checkpoints = validate_checkpoints()
+    implemented = set(checkpoints)
     check_phase9_abi_pairs(imports)
     check_phase9_storage_layouts()
     check_phase9_formatting_scope(imports)
     check_phase9_contract_size_coverage()
-    check_phase9_stub_sources(imports)
-    check_phase9_foundry_warning_policy(imports)
+    check_phase9_stub_sources(imports, implemented)
+    check_phase9_foundry_warning_policy(imports, implemented=implemented)
     check_phase9_local_token_source(imports)
     check_phase9_compatibility_review()
 
@@ -1505,9 +1510,7 @@ def check_implementation_artifacts() -> None:
         "Phase 9 Solidity implementation is incomplete: " + ", ".join(missing_contracts),
     )
 
-    model_paths = sorted(
-        (ROOT / "models/foundation_model/src/unified_foundation").glob("*.py")
-    )
+    model_paths = sorted((ROOT / "models/foundation_model/src/unified_foundation").glob("*.py"))
     model_text = combined_text(model_paths)
     require_tokens(
         model_text,
@@ -1600,9 +1603,7 @@ def main() -> None:
     parser.add_argument("--require-exit-complete", action="store_true")
     args = parser.parse_args()
 
-    require_implementation = (
-        args.require_implementation_complete or args.require_exit_complete
-    )
+    require_implementation = args.require_implementation_complete or args.require_exit_complete
     check_boundary_paths()
     backlog = check_backlog(require_implementation, args.require_exit_complete)
     check_boundary_declarations()
