@@ -141,3 +141,14 @@ Service executables remain local skeletons without provider, EVM RPC, broker, or
 production ledger-listener wiring. Its bounded engineering exit is recorded in
 `docs/reviews/phase-7c-exit-review.md`; live-provider, production-chain, reserve-backed,
 public-network, collateral-release, and real-fund authority remain prohibited.
+
+The accepted Phase 8 engineering boundary is recorded in
+`adr/0018-phase-8-cross-chain-and-wrapped-uft-boundary.md` and
+`docs/architecture/phase-8-cross-chain-protocol.md`, with authoritative layouts in
+`docs/architecture/phase-8-data-layouts.md`. It governs a complete synthetic/local
+two-domain flow with one canonical home authority, typed at-most-once messages,
+transport-only provider failover, fully backed and exposure-capped wUFT, bounded
+satellite custody/disbursement/repayment, and destination-tombstone recovery. It does
+not select a production chain, light client, bridge provider, or signing service and
+does not authorize public networks, production keys, real UFT, collateral, loans, or
+funds.
