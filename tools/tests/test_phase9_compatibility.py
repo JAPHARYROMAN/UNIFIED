@@ -8,7 +8,7 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 
 import build_phase9_compatibility_manifest as manifest  # noqa: E402
+import check_abi as abi  # noqa: E402
 import check_phase9 as phase9  # noqa: E402
 import check_phase9_implementation_checkpoints as checkpoints  # noqa: E402
 import check_phase9_storage_layouts as storage  # noqa: E402
@@ -587,6 +588,49 @@ def test_payoff_quote_engine_compiled_abi_remains_historical(tmp_path: Path) -> 
     assert json.loads(compiled_path.read_text(encoding="utf-8")) == json.loads(
         baseline_path.read_text(encoding="utf-8")
     )
+
+
+def test_phase9_abi_checker_uses_baselines_until_package_activation() -> None:
+    expected = abi.phase9_expected_abis()
+    for contract, (_compiled_path, baseline_path) in abi.ABI_PAIRS.items():
+        if contract in abi._PHASE9_CONTRACT_SOURCES:
+            assert expected[contract] == json.loads(baseline_path.read_text(encoding="utf-8"))
+
+
+def test_phase9_abi_checker_applies_only_full_refinance_package_additions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(abi, "validate_checkpoints", lambda **_kwargs: {})
+    refinance_contracts = cast(
+        dict[str, tuple[str, ...]],
+        checkpoints.ACTIVATION_PACKAGES["P9-REFI-001"]["contracts"],
+    )
+    registry = {
+        "packages": [
+            {
+                "checkpointId": "P9-REFI-001",
+                "revisions": [{"contract": contract} for contract in refinance_contracts],
+            }
+        ]
+    }
+    expected = abi.phase9_expected_abis(registry)
+
+    for contract in refinance_contracts:
+        baseline_path = abi.ABI_PAIRS[contract][1]
+        baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+        additions = cast(
+            dict[str, tuple[dict[str, Any], ...]],
+            checkpoints.ACTIVATION_PACKAGES["P9-REFI-001"]["abiAdditions"],
+        ).get(contract, ())
+        assert expected[contract] == checkpoints.additive_abi_payload(baseline, additions)
+
+    coordinator_abi = cast(list[dict[str, Any]], expected["RefinanceCoordinator"])
+    lien_abi = cast(list[dict[str, Any]], expected["LienRegistry"])
+    coordinator_names = {item.get("name") for item in coordinator_abi}
+    lien_names = {item.get("name") for item in lien_abi}
+    assert {"RefinanceStateTransitioned", "UnknownFundingCommitment"} <= coordinator_names
+    assert "UnknownLienHandoff" in lien_names
+    assert "UnknownUnauthorizedRecord" not in coordinator_names | lien_names
 
 
 def test_phase9_foundry_warning_policy_is_exact() -> None:

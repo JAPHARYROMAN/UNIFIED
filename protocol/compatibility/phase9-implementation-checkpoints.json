@@ -5,7 +5,7 @@
     "rawFreezeArtifactsSha256": "sha256:b0d494141f0e229cf9fd542401036cd63ba04de73e2f056c1e89a25253cdb1a3",
     "sourceSetSha256": "sha256:a40ac90f75c52fc7583651d2d57d2a4d82f1899ed673be8b460d17fb7b7425cb"
   },
-  "currentControlBundleSha256": "sha256:d298c4c11ab3f939e94c2b36cfc3fb41e6a6255a5429134eec92728f015c0a49",
+  "currentControlBundleSha256": "sha256:63e94d2080ead81171005bb6a55433d1e57064840e1c8396edf926e4ad1034aa",
   "currentSourceSetSha256": "sha256:69276c6de63238456ab2a42b85702536aee3a7a6ac29cc2be366f220d68ddbd9",
   "packages": [
     {

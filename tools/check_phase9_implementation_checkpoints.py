@@ -171,6 +171,16 @@ REFINANCE_COORDINATOR_ABI_ADDITIONS = (
     REFINANCE_STATE_TRANSITIONED_EVENT,
 )
 LIEN_REGISTRY_ABI_ADDITIONS = (REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR,)
+REFINANCE_AUXILIARY_SOURCE_OWNERS = (
+    ("protocol/src/interfaces/phase9/ILienRegistry.sol", "LienRegistry"),
+    (
+        "protocol/src/interfaces/phase9/IRefinanceCoordinator.sol",
+        "RefinanceCoordinator",
+    ),
+)
+PACKAGE_AUXILIARY_SOURCE_OWNERS = {
+    "P9-REFI-001": REFINANCE_AUXILIARY_SOURCE_OWNERS,
+}
 ACTIVATION_PACKAGES = {
     "P9-PAYOFF-001": {
         "abiAdditions": {},
@@ -196,6 +206,7 @@ CONTROL_BUNDLE_PATHS = (
     "protocol/foundry.toml",
     "scripts/check-foundation.ps1",
     "scripts/generate.ps1",
+    "tools/check_abi.py",
     "tools/check_phase9.py",
     "tools/check_phase9_implementation_checkpoints.py",
     "tools/check_phase9_schema.py",
@@ -586,6 +597,63 @@ def baseline_sources(manifest: dict[str, Any]) -> tuple[list[str], dict[str, str
         order.append(path)
         sources[path] = digest
     return order, sources
+
+
+def package_auxiliary_source_owners(
+    checkpoint_id: str,
+    source_order: list[str],
+    contracts: dict[str, dict[str, str]],
+    activated_contracts: dict[str, tuple[str, ...]],
+) -> tuple[tuple[str, str], ...]:
+    """Return the exact reviewed non-contract sources owned by an activation package."""
+
+    raw_entries = PACKAGE_AUXILIARY_SOURCE_OWNERS.get(checkpoint_id, ())
+    if not isinstance(raw_entries, tuple) or any(
+        not isinstance(entry, tuple)
+        or len(entry) != 2
+        or not all(isinstance(value, str) for value in entry)
+        for entry in raw_entries
+    ):
+        raise SystemExit(f"{checkpoint_id}: auxiliary source ownership is malformed")
+
+    entries = cast(tuple[tuple[str, str], ...], raw_entries)
+    paths = [path for path, _owner in entries]
+    if len(paths) != len(set(paths)):
+        raise SystemExit(f"{checkpoint_id}: auxiliary source path is duplicated")
+    if paths != sorted(paths, key=lambda value: value.encode("utf-8")):
+        raise SystemExit(f"{checkpoint_id}: auxiliary source paths are not ordinal")
+
+    baseline_paths = set(source_order)
+    activated_source_paths = {
+        contracts[contract]["sourcePath"]
+        for contract in activated_contracts
+        if contract in contracts
+    }
+    dependency_paths_by_owner: dict[str, set[str]] = {}
+    for path, owner in entries:
+        if path not in baseline_paths:
+            raise SystemExit(f"{checkpoint_id}: auxiliary source is not in the baseline: {path}")
+        if path in activated_source_paths:
+            raise SystemExit(
+                f"{checkpoint_id}: auxiliary source overlaps an activated contract: {path}"
+            )
+        if owner not in activated_contracts or owner not in contracts:
+            raise SystemExit(
+                f"{checkpoint_id}: auxiliary source owner is not activated: {owner}"
+            )
+        dependencies = dependency_paths_by_owner.get(owner)
+        if dependencies is None:
+            source_path = ROOT / contracts[owner]["sourcePath"]
+            dependencies = {
+                dependency.relative_to(ROOT).as_posix()
+                for dependency in repository_solidity_dependency_paths(source_path)
+            }
+            dependency_paths_by_owner[owner] = dependencies
+        if path not in dependencies:
+            raise SystemExit(
+                f"{checkpoint_id}: auxiliary source is not a dependency of {owner}: {path}"
+            )
+    return entries
 
 
 def raw_freeze_artifact_paths(manifest: dict[str, Any]) -> list[Path]:
@@ -1288,6 +1356,12 @@ def validate_checkpoints(
 
         raw_revisions = raw_package.get("revisions")
         expected_contracts = cast(dict[str, tuple[str, ...]], package_definition["contracts"])
+        auxiliary_source_owners = package_auxiliary_source_owners(
+            checkpoint_id,
+            source_order,
+            contracts,
+            expected_contracts,
+        )
         abi_additions = cast(
             dict[str, tuple[dict[str, Any], ...]], package_definition["abiAdditions"]
         )
@@ -1390,6 +1464,21 @@ def validate_checkpoints(
                 )
             package_sources[source_relative] = cast(str, revision["sourceSha256"])
 
+        auxiliary_paths = tuple(path for path, _owner in auxiliary_source_owners)
+        if auxiliary_paths:
+            committed_auxiliary_sources = reviewed_commit_file_bytes(
+                checkpoint_id,
+                reviewed_commit,
+                auxiliary_paths,
+            )
+            for auxiliary_path in auxiliary_paths:
+                auxiliary_hash = sha256_bytes(committed_auxiliary_sources[auxiliary_path])
+                if auxiliary_hash == effective_sources[auxiliary_path]:
+                    raise SystemExit(
+                        f"{checkpoint_id}: auxiliary source does not change: {auxiliary_path}"
+                    )
+                package_sources[auxiliary_path] = auxiliary_hash
+
         expected_contract_order = [name for name in production_order if name in expected_contracts]
         if package_contracts != expected_contract_order:
             raise SystemExit(f"{checkpoint_id}: contract revisions are not in baseline order")
@@ -1471,12 +1560,8 @@ def validate_checkpoints(
                 + "; unexpected="
                 + ",".join(sorted(actual_paths - expected_paths))
             )
-        implemented_paths = {
-            contracts[contract]["sourcePath"]: revision["sourceSha256"]
-            for contract, revision in latest_revisions.items()
-        }
         for relative_source in source_order:
-            expected_hash = implemented_paths.get(relative_source, sources[relative_source])
+            expected_hash = effective_sources[relative_source]
             if sha256_file(ROOT / relative_source) != expected_hash:
                 raise SystemExit(
                     f"{relative_source}: source changed without an exact implementation checkpoint"

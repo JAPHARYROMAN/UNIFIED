@@ -295,6 +295,58 @@ def fixture(
     )
 
 
+def auxiliary_fixture(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Path], bytes]:
+    manifest, registry, paths = fixture(tmp_path, monkeypatch)
+    source_relative = cast(str, manifest["contracts"][0]["sourcePath"])
+    auxiliary_relative = "protocol/src/resolution/IExample.sol"
+    auxiliary_path = tmp_path / auxiliary_relative
+    historical_auxiliary = b"interface IExample { /* historical */ }\n"
+    auxiliary_path.write_bytes(b"interface IExample { function helper() external; }\n")
+    paths["source"].write_text(
+        'import { IExample } from "./IExample.sol";\n'
+        "contract Example is IExample { /* implemented */ "
+        "function helper() external {} }\n",
+        encoding="utf-8",
+    )
+    manifest["sources"].append(
+        {
+            "path": auxiliary_relative,
+            "sha256": checkpoints.sha256_bytes(historical_auxiliary),
+        }
+    )
+    monkeypatch.setattr(
+        checkpoints,
+        "PACKAGE_AUXILIARY_SOURCE_OWNERS",
+        {"P9-EXAMPLE-001": ((auxiliary_relative, "Example"),)},
+    )
+
+    revision = registry["packages"][0]["revisions"][0]
+    revision["sourceSha256"] = checkpoints.sha256_file(paths["source"])
+    revision["dependencyClosureSha256"] = checkpoints.repository_solidity_dependency_hash(
+        paths["source"]
+    )
+    revision["implementationEvidenceBundleSha256"] = (
+        checkpoints.implementation_evidence_bundle_hash("Example")
+    )
+    current_sources = {
+        source_relative: revision["sourceSha256"],
+        auxiliary_relative: checkpoints.sha256_file(auxiliary_path),
+    }
+    source_set = checkpoints.sha256_payload(
+        [
+            {"path": source["path"], "sha256": current_sources[source["path"]]}
+            for source in manifest["sources"]
+        ]
+    )
+    revision["sourceSetSha256"] = source_set
+    registry["currentSourceSetSha256"] = source_set
+    write_review(registry["packages"][0], paths["review"])
+    paths["auxiliary"] = auxiliary_path
+    return manifest, registry, paths, historical_auxiliary
+
+
 def test_valid_reviewed_checkpoint_passes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     manifest, registry, _ = fixture(tmp_path, monkeypatch)
     assert set(checkpoints.validate_checkpoints(manifest=manifest, registry=registry)) == {
@@ -419,6 +471,28 @@ def test_refinance_additions_are_owned_by_their_exact_contracts() -> None:
     assert checkpoints.REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR not in additions[
         "LienRegistry"
     ]
+
+
+def test_refinance_auxiliary_sources_have_exact_owners_and_order() -> None:
+    assert checkpoints.REFINANCE_AUXILIARY_SOURCE_OWNERS == (
+        ("protocol/src/interfaces/phase9/ILienRegistry.sol", "LienRegistry"),
+        (
+            "protocol/src/interfaces/phase9/IRefinanceCoordinator.sol",
+            "RefinanceCoordinator",
+        ),
+    )
+    assert checkpoints.PACKAGE_AUXILIARY_SOURCE_OWNERS == {
+        "P9-REFI-001": checkpoints.REFINANCE_AUXILIARY_SOURCE_OWNERS
+    }
+    assert "P9-PAYOFF-001" not in checkpoints.PACKAGE_AUXILIARY_SOURCE_OWNERS
+
+
+def test_control_bundle_paths_are_ordinal_and_include_abi_ownership_checker() -> None:
+    assert list(checkpoints.CONTROL_BUNDLE_PATHS) == sorted(
+        checkpoints.CONTROL_BUNDLE_PATHS,
+        key=lambda path: path.encode("utf-8"),
+    )
+    assert checkpoints.CONTROL_BUNDLE_PATHS.count("tools/check_abi.py") == 1
 
 
 def test_later_revision_requires_exact_supersession_and_monotonic_activation(
@@ -588,6 +662,166 @@ def test_source_change_without_checkpoint_is_rejected(
     paths["source"].write_text("contract Example { /* unreviewed */ }\n", encoding="utf-8")
     with pytest.raises(SystemExit, match="without an exact implementation checkpoint"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+def test_auxiliary_source_checkpoint_updates_effective_source_set_without_schema_drift(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest, registry, _paths, _historical = auxiliary_fixture(tmp_path, monkeypatch)
+    checkpoint_package = registry["packages"][0]
+    assert set(checkpoint_package) == checkpoints.EXPECTED_PACKAGE_KEYS
+    assert set(checkpoint_package["revisions"][0]) == checkpoints.EXPECTED_REVISION_KEYS
+    assert "auxiliarySources" not in checkpoint_package
+    assert set(checkpoints.validate_checkpoints(manifest=manifest, registry=registry)) == {
+        "Example"
+    }
+
+
+def test_undeclared_auxiliary_source_change_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest, registry, _paths, _historical = auxiliary_fixture(tmp_path, monkeypatch)
+    monkeypatch.setattr(checkpoints, "PACKAGE_AUXILIARY_SOURCE_OWNERS", {})
+    with pytest.raises(SystemExit, match="reviewed Git source set is inconsistent"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+def test_auxiliary_source_must_change_from_its_effective_predecessor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest, registry, paths, historical = auxiliary_fixture(tmp_path, monkeypatch)
+    canonical_read = checkpoints.reviewed_commit_file_bytes
+    auxiliary_relative = paths["auxiliary"].relative_to(tmp_path).as_posix()
+
+    def historical_auxiliary_blob(
+        label: str, commit: str, relative_paths: tuple[str, ...]
+    ) -> dict[str, bytes]:
+        blobs = canonical_read(label, commit, relative_paths)
+        if auxiliary_relative in blobs:
+            blobs[auxiliary_relative] = historical
+        return blobs
+
+    monkeypatch.setattr(
+        checkpoints,
+        "reviewed_commit_file_bytes",
+        historical_auxiliary_blob,
+    )
+    with pytest.raises(SystemExit, match="auxiliary source does not change"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+def test_post_checkpoint_auxiliary_source_mutation_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest, registry, paths, _historical = auxiliary_fixture(tmp_path, monkeypatch)
+    committed = {
+        source["path"]: (tmp_path / source["path"]).read_bytes() for source in manifest["sources"]
+    }
+
+    def committed_blobs(
+        _label: str, _commit: str, relative_paths: tuple[str, ...]
+    ) -> dict[str, bytes]:
+        return {relative: committed[relative] for relative in relative_paths}
+
+    monkeypatch.setattr(checkpoints, "reviewed_commit_file_bytes", committed_blobs)
+    checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+    paths["auxiliary"].write_text("interface IExample { /* drift */ }\n", encoding="utf-8")
+    with pytest.raises(SystemExit, match="without an exact implementation checkpoint"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+def test_auxiliary_source_ownership_validation_fails_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source_relative = "protocol/src/resolution/Example.sol"
+    auxiliary_a = "protocol/src/interfaces/phase9/IAuxiliary.sol"
+    auxiliary_z = "protocol/src/interfaces/phase9/ZAuxiliary.sol"
+    source_path = tmp_path / source_relative
+    source_path.parent.mkdir(parents=True)
+    source_path.write_text("contract Example {}\n", encoding="utf-8")
+    for relative in (auxiliary_a, auxiliary_z):
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("interface Auxiliary {}\n", encoding="utf-8")
+
+    monkeypatch.setattr(checkpoints, "ROOT", tmp_path)
+    dependencies = [tmp_path / source_relative, tmp_path / auxiliary_a, tmp_path / auxiliary_z]
+    monkeypatch.setattr(
+        checkpoints,
+        "repository_solidity_dependency_paths",
+        lambda _source: dependencies,
+    )
+    source_order = [source_relative, auxiliary_a, auxiliary_z]
+    contracts = {"Example": {"sourcePath": source_relative}}
+    activated: dict[str, tuple[str, ...]] = {"Example": ("mutate()",)}
+
+    monkeypatch.setattr(
+        checkpoints,
+        "PACKAGE_AUXILIARY_SOURCE_OWNERS",
+        {"P9-EXAMPLE-001": ((auxiliary_a, "Example"), (auxiliary_z, "Example"))},
+    )
+    assert checkpoints.package_auxiliary_source_owners(
+        "P9-EXAMPLE-001", source_order, contracts, activated
+    ) == ((auxiliary_a, "Example"), (auxiliary_z, "Example"))
+
+    malformed = {"P9-EXAMPLE-001": [(auxiliary_a, "Example")]}
+    monkeypatch.setattr(checkpoints, "PACKAGE_AUXILIARY_SOURCE_OWNERS", malformed)
+    with pytest.raises(SystemExit, match="ownership is malformed"):
+        checkpoints.package_auxiliary_source_owners(
+            "P9-EXAMPLE-001", source_order, contracts, activated
+        )
+
+    duplicate = {"P9-EXAMPLE-001": ((auxiliary_a, "Example"), (auxiliary_a, "Example"))}
+    monkeypatch.setattr(checkpoints, "PACKAGE_AUXILIARY_SOURCE_OWNERS", duplicate)
+    with pytest.raises(SystemExit, match="path is duplicated"):
+        checkpoints.package_auxiliary_source_owners(
+            "P9-EXAMPLE-001", source_order, contracts, activated
+        )
+
+    unsorted = {"P9-EXAMPLE-001": ((auxiliary_z, "Example"), (auxiliary_a, "Example"))}
+    monkeypatch.setattr(checkpoints, "PACKAGE_AUXILIARY_SOURCE_OWNERS", unsorted)
+    with pytest.raises(SystemExit, match="paths are not ordinal"):
+        checkpoints.package_auxiliary_source_owners(
+            "P9-EXAMPLE-001", source_order, contracts, activated
+        )
+
+    nonbaseline = {
+        "P9-EXAMPLE-001": (("protocol/src/interfaces/phase9/IMissing.sol", "Example"),)
+    }
+    monkeypatch.setattr(checkpoints, "PACKAGE_AUXILIARY_SOURCE_OWNERS", nonbaseline)
+    with pytest.raises(SystemExit, match="not in the baseline"):
+        checkpoints.package_auxiliary_source_owners(
+            "P9-EXAMPLE-001", source_order, contracts, activated
+        )
+
+    overlap = {"P9-EXAMPLE-001": ((source_relative, "Example"),)}
+    monkeypatch.setattr(checkpoints, "PACKAGE_AUXILIARY_SOURCE_OWNERS", overlap)
+    with pytest.raises(SystemExit, match="overlaps an activated contract"):
+        checkpoints.package_auxiliary_source_owners(
+            "P9-EXAMPLE-001", source_order, contracts, activated
+        )
+
+    wrong_owner = {"P9-EXAMPLE-001": ((auxiliary_a, "Other"),)}
+    monkeypatch.setattr(checkpoints, "PACKAGE_AUXILIARY_SOURCE_OWNERS", wrong_owner)
+    with pytest.raises(SystemExit, match="owner is not activated"):
+        checkpoints.package_auxiliary_source_owners(
+            "P9-EXAMPLE-001", source_order, contracts, activated
+        )
+
+    monkeypatch.setattr(
+        checkpoints,
+        "PACKAGE_AUXILIARY_SOURCE_OWNERS",
+        {"P9-EXAMPLE-001": ((auxiliary_a, "Example"),)},
+    )
+    monkeypatch.setattr(
+        checkpoints,
+        "repository_solidity_dependency_paths",
+        lambda _source: [tmp_path / source_relative],
+    )
+    with pytest.raises(SystemExit, match="is not a dependency of Example"):
+        checkpoints.package_auxiliary_source_owners(
+            "P9-EXAMPLE-001", source_order, contracts, activated
+        )
 
 
 def test_extra_phase9_contract_is_rejected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

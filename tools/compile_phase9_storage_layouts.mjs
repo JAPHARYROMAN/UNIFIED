@@ -195,6 +195,16 @@ export const REFINANCE_COORDINATOR_ABI_ADDITIONS = [
   REFINANCE_STATE_TRANSITIONED_EVENT,
 ];
 export const LIEN_REGISTRY_ABI_ADDITIONS = [REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR];
+export const REFINANCE_AUXILIARY_SOURCE_OWNERS = [
+  ["protocol/src/interfaces/phase9/ILienRegistry.sol", "LienRegistry"],
+  [
+    "protocol/src/interfaces/phase9/IRefinanceCoordinator.sol",
+    "RefinanceCoordinator",
+  ],
+];
+export const PACKAGE_AUXILIARY_SOURCE_OWNERS = new Map([
+  ["P9-REFI-001", REFINANCE_AUXILIARY_SOURCE_OWNERS],
+]);
 export const KNOWN_MUTATOR_SIGNATURES = new Map([
   ["PayoffQuoteEngine", PAYOFF_ACTIVATED_SIGNATURES],
   ["Phase9LoanFactory", REFINANCE_ACTIVATED_SIGNATURES.get("Phase9LoanFactory")],
@@ -258,6 +268,7 @@ export const CONTROL_BUNDLE_PATHS = [
   "protocol/foundry.toml",
   "scripts/check-foundation.ps1",
   "scripts/generate.ps1",
+  "tools/check_abi.py",
   "tools/check_phase9.py",
   "tools/check_phase9_implementation_checkpoints.py",
   "tools/check_phase9_schema.py",
@@ -601,6 +612,68 @@ export function repositorySolidityDependencyHash(sourcePath, { root = ROOT } = {
       sha256: sha256(readFileSync(path)),
     }));
   return sha256(canonicalJson(payload));
+}
+
+export function validatePackageAuxiliarySourceOwners(
+  checkpointId,
+  {
+    entries = PACKAGE_AUXILIARY_SOURCE_OWNERS.get(checkpointId) ?? [],
+    root = ROOT,
+  } = {},
+) {
+  const definition = ACTIVATION_PACKAGES.get(checkpointId);
+  if (definition === undefined) {
+    throw new Error(`${checkpointId}: auxiliary source ownership is not activated`);
+  }
+  if (
+    !Array.isArray(entries) ||
+    entries.some(
+      (entry) =>
+        !Array.isArray(entry) ||
+        entry.length !== 2 ||
+        entry.some((value) => typeof value !== "string"),
+    )
+  ) {
+    throw new Error(`${checkpointId}: auxiliary source ownership is malformed`);
+  }
+
+  const paths = entries.map(([path]) => path);
+  if (new Set(paths).size !== paths.length) {
+    throw new Error(`${checkpointId}: auxiliary source path is duplicated`);
+  }
+  const ordered = [...paths].sort(ordinalUtf8Compare);
+  if (!ordered.every((path, index) => path === paths[index])) {
+    throw new Error(`${checkpointId}: auxiliary source paths are not ordinal`);
+  }
+
+  const dependenciesByOwner = new Map();
+  for (const [path, owner] of entries) {
+    if (!definition.contracts.has(owner)) {
+      throw new Error(`${checkpointId}: auxiliary source owner is not activated: ${owner}`);
+    }
+    const ownerSource = ACTIVATED_IMPLEMENTATION_SOURCES.get(owner);
+    if (ownerSource === undefined) {
+      throw new Error(`${checkpointId}: auxiliary source owner has no source: ${owner}`);
+    }
+    if (path === ownerSource) {
+      throw new Error(`${checkpointId}: auxiliary source overlaps its owner source: ${path}`);
+    }
+    let dependencies = dependenciesByOwner.get(owner);
+    if (dependencies === undefined) {
+      dependencies = new Set(
+        repositorySolidityDependencyPaths(ownerSource, { root }).map((dependency) =>
+          relative(root, dependency).split(sep).join("/"),
+        ),
+      );
+      dependenciesByOwner.set(owner, dependencies);
+    }
+    if (!dependencies.has(path)) {
+      throw new Error(
+        `${checkpointId}: auxiliary source is not a dependency of ${owner}: ${path}`,
+      );
+    }
+  }
+  return entries;
 }
 
 function gitHashPaths(paths, { root, clean }) {
@@ -973,6 +1046,7 @@ function checkpointLatestRevisions(payload) {
     if (definition === undefined || observedPackages.includes(checkpointPackage.checkpointId)) {
       throw new Error("Phase 9 checkpoint package is not uniquely activated");
     }
+    validatePackageAuxiliarySourceOwners(checkpointPackage.checkpointId);
     observedPackages.push(checkpointPackage.checkpointId);
     if (
       !Array.isArray(checkpointPackage.requiredBacklogIds) ||

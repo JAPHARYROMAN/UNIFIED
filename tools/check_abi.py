@@ -4,6 +4,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any, cast
+
+from check_phase9_implementation_checkpoints import (
+    ACTIVATION_PACKAGES,
+    additive_abi_payload,
+    checkpoint_payload,
+    validate_checkpoints,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 ABI_PAIRS = {
@@ -283,8 +291,39 @@ for _phase9_contract, _phase9_source in _PHASE9_CONTRACT_SOURCES.items():
     )
 
 
+def phase9_expected_abis(registry: dict[str, Any] | None = None) -> dict[str, object]:
+    """Return historical Phase 9 ABIs plus additions from fully validated packages."""
+
+    checkpoints = checkpoint_payload() if registry is None else registry
+    validate_checkpoints(
+        registry=checkpoints,
+        # ABI comparison is intentionally usable before current implementation-source
+        # activation. The full Phase 9 gate separately proves current source, review,
+        # backlog, control-bundle, dependency, and storage evidence.
+        verify_current=False,
+        verify_reviews=False,
+        verify_backlog=False,
+    )
+    expected: dict[str, object] = {
+        contract: json.loads(baseline_path.read_text(encoding="utf-8"))
+        for contract, (_compiled_path, baseline_path) in ABI_PAIRS.items()
+        if contract in _PHASE9_CONTRACT_SOURCES
+    }
+    packages = cast(list[dict[str, Any]], checkpoints["packages"])
+    for package in packages:
+        definition = ACTIVATION_PACKAGES[cast(str, package["checkpointId"])]
+        additions = cast(dict[str, tuple[dict[str, Any], ...]], definition["abiAdditions"])
+        for revision in cast(list[dict[str, Any]], package["revisions"]):
+            contract = cast(str, revision["contract"])
+            expected[contract] = additive_abi_payload(
+                expected[contract], additions.get(contract, ())
+            )
+    return expected
+
+
 def main() -> None:
     failures: list[str] = []
+    phase9_abis = phase9_expected_abis()
     for contract, (compiled_path, baseline_path) in ABI_PAIRS.items():
         if not compiled_path.is_file():
             failures.append(f"{contract}: compiled ABI is missing")
@@ -294,8 +333,14 @@ def main() -> None:
             continue
         compiled = json.loads(compiled_path.read_text(encoding="utf-8"))
         baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
-        if compiled != baseline:
-            failures.append(f"{contract}: ABI differs from reviewed baseline")
+        expected = phase9_abis.get(contract, baseline)
+        if compiled != expected:
+            boundary = (
+                "reviewed baseline plus activated additions"
+                if contract in phase9_abis
+                else "reviewed baseline"
+            )
+            failures.append(f"{contract}: ABI differs from {boundary}")
     if failures:
         raise SystemExit(
             "\n".join(failures)

@@ -18,12 +18,14 @@ import {
   implementationEvidenceBundleSha256,
   LIEN_REGISTRY_ABI_ADDITIONS,
   ordinalUtf8Compare,
+  PACKAGE_AUXILIARY_SOURCE_OWNERS,
   PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS,
   PHASE9_PRODUCTION_CONTRACTS,
   phase9ActivatedSignatures,
   phase9StubContracts,
   phase9WarningStubContracts,
   REFINANCE_ACTIVATED_SIGNATURES,
+  REFINANCE_AUXILIARY_SOURCE_OWNERS,
   REFINANCE_COORDINATOR_ABI_ADDITIONS,
   REFINANCE_STATE_TRANSITIONED_EVENT,
   REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR,
@@ -34,6 +36,7 @@ import {
   solidityImportsFromSource,
   validateCheckpointAbiAdditions,
   validateCheckpointDependencyClosures,
+  validatePackageAuxiliarySourceOwners,
   validatePhase9MutabilityDiagnostics,
 } from "../compile_phase9_storage_layouts.mjs";
 
@@ -379,6 +382,45 @@ test("provisional refinance activation is method-exact and keeps updateCustody f
   );
 });
 
+test("Node and Python tooling share exact refinance auxiliary source ownership", () => {
+  const python = readFileSync(
+    resolve("tools/check_phase9_implementation_checkpoints.py"),
+    "utf8",
+  );
+  const tuple = python.match(
+    /REFINANCE_AUXILIARY_SOURCE_OWNERS = \(([\s\S]*?)\)\r?\nPACKAGE_AUXILIARY_SOURCE_OWNERS/,
+  );
+  assert.notEqual(tuple, null);
+  const pythonOwners = [...tuple[1].matchAll(/\(\s*"([^"]+)",\s*"([^"]+)",?\s*\)/g)].map(
+    (match) => [match[1], match[2]],
+  );
+  assert.deepEqual(REFINANCE_AUXILIARY_SOURCE_OWNERS, pythonOwners);
+  assert.deepEqual(
+    PACKAGE_AUXILIARY_SOURCE_OWNERS.get("P9-REFI-001"),
+    REFINANCE_AUXILIARY_SOURCE_OWNERS,
+  );
+  assert.deepEqual(REFINANCE_AUXILIARY_SOURCE_OWNERS, [
+    ["protocol/src/interfaces/phase9/ILienRegistry.sol", "LienRegistry"],
+    [
+      "protocol/src/interfaces/phase9/IRefinanceCoordinator.sol",
+      "RefinanceCoordinator",
+    ],
+  ]);
+  assert.doesNotThrow(() => validatePackageAuxiliarySourceOwners("P9-REFI-001"));
+  assert.throws(
+    () =>
+      validatePackageAuxiliarySourceOwners("P9-REFI-001", {
+        entries: [
+          [
+            "protocol/src/interfaces/phase9/IRefinanceCoordinator.sol",
+            "LienRegistry",
+          ],
+        ],
+      }),
+    /auxiliary source is not a dependency of LienRegistry/,
+  );
+});
+
 test("RefinanceCoordinator additive ABI allowlist fixes its exact event and error", () => {
   const baseline = JSON.parse(
     readFileSync(resolve("protocol/abi/phase9/RefinanceCoordinator.abi.json"), "utf8"),
@@ -555,6 +597,7 @@ test("Node and Python checkpoint tooling bind the exact control path list", () =
     "protocol/foundry.toml",
     "scripts/check-foundation.ps1",
     "scripts/generate.ps1",
+    "tools/check_abi.py",
     "tools/check_phase9.py",
     "tools/check_phase9_implementation_checkpoints.py",
     "tools/check_phase9_schema.py",
