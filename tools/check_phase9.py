@@ -76,6 +76,8 @@ PHASE9_PRODUCTION_CONTRACTS = (
 )
 PHASE9_CONTRACTS = (*PHASE9_PRODUCTION_CONTRACTS, "Phase9LocalSyntheticToken")
 PHASE9_FOUNDRY_WARNING_CODE = 2018
+PHASE9_FREEZE_ERROR = "Phase9ImplementationNotFrozen"
+PHASE9_FREEZE_ABI_COMPATIBILITY_MARKER = "_phase9FrozenErrorCompatibilityMarker"
 
 EXPECTED_QUOTE_PREIMAGE = (
     '"UNIFIED_PAYOFF_QUOTE_V1"',
@@ -1212,10 +1214,94 @@ def solidity_function_bodies(source: str) -> list[tuple[str, str]]:
 def is_exact_freeze_revert(body: str) -> bool:
     return (
         re.fullmatch(
-            r"\s*revert\s+Phase9ImplementationNotFrozen\s*\(\s*\)\s*;\s*",
+            rf"\s*revert\s+{PHASE9_FREEZE_ERROR}\s*\(\s*\)\s*;\s*",
             body,
         )
         is not None
+    )
+
+
+def check_implemented_freeze_abi_compatibility(contract: str, source: str) -> None:
+    """Allow the frozen error ABI entry without leaving a callable freeze path."""
+    if PHASE9_FREEZE_ERROR not in source:
+        require(
+            PHASE9_FREEZE_ABI_COMPATIBILITY_MARKER not in source,
+            f"{contract} retains the freeze ABI marker without the frozen error",
+        )
+        return
+
+    exact_import = re.compile(
+        rf'import\s*\{{\s*{PHASE9_FREEZE_ERROR}\s*\}}\s*from\s*'
+        r'"\.\./interfaces/phase9/Phase9Errors\.sol"\s*;'
+    )
+    require(
+        len(exact_import.findall(source)) == 1,
+        f"{contract} freeze ABI compatibility import is not exact",
+    )
+
+    marker_functions: list[tuple[str, str]] = []
+    other_functions: list[tuple[str, str]] = []
+    for header, body in solidity_function_bodies(source):
+        function_name = re.match(r"\s*([A-Za-z_]\w*)", header)
+        name = function_name.group(1) if function_name else "<unknown>"
+        if name == PHASE9_FREEZE_ABI_COMPATIBILITY_MARKER:
+            marker_functions.append((header, body))
+        else:
+            other_functions.append((header, body))
+
+    require(
+        len(marker_functions) == 1,
+        f"{contract} must contain exactly one named freeze ABI compatibility marker",
+    )
+    marker_header, marker_body = marker_functions[0]
+    require(
+        re.fullmatch(
+            rf"\s*{PHASE9_FREEZE_ABI_COMPATIBILITY_MARKER}\s*\(\s*\)\s+private\s+pure\s*",
+            marker_header,
+        )
+        is not None,
+        f"{contract} freeze ABI compatibility marker must be exactly private pure",
+    )
+    require(
+        is_exact_freeze_revert(marker_body),
+        f"{contract} freeze ABI compatibility marker body is not exact",
+    )
+
+    impossible_guard = re.compile(
+        rf"if\s*\(\s*msg\.data\.length\s*==\s*0\s*\)\s*"
+        rf"{PHASE9_FREEZE_ABI_COMPATIBILITY_MARKER}\s*\(\s*\)\s*;"
+    )
+    guard_count = 0
+    for header, body in other_functions:
+        body_without_guards, count = impossible_guard.subn("", body)
+        if count:
+            header_words = set(re.findall(r"[A-Za-z_]\w*", header))
+            require(
+                bool({"public", "external"} & header_words)
+                and not bool({"view", "pure"} & header_words),
+                f"{contract} freeze ABI compatibility guard is outside a mutating ABI entrypoint",
+            )
+            guard_count += count
+        require(
+            PHASE9_FREEZE_ABI_COMPATIBILITY_MARKER not in body_without_guards,
+            f"{contract} contains a reachable freeze ABI marker path",
+        )
+        require(
+            PHASE9_FREEZE_ERROR not in body_without_guards,
+            f"{contract} retains fail-closed freeze behavior after activation",
+        )
+
+    require(
+        guard_count == 1,
+        f"{contract} must contain exactly one unreachable freeze ABI compatibility guard",
+    )
+    require(
+        len(re.findall(rf"\b{PHASE9_FREEZE_ERROR}\b", source)) == 2,
+        f"{contract} contains a freeze error use outside the exact ABI compatibility marker",
+    )
+    require(
+        len(re.findall(rf"\b{PHASE9_FREEZE_ABI_COMPATIBILITY_MARKER}\b", source)) == 2,
+        f"{contract} contains a freeze ABI marker use outside the exact unreachable guard",
     )
 
 
@@ -1230,14 +1316,11 @@ def check_phase9_stub_sources(
         if contract not in implemented_contracts:
             require_tokens(
                 source,
-                ("Phase9ImplementationNotFrozen",),
+                (PHASE9_FREEZE_ERROR,),
                 f"{contract} freeze stub",
             )
         else:
-            require(
-                "Phase9ImplementationNotFrozen" not in source,
-                f"{contract} retains fail-closed freeze behavior after activation",
-            )
+            check_implemented_freeze_abi_compatibility(contract, source)
         present = [token for token in forbidden if token.lower() in source.lower()]
         require(
             not present,
@@ -1247,8 +1330,6 @@ def check_phase9_stub_sources(
             re.search(r"\b(?:fallback|receive)\s*\(", source) is None,
             f"{contract} exposes a fallback or receive function",
         )
-        if contract in implemented_contracts:
-            continue
         for header, body in solidity_function_bodies(source):
             header_words = set(re.findall(r"[A-Za-z_]\w*", header))
             if not ({"public", "external"} & header_words):
@@ -1257,10 +1338,16 @@ def check_phase9_stub_sources(
                 continue
             function_name = re.match(r"\s*([A-Za-z_]\w*)", header)
             label = function_name.group(1) if function_name else "<unknown>"
-            require(
-                is_exact_freeze_revert(body),
-                f"{contract}.{label} has a successful or non-canonical mutating stub path",
-            )
+            if contract in implemented_contracts:
+                require(
+                    not is_exact_freeze_revert(body),
+                    f"{contract}.{label} retains exact freeze behavior after activation",
+                )
+            else:
+                require(
+                    is_exact_freeze_revert(body),
+                    f"{contract}.{label} has a successful or non-canonical mutating stub path",
+                )
 
 
 def check_phase9_foundry_warning_policy(

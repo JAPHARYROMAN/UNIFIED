@@ -388,9 +388,12 @@ Activating `UNI-PAYOFF-001` creates a new exact-source implementation checkpoint
 2. the current implementation source and complete reviewed Phase 9 source set receive new
    exact hashes in an implementation checkpoint manifest, and the activated contract's
    ordered transitive repository-local Solidity dependency closure receives a separate
-   exact hash;
+   exact hash; a separate deterministic implementation-evidence bundle binds the activation,
+   acceptance, reference, harness, deployment, and gate files without including the review,
+   checkpoint registry, or backlog in a hash cycle;
 3. the review record names both the immutable historical freeze and the current
-   exact-source checkpoint;
+   exact-source checkpoint, identifies distinct implementation, architecture, security, and
+   tooling participants, and binds the exact lowercase 40-hex reviewed commit;
 4. source-only or dependency-only changes require regenerated source/dependency hashes
    and renewed architecture and security review, but do not replace historical evidence;
 5. any selector, event, error, tuple, mapping, field, base contract, slot, offset, type,

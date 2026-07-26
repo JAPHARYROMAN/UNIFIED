@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
+import shutil
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -194,17 +197,140 @@ def test_mutating_stub_source_must_be_exact_revert() -> None:
     assert not phase9.is_exact_freeze_revert(phase9.solidity_function_bodies(rejected)[0][1])
 
 
-def test_activated_contract_cannot_retain_freeze_behavior() -> None:
+def implemented_abi_compatibility_fixture(extra_body: str = "") -> str:
+    return f'''
+import {{ Phase9ImplementationNotFrozen }} from "../interfaces/phase9/Phase9Errors.sol";
+
+contract Example {{
+    function mutate() external {{
+        if (msg.data.length == 0) _phase9FrozenErrorCompatibilityMarker();
+        {extra_body}
+    }}
+
+    function _phase9FrozenErrorCompatibilityMarker() private pure {{
+        revert Phase9ImplementationNotFrozen();
+    }}
+}}
+'''
+
+
+def test_activated_contract_allows_only_exact_unreachable_freeze_abi_marker() -> None:
+    phase9.check_implemented_freeze_abi_compatibility(
+        "Example", implemented_abi_compatibility_fixture()
+    )
+    phase9.check_phase9_stub_sources(
+        phase9.protocol_compilation_imports(),
+        implemented={"PayoffQuoteEngine"},
+    )
+
+
+def test_activated_contract_rejects_exact_freeze_behavior_on_public_mutator() -> None:
+    source = implemented_abi_compatibility_fixture(
+        "revert Phase9ImplementationNotFrozen();"
+    )
     with pytest.raises(SystemExit, match="retains fail-closed freeze behavior"):
-        phase9.check_phase9_stub_sources(
-            phase9.protocol_compilation_imports(),
-            implemented={"PayoffQuoteEngine"},
+        phase9.check_implemented_freeze_abi_compatibility("Example", source)
+
+
+@pytest.mark.parametrize(
+    "replacement",
+    (
+        "_phase9FrozenErrorCompatibilityMarker();",
+        "if (msg.data.length > 0) _phase9FrozenErrorCompatibilityMarker();",
+        "if (msg.sender != address(0)) _phase9FrozenErrorCompatibilityMarker();",
+    ),
+)
+def test_activated_contract_rejects_reachable_freeze_marker_paths(replacement: str) -> None:
+    source = implemented_abi_compatibility_fixture().replace(
+        "if (msg.data.length == 0) _phase9FrozenErrorCompatibilityMarker();",
+        replacement,
+    )
+    with pytest.raises(SystemExit, match="reachable freeze ABI marker path"):
+        phase9.check_implemented_freeze_abi_compatibility("Example", source)
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    (
+        (
+            lambda source: source.replace("private pure", "internal pure"),
+            "must be exactly private pure",
+        ),
+        (
+            lambda source: source.replace(
+                "revert Phase9ImplementationNotFrozen();",
+                "if (false) revert Phase9ImplementationNotFrozen();",
+            ),
+            "marker body is not exact",
+        ),
+        (
+            lambda source: source.replace(
+                "_phase9FrozenErrorCompatibilityMarker() private pure",
+                "_renamedCompatibilityMarker() private pure",
+            ),
+            "exactly one named freeze ABI compatibility marker",
+        ),
+    ),
+)
+def test_activated_contract_rejects_malformed_freeze_abi_marker(
+    mutation: Any, message: str
+) -> None:
+    with pytest.raises(SystemExit, match=message):
+        phase9.check_implemented_freeze_abi_compatibility(
+            "Example", mutation(implemented_abi_compatibility_fixture())
         )
+
+
+def test_nonimplemented_stub_checks_remain_fail_closed(tmp_path: Path) -> None:
+    imports = phase9.protocol_compilation_imports()
+    factory_source = imports["Phase9LoanFactory"].read_text(encoding="utf-8")
+    mutated_source = factory_source.replace(
+        "revert Phase9ImplementationNotFrozen();",
+        "if (false) revert Phase9ImplementationNotFrozen();",
+        1,
+    )
+    mutated_path = tmp_path / "Phase9LoanFactory.sol"
+    mutated_path.write_text(mutated_source, encoding="utf-8")
+    imports["Phase9LoanFactory"] = mutated_path
+
+    with pytest.raises(SystemExit, match="successful or non-canonical mutating stub path"):
+        phase9.check_phase9_stub_sources(imports, implemented={"PayoffQuoteEngine"})
+
+
+def test_payoff_quote_engine_compiled_abi_remains_historical(tmp_path: Path) -> None:
+    pnpm = shutil.which("pnpm")
+    assert pnpm is not None, "pnpm is required to compile the Phase 9 historical ABI gate"
+    subprocess.run(  # noqa: S603 - executable is resolved from the controlled toolchain PATH
+        [
+            pnpm,
+            "exec",
+            "solcjs",
+            "--base-path",
+            str(ROOT),
+            "--include-path",
+            str(ROOT / "node_modules"),
+            "--abi",
+            "-o",
+            str(tmp_path),
+            str(ROOT / "protocol/src/resolution/PayoffQuoteEngine.sol"),
+        ],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    compiled_path = tmp_path / "protocol_src_resolution_PayoffQuoteEngine_sol_PayoffQuoteEngine.abi"
+    baseline_path = ROOT / "protocol/abi/phase9/PayoffQuoteEngine.abi.json"
+    assert json.loads(compiled_path.read_text(encoding="utf-8")) == json.loads(
+        baseline_path.read_text(encoding="utf-8")
+    )
 
 
 def test_phase9_foundry_warning_policy_is_exact() -> None:
     phase9.check_phase9_foundry_warning_policy(
-        phase9.protocol_compilation_imports(), foundry_config()
+        phase9.protocol_compilation_imports(),
+        foundry_config(),
+        implemented={"PayoffQuoteEngine"},
     )
 
 
@@ -227,14 +353,22 @@ def test_phase9_foundry_warning_policy_rejects_scope_drift(mutation: str) -> Non
         message = "broad path warning ignores"
 
     with pytest.raises(SystemExit, match=message):
-        phase9.check_phase9_foundry_warning_policy(phase9.protocol_compilation_imports(), config)
+        phase9.check_phase9_foundry_warning_policy(
+            phase9.protocol_compilation_imports(),
+            config,
+            implemented={"PayoffQuoteEngine"},
+        )
 
 
 def test_implemented_contract_cannot_retain_a_broad_warning_exemption() -> None:
+    config = copy.deepcopy(foundry_config())
+    config["profile"]["default"]["ignored_error_codes_from"].append(
+        ["src/resolution/PayoffQuoteEngine.sol", [2018]]
+    )
     with pytest.raises(SystemExit, match="exception set drifted"):
         phase9.check_phase9_foundry_warning_policy(
             phase9.protocol_compilation_imports(),
-            foundry_config(),
+            config,
             implemented={"PayoffQuoteEngine"},
         )
 

@@ -7,14 +7,18 @@ import json
 from typing import Any, cast
 
 from check_phase9_implementation_checkpoints import (
+    ACTIVATED_IMPLEMENTATIONS,
     CHECKPOINT_PATH,
     ROOT,
     baseline_contracts,
     checkpoint_payload,
     current_reviewed_source_set_hash,
     historical_manifest,
+    implementation_evidence_bundle_hash,
     read_json,
     repository_solidity_dependency_hash,
+    require_unambiguous_review_pass,
+    review_content,
     sha256_file,
     structural_storage_hash,
     validate_checkpoints,
@@ -22,34 +26,48 @@ from check_phase9_implementation_checkpoints import (
 )
 
 
-def candidate_entry(
-    contract: str, backlog_id: str, review_path: str, manifest: dict[str, Any]
-) -> dict[str, str]:
+def candidate_evidence(contract: str, backlog_id: str, manifest: dict[str, Any]) -> dict[str, str]:
+    """Prepare exact hashes for review without claiming that review has passed."""
+
     contract_order, contracts = baseline_contracts(manifest)
     if contract not in contracts or contract == "Phase9LocalSyntheticToken":
         raise SystemExit(f"{contract} is not a checkpoint-eligible Phase 9 contract")
+    if ACTIVATED_IMPLEMENTATIONS.get(contract) != backlog_id:
+        raise SystemExit(f"{contract}: implementation checkpoint backlog substitution")
     baseline = contracts[contract]
     storage = read_json(ROOT / baseline["storagePath"])
     if not isinstance(storage, dict):
         raise SystemExit(f"{contract}: baseline storage snapshot is malformed")
-    review = validate_review_path(review_path)
-    source_set_hash = current_reviewed_source_set_hash(manifest)
-    entry = {
+    evidence = {
         "abiSha256": baseline["abiSha256"],
         "backlogId": backlog_id,
         "contract": contract,
         "dependencyClosureSha256": repository_solidity_dependency_hash(
             ROOT / baseline["sourcePath"]
         ),
-        "reviewPath": review.relative_to(ROOT).as_posix(),
-        "reviewSha256": sha256_file(review),
+        "implementationEvidenceBundleSha256": implementation_evidence_bundle_hash(contract),
         "sourceSha256": sha256_file(ROOT / baseline["sourcePath"]),
-        "sourceSetSha256": source_set_hash,
-        "status": "PASS",
+        "sourceSetSha256": current_reviewed_source_set_hash(manifest),
         "storageStructuralSha256": structural_storage_hash(cast(dict[str, Any], storage)),
     }
     if contract_order.index(contract) >= contract_order.index("Phase9LocalSyntheticToken"):
         raise SystemExit(f"{contract} is not a production implementation contract")
+    return evidence
+
+
+def candidate_entry(
+    contract: str, backlog_id: str, review_path: str, manifest: dict[str, Any]
+) -> dict[str, str]:
+    evidence = candidate_evidence(contract, backlog_id, manifest)
+    review = validate_review_path(review_path)
+    metadata = require_unambiguous_review_pass(contract, review_content(review))
+    entry = {
+        **evidence,
+        **metadata,
+        "reviewPath": review.relative_to(ROOT).as_posix(),
+        "reviewSha256": sha256_file(review),
+        "status": "PASS",
+    }
     return entry
 
 
@@ -75,11 +93,26 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--contract", required=True)
     parser.add_argument("--backlog-id", required=True)
-    parser.add_argument("--review-path", required=True)
+    parser.add_argument("--review-path")
+    parser.add_argument("--evidence-only", action="store_true")
     parser.add_argument("--write", action="store_true")
     args = parser.parse_args()
 
     manifest = historical_manifest()
+    if args.evidence_only:
+        if args.review_path is not None or args.write:
+            parser.error("--evidence-only cannot be combined with --review-path or --write")
+        print(
+            json.dumps(
+                candidate_evidence(args.contract, args.backlog_id, manifest),
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+        )
+        return
+    if args.review_path is None:
+        parser.error("--review-path is required unless --evidence-only is used")
     entry = candidate_entry(args.contract, args.backlog_id, args.review_path, manifest)
     registry = updated_registry(entry, manifest)
     validate_checkpoints(manifest=manifest, registry=registry)

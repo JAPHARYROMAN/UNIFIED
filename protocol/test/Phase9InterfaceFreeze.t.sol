@@ -8,7 +8,6 @@ import { IGuaranteeVault } from "../src/interfaces/phase9/IGuaranteeVault.sol";
 import { IInsuranceManager } from "../src/interfaces/phase9/IInsuranceManager.sol";
 import { IInsuranceReserveVault } from "../src/interfaces/phase9/IInsuranceReserveVault.sol";
 import { ILienRegistry } from "../src/interfaces/phase9/ILienRegistry.sol";
-import { IPayoffQuoteEngineV2 } from "../src/interfaces/phase9/IPayoffQuoteEngineV2.sol";
 import { IPhase9LoanAccount } from "../src/interfaces/phase9/IPhase9LoanAccount.sol";
 import { IPhase9LoanFactory } from "../src/interfaces/phase9/IPhase9LoanFactory.sol";
 import { IPositionManagerV2 } from "../src/interfaces/phase9/IPositionManagerV2.sol";
@@ -25,7 +24,6 @@ import { GuaranteeVault } from "../src/recovery/GuaranteeVault.sol";
 import { RecoveryManager } from "../src/recovery/RecoveryManager.sol";
 import { CollateralCustodyV2 } from "../src/resolution/CollateralCustodyV2.sol";
 import { LienRegistry } from "../src/resolution/LienRegistry.sol";
-import { PayoffQuoteEngine } from "../src/resolution/PayoffQuoteEngine.sol";
 import { Phase9LoanAccount } from "../src/resolution/Phase9LoanAccount.sol";
 import { Phase9LoanFactory } from "../src/resolution/Phase9LoanFactory.sol";
 import { Phase9Types } from "../src/resolution/Phase9Types.sol";
@@ -36,7 +34,7 @@ import { RestructuringController } from "../src/resolution/RestructuringControll
 contract Phase9InterfaceFreezeTest {
     bytes4 private constant FROZEN = bytes4(keccak256("Phase9ImplementationNotFrozen()"));
 
-    function testEveryNonTokenComponentRejectsItsRepresentativeMutator() public {
+    function testEveryStillUnopenedNonTokenComponentRejectsItsRepresentativeMutator() public {
         Phase9Types.LoanCreationRequest memory loanCreationRequest;
         _requireFrozen(
             address(
@@ -56,16 +54,6 @@ contract Phase9InterfaceFreezeTest {
         _requireFrozen(
             address(new Phase9LoanAccount()),
             abi.encodeCall(IPhase9LoanAccount.closeLoan, (bytes32(uint256(1))))
-        );
-        _requireFrozen(
-            address(
-                new PayoffQuoteEngine(
-                    ILoanRegistry(address(0)), address(0), 0, address(0), address(0)
-                )
-            ),
-            abi.encodeCall(
-                IPayoffQuoteEngineV2.invalidateQuote, (bytes32(uint256(1)), bytes32(uint256(2)))
-            )
         );
         _requireFrozen(
             address(new CollateralCustodyV2(address(0), address(0), address(0))),

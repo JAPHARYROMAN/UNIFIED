@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "compiler": {
+    "solidity": "0.8.36",
+    "optimizerEnabled": true,
+    "optimizerRuns": 200,
+    "evmVersion": "prague",
+    "foundry": "1.7.1",
+    "openzeppelin": "5.6.1"
+  },
+  "contracts": {
+    "token": {
+      "artifactPath": "protocol/out/Phase9LocalSyntheticToken.sol/Phase9LocalSyntheticToken.json",
+      "creationBytes": 2854,
+      "creationCodeHash": "0xcfaf6d301a46b68b63770c6ef492ff37f76eba1bbfac606e5d740bdf98ebe411",
+      "runtimeBytes": 1789,
+      "runtimeCodeHash": "0xb4cb1bc940c6783f3ecad43dc045c0fa93b02fae77d6e874a8adaf7216c907e5"
+    },
+    "engine": {
+      "artifactPath": "protocol/out/PayoffQuoteEngine.sol/PayoffQuoteEngine.json",
+      "creationBytes": 18677,
+      "creationCodeHash": "0x4a7e6ea1960753ce73b5baa1984c4422524ca7afa8b9e6a2327fdd21bb99fb7e",
+      "runtimeBytes": 18177,
+      "runtimeCodeHash": "0x0294a1fad58f2774ef0744fdd9def78d194a2ac49b92368c0f99d5a1f4526e45"
+    },
+    "coordinator": {
+      "artifactPath": "protocol/out/RefinanceCoordinator.sol/RefinanceCoordinator.json",
+      "creationBytes": 3240,
+      "creationCodeHash": "0x974a985bfc47378cf26913fc65a98b85de1efc23e69566c4924ac2a003b583de",
+      "runtimeBytes": 2809,
+      "runtimeCodeHash": "0xdb318db2f05d526fe3cc38758ebfbdb7fe3514cd0eac5a3eaffd7d6afec85cba"
+    },
+    "pair": {
+      "artifactPath": "protocol/out/DeployPhase9Local.s.sol/Phase9PayoffPairDeployer.json",
+      "creationBytes": 46686,
+      "creationCodeHash": "0x453905bc6f9e3e2b0ee6a679e43ffd1d09bf23c6c541949ad1758a698fb23a81",
+      "runtimeBytes": 62,
+      "runtimeCodeHash": "0x0ee2f1b274e7e3f3689788b95bb55b949a897ab27338a3531599127712a705b4"
+    }
+  }
+}

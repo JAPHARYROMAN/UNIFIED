@@ -37,6 +37,46 @@ const ACTIVATED_IMPLEMENTATIONS = new Map([["PayoffQuoteEngine", "UNI-PAYOFF-001
 const ACTIVATED_IMPLEMENTATION_SOURCES = new Map([
   ["PayoffQuoteEngine", "protocol/src/resolution/PayoffQuoteEngine.sol"],
 ]);
+export const PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = [
+  "adr/0020-phase-9-payoff-authority-and-implementation-activation.md",
+  "apps/foundation-console/src/index.ts",
+  "apps/foundation-console/src/phase9PayoffReferenceGolden.ts",
+  "docs/architecture/phase-9-payoff-deployment-evidence.md",
+  "docs/architecture/phase-9-payoff-quote-acceptance.md",
+  "docs/architecture/phase-9-payoff-reference-evidence.md",
+  "infrastructure/local/phase9-payoff-deployment-candidate.schema.json",
+  "infrastructure/local/phase9-payoff-deployment-code-hashes.json",
+  "infrastructure/local/phase9-payoff-deployment-evidence.schema.json",
+  "models/foundation_model/src/unified_foundation/phase9_payoff_reference.py",
+  "models/foundation_model/tests/test_phase9_payoff_reference.py",
+  "packages/phase9/typescript/payoffReference.ts",
+  "protocol/foundry.toml",
+  "protocol/script/DeployPhase9Local.s.sol",
+  "protocol/test/Phase9InterfaceFreeze.t.sol",
+  "protocol/test/Phase9PayoffLocalDeploymentEvidence.t.sol",
+  "protocol/test/Phase9PayoffQuote.t.sol",
+  "protocol/test/Phase9PayoffQuoteAcceptanceMap.sol",
+  "protocol/test/Phase9PayoffQuoteDeployment.t.sol",
+  "protocol/test/Phase9PayoffQuoteFuzz.t.sol",
+  "protocol/test/Phase9PayoffQuoteGolden.t.sol",
+  "protocol/test/Phase9PayoffQuoteHarness.sol",
+  "protocol/test/Phase9PayoffQuoteInvariants.t.sol",
+  "scripts/check-foundation.ps1",
+  "tools/check_phase9.py",
+  "tools/check_phase9_implementation_checkpoints.py",
+  "tools/check_phase9_storage_layouts.py",
+  "tools/compile_phase9_storage_layouts.mjs",
+  "tools/tests/test_phase9_compatibility.py",
+  "tools/tests/test_phase9_implementation_checkpoints.py",
+  "tools/tests/test_phase9_payoff_deployment_evidence_schema.py",
+  "tools/tests/test_phase9_warning_policy.mjs",
+  "tools/tests/test_update_phase9_implementation_checkpoint.py",
+  "tools/update_phase9_implementation_checkpoint.py",
+  "tools/verify_phase9_payoff_deployment.py",
+];
+const IMPLEMENTATION_EVIDENCE_PATHS = new Map([
+  ["PayoffQuoteEngine", PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS],
+]);
 const BASELINE = {
   commit: "4f01a5692df92c435ff8893840ebdcca055449f0",
   manifestSha256: "sha256:9237acd53b00f5e90d77bbd4f5ce09590ddb750d079c333be4b14d8e7b4238a2",
@@ -52,15 +92,21 @@ const CHECKPOINT_ROOT_KEYS = [
 ];
 const CHECKPOINT_ENTRY_KEYS = [
   "abiSha256",
+  "architectureReviewer",
   "backlogId",
   "contract",
   "dependencyClosureSha256",
+  "implementationAuthor",
+  "implementationEvidenceBundleSha256",
   "reviewPath",
   "reviewSha256",
+  "reviewedCommit",
+  "securityReviewer",
   "sourceSha256",
   "sourceSetSha256",
   "status",
   "storageStructuralSha256",
+  "toolingReviewer",
 ];
 const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/;
 
@@ -101,8 +147,8 @@ function exactKeys(value, expected) {
   return observed.length === wanted.length && observed.every((key, index) => key === wanted[index]);
 }
 
-function repositoryPath(path) {
-  const result = relative(ROOT, path);
+function repositoryPath(path, root = ROOT) {
+  const result = relative(root, path);
   return result !== ".." && !result.startsWith(`..${sep}`) && !isAbsolute(result);
 }
 
@@ -216,14 +262,87 @@ export function ordinalUtf8Compare(left, right) {
   return Buffer.compare(Buffer.from(left, "utf8"), Buffer.from(right, "utf8"));
 }
 
-function repositoryImportPath(sourcePath, importPath) {
-  const candidates = importPath.startsWith(".")
-    ? [resolve(dirname(sourcePath), importPath)]
-    : [resolve(ROOT, importPath), resolve(ROOT, "protocol/src", importPath)];
+export function foundryRemappings(root = ROOT) {
+  const configPath = resolve(root, "protocol/foundry.toml");
+  let content;
+  try {
+    content = readFileSync(configPath, "utf8");
+  } catch (error) {
+    if (error?.code === "ENOENT") throw new Error("protocol/foundry.toml is missing");
+    throw error;
+  }
+  const sectionStart = /^\[profile\.default\][ \t]*$/m.exec(content);
+  if (sectionStart === null) throw new Error("Foundry default profile is missing");
+  const sectionOffset = sectionStart.index + sectionStart[0].length;
+  const remainder = content.slice(sectionOffset);
+  const nextSection = /^\[[^\r\n]+\][ \t]*$/m.exec(remainder);
+  const section = remainder.slice(0, nextSection?.index ?? remainder.length);
+  const declarations = [...section.matchAll(/^[ \t]*remappings[ \t]*=[ \t]*\[([\s\S]*?)\]/gm)];
+  if (declarations.length !== 1) throw new Error("Foundry remappings are missing or malformed");
+  const body = declarations[0][1];
+  const entries = [];
+  let cursor = 0;
+  while (cursor < body.length) {
+    while (cursor < body.length && /[\s,]/.test(body[cursor])) cursor += 1;
+    if (cursor === body.length) break;
+    const token = /"(?:\\.|[^"\\])*"/y;
+    token.lastIndex = cursor;
+    const match = token.exec(body);
+    if (match === null) throw new Error("Foundry remapping entry is not a basic string");
+    entries.push(JSON.parse(match[0]));
+    cursor = token.lastIndex;
+    while (cursor < body.length && /\s/.test(body[cursor])) cursor += 1;
+    if (cursor < body.length && body[cursor] !== ",") {
+      throw new Error("Foundry remapping array is malformed");
+    }
+  }
+
+  const parsed = new Map();
+  for (const entry of entries) {
+    const separator = entry.indexOf("=");
+    const prefix = entry.slice(0, separator);
+    const target = entry.slice(separator + 1);
+    if (separator <= 0 || target.length === 0 || parsed.has(prefix)) {
+      throw new Error(`Foundry remapping entry is malformed: ${entry}`);
+    }
+    const targetPath = resolve(dirname(configPath), target);
+    if (!repositoryPath(targetPath, root)) {
+      throw new Error(`Foundry remapping target is outside the repository: ${entry}`);
+    }
+    parsed.set(prefix, targetPath);
+  }
+  return [...parsed.entries()].sort(
+    ([left], [right]) => right.length - left.length || ordinalUtf8Compare(left, right),
+  );
+}
+
+function repositoryImportPath(sourcePath, importPath, root) {
+  let candidates;
+  if (importPath.startsWith(".")) {
+    candidates = [resolve(dirname(sourcePath), importPath)];
+  } else {
+    const remapping = foundryRemappings(root).find(([prefix]) => importPath.startsWith(prefix));
+    if (remapping !== undefined) {
+      const [prefix, target] = remapping;
+      try {
+        if (!statSync(target).isDirectory()) throw new Error("target is not a directory");
+      } catch (error) {
+        if (error?.code === "ENOENT") {
+          throw new Error(
+            `Prepared Foundry remapping target is missing: ${relative(root, target)}`,
+          );
+        }
+        throw error;
+      }
+      candidates = [resolve(target, importPath.slice(prefix.length))];
+    } else {
+      candidates = [resolve(root, importPath), resolve(root, "protocol/src", importPath)];
+    }
+  }
   for (const candidate of candidates) {
-    if (!repositoryPath(candidate)) {
+    if (!repositoryPath(candidate, root)) {
       if (importPath.startsWith(".")) {
-        throw new Error(`${relative(ROOT, sourcePath)} imports outside the repository: ${importPath}`);
+        throw new Error(`${relative(root, sourcePath)} imports outside the repository: ${importPath}`);
       }
       continue;
     }
@@ -231,7 +350,7 @@ function repositoryImportPath(sourcePath, importPath) {
       if (!statSync(candidate).isFile()) continue;
       if (!candidate.toLowerCase().endsWith(".sol")) {
         throw new Error(
-          `${relative(ROOT, sourcePath)} imports a non-Solidity repository file: ${importPath}`,
+          `${relative(root, sourcePath)} imports a non-Solidity repository file: ${importPath}`,
         );
       }
       return candidate;
@@ -239,15 +358,15 @@ function repositoryImportPath(sourcePath, importPath) {
       if (error?.code !== "ENOENT") throw error;
     }
   }
-  if ([".", "protocol/", "src/"].some((prefix) => importPath.startsWith(prefix))) {
-    throw new Error(`${relative(ROOT, sourcePath)} has an unresolved repository import: ${importPath}`);
-  }
-  return null;
+  const kind = [".", "protocol/", "src/"].some((prefix) => importPath.startsWith(prefix))
+    ? "repository"
+    : "non-relative";
+  throw new Error(`${relative(root, sourcePath)} has an unresolved ${kind} import: ${importPath}`);
 }
 
-export function repositorySolidityDependencyHash(sourcePath) {
-  const rootSource = resolve(ROOT, sourcePath);
-  if (!repositoryPath(rootSource)) {
+export function repositorySolidityDependencyPaths(sourcePath, { root = ROOT } = {}) {
+  const rootSource = resolve(root, sourcePath);
+  if (!repositoryPath(rootSource, root)) {
     throw new Error("Phase 9 implementation source is outside the repository");
   }
   const pending = [rootSource];
@@ -257,16 +376,54 @@ export function repositorySolidityDependencyHash(sourcePath) {
     if (observed.has(current)) continue;
     observed.add(current);
     for (const importPath of solidityImports(current)) {
-      const dependency = repositoryImportPath(current, importPath);
-      if (dependency !== null && !observed.has(dependency)) pending.push(dependency);
+      const dependency = repositoryImportPath(current, importPath, root);
+      if (!observed.has(dependency)) pending.push(dependency);
     }
   }
-  const payload = [...observed]
+  return [...observed].sort((left, right) =>
+    ordinalUtf8Compare(
+      relative(root, left).split(sep).join("/"),
+      relative(root, right).split(sep).join("/"),
+    ),
+  );
+}
+
+export function repositorySolidityDependencyHash(sourcePath, { root = ROOT } = {}) {
+  const payload = repositorySolidityDependencyPaths(sourcePath, { root })
     .map((path) => ({
-      path: relative(ROOT, path).split(sep).join("/"),
+      path: relative(root, path).split(sep).join("/"),
       sha256: sha256(readFileSync(path)),
-    }))
-    .sort((left, right) => ordinalUtf8Compare(left.path, right.path));
+    }));
+  return sha256(canonicalJson(payload));
+}
+
+export function implementationEvidenceBundleSha256(contract, { root = ROOT } = {}) {
+  const paths = IMPLEMENTATION_EVIDENCE_PATHS.get(contract);
+  if (paths === undefined) {
+    throw new Error(`${contract}: implementation evidence bundle is not activated`);
+  }
+  if (new Set(paths).size !== paths.length) {
+    throw new Error(`${contract}: implementation evidence bundle contains duplicate paths`);
+  }
+  const ordered = [...paths].sort(ordinalUtf8Compare);
+  if (!ordered.every((path, index) => path === paths[index])) {
+    throw new Error(`${contract}: implementation evidence bundle paths are not ordinal`);
+  }
+  const payload = paths.map((path) => {
+    const absolute = resolve(root, path);
+    if (!repositoryPath(absolute, root)) {
+      throw new Error(`${contract}: implementation evidence path is outside the repository: ${path}`);
+    }
+    try {
+      if (!statSync(absolute).isFile()) throw new Error("not a file");
+    } catch (error) {
+      if (error?.code === "ENOENT") {
+        throw new Error(`${contract}: implementation evidence is missing: ${path}`);
+      }
+      throw error;
+    }
+    return { path, sha256: sha256(readFileSync(absolute)) };
+  });
   return sha256(canonicalJson(payload));
 }
 
@@ -399,27 +556,54 @@ export function phase9StubContracts(payload) {
   const implemented = payload.implementations.map((entry) => entry?.contract);
   if (
     payload.implementations.some(
-      (entry) =>
-        !exactKeys(entry, CHECKPOINT_ENTRY_KEYS) ||
-        !Object.values(entry).every((value) => typeof value === "string") ||
-        typeof entry.contract !== "string" ||
-        !PHASE9_PRODUCTION_CONTRACTS.includes(entry.contract) ||
-        entry.backlogId !== ACTIVATED_IMPLEMENTATIONS.get(entry.contract) ||
-        entry.status !== "PASS" ||
-        [
-          entry.abiSha256,
-          entry.dependencyClosureSha256,
-          entry.reviewSha256,
-          entry.sourceSha256,
-          entry.sourceSetSha256,
-          entry.storageStructuralSha256,
-        ].some((value) => !SHA256_PATTERN.test(value)),
+      (entry) => {
+        if (
+          !exactKeys(entry, CHECKPOINT_ENTRY_KEYS) ||
+          !Object.values(entry).every((value) => typeof value === "string") ||
+          typeof entry.contract !== "string" ||
+          !PHASE9_PRODUCTION_CONTRACTS.includes(entry.contract) ||
+          entry.backlogId !== ACTIVATED_IMPLEMENTATIONS.get(entry.contract) ||
+          entry.status !== "PASS" ||
+          !/^[0-9a-f]{40}$/.test(entry.reviewedCommit) ||
+          [
+            entry.implementationAuthor,
+            entry.architectureReviewer,
+            entry.securityReviewer,
+            entry.toolingReviewer,
+          ].some((identity) => identity.trim().length === 0) ||
+          new Set(
+            [
+              entry.implementationAuthor,
+              entry.architectureReviewer,
+              entry.securityReviewer,
+              entry.toolingReviewer,
+            ].map((identity) => identity.toLocaleLowerCase("en-US")),
+          ).size !== 4 ||
+          [
+            entry.abiSha256,
+            entry.dependencyClosureSha256,
+            entry.implementationEvidenceBundleSha256,
+            entry.reviewSha256,
+            entry.sourceSha256,
+            entry.sourceSetSha256,
+            entry.storageStructuralSha256,
+          ].some((value) => !SHA256_PATTERN.test(value))
+        ) {
+          return true;
+        }
+        return false;
+      },
     ) ||
     new Set(implemented).size !== implemented.length
   ) {
     throw new Error("Phase 9 implementation checkpoint contract set is invalid");
   }
   return PHASE9_PRODUCTION_CONTRACTS.filter((contract) => !implemented.includes(contract));
+}
+
+export function phase9WarningStubContracts(payload) {
+  const checkpointStubs = phase9StubContracts(payload);
+  return checkpointStubs.filter((contract) => !ACTIVATED_IMPLEMENTATIONS.has(contract));
 }
 
 export function validateCheckpointDependencyClosures(payload) {
@@ -431,6 +615,10 @@ export function validateCheckpointDependencyClosures(payload) {
     const actual = repositorySolidityDependencyHash(sourcePath);
     if (actual !== entry.dependencyClosureSha256) {
       throw new Error(`${entry.contract}: reviewed Solidity dependency closure hash is stale`);
+    }
+    const bundle = implementationEvidenceBundleSha256(entry.contract);
+    if (bundle !== entry.implementationEvidenceBundleSha256) {
+      throw new Error(`${entry.contract}: implementation evidence bundle hash is stale`);
     }
   }
 }
@@ -625,7 +813,7 @@ async function main() {
   const errors = diagnostics.filter((diagnostic) => diagnostic.severity === "error");
   if (errors.length > 0) throw new Error(`Solidity compilation failed (${errors.length} errors)`);
   const checkpointPayload = await readJson(CHECKPOINT_PATH);
-  const stubContracts = phase9StubContracts(checkpointPayload);
+  const stubContracts = phase9WarningStubContracts(checkpointPayload);
   validateCheckpointDependencyClosures(checkpointPayload);
   validatePhase9MutabilityDiagnostics(output, { productionContracts: stubContracts });
 

@@ -6,6 +6,9 @@ import csv
 import hashlib
 import json
 import re
+import shutil
+import subprocess
+import tomllib
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, cast
@@ -27,6 +30,58 @@ BASELINE_RAW_FREEZE_ARTIFACTS_SHA256 = (
 )
 ACTIVATION_BACKLOG_ID = "UNI-ADR-015"
 ACTIVATED_IMPLEMENTATIONS = {"PayoffQuoteEngine": "UNI-PAYOFF-001"}
+PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = (
+    "adr/0020-phase-9-payoff-authority-and-implementation-activation.md",
+    "apps/foundation-console/src/index.ts",
+    "apps/foundation-console/src/phase9PayoffReferenceGolden.ts",
+    "docs/architecture/phase-9-payoff-deployment-evidence.md",
+    "docs/architecture/phase-9-payoff-quote-acceptance.md",
+    "docs/architecture/phase-9-payoff-reference-evidence.md",
+    "infrastructure/local/phase9-payoff-deployment-candidate.schema.json",
+    "infrastructure/local/phase9-payoff-deployment-code-hashes.json",
+    "infrastructure/local/phase9-payoff-deployment-evidence.schema.json",
+    "models/foundation_model/src/unified_foundation/phase9_payoff_reference.py",
+    "models/foundation_model/tests/test_phase9_payoff_reference.py",
+    "packages/phase9/typescript/payoffReference.ts",
+    "protocol/foundry.toml",
+    "protocol/script/DeployPhase9Local.s.sol",
+    "protocol/test/Phase9InterfaceFreeze.t.sol",
+    "protocol/test/Phase9PayoffLocalDeploymentEvidence.t.sol",
+    "protocol/test/Phase9PayoffQuote.t.sol",
+    "protocol/test/Phase9PayoffQuoteAcceptanceMap.sol",
+    "protocol/test/Phase9PayoffQuoteDeployment.t.sol",
+    "protocol/test/Phase9PayoffQuoteFuzz.t.sol",
+    "protocol/test/Phase9PayoffQuoteGolden.t.sol",
+    "protocol/test/Phase9PayoffQuoteHarness.sol",
+    "protocol/test/Phase9PayoffQuoteInvariants.t.sol",
+    "scripts/check-foundation.ps1",
+    "tools/check_phase9.py",
+    "tools/check_phase9_implementation_checkpoints.py",
+    "tools/check_phase9_storage_layouts.py",
+    "tools/compile_phase9_storage_layouts.mjs",
+    "tools/tests/test_phase9_compatibility.py",
+    "tools/tests/test_phase9_implementation_checkpoints.py",
+    "tools/tests/test_phase9_payoff_deployment_evidence_schema.py",
+    "tools/tests/test_phase9_warning_policy.mjs",
+    "tools/tests/test_update_phase9_implementation_checkpoint.py",
+    "tools/update_phase9_implementation_checkpoint.py",
+    "tools/verify_phase9_payoff_deployment.py",
+)
+IMPLEMENTATION_EVIDENCE_PATHS = {
+    "PayoffQuoteEngine": PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS,
+}
+
+# Prepared Foundry dependencies under protocol/lib are intentionally excluded from Git.
+# Their exact installed bytes remain covered by dependencyClosureSha256. The candidate
+# commit instead binds the pinned package inputs and the only script that materializes
+# those bytes, in addition to every repository-tracked source in the closure.
+REVIEWED_COMMIT_PROVENANCE_PATHS = (
+    "package.json",
+    "pnpm-lock.yaml",
+    "protocol/foundry.toml",
+    "scripts/prepare-foundry.ps1",
+)
+PREPARED_DEPENDENCY_PREFIXES = ("protocol/lib/",)
 
 SOURCE_ROOTS = (
     ROOT / "protocol/src/interfaces/phase9",
@@ -52,15 +107,21 @@ EXPECTED_BASELINE_KEYS = {
 }
 EXPECTED_ENTRY_KEYS = {
     "abiSha256",
+    "architectureReviewer",
     "backlogId",
     "contract",
     "dependencyClosureSha256",
+    "implementationAuthor",
+    "implementationEvidenceBundleSha256",
     "reviewPath",
     "reviewSha256",
+    "reviewedCommit",
+    "securityReviewer",
     "sourceSha256",
     "sourceSetSha256",
     "status",
     "storageStructuralSha256",
+    "toolingReviewer",
 }
 
 
@@ -312,12 +373,89 @@ def ordinal_utf8_path_key(path: Path) -> bytes:
     return path.relative_to(ROOT).as_posix().encode("utf-8")
 
 
-def repository_import_path(source_path: Path, import_path: str) -> Path | None:
-    candidates = (
-        (source_path.parent / import_path,)
-        if import_path.startswith(".")
-        else (ROOT / import_path, ROOT / "protocol/src" / import_path)
-    )
+def implementation_evidence_bundle_paths(contract: str) -> list[Path]:
+    relative_paths = IMPLEMENTATION_EVIDENCE_PATHS.get(contract)
+    if relative_paths is None:
+        raise SystemExit(f"{contract}: implementation evidence bundle is not activated")
+    if len(set(relative_paths)) != len(relative_paths):
+        raise SystemExit(f"{contract}: implementation evidence bundle contains duplicate paths")
+    encoded_paths = [path.encode("utf-8") for path in relative_paths]
+    if encoded_paths != sorted(encoded_paths):
+        raise SystemExit(f"{contract}: implementation evidence bundle paths are not ordinal")
+    paths: list[Path] = []
+    for relative_path in relative_paths:
+        path = (ROOT / relative_path).resolve()
+        try:
+            path.relative_to(ROOT.resolve())
+        except ValueError:
+            raise SystemExit(
+                f"{contract}: implementation evidence path is outside the repository: "
+                f"{relative_path}"
+            ) from None
+        if not path.is_file():
+            raise SystemExit(f"{contract}: implementation evidence is missing: {relative_path}")
+        paths.append(path)
+    return paths
+
+
+def implementation_evidence_bundle_hash(contract: str) -> str:
+    payload = [
+        {"path": path.relative_to(ROOT).as_posix(), "sha256": sha256_file(path)}
+        for path in implementation_evidence_bundle_paths(contract)
+    ]
+    return sha256_payload(payload)
+
+
+def foundry_remappings() -> tuple[tuple[str, Path], ...]:
+    config_path = ROOT / "protocol/foundry.toml"
+    try:
+        with config_path.open("rb") as handle:
+            config = tomllib.load(handle)
+    except FileNotFoundError as exc:
+        raise SystemExit("protocol/foundry.toml is missing") from exc
+    profile = config.get("profile")
+    default = profile.get("default") if isinstance(profile, dict) else None
+    raw_remappings = default.get("remappings") if isinstance(default, dict) else None
+    if not isinstance(raw_remappings, list):
+        raise SystemExit("Foundry remappings are missing or malformed")
+
+    parsed: dict[str, Path] = {}
+    for raw_remapping in raw_remappings:
+        if not isinstance(raw_remapping, str):
+            raise SystemExit("Foundry remapping entry is not a string")
+        prefix, separator, target = raw_remapping.partition("=")
+        if separator != "=" or not prefix or not target or prefix in parsed:
+            raise SystemExit(f"Foundry remapping entry is malformed: {raw_remapping}")
+        target_path = (config_path.parent / target).resolve()
+        try:
+            target_path.relative_to(ROOT.resolve())
+        except ValueError:
+            raise SystemExit(
+                f"Foundry remapping target is outside the repository: {raw_remapping}"
+            ) from None
+        parsed[prefix] = target_path
+    return tuple(sorted(parsed.items(), key=lambda item: (-len(item[0]), item[0].encode("utf-8"))))
+
+
+def repository_import_path(source_path: Path, import_path: str) -> Path:
+    candidates: tuple[Path, ...]
+    if import_path.startswith("."):
+        candidates = (source_path.parent / import_path,)
+    else:
+        matching_remappings = [
+            (prefix, target)
+            for prefix, target in foundry_remappings()
+            if import_path.startswith(prefix)
+        ]
+        if matching_remappings:
+            prefix, target = matching_remappings[0]
+            if not target.is_dir():
+                raise SystemExit(
+                    f"Prepared Foundry remapping target is missing: {target.relative_to(ROOT)}"
+                )
+            candidates = (target / import_path[len(prefix) :],)
+        else:
+            candidates = (ROOT / import_path, ROOT / "protocol/src" / import_path)
     for candidate in candidates:
         resolved = candidate.resolve()
         try:
@@ -335,11 +473,12 @@ def repository_import_path(source_path: Path, import_path: str) -> Path | None:
                     f"{import_path}"
                 )
             return resolved
-    if import_path.startswith((".", "protocol/", "src/")):
-        raise SystemExit(
-            f"{source_path.relative_to(ROOT)} has an unresolved repository import: {import_path}"
-        )
-    return None
+    import_kind = (
+        "repository" if import_path.startswith((".", "protocol/", "src/")) else "non-relative"
+    )
+    raise SystemExit(
+        f"{source_path.relative_to(ROOT)} has an unresolved {import_kind} import: {import_path}"
+    )
 
 
 def repository_solidity_dependency_paths(source_path: Path) -> list[Path]:
@@ -357,7 +496,7 @@ def repository_solidity_dependency_paths(source_path: Path) -> list[Path]:
         observed.add(current)
         for import_path in solidity_imports(current):
             dependency = repository_import_path(current, import_path)
-            if dependency is not None and dependency not in observed:
+            if dependency not in observed:
                 pending.append(dependency)
     return sorted(observed, key=ordinal_utf8_path_key)
 
@@ -368,6 +507,96 @@ def repository_solidity_dependency_hash(source_path: Path) -> str:
         for path in repository_solidity_dependency_paths(source_path)
     ]
     return sha256_payload(payload)
+
+
+def reviewed_commit_required_paths(
+    contract: str, manifest: dict[str, Any], source_path: Path
+) -> list[Path]:
+    """Return every current file that the cited implementation commit must contain."""
+
+    source_order, _ = baseline_sources(manifest)
+    paths = set(implementation_evidence_bundle_paths(contract))
+    paths.update(ROOT / relative for relative in source_order)
+    for dependency in repository_solidity_dependency_paths(source_path):
+        relative = dependency.relative_to(ROOT).as_posix()
+        if not relative.startswith(PREPARED_DEPENDENCY_PREFIXES):
+            paths.add(dependency)
+    paths.update(ROOT / relative for relative in REVIEWED_COMMIT_PROVENANCE_PATHS)
+
+    for path in paths:
+        try:
+            path.relative_to(ROOT)
+        except ValueError:
+            raise SystemExit(
+                f"{contract}: reviewed commit path is outside the repository: {path}"
+            ) from None
+        if not path.is_file():
+            raise SystemExit(
+                f"{contract}: reviewed commit input is missing: "
+                f"{path.relative_to(ROOT).as_posix()}"
+            )
+    return sorted(paths, key=ordinal_utf8_path_key)
+
+
+def run_git_bytes(arguments: tuple[str, ...]) -> subprocess.CompletedProcess[bytes]:
+    """Run a read-only Git object query from the repository root."""
+
+    git_executable = shutil.which("git")
+    if git_executable is None:
+        raise SystemExit("Git is required to validate the reviewed implementation commit")
+    try:
+        return subprocess.run(  # noqa: S603 - argument vector is never evaluated by a shell
+            (git_executable, *arguments),
+            cwd=ROOT,
+            capture_output=True,
+            check=False,
+        )
+    except OSError as exc:
+        raise SystemExit("Git is required to validate the reviewed implementation commit") from exc
+
+
+def reviewed_commit_file_bytes(
+    contract: str, commit: str, relative_paths: tuple[str, ...]
+) -> dict[str, bytes]:
+    """Read required blobs from an exact commit, failing closed on any missing object."""
+
+    commit_result = run_git_bytes(("cat-file", "-e", f"{commit}^{{commit}}"))
+    if commit_result.returncode != 0:
+        raise SystemExit(f"{contract}: reviewed commit does not exist: {commit}")
+
+    blobs: dict[str, bytes] = {}
+    for relative_path in relative_paths:
+        result = run_git_bytes(("cat-file", "blob", f"{commit}:{relative_path}"))
+        if result.returncode != 0:
+            raise SystemExit(
+                f"{contract}: reviewed commit lacks required path: {relative_path}"
+            )
+        blobs[relative_path] = result.stdout
+    return blobs
+
+
+def validate_reviewed_commit_paths(contract: str, commit: str, paths: list[Path]) -> None:
+    """Prove current path bytes are byte-identical to blobs in the cited commit."""
+
+    relative_paths = tuple(path.relative_to(ROOT).as_posix() for path in paths)
+    committed = reviewed_commit_file_bytes(contract, commit, relative_paths)
+    for path, relative_path in zip(paths, relative_paths, strict=True):
+        if path.read_bytes() != committed[relative_path]:
+            raise SystemExit(
+                f"{contract}: reviewed input differs from reviewed commit: {relative_path}"
+            )
+
+
+def validate_reviewed_commit_binding(
+    contract: str, commit: str, manifest: dict[str, Any], source_path: Path
+) -> None:
+    """Bind every reviewed current input to the exact cited candidate commit."""
+
+    validate_reviewed_commit_paths(
+        contract,
+        commit,
+        reviewed_commit_required_paths(contract, manifest, source_path),
+    )
 
 
 def ordered_source_set_hash(order: list[str], sources: dict[str, str]) -> str:
@@ -402,12 +631,114 @@ def backlog_statuses() -> dict[str, str]:
     return result
 
 
-def normalized_review(path: Path) -> str:
+def review_content(path: Path) -> str:
     try:
-        content = path.read_text(encoding="utf-8")
+        return path.read_text(encoding="utf-8")
     except FileNotFoundError as exc:
         raise SystemExit(f"{path.relative_to(ROOT)} is missing") from exc
+
+
+def normalized_review(content: str) -> str:
     return re.sub(r"\s+", " ", content).strip().lower()
+
+
+def review_field_occurrences(content: str, label: str) -> int:
+    return len(
+        re.findall(
+            rf"\b{re.escape(label)}[ \t*_`]*:",
+            content,
+            flags=re.IGNORECASE,
+        )
+    )
+
+
+def review_status_occurrences(content: str, label: str) -> int:
+    field_pattern = re.compile(
+        rf"\b{re.escape(label)}[ \t*_`]*:",
+        flags=re.IGNORECASE,
+    )
+    prose_pattern = re.compile(
+        rf"\b{re.escape(label)}\b[ \t*_`]*(?:[-=][ \t*_`]*|"
+        rf"[ \t]+(?:is|was|remains)[ \t]+)(?:PASS|FAIL|PENDING|BLOCKED)\b",
+        flags=re.IGNORECASE,
+    )
+    spans = {
+        match.span()
+        for pattern in (field_pattern, prose_pattern)
+        for match in pattern.finditer(content)
+    }
+    return len(spans)
+
+
+def visible_review_lines(content: str) -> tuple[str, ...]:
+    lines: list[str] = []
+    fence: str | None = None
+    in_html_comment = False
+    for line in content.splitlines():
+        if in_html_comment:
+            if "-->" in line:
+                in_html_comment = False
+            continue
+        if "<!--" in line:
+            if "-->" not in line.split("<!--", 1)[1]:
+                in_html_comment = True
+            continue
+        fence_match = re.match(r"^[ \t]{0,3}(?P<marker>`{3,}|~{3,})", line)
+        if fence_match is not None:
+            marker = fence_match.group("marker")[0]
+            if fence is None:
+                fence = marker
+            elif fence == marker:
+                fence = None
+            continue
+        if fence is None:
+            lines.append(line)
+    return tuple(lines)
+
+
+def require_unambiguous_review_pass(contract: str, content: str) -> dict[str, str]:
+    visible_lines = visible_review_lines(content)
+    for label in ("Decision", "Architecture review", "Security review"):
+        canonical = f"{label}: PASS"
+        if visible_lines.count(canonical) != 1 or review_status_occurrences(content, label) != 1:
+            raise SystemExit(
+                f"{contract}: implementation review must contain exactly one visible canonical "
+                f"{canonical} and no other {label} status occurrence"
+            )
+
+    metadata: dict[str, str] = {}
+    fields = (
+        ("Implementation author", "implementationAuthor"),
+        ("Architecture reviewer", "architectureReviewer"),
+        ("Security reviewer", "securityReviewer"),
+        ("Tooling reviewer", "toolingReviewer"),
+        ("Reviewed commit", "reviewedCommit"),
+    )
+    for label, entry_field in fields:
+        pattern = re.compile(rf"{re.escape(label)}: (?P<value>\S(?:.*\S)?)")
+        matches = [
+            match.group("value")
+            for line in visible_lines
+            if (match := pattern.fullmatch(line)) is not None
+        ]
+        if len(matches) != 1 or review_field_occurrences(content, label) != 1:
+            raise SystemExit(
+                f"{contract}: implementation review must contain exactly one visible canonical "
+                f"{label} field"
+            )
+        metadata[entry_field] = matches[0]
+
+    identities = (
+        metadata["implementationAuthor"],
+        metadata["architectureReviewer"],
+        metadata["securityReviewer"],
+        metadata["toolingReviewer"],
+    )
+    if len({identity.casefold() for identity in identities}) != len(identities):
+        raise SystemExit(f"{contract}: implementation author and reviewers must all be distinct")
+    if re.fullmatch(r"[0-9a-f]{40}", metadata["reviewedCommit"]) is None:
+        raise SystemExit(f"{contract}: reviewed commit must be exact lowercase 40-hex")
+    return metadata
 
 
 def validate_review_path(relative: str) -> Path:
@@ -514,6 +845,7 @@ def validate_checkpoints(
         for field in (
             "abiSha256",
             "dependencyClosureSha256",
+            "implementationEvidenceBundleSha256",
             "reviewSha256",
             "sourceSha256",
             "sourceSetSha256",
@@ -548,26 +880,41 @@ def validate_checkpoints(
                 raise SystemExit(f"{contract}: reviewed implementation source hash is stale")
             if repository_solidity_dependency_hash(source_path) != entry["dependencyClosureSha256"]:
                 raise SystemExit(f"{contract}: reviewed Solidity dependency closure hash is stale")
+            if (
+                implementation_evidence_bundle_hash(contract)
+                != entry["implementationEvidenceBundleSha256"]
+            ):
+                raise SystemExit(f"{contract}: implementation evidence bundle hash is stale")
 
         if verify_reviews:
             review_path = validate_review_path(entry["reviewPath"])
             if sha256_file(review_path) != entry["reviewSha256"]:
                 raise SystemExit(f"{contract}: implementation review hash is stale")
-            review = normalized_review(review_path)
+            content = review_content(review_path)
+            metadata = require_unambiguous_review_pass(contract, content)
+            for field, value in metadata.items():
+                if entry[field] != value:
+                    raise SystemExit(f"{contract}: implementation review {field} mismatch")
+            review = normalized_review(content)
             required_tokens = (
-                "decision: pass",
-                "architecture review: pass",
-                "security review: pass",
                 contract.lower(),
                 backlog_id.lower(),
                 entry["sourceSha256"],
                 entry["sourceSetSha256"],
                 entry["dependencyClosureSha256"],
+                entry["implementationEvidenceBundleSha256"],
                 entry["abiSha256"],
                 entry["storageStructuralSha256"],
             )
             if any(token.lower() not in review for token in required_tokens):
                 raise SystemExit(f"{contract}: implementation review status or hashes mismatch")
+            if verify_current:
+                validate_reviewed_commit_binding(
+                    contract,
+                    entry["reviewedCommit"],
+                    baseline,
+                    source_path,
+                )
 
     expected_entry_order = [name for name in production_order if name in entries]
     if observed_order != expected_entry_order:

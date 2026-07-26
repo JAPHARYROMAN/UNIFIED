@@ -13,13 +13,12 @@ deny = "warnings"
 # 3860/5574 arise only from test/script harnesses that embed many deployment bytecodes.
 # Production deployed-size limits are checked separately in scripts/check-contract-sizes.py.
 ignored_error_codes = [3860, 5574, 6335]
-# Phase 9 interface-freeze mutators intentionally remain nonpayable while their
-# sole body statement is the canonical fail-closed revert. Keep warning 2018
+# Unopened Phase 9 interface-freeze mutators intentionally remain nonpayable while
+# their sole body statement is the canonical fail-closed revert. Keep warning 2018
 # scoped to those exact frozen source files; every other warning remains denied.
 ignored_error_codes_from = [
     ["src/resolution/Phase9LoanFactory.sol", [2018]],
     ["src/resolution/Phase9LoanAccount.sol", [2018]],
-    ["src/resolution/PayoffQuoteEngine.sol", [2018]],
     ["src/resolution/CollateralCustodyV2.sol", [2018]],
     ["src/resolution/LienRegistry.sol", [2018]],
     ["src/resolution/RefinanceCoordinator.sol", [2018]],
