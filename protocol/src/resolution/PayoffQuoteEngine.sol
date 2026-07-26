@@ -77,8 +77,6 @@ contract PayoffQuoteEngine is IPayoffQuoteEngineV2 {
         uint64 quoteNonce;
     }
 
-    uint256 private constant LOCAL_CHAIN_ID = 31337;
-
     ILoanRegistry private _loanRegistry;
     address private _quotePolicyRegistry;
     uint64 private _maximumQuoteValidity;
@@ -99,7 +97,7 @@ contract PayoffQuoteEngine is IPayoffQuoteEngineV2 {
         address refinanceCoordinator_
     ) {
         if (
-            block.chainid != LOCAL_CHAIN_ID || address(loanRegistry_) == address(0)
+            block.chainid != 31337 || address(loanRegistry_) == address(0)
                 || quotePolicyRegistry_ == address(0) || maximumQuoteValidity_ == 0
                 || approvedPhase9Factory_ == address(0) || refinanceCoordinator_ == address(0)
                 || address(loanRegistry_).code.length == 0 || quotePolicyRegistry_.code.length == 0
@@ -358,7 +356,7 @@ contract PayoffQuoteEngine is IPayoffQuoteEngineV2 {
         uint64 expectedDebtStateVersion
     ) private view returns (LoanAuthorityFacts memory loan) {
         if (
-            block.chainid != LOCAL_CHAIN_ID || loanId == bytes32(0)
+            block.chainid != 31337 || loanId == bytes32(0)
                 || address(_loanRegistry).code.length == 0
                 || _approvedPhase9Factory.code.length == 0
         ) {

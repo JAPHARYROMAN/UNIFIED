@@ -24,7 +24,7 @@ EVIDENCE_SCHEMA_RELATIVE = Path(
 )
 DEFAULT_PINS = ROOT / PIN_MANIFEST_RELATIVE
 REVIEWED_PIN_MANIFEST_SHA256 = (
-    "sha256:c2486f4fbb36ae30c1b75be4f0b7b48da340f9c2c0c542458aa0ce135f92ff0d"
+    "sha256:8169db4dd2adb3966d80a4265d085475b3af2376b41daadc25b4df8ff473ed54"
 )
 REVIEWED_ARTIFACT_PATHS = {
     "token": "protocol/out/Phase9LocalSyntheticToken.sol/Phase9LocalSyntheticToken.json",
@@ -161,7 +161,7 @@ def _sha256_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _reject_symlink_components(path: Path, root: Path, label: str) -> None:
+def _reject_redirecting_path_components(path: Path, root: Path, label: str) -> None:
     root_absolute = root.absolute()
     path_absolute = path.absolute()
     try:
@@ -173,6 +173,16 @@ def _reject_symlink_components(path: Path, root: Path, label: str) -> None:
         current /= part
         if current.is_symlink():
             _fail(f"{label} must not use symlinked path components")
+        junction_check = getattr(current, "is_junction", None)
+        if callable(junction_check) and junction_check():
+            _fail(f"{label} must not use junction or reparse path components")
+        try:
+            attributes = getattr(current.lstat(), "st_file_attributes", 0)
+        except FileNotFoundError:
+            attributes = 0
+        reparse_attribute = 0x400
+        if attributes & reparse_attribute:
+            _fail(f"{label} must not use junction or reparse path components")
 
 
 def _canonical_repo_file(
@@ -188,16 +198,20 @@ def _canonical_repo_file(
     supplied = path if path.is_absolute() else root / path
     if any(part == ".." for part in path.parts):
         _fail(f"{label} must not contain traversal")
-    _reject_symlink_components(supplied, root, label)
+    _reject_redirecting_path_components(supplied, root, label)
     if must_exist:
         resolved = supplied.resolve(strict=True)
         expected_resolved = expected.resolve(strict=True)
     else:
         resolved = supplied.resolve(strict=False)
         expected_resolved = expected.resolve(strict=False)
+    try:
+        resolved.relative_to(root)
+    except ValueError as exc:
+        raise VerificationError(f"{label} must remain inside the repository") from exc
     if resolved != expected_resolved:
         _fail(f"{label} must be {expected_relative.as_posix()}")
-    return expected_resolved
+    return resolved
 
 
 def canonical_rpc_url(url: str) -> str:
@@ -765,8 +779,15 @@ def _checked_deployment(
     }
 
 
-def _rpc_code(rpc: RpcCall, address: str, block: int, label: str) -> tuple[str, int]:
-    result = rpc("eth_getCode", [address, hex(block)])
+def _block_reference(block_hash: str) -> dict[str, object]:
+    return {
+        "blockHash": _hash(block_hash, "state-observation block hash"),
+        "requireCanonical": True,
+    }
+
+
+def _rpc_code(rpc: RpcCall, address: str, block_hash: str, label: str) -> tuple[str, int]:
+    result = rpc("eth_getCode", [address, _block_reference(block_hash)])
     if not isinstance(result, str) or not result.startswith("0x"):
         _fail(f"RPC code response for {label} is invalid")
     code = bytes.fromhex(result[2:])
@@ -775,8 +796,8 @@ def _rpc_code(rpc: RpcCall, address: str, block: int, label: str) -> tuple[str, 
     return "0x" + _keccak(code).hex(), len(code)
 
 
-def _storage(rpc: RpcCall, address: str, slot: int, block: int) -> str:
-    value = rpc("eth_getStorageAt", [address, hex(slot), hex(block)])
+def _storage(rpc: RpcCall, address: str, slot: int, block_hash: str) -> str:
+    value = rpc("eth_getStorageAt", [address, hex(slot), _block_reference(block_hash)])
     return _hash(value, f"storage {address}[{slot}]", nonzero=False)
 
 
@@ -962,17 +983,17 @@ def verify(
     if token_tx["sender"] != pair_tx["sender"] or pair_tx["nonce"] != token_tx["nonce"] + 1:
         _fail("token and pair must be consecutive CREATE transactions from one sender")
     event = _verify_event(pair_tx["receipt"], facts)
-    block = pair_tx["blockNumber"]
-
     observed_hashes: dict[str, str] = {}
     observed_bytes: dict[str, int] = {}
-    for name, address in (
-        ("token", str(facts["settlement_token"])),
-        ("pair", str(facts["pair_deployer"])),
-        ("engine", str(facts["predicted_engine"])),
-        ("coordinator", str(facts["predicted_coordinator"])),
+    for name, address, observation_block_hash in (
+        ("token", str(facts["settlement_token"]), token_tx["blockHash"]),
+        ("pair", str(facts["pair_deployer"]), pair_tx["blockHash"]),
+        ("engine", str(facts["predicted_engine"]), pair_tx["blockHash"]),
+        ("coordinator", str(facts["predicted_coordinator"]), pair_tx["blockHash"]),
     ):
-        observed_hashes[name], observed_bytes[name] = _rpc_code(rpc, address, block, name)
+        observed_hashes[name], observed_bytes[name] = _rpc_code(
+            rpc, address, observation_block_hash, name
+        )
         if (
             observed_hashes[name] != pins[name]["runtimeCodeHash"]
             or observed_bytes[name] != pins[name]["runtimeBytes"]
@@ -980,8 +1001,10 @@ def verify(
             _fail(f"live {name} code does not match reviewed compiled artifacts")
 
     expected_engine_slots, expected_coordinator_slots = _expected_storage(facts)
-    engine_slots = [_storage(rpc, engine, slot, block) for slot in range(4)]
-    coordinator_slots = [_storage(rpc, coordinator, slot, block) for slot in range(9)]
+    engine_slots = [_storage(rpc, engine, slot, pair_tx["blockHash"]) for slot in range(4)]
+    coordinator_slots = [
+        _storage(rpc, coordinator, slot, pair_tx["blockHash"]) for slot in range(9)
+    ]
     if engine_slots != expected_engine_slots:
         _fail("live payoff engine constructor storage mismatch")
     if coordinator_slots != expected_coordinator_slots:
@@ -1092,6 +1115,14 @@ def rejection_payload(reason: str) -> dict[str, object]:
     }
 
 
+def _stale_rejection_blocks_acceptance(output_path: Path, rejection_path: Path) -> bool:
+    if not rejection_path.exists():
+        return False
+    if output_path.exists():
+        output_path.unlink()
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Verify completed Phase 9 payoff broadcasts and live local RPC state."
@@ -1166,6 +1197,13 @@ def main() -> int:
     except (OSError, ValueError) as exc:
         print(f"Phase 9 payoff deployment verification failed: {exc}", file=sys.stderr)
         return 1
+    if _stale_rejection_blocks_acceptance(output_path, rejection_path):
+        print(
+            "Phase 9 payoff deployment verification failed: an existing rejection requires "
+            f"bounded local reset with {RESET_COMMAND}",
+            file=sys.stderr,
+        )
+        return 1
     try:
         accepted = verify(
             candidate_path,
@@ -1173,15 +1211,32 @@ def main() -> int:
             pins_path,
             HttpRpc(rpc_url),
             rpc_url=rpc_url,
+            root=ROOT,
         )
         validate_accepted_evidence(accepted, ROOT)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         if output_path.exists():
             output_path.unlink()
         _write_json(rejection_path, rejection_payload(str(exc)))
+        if output_path.exists():
+            output_path.unlink()
         print(f"Phase 9 payoff deployment verification failed: {exc}", file=sys.stderr)
         return 1
+    if _stale_rejection_blocks_acceptance(output_path, rejection_path):
+        print(
+            "Phase 9 payoff deployment verification failed: a rejection appeared during "
+            f"verification and requires bounded local reset with {RESET_COMMAND}",
+            file=sys.stderr,
+        )
+        return 1
     _write_json(output_path, accepted)
+    if _stale_rejection_blocks_acceptance(output_path, rejection_path):
+        print(
+            "Phase 9 payoff deployment verification failed: accepted evidence was withdrawn "
+            f"because a rejection requires bounded local reset with {RESET_COMMAND}",
+            file=sys.stderr,
+        )
+        return 1
     print(f"Phase 9 payoff deployment evidence accepted: {output_path}")
     return 0
 

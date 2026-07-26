@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { Buffer } from "node:buffer";
+import { spawnSync } from "node:child_process";
 import { readFileSync, statSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
@@ -38,6 +39,9 @@ const ACTIVATED_IMPLEMENTATION_SOURCES = new Map([
   ["PayoffQuoteEngine", "protocol/src/resolution/PayoffQuoteEngine.sol"],
 ]);
 export const PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = [
+  ".gitattributes",
+  ".github/workflows/foundation.yml",
+  ".mise.toml",
   "adr/0020-phase-9-payoff-authority-and-implementation-activation.md",
   "apps/foundation-console/src/index.ts",
   "apps/foundation-console/src/phase9PayoffReferenceGolden.ts",
@@ -49,9 +53,12 @@ export const PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = [
   "infrastructure/local/phase9-payoff-deployment-evidence.schema.json",
   "models/foundation_model/src/unified_foundation/phase9_payoff_reference.py",
   "models/foundation_model/tests/test_phase9_payoff_reference.py",
+  "package.json",
   "packages/phase9/typescript/payoffReference.ts",
+  "pnpm-lock.yaml",
   "protocol/foundry.toml",
   "protocol/script/DeployPhase9Local.s.sol",
+  "protocol/src/ProtocolCompilation.sol",
   "protocol/test/Phase9InterfaceFreeze.t.sol",
   "protocol/test/Phase9PayoffLocalDeploymentEvidence.t.sol",
   "protocol/test/Phase9PayoffQuote.t.sol",
@@ -61,7 +68,10 @@ export const PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = [
   "protocol/test/Phase9PayoffQuoteGolden.t.sol",
   "protocol/test/Phase9PayoffQuoteHarness.sol",
   "protocol/test/Phase9PayoffQuoteInvariants.t.sol",
+  "pyproject.toml",
+  "scripts/check-contract-sizes.py",
   "scripts/check-foundation.ps1",
+  "scripts/prepare-foundry.ps1",
   "tools/check_phase9.py",
   "tools/check_phase9_implementation_checkpoints.py",
   "tools/check_phase9_storage_layouts.py",
@@ -73,6 +83,8 @@ export const PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = [
   "tools/tests/test_update_phase9_implementation_checkpoint.py",
   "tools/update_phase9_implementation_checkpoint.py",
   "tools/verify_phase9_payoff_deployment.py",
+  "tsconfig.json",
+  "uv.lock",
 ];
 const IMPLEMENTATION_EVIDENCE_PATHS = new Map([
   ["PayoffQuoteEngine", PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS],
@@ -397,6 +409,40 @@ export function repositorySolidityDependencyHash(sourcePath, { root = ROOT } = {
   return sha256(canonicalJson(payload));
 }
 
+function gitHashPaths(paths, { root, clean }) {
+  if (paths.some((path) => path.includes("\n") || path.includes("\r"))) {
+    throw new Error("reviewed input path contains a line break");
+  }
+  const arguments_ = ["hash-object", "--stdin-paths"];
+  if (!clean) arguments_.push("--no-filters");
+  const result = spawnSync("git", arguments_, {
+    cwd: root,
+    input: `${paths.join("\n")}\n`,
+    encoding: "utf8",
+    windowsHide: true,
+  });
+  const digests = result.stdout?.trim().split(/\r?\n/) ?? [];
+  if (
+    result.error !== undefined ||
+    result.status !== 0 ||
+    digests.length !== paths.length ||
+    digests.some((digest) => !/^[0-9a-f]{40}$/.test(digest))
+  ) {
+    throw new Error("Git cannot hash reviewed input paths");
+  }
+  return digests;
+}
+
+export function requireGitCleanWorktreeBytes(paths, { root = ROOT } = {}) {
+  const rawDigests = gitHashPaths(paths, { root, clean: false });
+  const cleanDigests = gitHashPaths(paths, { root, clean: true });
+  for (const [index, path] of paths.entries()) {
+    if (rawDigests[index] !== cleanDigests[index]) {
+      throw new Error(`worktree bytes differ from Git-clean canonical bytes: ${path}`);
+    }
+  }
+}
+
 export function implementationEvidenceBundleSha256(contract, { root = ROOT } = {}) {
   const paths = IMPLEMENTATION_EVIDENCE_PATHS.get(contract);
   if (paths === undefined) {
@@ -424,6 +470,7 @@ export function implementationEvidenceBundleSha256(contract, { root = ROOT } = {
     }
     return { path, sha256: sha256(readFileSync(absolute)) };
   });
+  requireGitCleanWorktreeBytes(paths, { root });
   return sha256(canonicalJson(payload));
 }
 
@@ -791,6 +838,7 @@ async function main() {
   if (openzeppelinPackage.version !== "5.6.1") {
     throw new Error(`Expected OpenZeppelin 5.6.1, received ${openzeppelinPackage.version}`);
   }
+  const initialDependencyClosureSha256 = repositorySolidityDependencyHash(COMPILATION_ROOT);
 
   const input = {
     language: "Solidity",
@@ -840,9 +888,15 @@ async function main() {
   const missing = PHASE9_CONTRACTS.filter((contract) => !matches.has(contract));
   if (missing.length > 0) throw new Error(`Missing Phase 9 contracts: ${missing.join(", ")}`);
 
+  const finalDependencyClosureSha256 = repositorySolidityDependencyHash(COMPILATION_ROOT);
+  if (finalDependencyClosureSha256 !== initialDependencyClosureSha256) {
+    throw new Error("Protocol compilation dependency closure changed during storage compilation");
+  }
+
   const artifact = canonicalize({
+    compilationDependencyClosureSha256: finalDependencyClosureSha256,
     contracts: Object.fromEntries(PHASE9_CONTRACTS.map((name) => [name, matches.get(name)])),
-    schemaVersion: 1,
+    schemaVersion: 2,
   });
   await mkdir(dirname(OUTPUT_PATH), { recursive: true });
   await writeFile(OUTPUT_PATH, `${JSON.stringify(artifact, null, 2)}\n`, "utf8");

@@ -82,8 +82,10 @@ include `implementationEvidenceBundleSha256`, whose exact ordinal path list is e
 `PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS` by both checkpoint implementations. That bundle
 covers the activation ADR, acceptance and evidence documents, reference implementations
 and tests, Solidity harnesses, deployment schemas and verifier, checkpoint and compatibility
-gates, and foundation wiring. The review, checkpoint registry, and backlog are deliberately
-excluded to prevent self-referential hashes.
+gates, foundation workflow and entrypoint, compiler aggregation, size policy, dependency
+preparation, Git attributes, pinned Node and Python dependency graphs, TypeScript and Python
+configuration, and the pinned local toolchain. The review, checkpoint registry, and backlog
+are deliberately excluded to prevent self-referential hashes.
 
 Independent architecture, security, and tooling reviewers must approve that exact source,
 source-set, dependency-closure, evidence-bundle, ABI, and structural-storage evidence. The
@@ -96,12 +98,15 @@ preview the candidate, and then write it:
 The reviewed commit must resolve to a Git commit object. The checkpoint checker compares
 that commit's raw blobs with every implementation-evidence file, every frozen Phase 9
 source-set file, every repository-tracked file in the payoff dependency closure, and the
-pinned `package.json`, `pnpm-lock.yaml`, `protocol/foundry.toml`, and
-`scripts/prepare-foundry.ps1` provenance inputs. The ignored `protocol/lib` copy remains a
-reproducible prepared dependency: its installed bytes are covered by the exact recursive
-dependency-closure hash, while the commit binds the package integrity, remapping, and copy
-procedure. The later combined review, backlog transition, and checkpoint registry are
-intentionally excluded from this commit-byte comparison.
+pinned workflow, package, lockfile, compiler, type-checker, size-gate, remapping, toolchain,
+and dependency-preparation provenance inputs. Before hashing, both checkpoint implementations
+require every evidence file's worktree bytes to equal the bytes produced by Git's clean
+attributes. `.gitattributes` is itself reviewed evidence, all text is repository-canonical
+LF, and hash-critical PowerShell scripts have an explicit LF rule. The ignored `protocol/lib`
+copy remains a reproducible prepared dependency: its installed bytes are covered by the exact
+recursive dependency-closure hash, while the commit binds package integrity, remapping, and
+the copy procedure. The later combined review, backlog transition, and checkpoint registry
+are intentionally excluded from this commit-byte comparison.
 
 ```powershell
 uv run python tools/update_phase9_implementation_checkpoint.py `

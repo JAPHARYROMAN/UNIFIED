@@ -171,6 +171,9 @@ def fixture(
         {"Example": (source_relative,)},
     )
     monkeypatch.setattr(checkpoints, "REVIEWED_COMMIT_PROVENANCE_PATHS", ())
+    monkeypatch.setattr(
+        checkpoints, "require_git_clean_worktree_bytes", lambda contract, paths: None
+    )
 
     def current_worktree_blobs(
         contract: str, commit: str, relative_paths: tuple[str, ...]
@@ -289,6 +292,31 @@ def test_evidence_drift_after_candidate_commit_is_rejected(
 
     with pytest.raises(SystemExit, match="reviewed input differs from reviewed commit"):
         checkpoints.validate_reviewed_commit_paths("Example", commit, [evidence])
+
+
+def test_git_clean_lf_and_candidate_blob_bytes_must_match_exactly(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = tmp_path / "repository"
+    attributes = b"* text=auto eol=lf\n*.ps1 text eol=lf\n"
+    script_relative = "scripts/check.ps1"
+    script_lf = b"$ErrorActionPreference = 'Stop'\nWrite-Output 'ok'\n"
+    commit = create_candidate_commit(
+        repository,
+        {".gitattributes": attributes, script_relative: script_lf},
+    )
+    monkeypatch.setattr(checkpoints, "ROOT", repository)
+    paths = [repository / ".gitattributes", repository / script_relative]
+
+    checkpoints.require_git_clean_worktree_bytes("Example", paths)
+    checkpoints.validate_reviewed_commit_paths("Example", commit, paths)
+
+    script = repository / script_relative
+    script.write_bytes(script_lf.replace(b"\n", b"\r\n"))
+    with pytest.raises(SystemExit, match="Git-clean canonical bytes"):
+        checkpoints.require_git_clean_worktree_bytes("Example", paths)
+    with pytest.raises(SystemExit, match="reviewed input differs from reviewed commit"):
+        checkpoints.validate_reviewed_commit_paths("Example", commit, paths)
 
 
 def test_post_candidate_review_backlog_and_checkpoint_files_may_differ(
@@ -530,7 +558,14 @@ def test_payoff_implementation_evidence_bundle_paths_are_exact_and_cycle_free() 
     assert list(paths) == sorted(paths, key=lambda path: path.encode("utf-8"))
     assert len(paths) == len(set(paths))
     assert {
+        ".gitattributes",
+        ".github/workflows/foundation.yml",
+        ".mise.toml",
+        "package.json",
+        "pnpm-lock.yaml",
+        "protocol/foundry.toml",
         "protocol/script/DeployPhase9Local.s.sol",
+        "protocol/src/ProtocolCompilation.sol",
         "tools/verify_phase9_payoff_deployment.py",
         "infrastructure/local/phase9-payoff-deployment-candidate.schema.json",
         "infrastructure/local/phase9-payoff-deployment-evidence.schema.json",
@@ -538,6 +573,12 @@ def test_payoff_implementation_evidence_bundle_paths_are_exact_and_cycle_free() 
         "protocol/test/Phase9PayoffQuoteAcceptanceMap.sol",
         "models/foundation_model/src/unified_foundation/phase9_payoff_reference.py",
         "packages/phase9/typescript/payoffReference.ts",
+        "pyproject.toml",
+        "scripts/check-contract-sizes.py",
+        "scripts/check-foundation.ps1",
+        "scripts/prepare-foundry.ps1",
+        "tsconfig.json",
+        "uv.lock",
         "tools/check_phase9_implementation_checkpoints.py",
         "tools/compile_phase9_storage_layouts.mjs",
     }.issubset(paths)
@@ -553,6 +594,9 @@ def test_every_payoff_implementation_evidence_path_is_material_to_bundle_hash(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(checkpoints, "ROOT", tmp_path)
+    monkeypatch.setattr(
+        checkpoints, "require_git_clean_worktree_bytes", lambda contract, paths: None
+    )
     for relative_path in checkpoints.PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS:
         path = tmp_path / relative_path
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -875,6 +919,137 @@ def test_structural_storage_ignores_bodies_but_not_variables_or_slots() -> None:
     assert checkpoints.structural_storage_hash(slot_drift) != checkpoints.structural_storage_hash(
         baseline
     )
+
+
+def ast_numbered_storage_payload(
+    contract_id: int, enum_id: int, struct_id: int
+) -> dict[str, Any]:
+    payload = storage_payload("Example", "protocol/src/resolution/Example.sol")
+    contract_type = f"t_contract(IRegistry){contract_id}"
+    enum_type = f"t_enum(State){enum_id}"
+    struct_type = f"t_struct(Item){struct_id}_storage"
+    array_type = f"t_array({struct_type})dyn_storage"
+    mapping_type = f"t_mapping({contract_type},{array_type})"
+    payload["storageLayout"] = {
+        "storage": [
+            {
+                "contract": "protocol/src/resolution/Example.sol:Example",
+                "label": "_items",
+                "offset": 0,
+                "slot": "0",
+                "type": mapping_type,
+            }
+        ],
+        "types": {
+            contract_type: {
+                "encoding": "inplace",
+                "label": "contract IRegistry",
+                "numberOfBytes": "20",
+            },
+            enum_type: {
+                "encoding": "inplace",
+                "label": "enum IExample.State",
+                "numberOfBytes": "1",
+            },
+            struct_type: {
+                "encoding": "inplace",
+                "label": "struct IExample.Item",
+                "members": [
+                    {
+                        "contract": "protocol/src/resolution/Example.sol:Example",
+                        "label": "state",
+                        "offset": 0,
+                        "slot": "0",
+                        "type": enum_type,
+                    },
+                    {
+                        "contract": "protocol/src/resolution/Example.sol:Example",
+                        "label": "registry",
+                        "offset": 1,
+                        "slot": "0",
+                        "type": contract_type,
+                    },
+                ],
+                "numberOfBytes": "32",
+            },
+            array_type: {
+                "base": struct_type,
+                "encoding": "dynamic_array",
+                "label": "struct IExample.Item[]",
+                "numberOfBytes": "32",
+            },
+            mapping_type: {
+                "encoding": "mapping",
+                "key": contract_type,
+                "label": "mapping(contract IRegistry => struct IExample.Item[])",
+                "numberOfBytes": "32",
+                "value": array_type,
+            },
+        },
+    }
+    return payload
+
+
+def test_structural_storage_normalizes_only_solc_ast_type_suffixes_across_graph() -> None:
+    baseline = ast_numbered_storage_payload(101, 102, 103)
+    renumbered = ast_numbered_storage_payload(901, 902, 903)
+
+    assert checkpoints.structural_storage_hash(baseline) == checkpoints.structural_storage_hash(
+        renumbered
+    )
+    layout = checkpoints.structural_storage_payload(baseline)["storageLayout"]
+    full_payload = checkpoints.normalized_storage_payload(baseline)
+    mapping_type = (
+        "t_mapping(t_contract(IRegistry)<ast-id>,"
+        "t_array(t_struct(Item)<ast-id>_storage)dyn_storage)"
+    )
+    assert layout["storage"][0]["type"] == mapping_type
+    assert layout["storage"][0]["label"] == "_items"
+    assert layout["storage"][0]["offset"] == 0
+    assert layout["storage"][0]["slot"] == "0"
+    assert mapping_type in layout["types"]
+    assert layout["types"][mapping_type]["key"] == "t_contract(IRegistry)<ast-id>"
+    assert layout["types"][mapping_type]["value"] == (
+        "t_array(t_struct(Item)<ast-id>_storage)dyn_storage"
+    )
+    assert layout["types"][layout["types"][mapping_type]["value"]]["base"] == (
+        "t_struct(Item)<ast-id>_storage"
+    )
+    assert layout["types"]["t_struct(Item)<ast-id>_storage"]["members"][0]["type"] == (
+        "t_enum(State)<ast-id>"
+    )
+    assert layout["types"]["t_struct(Item)<ast-id>_storage"]["members"][0]["label"] == (
+        "state"
+    )
+    assert full_payload["freezeSurface"] == baseline["freezeSurface"]
+    assert checkpoints.normalize_solc_storage_type_id("t_array(t_address)3_storage") == (
+        "t_array(t_address)3_storage"
+    )
+
+    concrete_label_drift = copy.deepcopy(renumbered)
+    concrete_label_drift["storageLayout"]["types"][
+        "t_struct(Item)903_storage"
+    ]["label"] = "struct OtherNamespace.Item"
+    assert checkpoints.structural_storage_hash(
+        concrete_label_drift
+    ) != checkpoints.structural_storage_hash(baseline)
+
+    member_order_drift = copy.deepcopy(renumbered)
+    member_order_drift["storageLayout"]["types"]["t_struct(Item)903_storage"][
+        "members"
+    ].reverse()
+    assert checkpoints.structural_storage_hash(
+        member_order_drift
+    ) != checkpoints.structural_storage_hash(baseline)
+
+
+def test_structural_storage_type_normalization_collision_fails_closed() -> None:
+    payload = ast_numbered_storage_payload(101, 102, 103)
+    payload["storageLayout"]["types"]["t_struct(Item)104_storage"] = copy.deepcopy(
+        payload["storageLayout"]["types"]["t_struct(Item)103_storage"]
+    )
+    with pytest.raises(SystemExit, match="storage type normalization collision"):
+        checkpoints.structural_storage_hash(payload)
 
 
 def test_historical_manifest_identity_drift_is_rejected(

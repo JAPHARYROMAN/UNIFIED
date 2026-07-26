@@ -70,8 +70,10 @@ RPC transactions and successful receipts; checks sender, consecutive sender nonc
 zero value, blocks, contract addresses, exact reviewed creation bytecode plus constructor
 arguments, and the exact `PayoffPairDeployed` log; recomputes CREATE addresses and
 constructor/configuration digests; independently checks reviewed compiled artifact pins;
-and reads runtime code plus engine slots `0..3` and coordinator slots `0..8` at the pair
-receipt block.
+and reads runtime code plus engine slots `0..3` and coordinator slots `0..8` through
+EIP-1898 canonical block-hash references. The token observation is bound to its receipt
+block hash; the pair, engine, coordinator, and storage observations are bound to the pair
+receipt block hash. A same-height replacement block cannot authorize evidence.
 
 The broadcast file must contain exactly two ordered CREATE transactions—local token,
 then pair deployer—and exactly their two ordered receipts. Accepted evidence records the
@@ -89,4 +91,9 @@ pwsh ./scripts/local-reset.ps1
 ```
 
 Reset disposes local state; it does not claim that a completed historical transaction
-was reverted. No loan or quote may be created before accepted evidence exists.
+was reverted. Once a rejection receipt exists, a later invocation cannot create accepted
+evidence until the bounded reset removes the canonical local evidence directory. Accepted
+and rejected evidence therefore cannot coexist. No loan or quote may be created before
+accepted evidence exists. Canonical path checks reject symlink, Windows junction, and
+other Windows reparse components and re-check final resolved containment within the
+repository before reading, writing, or deleting any evidence file.

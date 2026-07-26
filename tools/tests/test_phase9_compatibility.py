@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import build_phase9_compatibility_manifest as manifest  # noqa: E402
 import check_phase9 as phase9  # noqa: E402
+import check_phase9_implementation_checkpoints as checkpoints  # noqa: E402
 import check_phase9_storage_layouts as storage  # noqa: E402
 import check_privileged_surface as privileged_surface  # noqa: E402
 
@@ -140,6 +141,65 @@ def test_storage_comparison_detects_reordering_and_retyping() -> None:
     expected_list = [expected, {"contract": "second"}]
     actual_list = list(reversed(expected_list))
     assert "$[0]" in (storage.first_difference(expected_list, actual_list) or "")
+
+
+def test_compiled_storage_artifact_requires_exact_fresh_dependency_closure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    artifact_path = tmp_path / "phase9-storage-layouts.json"
+    dependency_hash = "sha256:" + "1" * 64
+    artifact = {
+        "compilationDependencyClosureSha256": dependency_hash,
+        "contracts": {"Phase9LoanFactory": sample_layout()},
+        "schemaVersion": 2,
+    }
+    artifact_path.write_text(json.dumps(artifact), encoding="utf-8")
+    monkeypatch.setattr(storage, "ACTUAL_PATH", artifact_path)
+    monkeypatch.setattr(storage, "PHASE9_CONTRACTS", ("Phase9LoanFactory",))
+    monkeypatch.setattr(
+        storage, "repository_solidity_dependency_hash", lambda _path: dependency_hash
+    )
+
+    assert set(storage.load_actual_layouts()) == {"Phase9LoanFactory"}
+
+    monkeypatch.setattr(
+        storage,
+        "repository_solidity_dependency_hash",
+        lambda _path: "sha256:" + "2" * 64,
+    )
+    with pytest.raises(SystemExit, match="artifact is stale"):
+        storage.load_actual_layouts()
+
+    artifact.pop("compilationDependencyClosureSha256")
+    artifact_path.write_text(json.dumps(artifact), encoding="utf-8")
+    with pytest.raises(SystemExit, match="unsupported schema"):
+        storage.load_actual_layouts()
+
+
+def test_checked_implementation_hash_loads_and_compares_in_implemented_mode(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    layout = sample_layout("PayoffQuoteEngine")
+    observed: list[tuple[str, set[str]]] = []
+
+    def load(implemented: set[str] | None = None) -> dict[str, dict[str, Any]]:
+        observed.append(("load", set() if implemented is None else implemented))
+        return {"PayoffQuoteEngine": layout}
+
+    def compare(
+        _actual: dict[str, dict[str, Any]], implemented: set[str] | None = None
+    ) -> None:
+        observed.append(("compare", set() if implemented is None else implemented))
+
+    monkeypatch.setattr(storage, "load_actual_layouts", load)
+    monkeypatch.setattr(storage, "check_snapshots", compare)
+    expected = checkpoints.structural_storage_hash(layout)
+
+    assert storage.checked_implementation_storage_hash("PayoffQuoteEngine") == expected
+    assert observed == [
+        ("load", {"PayoffQuoteEngine"}),
+        ("compare", {"PayoffQuoteEngine"}),
+    ]
 
 
 def test_backlog_dependency_order_is_fail_closed() -> None:
