@@ -1,5 +1,5 @@
 version: 1
-reviewed_at: 2026-07-25
+reviewed_at: 2026-07-26
 risks:
   - id: RISK-FOUNDATION-001
     severity: EXISTENTIAL
@@ -558,4 +558,139 @@ risks:
     expiry: 2026-10-25
     downstream_impact: Unauthorized debt interest recipient maturity or collateral-right changes
     validation: Immutable home policy typed bounded satellite actions recovery limited to original instruction effects and direct-home repayment preservation
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-001
+    severity: CRITICAL
+    title: Stale incomplete or manipulated payoff quote
+    owner: Security Authority
+    evidence: adr/0021-phase-9-atomic-refinance-authority-and-activation.md
+    expiry: 2026-10-25
+    downstream_impact: Incorrect payoff debt closure lender loss or activation against superseded economics
+    validation: Re-resolve canonical debt account policy component beneficiary route asset token version and half-open expiry immediately before one-time quote consumption; final control requires the Phase 9 refinance acceptance gate
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-002
+    severity: EXISTENTIAL
+    title: Duplicate senior lien or unsafe collateral handoff
+    owner: Security Authority
+    evidence: adr/0021-phase-9-atomic-refinance-authority-and-activation.md
+    expiry: 2026-10-25
+    downstream_impact: Competing secured claims unlocked collateral borrower loss and protocol insolvency
+    validation: Keep the old senior lien enforceable until an atomic version-checked handoff completes for every committed collateral ID; implementation remains frozen until collateral enumeration and acceptance evidence are complete
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-003
+    severity: EXISTENTIAL
+    title: Partial refinance loses funding payoff collateral or proceeds
+    owner: Protocol Architecture Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Trapped lender funds paid old debt without replacement rights or irreversible collateral and borrower loss
+    validation: One same-chain transaction must roll back every escrow payoff lien activation fee and proceeds effect at each injected failure point; no implementation acceptance before the full failpoint matrix passes
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-004
+    severity: CRITICAL
+    title: Old-lender payoff fee or borrower proceeds are redirected
+    owner: Security Authority
+    evidence: adr/0021-phase-9-atomic-refinance-authority-and-activation.md
+    expiry: 2026-10-25
+    downstream_impact: Direct asset theft lender underpayment borrower loss or hidden treasury transfer
+    validation: Derive every amount and recipient from immutable quote loan policy coordinator and borrower authorities with exact sender recipient and coordinator balance-delta tests
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-005
+    severity: EXISTENTIAL
+    title: Refinance or restructuring replay griefing expiry or refund freezes value
+    owner: Security Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Duplicate economic effects permanently trapped escrow or collateral and unresolved loan state
+    validation: Domain-bound nonces immutable operation results changed-replay rejection monotonic terminal states and safe exact-once refunds must pass randomized replay expiry cancellation pause and restart tests
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-006
+    severity: CRITICAL
+    title: Unauthorized amendment consent forgery quorum substitution or vote replay
+    owner: Security Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Protected borrower or lender economics change without the required authority
+    validation: Bind consent and votes to chain contract loan proposal versions policy accounting delta snapshot owner weight nonce and expiry with one-position-one-vote replay tests
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-007
+    severity: EXISTENTIAL
+    title: Replacement or modification erases duplicates or inflates debt or lender rights
+    owner: Accounting and Economic Risk Authority
+    evidence: adr/0021-phase-9-atomic-refinance-authority-and-activation.md
+    expiry: 2026-10-25
+    downstream_impact: Unfunded claims hidden borrower debt lender loss and irreconcilable obligations
+    validation: Prove old debt reaches zero only through exact payoff; for replacement issuance aggregate effective new claims equal accepted funding and new principal with one owner-funder position per commitment; for the paid old loan raw issuance and checkpoints remain nominal history while aggregate effective old claim vote and payment rights joined to canonical CLOSED or TERMINAL debt equal zero; activation authority remains subject to acceptance review
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-008
+    severity: EXISTENTIAL
+    title: Reserve funding segregation stress value or capacity is overstated or double counted
+    owner: Accounting and Economic Risk Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Unsupported protection promises hidden insolvency and unauthorized claim payment
+    validation: Derive capacity only from exact dedicated synthetic custody immutable policy haircuts aggregate limits and reconciled liabilities; no production solvency conclusion or real reserve use is authorized
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-009
+    severity: CRITICAL
+    title: Ineligible duplicate excessive or wrong-recipient claim is approved or paid
+    owner: Security Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Reserve loss beneficiary theft policy-limit breach and duplicated recovery
+    validation: Re-resolve canonical policy loss beneficiary eligibility deductible capacity and prior receipts before approval and payment with exact amount recipient and replay tests
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-010
+    severity: EXISTENTIAL
+    title: Protection recovery or reconciliation roles collude or create a hidden bailout
+    owner: Security Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Unauthorized reserve withdrawal concealed socialized loss and falsified financial state
+    validation: Enforce deny-by-default role separation immutable policy-bound recipients append-only evidence and no runtime authority to rewrite claims payments journals or reconciliation outcomes
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-011
+    severity: CRITICAL
+    title: Waterfall priority or aggregate receipts overpay or double count a creditor
+    owner: Accounting and Economic Risk Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Borrower surplus loss lender overpayment understated loss and unbalanced recovery accounting
+    validation: Use one canonical loss identity bounded entitlements seniority ordering source uniqueness and conservation across collateral guarantor insurance write-off and later-recovery allocations
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-012
+    severity: CRITICAL
+    title: Mocked guarantor legal or off-chain evidence fabricates value release or subrogation
+    owner: Accounting and Economic Risk Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: False debt reduction collateral release unsupported reserve capacity and fictitious recoveries
+    validation: Treat commitments and attestations as memorandum evidence only and recognize economic value solely after an exact canonical synthetic-token receipt bound to the stored loss
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-013
+    severity: CRITICAL
+    title: Write-off hides debt erases rights or duplicates later recovery
+    owner: Accounting and Economic Risk Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Misstated losses destroyed creditor rights duplicate income and unreconciled recoveries
+    validation: Preserve append-only debt loss entitlement and write-off history cap write-off to residual exposure and allocate every later receipt once under the immutable waterfall
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-014
+    severity: CRITICAL
+    title: Contracts durable state ledger and solvency metrics diverge after retry or restart
+    owner: Accounting and Economic Risk Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Conflicting financial truth stale operations duplicate journals and unsafe release evidence
+    validation: Require finalized canonical event identities compare-and-set projections balanced idempotent journals deterministic rebuild crash restart tests and visible owned reconciliation differences
+    status: CONTROLLED_LOCAL_ONLY
+  - id: RISK-PHASE9-015
+    severity: EXISTENTIAL
+    title: Phase 9 recovery or emergency authority crosses into Phase 8 authority
+    owner: Protocol Architecture Authority
+    evidence: adr/0021-phase-9-atomic-refinance-authority-and-activation.md
+    expiry: 2026-10-25
+    downstream_impact: Unauthorized bridge message wrapped supply backing cancellation or remote collateral release
+    validation: Compile and deploy Phase 9 without Phase 8 authority interfaces forbid arbitrary calls and prove recovery and emergency roles cannot mutate Phase 8 messages backing wrapped tokens or collateral releases
     status: CONTROLLED_LOCAL_ONLY

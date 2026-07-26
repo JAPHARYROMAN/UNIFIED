@@ -127,6 +127,9 @@ message RefinanceRequest {
   bytes request_digest = 21;
   RefinanceState state = 22;
   uint64 new_loan_nonce = 23;
+  // Corroborative canonical 20-byte EVM address committed by the refinance
+  // identifier; it must equal the factory-resolved position manager.
+  bytes new_position_manager = 24;
 }
 
 message RefinanceFundingCommitment {

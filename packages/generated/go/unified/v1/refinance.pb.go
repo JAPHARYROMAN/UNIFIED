@@ -731,8 +731,11 @@ type RefinanceRequest struct {
 	RequestDigest            []byte                 `protobuf:"bytes,21,opt,name=request_digest,json=requestDigest,proto3" json:"request_digest,omitempty"`
 	State                    RefinanceState         `protobuf:"varint,22,opt,name=state,proto3,enum=unified.v1.RefinanceState" json:"state,omitempty"`
 	NewLoanNonce             uint64                 `protobuf:"varint,23,opt,name=new_loan_nonce,json=newLoanNonce,proto3" json:"new_loan_nonce,omitempty"`
-	unknownFields            protoimpl.UnknownFields
-	sizeCache                protoimpl.SizeCache
+	// Corroborative canonical 20-byte EVM address committed by the refinance
+	// identifier; it must equal the factory-resolved position manager.
+	NewPositionManager []byte `protobuf:"bytes,24,opt,name=new_position_manager,json=newPositionManager,proto3" json:"new_position_manager,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *RefinanceRequest) Reset() {
@@ -924,6 +927,13 @@ func (x *RefinanceRequest) GetNewLoanNonce() uint64 {
 		return x.NewLoanNonce
 	}
 	return 0
+}
+
+func (x *RefinanceRequest) GetNewPositionManager() []byte {
+	if x != nil {
+		return x.NewPositionManager
+	}
+	return nil
 }
 
 type RefinanceFundingCommitment struct {
@@ -1445,7 +1455,8 @@ const file_unified_v1_refinance_proto_rawDesc = "" +
 	"quoteNonce\x12>\n" +
 	"\fquote_policy\x18\r \x01(\v2\x1b.unified.v1.PolicyReferenceR\vquotePolicy\x12!\n" +
 	"\fquote_digest\x18\x0e \x01(\fR\vquoteDigest\x122\n" +
-	"\x05state\x18\x0f \x01(\x0e2\x1c.unified.v1.PayoffQuoteStateR\x05state\"\xd4\t\n" +
+	"\x05state\x18\x0f \x01(\x0e2\x1c.unified.v1.PayoffQuoteStateR\x05state\"\x86\n" +
+	"\n" +
 	"\x10RefinanceRequest\x129\n" +
 	"\frefinance_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\vrefinanceId\x122\n" +
 	"\vold_loan_id\x18\x02 \x01(\v2\x12.unified.v1.LoanIdR\toldLoanId\x122\n" +
@@ -1472,7 +1483,8 @@ const file_unified_v1_refinance_proto_rawDesc = "" +
 	"\x10refinance_policy\x18\x14 \x01(\v2\x1b.unified.v1.PolicyReferenceR\x0frefinancePolicy\x12%\n" +
 	"\x0erequest_digest\x18\x15 \x01(\fR\rrequestDigest\x120\n" +
 	"\x05state\x18\x16 \x01(\x0e2\x1a.unified.v1.RefinanceStateR\x05state\x12$\n" +
-	"\x0enew_loan_nonce\x18\x17 \x01(\x04R\fnewLoanNonce\"\xf3\x03\n" +
+	"\x0enew_loan_nonce\x18\x17 \x01(\x04R\fnewLoanNonce\x120\n" +
+	"\x14new_position_manager\x18\x18 \x01(\fR\x12newPositionManager\"\xf3\x03\n" +
 	"\x1aRefinanceFundingCommitment\x12;\n" +
 	"\rcommitment_id\x18\x01 \x01(\v2\x16.unified.v1.IdentifierR\fcommitmentId\x129\n" +
 	"\frefinance_id\x18\x02 \x01(\v2\x16.unified.v1.IdentifierR\vrefinanceId\x127\n" +

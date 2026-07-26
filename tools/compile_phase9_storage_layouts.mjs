@@ -32,11 +32,16 @@ const PHASE9_CONTRACTS = [
   "RecoveryManager",
   "Phase9LocalSyntheticToken",
 ];
-const PHASE9_PRODUCTION_CONTRACTS = PHASE9_CONTRACTS.slice(0, -1);
+export const PHASE9_PRODUCTION_CONTRACTS = PHASE9_CONTRACTS.slice(0, -1);
 const PHASE9_MUTABILITY_WARNING_CODE = "2018";
-const ACTIVATED_IMPLEMENTATIONS = new Map([["PayoffQuoteEngine", "UNI-PAYOFF-001"]]);
 const ACTIVATED_IMPLEMENTATION_SOURCES = new Map([
   ["PayoffQuoteEngine", "protocol/src/resolution/PayoffQuoteEngine.sol"],
+  ["Phase9LoanFactory", "protocol/src/resolution/Phase9LoanFactory.sol"],
+  ["Phase9LoanAccount", "protocol/src/resolution/Phase9LoanAccount.sol"],
+  ["CollateralCustodyV2", "protocol/src/resolution/CollateralCustodyV2.sol"],
+  ["LienRegistry", "protocol/src/resolution/LienRegistry.sol"],
+  ["RefinanceCoordinator", "protocol/src/resolution/RefinanceCoordinator.sol"],
+  ["PositionManagerV2", "protocol/src/resolution/PositionManagerV2.sol"],
 ]);
 export const PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = [
   ".gitattributes",
@@ -89,6 +94,182 @@ export const PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = [
 const IMPLEMENTATION_EVIDENCE_PATHS = new Map([
   ["PayoffQuoteEngine", PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS],
 ]);
+const PAYOFF_ACTIVATED_SIGNATURES = [
+  "consumeQuote(bytes32,bytes32,uint64,bytes32)",
+  "invalidateQuote(bytes32,bytes32)",
+  "issueQuote(bytes32,uint64)",
+];
+export const REFINANCE_ACTIVATED_SIGNATURES = new Map([
+  [
+    "Phase9LoanFactory",
+    [
+      "createLoan((bytes32,uint64,bytes32,(address,address,address,bytes32,address,address,address,address,address,address,address,address,address,bytes32,bytes32,bytes32,bytes32,bytes32,bytes32),bytes32))",
+    ],
+  ],
+  [
+    "Phase9LoanAccount",
+    [
+      "activateReplacementLoan(bytes32,(uint8,uint8,uint64,uint64,uint64,uint64,uint64,bytes32,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bytes32,bytes32),bytes32)",
+      "initialize((address,address,address,bytes32,address,address,address,address,address,address,address,address,address,bytes32,bytes32,bytes32,bytes32,bytes32,bytes32),(uint8,uint8,uint64,uint64,uint64,uint64,uint64,bytes32,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bytes32,bytes32))",
+      "recordRefinancePayoff(bytes32,uint256,bytes32)",
+    ],
+  ],
+  [
+    "CollateralCustodyV2",
+    ["recordCustody((bytes32,bytes32,address,address,uint256,uint8,bytes32),bytes32)"],
+  ],
+  [
+    "LienRegistry",
+    [
+      "beginHandoff(bytes32,bytes32,bytes32,uint64)",
+      "completeHandoff(bytes32,bytes32)",
+      "registerLien((bytes32,address,address,bytes32,uint256,address,bytes32,uint64,uint8,bytes32,bytes32))",
+    ],
+  ],
+  [
+    "RefinanceCoordinator",
+    [
+      "cancelRefinance(bytes32,bytes32)",
+      "executeRefinance(bytes32,bytes32)",
+      "recordFundingCommitment((bytes32,bytes32,bytes32,bytes32,address,uint256,uint64,bytes32,uint8,bytes32))",
+      "refundCommitment(bytes32,bytes32)",
+      "requestRefinance((bytes32,bytes32,bytes32,address,address,address,bytes32,bytes32,uint256,uint256,bytes32,bytes32,uint64,bytes32,bytes32,uint256,uint256,uint256,uint64,uint64,bytes32,uint64,uint8,uint64,uint256,uint32,bytes32))",
+    ],
+  ],
+  [
+    "PositionManagerV2",
+    [
+      "initialize(bytes32,address,address)",
+      "issuePosition((bytes32,bytes32,address,uint256,uint256,uint8))",
+      "registerTranche((bytes32,uint32,uint256,uint256,bytes32))",
+    ],
+  ],
+]);
+export const REFINANCE_STATE_TRANSITIONED_EVENT = {
+  anonymous: false,
+  inputs: [
+    { indexed: true, internalType: "bytes32", name: "refinanceId", type: "bytes32" },
+    {
+      indexed: true,
+      internalType: "enum Phase9Types.RefinanceState",
+      name: "previousState",
+      type: "uint8",
+    },
+    {
+      indexed: true,
+      internalType: "enum Phase9Types.RefinanceState",
+      name: "nextState",
+      type: "uint8",
+    },
+    { indexed: false, internalType: "uint64", name: "stateVersion", type: "uint64" },
+    { indexed: false, internalType: "bytes32", name: "operationId", type: "bytes32" },
+    { indexed: false, internalType: "bytes32", name: "evidenceHash", type: "bytes32" },
+  ],
+  name: "RefinanceStateTransitioned",
+  type: "event",
+};
+export const REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR = {
+  inputs: [
+    {
+      internalType: "bytes32",
+      name: "commitmentId",
+      type: "bytes32",
+    },
+  ],
+  name: "UnknownFundingCommitment",
+  type: "error",
+};
+export const REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR = {
+  inputs: [
+    {
+      internalType: "bytes32",
+      name: "handoffId",
+      type: "bytes32",
+    },
+  ],
+  name: "UnknownLienHandoff",
+  type: "error",
+};
+export const REFINANCE_COORDINATOR_ABI_ADDITIONS = [
+  REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR,
+  REFINANCE_STATE_TRANSITIONED_EVENT,
+];
+export const LIEN_REGISTRY_ABI_ADDITIONS = [REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR];
+export const KNOWN_MUTATOR_SIGNATURES = new Map([
+  ["PayoffQuoteEngine", PAYOFF_ACTIVATED_SIGNATURES],
+  ["Phase9LoanFactory", REFINANCE_ACTIVATED_SIGNATURES.get("Phase9LoanFactory")],
+  [
+    "Phase9LoanAccount",
+    [
+      ...REFINANCE_ACTIVATED_SIGNATURES.get("Phase9LoanAccount"),
+      "applyRestructuring((bytes32,bytes32,bytes32,uint64,uint64,uint64,uint64,bytes32,bytes32,bytes32,bytes32,uint256,uint256,uint256,uint256,bytes32),bytes32)",
+      "closeLoan(bytes32)",
+      "recordCoveredLoss(bytes32,uint256,bytes32)",
+      "recordPostWriteOffRecovery(bytes32,uint256,bytes32)",
+      "recordRealizedLoss(bytes32,uint256,bytes32)",
+      "recordWriteOff(bytes32,uint256,bytes32)",
+    ].sort(ordinalUtf8Compare),
+  ],
+  [
+    "CollateralCustodyV2",
+    [
+      ...REFINANCE_ACTIVATED_SIGNATURES.get("CollateralCustodyV2"),
+      "updateCustody(bytes32,uint256,uint8,bytes32)",
+    ].sort(ordinalUtf8Compare),
+  ],
+  ["LienRegistry", REFINANCE_ACTIVATED_SIGNATURES.get("LienRegistry")],
+  ["RefinanceCoordinator", REFINANCE_ACTIVATED_SIGNATURES.get("RefinanceCoordinator")],
+  [
+    "PositionManagerV2",
+    [
+      ...REFINANCE_ACTIVATED_SIGNATURES.get("PositionManagerV2"),
+      "consumeVotingRight(bytes32,bytes32)",
+      "createSnapshot((bytes32,bytes32,uint64,uint64,bytes32,uint256,uint32,uint32,uint32,bytes32))",
+      "transferPosition(bytes32,address)",
+    ].sort(ordinalUtf8Compare),
+  ],
+]);
+const ACTIVATION_PACKAGES = new Map([
+  [
+    "P9-PAYOFF-001",
+    {
+      abiAdditions: new Map(),
+      contracts: new Map([["PayoffQuoteEngine", PAYOFF_ACTIVATED_SIGNATURES]]),
+      requiredBacklogIds: ["UNI-ADR-015", "UNI-PAYOFF-001"],
+    },
+  ],
+  [
+    "P9-REFI-001",
+    {
+      abiAdditions: new Map([
+        ["LienRegistry", LIEN_REGISTRY_ABI_ADDITIONS],
+        ["RefinanceCoordinator", REFINANCE_COORDINATOR_ABI_ADDITIONS],
+      ]),
+      contracts: REFINANCE_ACTIVATED_SIGNATURES,
+      requiredBacklogIds: ["UNI-ADR-016", "UNI-REFI-001", "UNI-REFI-002"],
+    },
+  ],
+]);
+// Bind every source that decides checkpoint activation, ABI/storage/schema compatibility,
+// generated-schema freshness, warning exemptions, or foundation-gate orchestration.
+export const CONTROL_BUNDLE_PATHS = [
+  "buf.gen.yaml",
+  "buf.yaml",
+  "protocol/foundry.toml",
+  "scripts/check-foundation.ps1",
+  "scripts/generate.ps1",
+  "tools/check_phase9.py",
+  "tools/check_phase9_implementation_checkpoints.py",
+  "tools/check_phase9_schema.py",
+  "tools/check_phase9_storage_layouts.py",
+  "tools/compile_phase9_storage_layouts.mjs",
+  "tools/tests/test_phase9_compatibility.py",
+  "tools/tests/test_phase9_implementation_checkpoints.py",
+  "tools/tests/test_phase9_schema.py",
+  "tools/tests/test_phase9_warning_policy.mjs",
+  "tools/tests/test_update_phase9_implementation_checkpoint.py",
+  "tools/update_phase9_implementation_checkpoint.py",
+];
 const BASELINE = {
   commit: "4f01a5692df92c435ff8893840ebdcca055449f0",
   manifestSha256: "sha256:9237acd53b00f5e90d77bbd4f5ce09590ddb750d079c333be4b14d8e7b4238a2",
@@ -96,29 +277,42 @@ const BASELINE = {
     "sha256:b0d494141f0e229cf9fd542401036cd63ba04de73e2f056c1e89a25253cdb1a3",
   sourceSetSha256: "sha256:a40ac90f75c52fc7583651d2d57d2a4d82f1899ed673be8b460d17fb7b7425cb",
 };
+const PAYOFF_ACCEPTED_PACKAGE_SHA256 =
+  "sha256:5c5696120704f77edd5cc7fe256cd745e226cc1b33c1b9c01c7cc8250c185545";
 const CHECKPOINT_ROOT_KEYS = [
   "baseline",
+  "currentControlBundleSha256",
   "currentSourceSetSha256",
-  "implementations",
+  "packages",
   "schemaVersion",
 ];
-const CHECKPOINT_ENTRY_KEYS = [
-  "abiSha256",
+const CHECKPOINT_PACKAGE_KEYS = [
+  "checkpointId",
+  "requiredBacklogIds",
+  "review",
+  "revisions",
+];
+const CHECKPOINT_REVIEW_KEYS = [
   "architectureReviewer",
-  "backlogId",
-  "contract",
-  "dependencyClosureSha256",
   "implementationAuthor",
-  "implementationEvidenceBundleSha256",
   "reviewPath",
   "reviewSha256",
   "reviewedCommit",
   "securityReviewer",
+  "status",
+  "toolingReviewer",
+];
+const CHECKPOINT_REVISION_KEYS = [
+  "abiSha256",
+  "activatedSignatures",
+  "contract",
+  "dependencyClosureSha256",
+  "implementationEvidenceBundleSha256",
+  "revision",
   "sourceSha256",
   "sourceSetSha256",
-  "status",
   "storageStructuralSha256",
-  "toolingReviewer",
+  "supersedes",
 ];
 const SHA256_PATTERN = /^sha256:[0-9a-f]{64}$/;
 
@@ -474,6 +668,33 @@ export function implementationEvidenceBundleSha256(contract, { root = ROOT } = {
   return sha256(canonicalJson(payload));
 }
 
+export function controlBundleSha256({ root = ROOT } = {}) {
+  if (new Set(CONTROL_BUNDLE_PATHS).size !== CONTROL_BUNDLE_PATHS.length) {
+    throw new Error("Phase 9 control bundle contains duplicate paths");
+  }
+  const ordered = [...CONTROL_BUNDLE_PATHS].sort(ordinalUtf8Compare);
+  if (!ordered.every((path, index) => path === CONTROL_BUNDLE_PATHS[index])) {
+    throw new Error("Phase 9 control bundle paths are not ordinal");
+  }
+  const payload = CONTROL_BUNDLE_PATHS.map((path) => {
+    const absolute = resolve(root, path);
+    if (!repositoryPath(absolute, root)) {
+      throw new Error(`Phase 9 control bundle path is outside the repository: ${path}`);
+    }
+    try {
+      if (!statSync(absolute).isFile()) throw new Error("not a file");
+    } catch (error) {
+      if (error?.code === "ENOENT") {
+        throw new Error(`Phase 9 control bundle input is missing: ${path}`);
+      }
+      throw error;
+    }
+    return { path, sha256: sha256(readFileSync(absolute)) };
+  });
+  requireGitCleanWorktreeBytes(CONTROL_BUNDLE_PATHS, { root });
+  return sha256(canonicalJson(payload));
+}
+
 function findImport(importPath) {
   const candidates = [
     resolve(ROOT, importPath),
@@ -522,11 +743,121 @@ function sourceRange(node) {
   return { end: start + length, start };
 }
 
-function functionLabel(sourceName, contractName, node) {
-  const parameterTypes = (node.parameters?.parameters ?? []).map(
-    (parameter) => parameter.typeDescriptions?.typeString ?? "?",
-  );
-  return `${sourceName}:${contractName}.${node.name}(${parameterTypes.join(",")})`;
+function canonicalAbiType(parameter) {
+  if (typeof parameter?.type !== "string") {
+    throw new Error("Phase 9 ABI contains a malformed parameter");
+  }
+  if (!parameter.type.startsWith("tuple")) return parameter.type;
+  if (!Array.isArray(parameter.components)) {
+    throw new Error("Phase 9 ABI tuple parameter lacks components");
+  }
+  const suffix = parameter.type.slice("tuple".length);
+  return `(${parameter.components.map(canonicalAbiType).join(",")})${suffix}`;
+}
+
+function canonicalAbiSignature(entry) {
+  return `${entry.name}(${entry.inputs.map(canonicalAbiType).join(",")})`;
+}
+
+function abiItemIdentity(entry) {
+  if (entry === null || typeof entry !== "object" || typeof entry.type !== "string") {
+    throw new Error("Phase 9 ABI contains a malformed item");
+  }
+  const name = entry.name ?? "";
+  const inputs = entry.inputs ?? [];
+  if (typeof name !== "string" || !Array.isArray(inputs)) {
+    throw new Error("Phase 9 ABI contains a malformed named item");
+  }
+  return `${entry.type}:${name}(${inputs.map(canonicalAbiType).join(",")})`;
+}
+
+function abiSortKey(entry) {
+  const order = new Map([
+    ["constructor", 0],
+    ["error", 1],
+    ["event", 2],
+    ["function", 3],
+  ]);
+  const rank = order.get(entry?.type);
+  if (rank === undefined) {
+    throw new Error(`Phase 9 ABI contains an unsupported item type: ${entry?.type}`);
+  }
+  return [rank, abiItemIdentity(entry)];
+}
+
+export function additiveAbiPayload(baseline, additions) {
+  if (!Array.isArray(baseline) || !Array.isArray(additions)) {
+    throw new Error("Phase 9 additive ABI inputs must be arrays");
+  }
+  const payload = structuredClone(baseline);
+  const identities = new Set(payload.map(abiItemIdentity));
+  if (identities.size !== payload.length) {
+    throw new Error("Phase 9 baseline ABI contains duplicate canonical items");
+  }
+  for (const addition of additions) {
+    if (!["error", "event"].includes(addition?.type)) {
+      throw new Error("Phase 9 additive ABI allowlist may contain errors and events only");
+    }
+    const identity = abiItemIdentity(addition);
+    if (identities.has(identity)) {
+      throw new Error(`Phase 9 additive ABI item is duplicated: ${identity}`);
+    }
+    identities.add(identity);
+    payload.push(structuredClone(addition));
+  }
+  return payload.sort((left, right) => {
+    const [leftRank, leftIdentity] = abiSortKey(left);
+    const [rightRank, rightIdentity] = abiSortKey(right);
+    return leftRank - rightRank || ordinalUtf8Compare(leftIdentity, rightIdentity);
+  });
+}
+
+function contractMutatorSignatures(output, sourceName, contractName) {
+  const abi = output.contracts?.[sourceName]?.[contractName]?.abi;
+  if (!Array.isArray(abi)) {
+    throw new Error(`${contractName}: compiler did not return ABI`);
+  }
+  const byName = new Map();
+  for (const entry of abi) {
+    if (
+      entry?.type !== "function" ||
+      !["nonpayable", "payable"].includes(entry.stateMutability) ||
+      typeof entry.name !== "string" ||
+      !Array.isArray(entry.inputs)
+    ) {
+      continue;
+    }
+    const signature = canonicalAbiSignature(entry);
+    const signatures = byName.get(entry.name) ?? [];
+    signatures.push(signature);
+    byName.set(entry.name, signatures);
+  }
+  return byName;
+}
+
+function functionSignature(signaturesByName, node, contractName) {
+  const candidates = signaturesByName.get(node.name) ?? [];
+  const parameterCount = node.parameters?.parameters?.length ?? 0;
+  const matching = candidates.filter((signature) => {
+    const abi = signature.slice(signature.indexOf("(") + 1, -1);
+    if (abi.length === 0) return parameterCount === 0;
+    let depth = 0;
+    let count = 1;
+    for (const character of abi) {
+      if (character === "(") depth += 1;
+      if (character === ")") depth -= 1;
+      if (character === "," && depth === 0) count += 1;
+    }
+    return count === parameterCount;
+  });
+  if (matching.length !== 1) {
+    throw new Error(`${contractName}.${node.name}: mutator ABI signature is ambiguous`);
+  }
+  return matching[0];
+}
+
+function functionLabel(sourceName, contractName, signature) {
+  return `${sourceName}:${contractName}.${signature}`;
 }
 
 function canonicalFreezeMutators(output, productionContracts) {
@@ -539,6 +870,11 @@ function canonicalFreezeMutators(output, productionContracts) {
       ) {
         continue;
       }
+      const signaturesByName = contractMutatorSignatures(
+        output,
+        sourceName,
+        contract.name,
+      );
       for (const node of contract.nodes ?? []) {
         const statements = node.body?.statements ?? [];
         if (
@@ -552,10 +888,13 @@ function canonicalFreezeMutators(output, productionContracts) {
         ) {
           continue;
         }
+        const signature = functionSignature(signaturesByName, node, contract.name);
         functions.push({
           ...sourceRange(node),
+          contract: contract.name,
           key: `${sourceName}:${node.id}`,
-          label: functionLabel(sourceName, contract.name, node),
+          label: functionLabel(sourceName, contract.name, signature),
+          signature,
           sourceName,
         });
       }
@@ -574,6 +913,11 @@ function externalMutators(output, productionContracts) {
       ) {
         continue;
       }
+      const signaturesByName = contractMutatorSignatures(
+        output,
+        sourceName,
+        contract.name,
+      );
       for (const node of contract.nodes ?? []) {
         if (
           node.nodeType === "FunctionDefinition" &&
@@ -581,7 +925,15 @@ function externalMutators(output, productionContracts) {
           ["external", "public"].includes(node.visibility) &&
           !["view", "pure"].includes(node.stateMutability)
         ) {
-          functions.push(functionLabel(sourceName, contract.name, node));
+          const signature = functionSignature(signaturesByName, node, contract.name);
+          functions.push({
+            ...sourceRange(node),
+            contract: contract.name,
+            key: `${sourceName}:${node.id}`,
+            label: functionLabel(sourceName, contract.name, signature),
+            signature,
+            sourceName,
+          });
         }
       }
     }
@@ -589,83 +941,251 @@ function externalMutators(output, productionContracts) {
   return functions;
 }
 
-export function phase9StubContracts(payload) {
+function checkpointLatestRevisions(payload) {
   if (
     !exactKeys(payload, CHECKPOINT_ROOT_KEYS) ||
-    payload.schemaVersion !== 1 ||
-    !Array.isArray(payload.implementations) ||
+    payload.schemaVersion !== 2 ||
+    !Array.isArray(payload.packages) ||
     !exactKeys(payload.baseline, Object.keys(BASELINE)) ||
     canonicalJson(payload.baseline) !== canonicalJson(BASELINE) ||
+    !SHA256_PATTERN.test(payload.currentControlBundleSha256) ||
     !SHA256_PATTERN.test(payload.currentSourceSetSha256)
   ) {
     throw new Error("Phase 9 implementation checkpoint registry is malformed");
   }
-  const implemented = payload.implementations.map((entry) => entry?.contract);
-  if (
-    payload.implementations.some(
-      (entry) => {
-        if (
-          !exactKeys(entry, CHECKPOINT_ENTRY_KEYS) ||
-          !Object.values(entry).every((value) => typeof value === "string") ||
-          typeof entry.contract !== "string" ||
-          !PHASE9_PRODUCTION_CONTRACTS.includes(entry.contract) ||
-          entry.backlogId !== ACTIVATED_IMPLEMENTATIONS.get(entry.contract) ||
-          entry.status !== "PASS" ||
-          !/^[0-9a-f]{40}$/.test(entry.reviewedCommit) ||
-          [
-            entry.implementationAuthor,
-            entry.architectureReviewer,
-            entry.securityReviewer,
-            entry.toolingReviewer,
-          ].some((identity) => identity.trim().length === 0) ||
-          new Set(
-            [
-              entry.implementationAuthor,
-              entry.architectureReviewer,
-              entry.securityReviewer,
-              entry.toolingReviewer,
-            ].map((identity) => identity.toLocaleLowerCase("en-US")),
-          ).size !== 4 ||
-          [
-            entry.abiSha256,
-            entry.dependencyClosureSha256,
-            entry.implementationEvidenceBundleSha256,
-            entry.reviewSha256,
-            entry.sourceSha256,
-            entry.sourceSetSha256,
-            entry.storageStructuralSha256,
-          ].some((value) => !SHA256_PATTERN.test(value))
-        ) {
-          return true;
+
+  const observedPackages = [];
+  const latest = new Map();
+  const origins = new Map();
+  let effectiveAbis = new Map(
+    PHASE9_PRODUCTION_CONTRACTS.map((contract) => [
+      contract,
+      JSON.parse(
+        readFileSync(resolve(ROOT, `protocol/abi/phase9/${contract}.abi.json`), "utf8"),
+      ),
+    ]),
+  );
+  for (const checkpointPackage of payload.packages) {
+    if (!exactKeys(checkpointPackage, CHECKPOINT_PACKAGE_KEYS)) {
+      throw new Error("Phase 9 checkpoint package fields drifted");
+    }
+    const definition = ACTIVATION_PACKAGES.get(checkpointPackage.checkpointId);
+    if (definition === undefined || observedPackages.includes(checkpointPackage.checkpointId)) {
+      throw new Error("Phase 9 checkpoint package is not uniquely activated");
+    }
+    observedPackages.push(checkpointPackage.checkpointId);
+    if (
+      !Array.isArray(checkpointPackage.requiredBacklogIds) ||
+      canonicalJson(checkpointPackage.requiredBacklogIds) !==
+        canonicalJson(definition.requiredBacklogIds) ||
+      !Array.isArray(checkpointPackage.revisions) ||
+      checkpointPackage.revisions.length === 0
+    ) {
+      throw new Error(`${checkpointPackage.checkpointId}: package activation drifted`);
+    }
+    const review = checkpointPackage.review;
+    if (
+      !exactKeys(review, CHECKPOINT_REVIEW_KEYS) ||
+      !Object.values(review).every((value) => typeof value === "string") ||
+      review.status !== "PASS" ||
+      !SHA256_PATTERN.test(review.reviewSha256) ||
+      !/^[0-9a-f]{40}$/.test(review.reviewedCommit)
+    ) {
+      throw new Error(`${checkpointPackage.checkpointId}: review identity fields drifted`);
+    }
+    const identities = [
+      review.implementationAuthor,
+      review.architectureReviewer,
+      review.securityReviewer,
+      review.toolingReviewer,
+    ];
+    if (
+      identities.some((identity) => identity.trim().length === 0) ||
+      new Set(identities.map((identity) => identity.toLocaleLowerCase("en-US"))).size !== 4
+    ) {
+      throw new Error(`${checkpointPackage.checkpointId}: review identities are ambiguous`);
+    }
+
+    const packageContracts = [];
+    const packageAbis = new Map(effectiveAbis);
+    for (const revision of checkpointPackage.revisions) {
+      if (
+        !exactKeys(revision, CHECKPOINT_REVISION_KEYS) ||
+        !PHASE9_PRODUCTION_CONTRACTS.includes(revision.contract) ||
+        packageContracts.includes(revision.contract) ||
+        !Number.isSafeInteger(revision.revision) ||
+        revision.revision < 1 ||
+        !Array.isArray(revision.activatedSignatures) ||
+        [
+          revision.abiSha256,
+          revision.dependencyClosureSha256,
+          revision.implementationEvidenceBundleSha256,
+          revision.sourceSha256,
+          revision.sourceSetSha256,
+          revision.storageStructuralSha256,
+        ].some((value) => typeof value !== "string" || !SHA256_PATTERN.test(value))
+      ) {
+        throw new Error(`${checkpointPackage.checkpointId}: contract revision fields drifted`);
+      }
+      packageContracts.push(revision.contract);
+      const expectedSignatures = definition.contracts.get(revision.contract);
+      if (
+        expectedSignatures === undefined ||
+        canonicalJson(revision.activatedSignatures) !== canonicalJson(expectedSignatures)
+      ) {
+        throw new Error(
+          `${checkpointPackage.checkpointId}/${revision.contract}: activated signatures drifted`,
+        );
+      }
+      const expectedAbi = additiveAbiPayload(
+        effectiveAbis.get(revision.contract),
+        definition.abiAdditions.get(revision.contract) ?? [],
+      );
+      if (revision.abiSha256 !== sha256(canonicalJson(expectedAbi))) {
+        throw new Error(
+          `${checkpointPackage.checkpointId}/${revision.contract}: additive ABI drifted`,
+        );
+      }
+      packageAbis.set(revision.contract, expectedAbi);
+      const prior = latest.get(revision.contract);
+      const expectedRevision = prior === undefined ? 1 : prior.revision + 1;
+      if (revision.revision !== expectedRevision) {
+        throw new Error(
+          `${checkpointPackage.checkpointId}/${revision.contract}: revision is not monotonic`,
+        );
+      }
+      if (prior === undefined) {
+        if (revision.supersedes !== null) {
+          throw new Error(
+            `${checkpointPackage.checkpointId}/${revision.contract}: first revision supersedes`,
+          );
         }
-        return false;
-      },
-    ) ||
-    new Set(implemented).size !== implemented.length
-  ) {
-    throw new Error("Phase 9 implementation checkpoint contract set is invalid");
+      } else {
+        const previous = origins.get(revision.contract);
+        if (
+          !exactKeys(revision.supersedes, ["checkpointId", "revision"]) ||
+          revision.supersedes.checkpointId !== previous.checkpointId ||
+          revision.supersedes.revision !== previous.revision ||
+          !prior.activatedSignatures.every((signature) =>
+            revision.activatedSignatures.includes(signature),
+          )
+        ) {
+          throw new Error(
+            `${checkpointPackage.checkpointId}/${revision.contract}: supersession drifted`,
+          );
+        }
+      }
+      latest.set(revision.contract, revision);
+      origins.set(revision.contract, {
+        checkpointId: checkpointPackage.checkpointId,
+        revision: revision.revision,
+      });
+    }
+    const expectedContractOrder = PHASE9_PRODUCTION_CONTRACTS.filter((contract) =>
+      definition.contracts.has(contract),
+    );
+    if (canonicalJson(packageContracts) !== canonicalJson(expectedContractOrder)) {
+      throw new Error(`${checkpointPackage.checkpointId}: contract revision order drifted`);
+    }
+    if (
+      checkpointPackage.checkpointId === "P9-PAYOFF-001" &&
+      sha256(canonicalJson(checkpointPackage)) !== PAYOFF_ACCEPTED_PACKAGE_SHA256
+    ) {
+      throw new Error("P9-PAYOFF-001: accepted package identity drifted");
+    }
+    effectiveAbis = packageAbis;
   }
-  return PHASE9_PRODUCTION_CONTRACTS.filter((contract) => !implemented.includes(contract));
+
+  const expectedPackageOrder = [...ACTIVATION_PACKAGES.keys()].filter((checkpointId) =>
+    observedPackages.includes(checkpointId),
+  );
+  if (canonicalJson(observedPackages) !== canonicalJson(expectedPackageOrder)) {
+    throw new Error("Phase 9 checkpoint package order drifted");
+  }
+  return latest;
+}
+
+function expectedCurrentAbis(payload) {
+  checkpointLatestRevisions(payload);
+  const abis = new Map(
+    PHASE9_PRODUCTION_CONTRACTS.map((contract) => [
+      contract,
+      JSON.parse(
+        readFileSync(resolve(ROOT, `protocol/abi/phase9/${contract}.abi.json`), "utf8"),
+      ),
+    ]),
+  );
+  for (const checkpointPackage of payload.packages) {
+    const definition = ACTIVATION_PACKAGES.get(checkpointPackage.checkpointId);
+    for (const revision of checkpointPackage.revisions) {
+      abis.set(
+        revision.contract,
+        additiveAbiPayload(
+          abis.get(revision.contract),
+          definition.abiAdditions.get(revision.contract) ?? [],
+        ),
+      );
+    }
+  }
+  return abis;
+}
+
+export function validateCheckpointAbiAdditions(output, payload) {
+  const expected = expectedCurrentAbis(payload);
+  const observed = new Map();
+  for (const contracts of Object.values(output.contracts ?? {})) {
+    for (const [contract, artifact] of Object.entries(contracts)) {
+      if (!PHASE9_PRODUCTION_CONTRACTS.includes(contract)) continue;
+      if (observed.has(contract) || !Array.isArray(artifact.abi)) {
+        throw new Error(`${contract}: compiled ABI is missing or duplicated`);
+      }
+      observed.set(contract, artifact.abi);
+    }
+  }
+  for (const contract of PHASE9_PRODUCTION_CONTRACTS) {
+    if (canonicalJson(observed.get(contract)) !== canonicalJson(expected.get(contract))) {
+      throw new Error(`${contract}: compiled ABI differs from the historical plus additive set`);
+    }
+  }
+}
+
+export function phase9ActivatedSignatures(payload) {
+  return new Map(
+    [...checkpointLatestRevisions(payload)].map(([contract, revision]) => [
+      contract,
+      new Set(revision.activatedSignatures),
+    ]),
+  );
+}
+
+export function phase9StubContracts(payload) {
+  const activated = phase9ActivatedSignatures(payload);
+  return PHASE9_PRODUCTION_CONTRACTS.filter(
+    (contract) => (activated.get(contract)?.size ?? 0) === 0,
+  );
 }
 
 export function phase9WarningStubContracts(payload) {
-  const checkpointStubs = phase9StubContracts(payload);
-  return checkpointStubs.filter((contract) => !ACTIVATED_IMPLEMENTATIONS.has(contract));
+  const activated = phase9ActivatedSignatures(payload);
+  return PHASE9_PRODUCTION_CONTRACTS.filter((contract) => {
+    const active = activated.get(contract) ?? new Set();
+    const known = KNOWN_MUTATOR_SIGNATURES.get(contract);
+    return known === undefined || known.some((signature) => !active.has(signature));
+  });
 }
 
 export function validateCheckpointDependencyClosures(payload) {
-  for (const entry of payload.implementations) {
-    const sourcePath = ACTIVATED_IMPLEMENTATION_SOURCES.get(entry.contract);
+  if (payload.currentControlBundleSha256 !== controlBundleSha256()) {
+    throw new Error("Phase 9 current control-bundle hash is stale");
+  }
+  for (const [contract, revision] of checkpointLatestRevisions(payload)) {
+    const sourcePath = ACTIVATED_IMPLEMENTATION_SOURCES.get(contract);
     if (sourcePath === undefined) {
-      throw new Error(`${entry.contract}: implementation dependency closure is not activated`);
+      throw new Error(`${contract}: implementation dependency closure is not activated`);
     }
     const actual = repositorySolidityDependencyHash(sourcePath);
-    if (actual !== entry.dependencyClosureSha256) {
-      throw new Error(`${entry.contract}: reviewed Solidity dependency closure hash is stale`);
-    }
-    const bundle = implementationEvidenceBundleSha256(entry.contract);
-    if (bundle !== entry.implementationEvidenceBundleSha256) {
-      throw new Error(`${entry.contract}: implementation evidence bundle hash is stale`);
+    if (actual !== revision.dependencyClosureSha256) {
+      throw new Error(`${contract}: reviewed Solidity dependency closure hash is stale`);
     }
   }
 }
@@ -673,14 +1193,44 @@ export function validateCheckpointDependencyClosures(payload) {
 export function validatePhase9MutabilityDiagnostics(
   output,
   {
+    activatedSignatures = new Map(),
     expectedCount,
     productionContracts = PHASE9_PRODUCTION_CONTRACTS,
   } = {},
 ) {
   const mutators = externalMutators(output, productionContracts);
-  const requiredCount = expectedCount ?? mutators.length;
   const canonical = canonicalFreezeMutators(output, productionContracts);
-  if (canonical.length !== requiredCount) {
+  const canonicalKeys = new Set(canonical.map((fn) => fn.key));
+  const mutatorSignatures = new Map();
+  for (const mutator of mutators) {
+    const signatures = mutatorSignatures.get(mutator.contract) ?? new Set();
+    signatures.add(mutator.signature);
+    mutatorSignatures.set(mutator.contract, signatures);
+    const active = activatedSignatures.get(mutator.contract)?.has(mutator.signature) ?? false;
+    if (active === canonicalKeys.has(mutator.key)) {
+      throw new Error(
+        active
+          ? `Activated Phase 9 mutator remains frozen: ${mutator.label}`
+          : `Unopened Phase 9 mutator is not the exact freeze stub: ${mutator.label}`,
+      );
+    }
+  }
+  for (const [contract, signatures] of activatedSignatures) {
+    const canonicalSignatures = mutatorSignatures.get(contract);
+    if (
+      canonicalSignatures === undefined ||
+      [...signatures].some((signature) => !canonicalSignatures.has(signature))
+    ) {
+      throw new Error(`${contract}: checkpoint activates a noncanonical mutator signature`);
+    }
+  }
+
+  const unopened = mutators.filter(
+    (mutator) =>
+      !(activatedSignatures.get(mutator.contract)?.has(mutator.signature) ?? false),
+  );
+  const requiredCount = expectedCount ?? unopened.length;
+  if (canonical.length !== requiredCount || unopened.length !== requiredCount) {
     throw new Error(
       `Expected ${requiredCount} canonical Phase 9 fail-closed mutators, found ${canonical.length}`,
     );
@@ -720,6 +1270,9 @@ export function validatePhase9MutabilityDiagnostics(
       );
     }
     const [candidate] = candidates;
+    if (activatedSignatures.get(candidate.contract)?.has(candidate.signature) ?? false) {
+      throw new Error(`Warning 2018 targets activated Phase 9 mutator: ${candidate.label}`);
+    }
     if (matched.has(candidate.key)) {
       throw new Error(`Duplicate warning 2018 for ${candidate.label}`);
     }
@@ -845,7 +1398,7 @@ async function main() {
     settings: {
       ...COMPILER_SETTINGS,
       outputSelection: {
-        "*": { "": ["ast"], "*": ["storageLayout"] },
+        "*": { "": ["ast"], "*": ["abi", "storageLayout"] },
       },
     },
     sources: {
@@ -861,9 +1414,10 @@ async function main() {
   const errors = diagnostics.filter((diagnostic) => diagnostic.severity === "error");
   if (errors.length > 0) throw new Error(`Solidity compilation failed (${errors.length} errors)`);
   const checkpointPayload = await readJson(CHECKPOINT_PATH);
-  const stubContracts = phase9WarningStubContracts(checkpointPayload);
+  const activated = phase9ActivatedSignatures(checkpointPayload);
   validateCheckpointDependencyClosures(checkpointPayload);
-  validatePhase9MutabilityDiagnostics(output, { productionContracts: stubContracts });
+  validateCheckpointAbiAdditions(output, checkpointPayload);
+  validatePhase9MutabilityDiagnostics(output, { activatedSignatures: activated });
 
   const definitions = contractDefinitions(output);
   const matches = new Map();

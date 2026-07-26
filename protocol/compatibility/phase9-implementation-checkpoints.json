@@ -5,26 +5,44 @@
     "rawFreezeArtifactsSha256": "sha256:b0d494141f0e229cf9fd542401036cd63ba04de73e2f056c1e89a25253cdb1a3",
     "sourceSetSha256": "sha256:a40ac90f75c52fc7583651d2d57d2a4d82f1899ed673be8b460d17fb7b7425cb"
   },
+  "currentControlBundleSha256": "sha256:c7b547b17af4d5e9f9afb9410c0cef12e25762462982f35176aa43918ddd4f9d",
   "currentSourceSetSha256": "sha256:69276c6de63238456ab2a42b85702536aee3a7a6ac29cc2be366f220d68ddbd9",
-  "implementations": [
+  "packages": [
     {
-      "abiSha256": "sha256:27dd06f73d3bd649a4ed6c84c39306a6ac13b1c9e30b4d772a43b0e5a9938137",
-      "architectureReviewer": "/root/phase9_payoff_recheck_architecture",
-      "backlogId": "UNI-PAYOFF-001",
-      "contract": "PayoffQuoteEngine",
-      "dependencyClosureSha256": "sha256:443295b9b42d2b37581bba0a25c265fb25bd04f44dc419c198295623f863909d",
-      "implementationAuthor": "/root",
-      "implementationEvidenceBundleSha256": "sha256:358270e7d66a29a628aa79c402f6aeacafc188c7568c226915cad66f8a4b3f39",
-      "reviewPath": "security/reviews/phase-9-payoff-quote-engine.md",
-      "reviewSha256": "sha256:61073b58d9b4ab83218ab503ff0f5ba0bc19dbd6eb6506b6924c66b20036d709",
-      "reviewedCommit": "b1a510685fec84539a64cc81725a2ed51acbe489",
-      "securityReviewer": "/root/phase9_payoff_recheck_security",
-      "sourceSetSha256": "sha256:69276c6de63238456ab2a42b85702536aee3a7a6ac29cc2be366f220d68ddbd9",
-      "sourceSha256": "sha256:c19e7a73528b5ca29597e1c4d87e8097dde2ca1ed2ae4096073088e41186915a",
-      "status": "PASS",
-      "storageStructuralSha256": "sha256:e2d2ded51114d7c894cd700854f381de491de6b41060d85b40ee5d691b3e007b",
-      "toolingReviewer": "/root/phase9_payoff_recheck_tooling"
+      "checkpointId": "P9-PAYOFF-001",
+      "requiredBacklogIds": [
+        "UNI-ADR-015",
+        "UNI-PAYOFF-001"
+      ],
+      "review": {
+        "architectureReviewer": "/root/phase9_payoff_recheck_architecture",
+        "implementationAuthor": "/root",
+        "reviewPath": "security/reviews/phase-9-payoff-quote-engine.md",
+        "reviewSha256": "sha256:61073b58d9b4ab83218ab503ff0f5ba0bc19dbd6eb6506b6924c66b20036d709",
+        "reviewedCommit": "b1a510685fec84539a64cc81725a2ed51acbe489",
+        "securityReviewer": "/root/phase9_payoff_recheck_security",
+        "status": "PASS",
+        "toolingReviewer": "/root/phase9_payoff_recheck_tooling"
+      },
+      "revisions": [
+        {
+          "abiSha256": "sha256:27dd06f73d3bd649a4ed6c84c39306a6ac13b1c9e30b4d772a43b0e5a9938137",
+          "activatedSignatures": [
+            "consumeQuote(bytes32,bytes32,uint64,bytes32)",
+            "invalidateQuote(bytes32,bytes32)",
+            "issueQuote(bytes32,uint64)"
+          ],
+          "contract": "PayoffQuoteEngine",
+          "dependencyClosureSha256": "sha256:443295b9b42d2b37581bba0a25c265fb25bd04f44dc419c198295623f863909d",
+          "implementationEvidenceBundleSha256": "sha256:358270e7d66a29a628aa79c402f6aeacafc188c7568c226915cad66f8a4b3f39",
+          "revision": 1,
+          "sourceSetSha256": "sha256:69276c6de63238456ab2a42b85702536aee3a7a6ac29cc2be366f220d68ddbd9",
+          "sourceSha256": "sha256:c19e7a73528b5ca29597e1c4d87e8097dde2ca1ed2ae4096073088e41186915a",
+          "storageStructuralSha256": "sha256:e2d2ded51114d7c894cd700854f381de491de6b41060d85b40ee5d691b3e007b",
+          "supersedes": null
+        }
+      ]
     }
   ],
-  "schemaVersion": 1
+  "schemaVersion": 2
 }

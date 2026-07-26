@@ -2,7 +2,7 @@
 pragma solidity 0.8.36;
 
 // Code generated from schemas/proto/unified/v1. DO NOT EDIT.
-// Source SHA-256: 3c04a2c9e3665835cd0f8a1e602b57181f0236ad75b2e8c8d11c4732f61841ca
+// Source SHA-256: 9589fc48b608adbb7bbab4751619fedb4a8dec52cd1551707aafa725d21b1138
 library FoundationTypes {
     enum CollateralKind { UNSPECIFIED, NATIVE, ERC20, ERC721, ERC1155 }
 
@@ -1931,6 +1931,7 @@ library FoundationTypes {
         bytes requestDigest;
         RefinanceState state;
         uint64 newLoanNonce;
+        bytes newPositionManager;
     }
 
     struct RefinanceFundingCommitment {

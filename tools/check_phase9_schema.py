@@ -35,7 +35,7 @@ class ExpectedFile:
 
 EXPECTED_FILES: dict[str, ExpectedFile] = {
     "unified/v1/refinance.proto": ExpectedFile(
-        "968bf59cba37cfdcd0cbd3443a6f355e914fba92db90c5f333b64ce64248ee0c",
+        "d18e2784420ec0665fbd5da1ed9a69abe79f08e25d75b2dfdc66a32fee10668b",
         (
             "PayoffComponentKind",
             "PayoffQuoteState",
@@ -53,7 +53,7 @@ EXPECTED_FILES: dict[str, ExpectedFile] = {
             "RefinanceExecutionEvidence",
             "RefinanceRefundEvidence",
         ),
-        96,
+        97,
     ),
     "unified/v1/restructuring.proto": ExpectedFile(
         "1ead9a5a075a4c7f5b24db77cc4f54ba61cd37450677ceca7711a8e8b8d23594",

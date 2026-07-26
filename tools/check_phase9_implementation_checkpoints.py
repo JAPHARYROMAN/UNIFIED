@@ -28,8 +28,9 @@ BASELINE_SOURCE_SET_SHA256 = (
 BASELINE_RAW_FREEZE_ARTIFACTS_SHA256 = (
     "sha256:b0d494141f0e229cf9fd542401036cd63ba04de73e2f056c1e89a25253cdb1a3"
 )
-ACTIVATION_BACKLOG_ID = "UNI-ADR-015"
-ACTIVATED_IMPLEMENTATIONS = {"PayoffQuoteEngine": "UNI-PAYOFF-001"}
+PAYOFF_ACCEPTED_PACKAGE_SHA256 = (
+    "sha256:5c5696120704f77edd5cc7fe256cd745e226cc1b33c1b9c01c7cc8250c185545"
+)
 SOLC_AST_TYPE_SUFFIX_PATTERN = re.compile(
     r"(t_(?:contract|enum|struct|userDefinedValueType)\([^()]+\))\d+"
 )
@@ -85,6 +86,129 @@ IMPLEMENTATION_EVIDENCE_PATHS = {
     "PayoffQuoteEngine": PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS,
 }
 
+PAYOFF_ACTIVATED_SIGNATURES = (
+    "consumeQuote(bytes32,bytes32,uint64,bytes32)",
+    "invalidateQuote(bytes32,bytes32)",
+    "issueQuote(bytes32,uint64)",
+)
+REFINANCE_ACTIVATED_SIGNATURES = {
+    "Phase9LoanFactory": (
+        "createLoan((bytes32,uint64,bytes32,(address,address,address,bytes32,address,address,address,address,address,address,address,address,address,bytes32,bytes32,bytes32,bytes32,bytes32,bytes32),bytes32))",
+    ),
+    "Phase9LoanAccount": (
+        "activateReplacementLoan(bytes32,(uint8,uint8,uint64,uint64,uint64,uint64,uint64,bytes32,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bytes32,bytes32),bytes32)",
+        "initialize((address,address,address,bytes32,address,address,address,address,address,address,address,address,address,bytes32,bytes32,bytes32,bytes32,bytes32,bytes32),(uint8,uint8,uint64,uint64,uint64,uint64,uint64,bytes32,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bytes32,bytes32))",
+        "recordRefinancePayoff(bytes32,uint256,bytes32)",
+    ),
+    "CollateralCustodyV2": (
+        "recordCustody((bytes32,bytes32,address,address,uint256,uint8,bytes32),bytes32)",
+    ),
+    "LienRegistry": (
+        "beginHandoff(bytes32,bytes32,bytes32,uint64)",
+        "completeHandoff(bytes32,bytes32)",
+        "registerLien((bytes32,address,address,bytes32,uint256,address,bytes32,uint64,uint8,bytes32,bytes32))",
+    ),
+    "RefinanceCoordinator": (
+        "cancelRefinance(bytes32,bytes32)",
+        "executeRefinance(bytes32,bytes32)",
+        "recordFundingCommitment((bytes32,bytes32,bytes32,bytes32,address,uint256,uint64,bytes32,uint8,bytes32))",
+        "refundCommitment(bytes32,bytes32)",
+        "requestRefinance((bytes32,bytes32,bytes32,address,address,address,bytes32,bytes32,uint256,uint256,bytes32,bytes32,uint64,bytes32,bytes32,uint256,uint256,uint256,uint64,uint64,bytes32,uint64,uint8,uint64,uint256,uint32,bytes32))",
+    ),
+    "PositionManagerV2": (
+        "initialize(bytes32,address,address)",
+        "issuePosition((bytes32,bytes32,address,uint256,uint256,uint8))",
+        "registerTranche((bytes32,uint32,uint256,uint256,bytes32))",
+    ),
+}
+REFINANCE_STATE_TRANSITIONED_EVENT = {
+    "anonymous": False,
+    "inputs": [
+        {"indexed": True, "internalType": "bytes32", "name": "refinanceId", "type": "bytes32"},
+        {
+            "indexed": True,
+            "internalType": "enum Phase9Types.RefinanceState",
+            "name": "previousState",
+            "type": "uint8",
+        },
+        {
+            "indexed": True,
+            "internalType": "enum Phase9Types.RefinanceState",
+            "name": "nextState",
+            "type": "uint8",
+        },
+        {"indexed": False, "internalType": "uint64", "name": "stateVersion", "type": "uint64"},
+        {"indexed": False, "internalType": "bytes32", "name": "operationId", "type": "bytes32"},
+        {"indexed": False, "internalType": "bytes32", "name": "evidenceHash", "type": "bytes32"},
+    ],
+    "name": "RefinanceStateTransitioned",
+    "type": "event",
+}
+REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR = {
+    "inputs": [
+        {
+            "internalType": "bytes32",
+            "name": "commitmentId",
+            "type": "bytes32",
+        }
+    ],
+    "name": "UnknownFundingCommitment",
+    "type": "error",
+}
+REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR = {
+    "inputs": [
+        {
+            "internalType": "bytes32",
+            "name": "handoffId",
+            "type": "bytes32",
+        }
+    ],
+    "name": "UnknownLienHandoff",
+    "type": "error",
+}
+REFINANCE_COORDINATOR_ABI_ADDITIONS = (
+    REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR,
+    REFINANCE_STATE_TRANSITIONED_EVENT,
+)
+LIEN_REGISTRY_ABI_ADDITIONS = (REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR,)
+ACTIVATION_PACKAGES = {
+    "P9-PAYOFF-001": {
+        "abiAdditions": {},
+        "requiredBacklogIds": ("UNI-ADR-015", "UNI-PAYOFF-001"),
+        "contracts": {"PayoffQuoteEngine": PAYOFF_ACTIVATED_SIGNATURES},
+    },
+    # Provisional only. Absence from the checkpoint registry keeps every signature frozen.
+    "P9-REFI-001": {
+        "abiAdditions": {
+            "LienRegistry": LIEN_REGISTRY_ABI_ADDITIONS,
+            "RefinanceCoordinator": REFINANCE_COORDINATOR_ABI_ADDITIONS,
+        },
+        "requiredBacklogIds": ("UNI-ADR-016", "UNI-REFI-001", "UNI-REFI-002"),
+        "contracts": REFINANCE_ACTIVATED_SIGNATURES,
+    },
+}
+
+# Bind every source that decides checkpoint activation, ABI/storage/schema compatibility,
+# generated-schema freshness, warning exemptions, or foundation-gate orchestration.
+CONTROL_BUNDLE_PATHS = (
+    "buf.gen.yaml",
+    "buf.yaml",
+    "protocol/foundry.toml",
+    "scripts/check-foundation.ps1",
+    "scripts/generate.ps1",
+    "tools/check_phase9.py",
+    "tools/check_phase9_implementation_checkpoints.py",
+    "tools/check_phase9_schema.py",
+    "tools/check_phase9_storage_layouts.py",
+    "tools/compile_phase9_storage_layouts.mjs",
+    "tools/tests/test_phase9_compatibility.py",
+    "tools/tests/test_phase9_implementation_checkpoints.py",
+    "tools/tests/test_phase9_schema.py",
+    "tools/tests/test_phase9_warning_policy.mjs",
+    "tools/tests/test_update_phase9_implementation_checkpoint.py",
+    "tools/update_phase9_implementation_checkpoint.py",
+)
+
 # Prepared Foundry dependencies under protocol/lib are intentionally excluded from Git.
 # Their exact installed bytes remain covered by dependencyClosureSha256. The candidate
 # commit instead binds the pinned package inputs and the only script that materializes
@@ -117,8 +241,9 @@ BACKLOG_PATTERN = re.compile(r"UNI-[A-Z0-9]+(?:-[A-Z0-9]+)+\Z")
 
 EXPECTED_ROOT_KEYS = {
     "baseline",
+    "currentControlBundleSha256",
     "currentSourceSetSha256",
-    "implementations",
+    "packages",
     "schemaVersion",
 }
 EXPECTED_BASELINE_KEYS = {
@@ -127,24 +252,35 @@ EXPECTED_BASELINE_KEYS = {
     "rawFreezeArtifactsSha256",
     "sourceSetSha256",
 }
-EXPECTED_ENTRY_KEYS = {
-    "abiSha256",
+EXPECTED_PACKAGE_KEYS = {
+    "checkpointId",
+    "requiredBacklogIds",
+    "review",
+    "revisions",
+}
+EXPECTED_REVIEW_KEYS = {
     "architectureReviewer",
-    "backlogId",
-    "contract",
-    "dependencyClosureSha256",
     "implementationAuthor",
-    "implementationEvidenceBundleSha256",
     "reviewPath",
     "reviewSha256",
     "reviewedCommit",
     "securityReviewer",
-    "sourceSha256",
-    "sourceSetSha256",
     "status",
-    "storageStructuralSha256",
     "toolingReviewer",
 }
+EXPECTED_REVISION_KEYS = {
+    "abiSha256",
+    "activatedSignatures",
+    "contract",
+    "dependencyClosureSha256",
+    "implementationEvidenceBundleSha256",
+    "revision",
+    "sourceSha256",
+    "sourceSetSha256",
+    "storageStructuralSha256",
+    "supersedes",
+}
+EXPECTED_SUPERSEDES_KEYS = {"checkpointId", "revision"}
 
 
 def canonical_json(payload: object) -> str:
@@ -161,6 +297,111 @@ def sha256_file(path: Path) -> str:
     except FileNotFoundError as exc:
         raise SystemExit(f"{path.relative_to(ROOT)} is missing") from exc
     return "sha256:" + hashlib.sha256(content).hexdigest()
+
+
+def sha256_bytes(content: bytes) -> str:
+    return "sha256:" + hashlib.sha256(content).hexdigest()
+
+
+def canonical_abi_type(parameter: object) -> str:
+    if not isinstance(parameter, dict) or not isinstance(parameter.get("type"), str):
+        raise SystemExit("Phase 9 ABI contains a malformed parameter")
+    parameter_type = cast(str, parameter["type"])
+    if not parameter_type.startswith("tuple"):
+        return parameter_type
+    components = parameter.get("components")
+    if not isinstance(components, list):
+        raise SystemExit("Phase 9 ABI tuple parameter lacks components")
+    suffix = parameter_type[len("tuple") :]
+    return "(" + ",".join(canonical_abi_type(component) for component in components) + ")" + suffix
+
+
+def canonical_mutator_signatures(abi_path: Path) -> tuple[str, ...]:
+    payload = read_json(abi_path)
+    if not isinstance(payload, list):
+        raise SystemExit(f"{abi_path.relative_to(ROOT)} must contain a JSON array")
+    signatures: list[str] = []
+    for item in payload:
+        if (
+            not isinstance(item, dict)
+            or item.get("type") != "function"
+            or item.get("stateMutability") not in {"nonpayable", "payable"}
+        ):
+            continue
+        name = item.get("name")
+        inputs = item.get("inputs")
+        if not isinstance(name, str) or not isinstance(inputs, list):
+            raise SystemExit("Phase 9 ABI contains a malformed mutating function")
+        signatures.append(name + "(" + ",".join(canonical_abi_type(item) for item in inputs) + ")")
+    if len(signatures) != len(set(signatures)):
+        raise SystemExit(f"{abi_path.relative_to(ROOT)} contains duplicate mutator signatures")
+    return tuple(sorted(signatures, key=lambda value: value.encode("utf-8")))
+
+
+def abi_item_identity(item: object) -> str:
+    if not isinstance(item, dict) or not isinstance(item.get("type"), str):
+        raise SystemExit("Phase 9 ABI contains a malformed item")
+    item_type = cast(str, item["type"])
+    name = item.get("name", "")
+    inputs = item.get("inputs", [])
+    if not isinstance(name, str) or not isinstance(inputs, list):
+        raise SystemExit("Phase 9 ABI contains a malformed named item")
+    signature = name + "(" + ",".join(canonical_abi_type(value) for value in inputs) + ")"
+    return item_type + ":" + signature
+
+
+def abi_sort_key(item: object) -> tuple[int, bytes]:
+    if not isinstance(item, dict):
+        raise SystemExit("Phase 9 ABI contains a malformed item")
+    item_type = item.get("type")
+    order = {"constructor": 0, "error": 1, "event": 2, "function": 3}
+    if item_type not in order:
+        raise SystemExit(f"Phase 9 ABI contains an unsupported item type: {item_type}")
+    return order[cast(str, item_type)], abi_item_identity(item).encode("utf-8")
+
+
+def additive_abi_payload(
+    baseline_payload: object, additions: tuple[dict[str, Any], ...]
+) -> list[Any]:
+    if not isinstance(baseline_payload, list):
+        raise SystemExit("Phase 9 baseline ABI must contain a JSON array")
+    payload = deepcopy(baseline_payload)
+    identities = {abi_item_identity(item) for item in payload}
+    if len(identities) != len(payload):
+        raise SystemExit("Phase 9 baseline ABI contains duplicate canonical items")
+    for addition in additions:
+        if addition.get("type") not in {"error", "event"}:
+            raise SystemExit("Phase 9 additive ABI allowlist may contain errors and events only")
+        identity = abi_item_identity(addition)
+        if identity in identities:
+            raise SystemExit(f"Phase 9 additive ABI item is duplicated: {identity}")
+        identities.add(identity)
+        payload.append(deepcopy(addition))
+    return sorted(payload, key=abi_sort_key)
+
+
+def control_bundle_paths() -> list[Path]:
+    if len(CONTROL_BUNDLE_PATHS) != len(set(CONTROL_BUNDLE_PATHS)):
+        raise SystemExit("Phase 9 control bundle contains duplicate paths")
+    if list(CONTROL_BUNDLE_PATHS) != sorted(
+        CONTROL_BUNDLE_PATHS, key=lambda value: value.encode("utf-8")
+    ):
+        raise SystemExit("Phase 9 control bundle paths are not ordinal")
+    paths = [ROOT / relative for relative in CONTROL_BUNDLE_PATHS]
+    for path in paths:
+        if not path.is_file():
+            raise SystemExit(
+                f"Phase 9 control bundle input is missing: {path.relative_to(ROOT).as_posix()}"
+            )
+    return paths
+
+
+def current_control_bundle_hash() -> str:
+    paths = control_bundle_paths()
+    require_git_clean_worktree_bytes("Phase9ControlBundle", paths)
+    return sha256_payload(
+        [{"path": path.relative_to(ROOT).as_posix(), "sha256": sha256_file(path)} for path in paths]
+    )
 
 
 def read_json(path: Path) -> object:
@@ -512,8 +753,7 @@ def implementation_evidence_bundle_hash(contract: str) -> str:
     paths = implementation_evidence_bundle_paths(contract)
     require_git_clean_worktree_bytes(contract, paths)
     payload = [
-        {"path": path.relative_to(ROOT).as_posix(), "sha256": sha256_file(path)}
-        for path in paths
+        {"path": path.relative_to(ROOT).as_posix(), "sha256": sha256_file(path)} for path in paths
     ]
     return sha256_payload(payload)
 
@@ -644,8 +884,7 @@ def reviewed_commit_required_paths(
             ) from None
         if not path.is_file():
             raise SystemExit(
-                f"{contract}: reviewed commit input is missing: "
-                f"{path.relative_to(ROOT).as_posix()}"
+                f"{contract}: reviewed commit input is missing: {path.relative_to(ROOT).as_posix()}"
             )
     return sorted(paths, key=ordinal_utf8_path_key)
 
@@ -701,8 +940,7 @@ def require_git_clean_worktree_bytes(contract: str, paths: list[Path]) -> None:
     ):
         if raw_digest != clean_digest:
             raise SystemExit(
-                f"{contract}: worktree bytes differ from Git-clean canonical bytes: "
-                f"{relative_path}"
+                f"{contract}: worktree bytes differ from Git-clean canonical bytes: {relative_path}"
             )
 
 
@@ -719,11 +957,31 @@ def reviewed_commit_file_bytes(
     for relative_path in relative_paths:
         result = run_git_bytes(("cat-file", "blob", f"{commit}:{relative_path}"))
         if result.returncode != 0:
-            raise SystemExit(
-                f"{contract}: reviewed commit lacks required path: {relative_path}"
-            )
+            raise SystemExit(f"{contract}: reviewed commit lacks required path: {relative_path}")
         blobs[relative_path] = result.stdout
     return blobs
+
+
+def historical_source_set_hash(contract: str, commit: str, manifest: dict[str, Any]) -> str:
+    source_order, _ = baseline_sources(manifest)
+    blobs = reviewed_commit_file_bytes(contract, commit, tuple(source_order))
+    return sha256_payload(
+        [{"path": relative, "sha256": sha256_bytes(blobs[relative])} for relative in source_order]
+    )
+
+
+def historical_evidence_bundle_hash(contract: str, commit: str) -> str:
+    relative_paths = IMPLEMENTATION_EVIDENCE_PATHS.get(contract)
+    if relative_paths is None:
+        raise SystemExit(f"{contract}: implementation evidence bundle is not activated")
+    if len(relative_paths) != len(set(relative_paths)):
+        raise SystemExit(f"{contract}: implementation evidence bundle contains duplicate paths")
+    if list(relative_paths) != sorted(relative_paths, key=lambda value: value.encode("utf-8")):
+        raise SystemExit(f"{contract}: implementation evidence bundle paths are not ordinal")
+    blobs = reviewed_commit_file_bytes(contract, commit, relative_paths)
+    return sha256_payload(
+        [{"path": relative, "sha256": sha256_bytes(blobs[relative])} for relative in relative_paths]
+    )
 
 
 def validate_reviewed_commit_paths(contract: str, commit: str, paths: list[Path]) -> None:
@@ -909,7 +1167,7 @@ def checkpoint_payload() -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise SystemExit("Phase 9 implementation checkpoint registry must be a JSON object")
     registry = cast(dict[str, Any], payload)
-    if set(registry) != EXPECTED_ROOT_KEYS or registry.get("schemaVersion") != 1:
+    if set(registry) != EXPECTED_ROOT_KEYS or registry.get("schemaVersion") != 2:
         raise SystemExit("Phase 9 implementation checkpoint registry schema drifted")
     baseline = registry.get("baseline")
     if not isinstance(baseline, dict) or set(baseline) != EXPECTED_BASELINE_KEYS:
@@ -922,14 +1180,12 @@ def checkpoint_payload() -> dict[str, Any]:
     }
     if baseline != expected_baseline:
         raise SystemExit("Phase 9 implementation checkpoint baseline identity drifted")
-    if not isinstance(registry.get("implementations"), list):
-        raise SystemExit("Phase 9 implementation checkpoints must be a JSON array")
-    current_source_set_hash = registry.get("currentSourceSetSha256")
-    if (
-        not isinstance(current_source_set_hash, str)
-        or HASH_PATTERN.fullmatch(current_source_set_hash) is None
-    ):
-        raise SystemExit("Phase 9 current implementation source-set hash is malformed")
+    if not isinstance(registry.get("packages"), list):
+        raise SystemExit("Phase 9 checkpoint packages must be a JSON array")
+    for field in ("currentControlBundleSha256", "currentSourceSetSha256"):
+        value = registry.get(field)
+        if not isinstance(value, str) or HASH_PATTERN.fullmatch(value) is None:
+            raise SystemExit(f"Phase 9 {field} is malformed")
     return registry
 
 
@@ -940,10 +1196,10 @@ def validate_checkpoints(
     verify_current: bool = True,
     verify_reviews: bool = True,
     verify_backlog: bool = True,
-) -> dict[str, dict[str, str]]:
+) -> dict[str, dict[str, Any]]:
     baseline = historical_manifest() if manifest is None else manifest
     checkpoints = checkpoint_payload() if registry is None else registry
-    if set(checkpoints) != EXPECTED_ROOT_KEYS or checkpoints.get("schemaVersion") != 1:
+    if set(checkpoints) != EXPECTED_ROOT_KEYS or checkpoints.get("schemaVersion") != 2:
         raise SystemExit("Phase 9 implementation checkpoint registry schema drifted")
     expected_baseline = {
         "commit": BASELINE_COMMIT,
@@ -957,125 +1213,255 @@ def validate_checkpoints(
     contract_order, contracts = baseline_contracts(baseline)
     source_order, sources = baseline_sources(baseline)
     production_order = [name for name in contract_order if name != "Phase9LocalSyntheticToken"]
-    raw_entries = checkpoints.get("implementations")
-    if not isinstance(raw_entries, list):
-        raise SystemExit("Phase 9 implementation checkpoints must be a JSON array")
+    raw_packages = checkpoints.get("packages")
+    if not isinstance(raw_packages, list):
+        raise SystemExit("Phase 9 checkpoint packages must be a JSON array")
 
-    entries: dict[str, dict[str, str]] = {}
-    observed_order: list[str] = []
+    latest_revisions: dict[str, dict[str, Any]] = {}
+    latest_origins: dict[str, tuple[str, int]] = {}
+    observed_packages: list[str] = []
     effective_sources = dict(sources)
+    effective_abis = {
+        contract: read_json(ROOT / contract_entry["abiPath"])
+        for contract, contract_entry in contracts.items()
+    }
     statuses = backlog_statuses() if verify_backlog else {}
-    if raw_entries and verify_backlog and statuses.get(ACTIVATION_BACKLOG_ID) != "DONE":
-        raise SystemExit(f"{ACTIVATION_BACKLOG_ID} must be DONE before implementation checkpoints")
+    for raw_package in raw_packages:
+        if not isinstance(raw_package, dict) or set(raw_package) != EXPECTED_PACKAGE_KEYS:
+            raise SystemExit("Phase 9 checkpoint package fields drifted")
+        checkpoint_id = raw_package.get("checkpointId")
+        if not isinstance(checkpoint_id, str) or checkpoint_id not in ACTIVATION_PACKAGES:
+            raise SystemExit("Phase 9 checkpoint package is not activated")
+        if checkpoint_id in observed_packages:
+            raise SystemExit(f"Phase 9 checkpoint package is duplicated: {checkpoint_id}")
+        observed_packages.append(checkpoint_id)
+        package_definition = ACTIVATION_PACKAGES[checkpoint_id]
 
-    for raw_entry in raw_entries:
-        if not isinstance(raw_entry, dict) or set(raw_entry) != EXPECTED_ENTRY_KEYS:
-            raise SystemExit("Phase 9 implementation checkpoint fields drifted")
-        if not all(isinstance(value, str) for value in raw_entry.values()):
-            raise SystemExit("Phase 9 implementation checkpoint values must be strings")
-        entry = cast(dict[str, str], raw_entry)
-        contract = entry["contract"]
-        if contract not in production_order:
-            raise SystemExit(
-                f"Phase 9 implementation checkpoint names an unknown contract: {contract}"
-            )
-        if contract not in ACTIVATED_IMPLEMENTATIONS:
-            raise SystemExit(f"{contract}: implementation checkpoint is not activated")
-        if contract in entries:
-            raise SystemExit(f"Phase 9 implementation checkpoint is duplicated: {contract}")
-        observed_order.append(contract)
-        entries[contract] = entry
-
-        backlog_id = entry["backlogId"]
-        if BACKLOG_PATTERN.fullmatch(backlog_id) is None:
-            raise SystemExit(f"{contract}: implementation checkpoint backlog ID is malformed")
-        if entry["status"] != "PASS":
-            raise SystemExit(f"{contract}: implementation checkpoint status is not PASS")
-        if backlog_id != ACTIVATED_IMPLEMENTATIONS[contract]:
-            raise SystemExit(f"{contract}: implementation checkpoint backlog substitution")
-        for field in (
-            "abiSha256",
-            "dependencyClosureSha256",
-            "implementationEvidenceBundleSha256",
-            "reviewSha256",
-            "sourceSha256",
-            "sourceSetSha256",
-            "storageStructuralSha256",
+        if (
+            checkpoint_id == "P9-PAYOFF-001"
+            and sha256_payload(raw_package) != PAYOFF_ACCEPTED_PACKAGE_SHA256
         ):
-            if HASH_PATTERN.fullmatch(entry[field]) is None:
-                raise SystemExit(f"{contract}: implementation checkpoint {field} is malformed")
+            raise SystemExit("P9-PAYOFF-001: accepted package identity drifted")
 
-        contract_baseline = contracts[contract]
-        if entry["abiSha256"] != contract_baseline["abiSha256"]:
-            raise SystemExit(f"{contract}: implementation ABI differs from the freeze baseline")
-        baseline_source_hash = sources[contract_baseline["sourcePath"]]
-        if entry["sourceSha256"] == baseline_source_hash:
-            raise SystemExit(f"{contract}: checkpoint does not activate an implementation change")
-        effective_sources[contract_baseline["sourcePath"]] = entry["sourceSha256"]
-        expected_checkpoint_source_set = ordered_source_set_hash(source_order, effective_sources)
-        if entry["sourceSetSha256"] != expected_checkpoint_source_set:
-            raise SystemExit(f"{contract}: implementation source-set checkpoint is stale")
-        storage_payload = read_json(ROOT / contract_baseline["storagePath"])
-        if not isinstance(storage_payload, dict):
-            raise SystemExit(f"{contract}: baseline storage snapshot is malformed")
-        expected_structural_hash = structural_storage_hash(cast(dict[str, Any], storage_payload))
-        if entry["storageStructuralSha256"] != expected_structural_hash:
-            raise SystemExit(f"{contract}: implementation storage differs from the freeze baseline")
-
-        if verify_backlog and statuses.get(backlog_id) != "DONE":
-            raise SystemExit(f"{contract}: checkpoint backlog {backlog_id} is not DONE")
-
-        source_path = ROOT / contract_baseline["sourcePath"]
-        if verify_current:
-            if sha256_file(source_path) != entry["sourceSha256"]:
-                raise SystemExit(f"{contract}: reviewed implementation source hash is stale")
-            if repository_solidity_dependency_hash(source_path) != entry["dependencyClosureSha256"]:
-                raise SystemExit(f"{contract}: reviewed Solidity dependency closure hash is stale")
-            if (
-                implementation_evidence_bundle_hash(contract)
-                != entry["implementationEvidenceBundleSha256"]
-            ):
-                raise SystemExit(f"{contract}: implementation evidence bundle hash is stale")
-
-        if verify_reviews:
-            review_path = validate_review_path(entry["reviewPath"])
-            if sha256_file(review_path) != entry["reviewSha256"]:
-                raise SystemExit(f"{contract}: implementation review hash is stale")
-            content = review_content(review_path)
-            metadata = require_unambiguous_review_pass(contract, content)
-            for field, value in metadata.items():
-                if entry[field] != value:
-                    raise SystemExit(f"{contract}: implementation review {field} mismatch")
-            review = normalized_review(content)
-            required_tokens = (
-                contract.lower(),
-                backlog_id.lower(),
-                entry["sourceSha256"],
-                entry["sourceSetSha256"],
-                entry["dependencyClosureSha256"],
-                entry["implementationEvidenceBundleSha256"],
-                entry["abiSha256"],
-                entry["storageStructuralSha256"],
-            )
-            if any(token.lower() not in review for token in required_tokens):
-                raise SystemExit(f"{contract}: implementation review status or hashes mismatch")
-            if verify_current:
-                validate_reviewed_commit_binding(
-                    contract,
-                    entry["reviewedCommit"],
-                    baseline,
-                    source_path,
+        required_backlogs = raw_package.get("requiredBacklogIds")
+        expected_backlogs = package_definition["requiredBacklogIds"]
+        if not isinstance(required_backlogs, list) or tuple(required_backlogs) != expected_backlogs:
+            raise SystemExit(f"{checkpoint_id}: required backlog IDs drifted")
+        if any(
+            not isinstance(identifier, str) or BACKLOG_PATTERN.fullmatch(identifier) is None
+            for identifier in required_backlogs
+        ):
+            raise SystemExit(f"{checkpoint_id}: required backlog ID is malformed")
+        if verify_backlog:
+            incomplete = [
+                identifier for identifier in required_backlogs if statuses.get(identifier) != "DONE"
+            ]
+            if incomplete:
+                raise SystemExit(
+                    f"{checkpoint_id}: required checkpoint backlogs are not DONE: {incomplete}"
                 )
 
-    expected_entry_order = [name for name in production_order if name in entries]
-    if observed_order != expected_entry_order:
-        raise SystemExit("Phase 9 implementation checkpoints are not in baseline contract order")
+        review = raw_package.get("review")
+        if (
+            not isinstance(review, dict)
+            or set(review) != EXPECTED_REVIEW_KEYS
+            or not all(isinstance(value, str) for value in review.values())
+        ):
+            raise SystemExit(f"{checkpoint_id}: review identity fields drifted")
+        if review["status"] != "PASS" or HASH_PATTERN.fullmatch(review["reviewSha256"]) is None:
+            raise SystemExit(f"{checkpoint_id}: review status or hash is malformed")
+        identities = (
+            review["implementationAuthor"],
+            review["architectureReviewer"],
+            review["securityReviewer"],
+            review["toolingReviewer"],
+        )
+        if any(not identity.strip() for identity in identities) or len(
+            {identity.casefold() for identity in identities}
+        ) != len(identities):
+            raise SystemExit(
+                f"{checkpoint_id}: implementation author and reviewers must be distinct"
+            )
+        reviewed_commit = review["reviewedCommit"]
+        if re.fullmatch(r"[0-9a-f]{40}", reviewed_commit) is None:
+            raise SystemExit(f"{checkpoint_id}: reviewed commit must be exact lowercase 40-hex")
+
+        raw_revisions = raw_package.get("revisions")
+        expected_contracts = cast(dict[str, tuple[str, ...]], package_definition["contracts"])
+        abi_additions = cast(
+            dict[str, tuple[dict[str, Any], ...]], package_definition["abiAdditions"]
+        )
+        if not set(abi_additions) <= set(expected_contracts):
+            raise SystemExit(f"{checkpoint_id}: ABI addition names an unactivated contract")
+        if not isinstance(raw_revisions, list) or not raw_revisions:
+            raise SystemExit(f"{checkpoint_id}: contract revisions are missing")
+        package_contracts: list[str] = []
+        package_revisions: list[dict[str, Any]] = []
+        package_sources = dict(effective_sources)
+        package_abis = dict(effective_abis)
+        for raw_revision in raw_revisions:
+            if not isinstance(raw_revision, dict) or set(raw_revision) != EXPECTED_REVISION_KEYS:
+                raise SystemExit(f"{checkpoint_id}: contract revision fields drifted")
+            revision = cast(dict[str, Any], raw_revision)
+            contract = revision.get("contract")
+            if not isinstance(contract, str) or contract not in production_order:
+                raise SystemExit(f"{checkpoint_id}: contract revision names an unknown contract")
+            if contract not in expected_contracts or contract in package_contracts:
+                raise SystemExit(f"{checkpoint_id}: contract revision set drifted: {contract}")
+            package_contracts.append(contract)
+            package_revisions.append(revision)
+
+            activated = revision.get("activatedSignatures")
+            expected_activated = expected_contracts[contract]
+            if not isinstance(activated, list) or tuple(activated) != expected_activated:
+                raise SystemExit(f"{checkpoint_id}/{contract}: activated signature set drifted")
+            canonical_mutators = canonical_mutator_signatures(ROOT / contracts[contract]["abiPath"])
+            if not set(activated) <= set(canonical_mutators):
+                raise SystemExit(
+                    f"{checkpoint_id}/{contract}: activated signature is not canonical"
+                )
+
+            prior = latest_revisions.get(contract)
+            expected_revision = 1 if prior is None else cast(int, prior["revision"]) + 1
+            if revision.get("revision") != expected_revision:
+                raise SystemExit(f"{checkpoint_id}/{contract}: revision is not monotonic")
+            supersedes = revision.get("supersedes")
+            if prior is None:
+                if supersedes is not None:
+                    raise SystemExit(f"{checkpoint_id}/{contract}: first revision cannot supersede")
+            else:
+                previous_checkpoint, previous_revision = latest_origins[contract]
+                expected_supersedes = {
+                    "checkpointId": previous_checkpoint,
+                    "revision": previous_revision,
+                }
+                if supersedes != expected_supersedes:
+                    raise SystemExit(f"{checkpoint_id}/{contract}: supersession chain drifted")
+                if not set(cast(list[str], prior["activatedSignatures"])) <= set(activated):
+                    raise SystemExit(f"{checkpoint_id}/{contract}: activation is not monotonic")
+
+            for field in (
+                "abiSha256",
+                "dependencyClosureSha256",
+                "implementationEvidenceBundleSha256",
+                "sourceSha256",
+                "sourceSetSha256",
+                "storageStructuralSha256",
+            ):
+                value = revision.get(field)
+                if not isinstance(value, str) or HASH_PATTERN.fullmatch(value) is None:
+                    raise SystemExit(f"{checkpoint_id}/{contract}: {field} is malformed")
+
+            contract_baseline = contracts[contract]
+            expected_abi = additive_abi_payload(
+                effective_abis[contract], abi_additions.get(contract, ())
+            )
+            expected_abi_hash = sha256_payload(expected_abi)
+            if revision["abiSha256"] != expected_abi_hash:
+                raise SystemExit(
+                    f"{checkpoint_id}/{contract}: ABI differs from the additive allowlist"
+                )
+            package_abis[contract] = expected_abi
+            source_relative = contract_baseline["sourcePath"]
+            if revision["sourceSha256"] == effective_sources[source_relative]:
+                raise SystemExit(f"{checkpoint_id}/{contract}: revision does not change source")
+            committed_source = reviewed_commit_file_bytes(
+                contract, reviewed_commit, (source_relative,)
+            )[source_relative]
+            if sha256_bytes(committed_source) != revision["sourceSha256"]:
+                raise SystemExit(
+                    f"{checkpoint_id}/{contract}: source hash differs from reviewed Git blob"
+                )
+            if (
+                historical_evidence_bundle_hash(contract, reviewed_commit)
+                != revision["implementationEvidenceBundleSha256"]
+            ):
+                raise SystemExit(
+                    f"{checkpoint_id}/{contract}: evidence hash differs from reviewed Git blobs"
+                )
+
+            storage_payload = read_json(ROOT / contract_baseline["storagePath"])
+            if not isinstance(storage_payload, dict):
+                raise SystemExit(f"{contract}: baseline storage snapshot is malformed")
+            expected_storage_hash = structural_storage_hash(cast(dict[str, Any], storage_payload))
+            if revision["storageStructuralSha256"] != expected_storage_hash:
+                raise SystemExit(
+                    f"{checkpoint_id}/{contract}: storage differs from the freeze baseline"
+                )
+            package_sources[source_relative] = cast(str, revision["sourceSha256"])
+
+        expected_contract_order = [name for name in production_order if name in expected_contracts]
+        if package_contracts != expected_contract_order:
+            raise SystemExit(f"{checkpoint_id}: contract revisions are not in baseline order")
+        expected_package_source_set = ordered_source_set_hash(source_order, package_sources)
+        historical_package_source_set = historical_source_set_hash(
+            checkpoint_id, reviewed_commit, baseline
+        )
+        if historical_package_source_set != expected_package_source_set:
+            raise SystemExit(f"{checkpoint_id}: reviewed Git source set is inconsistent")
+        for revision in package_revisions:
+            if revision["sourceSetSha256"] != expected_package_source_set:
+                raise SystemExit(
+                    f"{checkpoint_id}/{revision['contract']}: source-set checkpoint is stale"
+                )
+
+        if verify_reviews:
+            review_path = validate_review_path(cast(str, review["reviewPath"]))
+            if sha256_file(review_path) != review["reviewSha256"]:
+                raise SystemExit(f"{checkpoint_id}: implementation review hash is stale")
+            content = review_content(review_path)
+            metadata = require_unambiguous_review_pass(checkpoint_id, content)
+            for field, value in metadata.items():
+                if review[field] != value:
+                    raise SystemExit(f"{checkpoint_id}: implementation review {field} mismatch")
+            normalized = normalized_review(content)
+            historical_payoff = checkpoint_id == "P9-PAYOFF-001"
+            required_tokens: list[str] = (
+                [] if historical_payoff else [checkpoint_id, *required_backlogs]
+            )
+            for revision in package_revisions:
+                required_tokens.extend(
+                    (
+                        cast(str, revision["contract"]),
+                        "UNI-PAYOFF-001" if historical_payoff else "",
+                        *(
+                            []
+                            if historical_payoff
+                            else cast(list[str], revision["activatedSignatures"])
+                        ),
+                        cast(str, revision["sourceSha256"]),
+                        cast(str, revision["sourceSetSha256"]),
+                        cast(str, revision["dependencyClosureSha256"]),
+                        cast(str, revision["implementationEvidenceBundleSha256"]),
+                        cast(str, revision["abiSha256"]),
+                        cast(str, revision["storageStructuralSha256"]),
+                    )
+                )
+            if any(token and token.lower() not in normalized for token in required_tokens):
+                raise SystemExit(
+                    f"{checkpoint_id}: implementation review status or hashes mismatch"
+                )
+
+        effective_sources = package_sources
+        effective_abis = package_abis
+        for revision in package_revisions:
+            contract = cast(str, revision["contract"])
+            latest_revisions[contract] = revision
+            latest_origins[contract] = (checkpoint_id, cast(int, revision["revision"]))
+
+    expected_package_order = [
+        checkpoint_id for checkpoint_id in ACTIVATION_PACKAGES if checkpoint_id in observed_packages
+    ]
+    if observed_packages != expected_package_order:
+        raise SystemExit("Phase 9 checkpoint packages are not in canonical order")
 
     expected_current_source_set = ordered_source_set_hash(source_order, effective_sources)
     if checkpoints.get("currentSourceSetSha256") != expected_current_source_set:
         raise SystemExit("Phase 9 current implementation source-set hash is stale")
 
     if verify_current:
+        if checkpoints.get("currentControlBundleSha256") != current_control_bundle_hash():
+            raise SystemExit("Phase 9 current control-bundle hash is stale")
         actual_paths = current_source_paths()
         expected_paths = set(source_order)
         if actual_paths != expected_paths:
@@ -1086,8 +1472,8 @@ def validate_checkpoints(
                 + ",".join(sorted(actual_paths - expected_paths))
             )
         implemented_paths = {
-            contracts[contract]["sourcePath"]: entry["sourceSha256"]
-            for contract, entry in entries.items()
+            contracts[contract]["sourcePath"]: revision["sourceSha256"]
+            for contract, revision in latest_revisions.items()
         }
         for relative_source in source_order:
             expected_hash = implemented_paths.get(relative_source, sources[relative_source])
@@ -1099,6 +1485,16 @@ def validate_checkpoints(
         if current_reviewed_source_set_hash(baseline) != expected_current_source_set:
             raise SystemExit("Phase 9 current reviewed source-set aggregate is stale")
 
+        for contract, revision in latest_revisions.items():
+            source_path = ROOT / contracts[contract]["sourcePath"]
+            if sha256_file(source_path) != revision["sourceSha256"]:
+                raise SystemExit(f"{contract}: latest reviewed implementation source hash is stale")
+            if (
+                repository_solidity_dependency_hash(source_path)
+                != revision["dependencyClosureSha256"]
+            ):
+                raise SystemExit(f"{contract}: reviewed Solidity dependency closure hash is stale")
+
         for contract, contract_baseline in contracts.items():
             abi_payload = read_json(ROOT / contract_baseline["abiPath"])
             if sha256_payload(abi_payload) != contract_baseline["abiSha256"]:
@@ -1107,11 +1503,18 @@ def validate_checkpoints(
             if sha256_payload(storage_payload) != contract_baseline["storageSha256"]:
                 raise SystemExit(f"{contract}: storage snapshot drifted from the freeze baseline")
 
-    return entries
+    return latest_revisions
 
 
 def implemented_contracts() -> set[str]:
     return set(validate_checkpoints())
+
+
+def activated_signatures() -> dict[str, frozenset[str]]:
+    return {
+        contract: frozenset(cast(list[str], revision["activatedSignatures"]))
+        for contract, revision in validate_checkpoints().items()
+    }
 
 
 def main() -> None:

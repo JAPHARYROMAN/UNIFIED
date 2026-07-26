@@ -227,6 +227,28 @@ def test_backlog_dependency_order_is_fail_closed() -> None:
     with pytest.raises(SystemExit, match="UNI-ADR-015"):
         phase9.check_backlog_precedence(implementation_before_activation)
 
+    for refinance_id in ("UNI-REFI-001", "UNI-REFI-002"):
+        refinance_before_activation = copy.deepcopy(rows)
+        refinance_before_activation["UNI-ADR-016"]["status"] = "TODO"
+        refinance_before_activation[refinance_id]["status"] = "DONE"
+        with pytest.raises(SystemExit, match="UNI-ADR-016"):
+            phase9.check_backlog_precedence(refinance_before_activation)
+
+
+def test_refinance_activation_row_and_acceptance_inventory_are_exact() -> None:
+    refinance_index = phase9.BACKLOG_IDS.index("UNI-REFI-001")
+    assert phase9.BACKLOG_IDS[refinance_index - 1] == "UNI-ADR-016"
+    assert "UNI-ADR-016" in phase9.BOUNDARY_COMPLETE_IDS
+    assert len(phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS) == 80
+    assert "P9R-COMPAT-003" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
+    assert "P9R-DON-004" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
+    assert "P9R-EVT-003" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
+    assert "P9R-LOCAL-003" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
+
+
+def test_refinance_boundary_evidence_is_exact() -> None:
+    phase9.check_refinance_boundary_evidence()
+
 
 @pytest.mark.parametrize(
     "relative",
@@ -355,6 +377,38 @@ def test_nonimplemented_stub_checks_remain_fail_closed(tmp_path: Path) -> None:
 
     with pytest.raises(SystemExit, match="successful or non-canonical mutating stub path"):
         phase9.check_phase9_stub_sources(imports, implemented={"PayoffQuoteEngine"})
+
+
+def test_method_level_activation_keeps_unopened_mutators_frozen(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = """
+    contract Example {
+        function opened() external { uint256 value = 1; value; }
+        function closed() external { revert Phase9ImplementationNotFrozen(); }
+    }
+    """
+    path = tmp_path / "Example.sol"
+    path.write_text(source, encoding="utf-8")
+    monkeypatch.setattr(phase9, "PHASE9_PRODUCTION_CONTRACTS", ("Example",))
+
+    phase9.check_phase9_stub_sources(
+        {"Example": path},
+        {"Example": frozenset({"opened()"})},
+    )
+
+    path.write_text(
+        source.replace(
+            "uint256 value = 1; value;",
+            "revert Phase9ImplementationNotFrozen();",
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="opened retains exact freeze behavior"):
+        phase9.check_phase9_stub_sources(
+            {"Example": path},
+            {"Example": frozenset({"opened()"})},
+        )
 
 
 def test_payoff_quote_engine_compiled_abi_remains_historical(tmp_path: Path) -> None:

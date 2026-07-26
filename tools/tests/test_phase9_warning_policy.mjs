@@ -12,15 +12,27 @@ import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 
 import {
+  additiveAbiPayload,
+  controlBundleSha256,
+  CONTROL_BUNDLE_PATHS,
   implementationEvidenceBundleSha256,
+  LIEN_REGISTRY_ABI_ADDITIONS,
   ordinalUtf8Compare,
   PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS,
+  PHASE9_PRODUCTION_CONTRACTS,
+  phase9ActivatedSignatures,
   phase9StubContracts,
   phase9WarningStubContracts,
+  REFINANCE_ACTIVATED_SIGNATURES,
+  REFINANCE_COORDINATOR_ABI_ADDITIONS,
+  REFINANCE_STATE_TRANSITIONED_EVENT,
+  REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR,
+  REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR,
   requireGitCleanWorktreeBytes,
   repositorySolidityDependencyHash,
   repositorySolidityDependencyPaths,
   solidityImportsFromSource,
+  validateCheckpointAbiAdditions,
   validateCheckpointDependencyClosures,
   validatePhase9MutabilityDiagnostics,
 } from "../compile_phase9_storage_layouts.mjs";
@@ -45,34 +57,57 @@ function runGit(root, ...arguments_) {
   return result.stdout.trim();
 }
 
-function checkpointEntry(overrides = {}) {
+const REGISTRY = JSON.parse(
+  readFileSync(resolve("protocol/compatibility/phase9-implementation-checkpoints.json"), "utf8"),
+);
+const PAYOFF_PACKAGE = REGISTRY.packages[0];
+
+function baselineCompiledOutput() {
   return {
-    abiSha256: HASH,
-    architectureReviewer: "Architecture Reviewer",
-    backlogId: "UNI-PAYOFF-001",
+    contracts: Object.fromEntries(
+      PHASE9_PRODUCTION_CONTRACTS.map((contract) => [
+        `compiled/${contract}.sol`,
+        {
+          [contract]: {
+            abi: JSON.parse(
+              readFileSync(resolve(`protocol/abi/phase9/${contract}.abi.json`), "utf8"),
+            ),
+          },
+        },
+      ]),
+    ),
+  };
+}
+
+function checkpointRevision(overrides = {}) {
+  return {
+    ...structuredClone(PAYOFF_PACKAGE.revisions[0]),
     contract: "PayoffQuoteEngine",
-    dependencyClosureSha256: HASH,
-    implementationAuthor: "Implementation Author",
-    implementationEvidenceBundleSha256: HASH,
-    reviewPath: "security/reviews/phase-9-payoff-quote-engine.md",
-    reviewSha256: HASH,
-    reviewedCommit: "1".repeat(40),
-    securityReviewer: "Security Reviewer",
-    sourceSha256: HASH,
-    sourceSetSha256: HASH,
-    status: "PASS",
-    storageStructuralSha256: HASH,
-    toolingReviewer: "Tooling Reviewer",
     ...overrides,
   };
 }
 
-function checkpointRegistry(implementations = []) {
+function checkpointPackage({
+  checkpointId = "P9-PAYOFF-001",
+  requiredBacklogIds = ["UNI-ADR-015", "UNI-PAYOFF-001"],
+  review = {},
+  revision = {},
+} = {}) {
+  return {
+    checkpointId,
+    requiredBacklogIds,
+    review: { ...structuredClone(PAYOFF_PACKAGE.review), ...review },
+    revisions: [checkpointRevision(revision)],
+  };
+}
+
+function checkpointRegistry(packages = []) {
   return {
     baseline: BASELINE,
+    currentControlBundleSha256: controlBundleSha256(),
     currentSourceSetSha256: HASH,
-    implementations,
-    schemaVersion: 1,
+    packages,
+    schemaVersion: 2,
   };
 }
 
@@ -98,19 +133,31 @@ function freezeFunction(id, start, errorName = "Phase9ImplementationNotFrozen") 
   };
 }
 
-function fixture(functions, locations) {
+function fixture(
+  functions,
+  locations,
+  { contract = "Phase9LoanFactory", source = SOURCE } = {},
+) {
+  const abi = functions.map((fn) => ({
+    inputs: [],
+    name: fn.name,
+    outputs: [],
+    stateMutability: fn.stateMutability,
+    type: "function",
+  }));
   return {
-    errors: locations.map(({ end, file = SOURCE, start }) => ({
+    contracts: { [source]: { [contract]: { abi } } },
+    errors: locations.map(({ end, file = source, start }) => ({
       errorCode: "2018",
       severity: "warning",
       sourceLocation: { end, file, start },
     })),
     sources: {
-      [SOURCE]: {
+      [source]: {
         ast: {
           nodes: [
             {
-              name: "Phase9LoanFactory",
+              name: contract,
               nodeType: "ContractDefinition",
               nodes: functions,
             },
@@ -141,7 +188,7 @@ test("rejects warning 2018 on a noncanonical function in an allowed file", () =>
         expectedCount: 1,
         productionContracts: ["Phase9LoanFactory"],
       }),
-    /not scoped to one canonical Phase 9 fail-closed mutator/,
+    /not the exact freeze stub/,
   );
 });
 
@@ -156,73 +203,110 @@ test("rejects a canonical mutator without its warning 2018", () => {
   );
 });
 
+test("allows only the exact activated signature while sibling methods remain frozen", () => {
+  const output = fixture(
+    [freezeFunction(1, 0), freezeFunction(2, 50, "DifferentError")],
+    [{ start: 5, end: 10 }],
+  );
+  assert.doesNotThrow(() =>
+    validatePhase9MutabilityDiagnostics(output, {
+      activatedSignatures: new Map([["Phase9LoanFactory", new Set(["mutate2()"])]]),
+      expectedCount: 1,
+      productionContracts: ["Phase9LoanFactory"],
+    }),
+  );
+  assert.throws(
+    () =>
+      validatePhase9MutabilityDiagnostics(output, {
+        activatedSignatures: new Map([["Phase9LoanFactory", new Set(["mutate1()"])]]),
+        expectedCount: 1,
+        productionContracts: ["Phase9LoanFactory"],
+      }),
+    /Activated Phase 9 mutator remains frozen/,
+  );
+});
+
 test("derives the exact stub set from implementation checkpoints", () => {
-  const stubs = phase9StubContracts(checkpointRegistry([checkpointEntry()]));
+  const stubs = phase9StubContracts(checkpointRegistry([checkpointPackage()]));
   assert.equal(stubs.includes("PayoffQuoteEngine"), false);
   assert.equal(stubs.includes("Phase9LoanAccount"), true);
   assert.equal(stubs.length, 12);
 });
 
-test("derives the same warning stub set before and after an activated checkpoint", () => {
+test("derives warning exemptions from whether any canonical mutator remains frozen", () => {
   const beforeCheckpoint = phase9WarningStubContracts(checkpointRegistry());
   const afterCheckpoint = phase9WarningStubContracts(
-    checkpointRegistry([checkpointEntry()]),
+    checkpointRegistry([checkpointPackage()]),
   );
 
   assert.equal(phase9StubContracts(checkpointRegistry()).includes("PayoffQuoteEngine"), true);
-  assert.equal(beforeCheckpoint.includes("PayoffQuoteEngine"), false);
+  assert.equal(beforeCheckpoint.includes("PayoffQuoteEngine"), true);
   assert.equal(beforeCheckpoint.includes("Phase9LoanAccount"), true);
-  assert.equal(beforeCheckpoint.length, 12);
-  assert.deepEqual(beforeCheckpoint, afterCheckpoint);
+  assert.equal(beforeCheckpoint.length, 13);
+  assert.equal(afterCheckpoint.includes("PayoffQuoteEngine"), false);
+  assert.equal(afterCheckpoint.length, 12);
 });
 
-test("rejects unknown or duplicate checkpoint contracts", () => {
+test("rejects unknown or duplicate checkpoint packages", () => {
   assert.throws(
     () =>
-      phase9StubContracts({
-        ...checkpointRegistry([checkpointEntry({ contract: "Unexpected" })]),
-      }),
-    /contract set is invalid/,
+      phase9StubContracts(
+        checkpointRegistry([checkpointPackage({ checkpointId: "P9-UNKNOWN-001" })]),
+      ),
+    /not uniquely activated/,
   );
   assert.throws(
     () =>
-      phase9StubContracts(checkpointRegistry([checkpointEntry(), checkpointEntry()])),
-    /contract set is invalid/,
+      phase9StubContracts(checkpointRegistry([checkpointPackage(), checkpointPackage()])),
+    /not uniquely activated/,
   );
 });
 
-test("rejects unopened contracts and backlog substitutions", () => {
+test("rejects required-backlog and signature substitutions", () => {
+  assert.throws(
+    () =>
+      phase9StubContracts(
+        checkpointRegistry([checkpointPackage({ requiredBacklogIds: ["UNI-WRONG-001"] })]),
+      ),
+    /package activation drifted/,
+  );
   assert.throws(
     () =>
       phase9StubContracts(
         checkpointRegistry([
-          checkpointEntry({ backlogId: "UNI-REFI-001", contract: "RefinanceCoordinator" }),
+          checkpointPackage({ revision: { activatedSignatures: ["issueQuote(bytes32,uint64)"] } }),
         ]),
       ),
-    /contract set is invalid/,
-  );
-  assert.throws(
-    () =>
-      phase9StubContracts(
-        checkpointRegistry([checkpointEntry({ backlogId: "UNI-WRONG-001" })]),
-      ),
-    /contract set is invalid/,
+    /activated signatures drifted/,
   );
 });
 
 test("rejects missing or malformed dependency-closure evidence", () => {
-  const missing = checkpointEntry();
+  const missing = checkpointRevision();
   delete missing.dependencyClosureSha256;
+  const missingPackage = checkpointPackage();
+  missingPackage.revisions = [missing];
   assert.throws(
-    () => phase9StubContracts(checkpointRegistry([missing])),
-    /contract set is invalid/,
+    () => phase9StubContracts(checkpointRegistry([missingPackage])),
+    /contract revision fields drifted/,
   );
   assert.throws(
     () =>
       phase9StubContracts(
-        checkpointRegistry([checkpointEntry({ dependencyClosureSha256: "stale" })]),
+        checkpointRegistry([
+          checkpointPackage({ revision: { dependencyClosureSha256: "stale" } }),
+        ]),
       ),
-    /contract set is invalid/,
+    /contract revision fields drifted/,
+  );
+});
+
+test("pins the accepted Payoff package independently of later revisions", () => {
+  const mutated = structuredClone(PAYOFF_PACKAGE);
+  mutated.revisions[0].dependencyClosureSha256 = HASH;
+  assert.throws(
+    () => phase9StubContracts(checkpointRegistry([mutated])),
+    /P9-PAYOFF-001: accepted package identity drifted/,
   );
 });
 
@@ -231,54 +315,185 @@ test("Node checkpoint validation rejects ambiguous identities and malformed revi
     () =>
       phase9StubContracts(
         checkpointRegistry([
-          checkpointEntry({ architectureReviewer: "Implementation Author" }),
+          checkpointPackage({ review: { architectureReviewer: "/root" } }),
         ]),
       ),
-    /contract set is invalid/,
+    /review identities are ambiguous/,
   );
   assert.throws(
     () =>
       phase9StubContracts(
-        checkpointRegistry([checkpointEntry({ reviewedCommit: "A".repeat(40) })]),
+        checkpointRegistry([
+          checkpointPackage({ review: { reviewedCommit: "A".repeat(40) } }),
+        ]),
       ),
-    /contract set is invalid/,
+    /review identity fields drifted/,
   );
   assert.throws(
     () =>
       phase9StubContracts(
-        checkpointRegistry([checkpointEntry({ toolingReviewer: " " })]),
+        checkpointRegistry([checkpointPackage({ review: { toolingReviewer: " " } })]),
       ),
-    /contract set is invalid/,
+    /review identities are ambiguous/,
   );
 });
 
-test("node compilation guard verifies the current dependency closure", () => {
+test("node compilation guard verifies current dependency and control closures", () => {
   const actual = repositorySolidityDependencyHash(
     "protocol/src/resolution/PayoffQuoteEngine.sol",
   );
   assert.equal(actual, "sha256:443295b9b42d2b37581bba0a25c265fb25bd04f44dc419c198295623f863909d");
-  const bundle = implementationEvidenceBundleSha256("PayoffQuoteEngine");
   const valid = checkpointRegistry([
-    checkpointEntry({
-      dependencyClosureSha256: actual,
-      implementationEvidenceBundleSha256: bundle,
+    checkpointPackage({
+      revision: { dependencyClosureSha256: actual },
     }),
   ]);
   assert.doesNotThrow(() => validateCheckpointDependencyClosures(valid));
   const stale = checkpointRegistry([
-    checkpointEntry({ implementationEvidenceBundleSha256: bundle }),
+    checkpointPackage({ revision: { dependencyClosureSha256: HASH } }),
   ]);
   assert.throws(
     () => validateCheckpointDependencyClosures(stale),
-    /dependency closure hash is stale/,
+    /accepted package identity drifted/,
   );
-  const staleBundle = checkpointRegistry([
-    checkpointEntry({ dependencyClosureSha256: actual }),
-  ]);
+  const staleControl = structuredClone(valid);
+  staleControl.currentControlBundleSha256 = HASH;
   assert.throws(
-    () => validateCheckpointDependencyClosures(staleBundle),
-    /implementation evidence bundle hash is stale/,
+    () => validateCheckpointDependencyClosures(staleControl),
+    /control-bundle hash is stale/,
   );
+});
+
+test("provisional refinance activation is method-exact and keeps updateCustody frozen", () => {
+  assert.equal(
+    REFINANCE_ACTIVATED_SIGNATURES.get("CollateralCustodyV2").includes(
+      "recordCustody((bytes32,bytes32,address,address,uint256,uint8,bytes32),bytes32)",
+    ),
+    true,
+  );
+  assert.equal(
+    REFINANCE_ACTIVATED_SIGNATURES.get("CollateralCustodyV2").includes(
+      "updateCustody(bytes32,uint256,uint8,bytes32)",
+    ),
+    false,
+  );
+});
+
+test("RefinanceCoordinator additive ABI allowlist fixes its exact event and error", () => {
+  const baseline = JSON.parse(
+    readFileSync(resolve("protocol/abi/phase9/RefinanceCoordinator.abi.json"), "utf8"),
+  );
+  assert.deepEqual(REFINANCE_COORDINATOR_ABI_ADDITIONS, [
+    REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR,
+    REFINANCE_STATE_TRANSITIONED_EVENT,
+  ]);
+  const additive = additiveAbiPayload(baseline, REFINANCE_COORDINATOR_ABI_ADDITIONS);
+  assert.equal(additive.length, baseline.length + 2);
+  assert.deepEqual(
+    additive.filter(
+      (item) =>
+        !["RefinanceStateTransitioned", "UnknownFundingCommitment"].includes(item.name),
+    ),
+    baseline,
+  );
+  const event = additive.find((item) => item.name === "RefinanceStateTransitioned");
+  assert.deepEqual(event.inputs.map((input) => input.type), [
+    "bytes32",
+    "uint8",
+    "uint8",
+    "uint64",
+    "bytes32",
+    "bytes32",
+  ]);
+  assert.deepEqual(
+    event.inputs.map((input) => input.indexed),
+    [true, true, true, false, false, false],
+  );
+  assert.deepEqual(
+    additive.find((item) => item.name === "UnknownFundingCommitment"),
+    REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR,
+  );
+  assert.throws(
+    () =>
+      additiveAbiPayload(baseline, [
+        {
+          inputs: [],
+          name: "unauthorizedSelector",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ]),
+    /errors and events only/,
+  );
+});
+
+test("LienRegistry additive ABI allowlist fixes its exact handoff error", () => {
+  const baseline = JSON.parse(
+    readFileSync(resolve("protocol/abi/phase9/LienRegistry.abi.json"), "utf8"),
+  );
+  assert.deepEqual(LIEN_REGISTRY_ABI_ADDITIONS, [
+    REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR,
+  ]);
+  const additive = additiveAbiPayload(baseline, LIEN_REGISTRY_ABI_ADDITIONS);
+  assert.equal(additive.length, baseline.length + 1);
+  assert.deepEqual(
+    additive.filter((item) => item.name !== "UnknownLienHandoff"),
+    baseline,
+  );
+  assert.deepEqual(
+    additive.find((item) => item.name === "UnknownLienHandoff"),
+    REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR,
+  );
+  assert.equal(
+    REFINANCE_COORDINATOR_ABI_ADDITIONS.includes(REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR),
+    false,
+  );
+  assert.equal(
+    LIEN_REGISTRY_ABI_ADDITIONS.includes(REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR),
+    false,
+  );
+});
+
+test("compiled-output ABI comparison rejects unauthorized errors and events", () => {
+  assert.doesNotThrow(() => validateCheckpointAbiAdditions(baselineCompiledOutput(), REGISTRY));
+  for (const unauthorized of [
+    {
+      inputs: [{ internalType: "bytes32", name: "unknownId", type: "bytes32" }],
+      name: "UnknownUnauthorizedRecord",
+      type: "error",
+    },
+    {
+      anonymous: false,
+      inputs: [{ indexed: true, internalType: "bytes32", name: "unknownId", type: "bytes32" }],
+      name: "UnauthorizedStateTransitioned",
+      type: "event",
+    },
+  ]) {
+    const output = baselineCompiledOutput();
+    output.contracts["compiled/RefinanceCoordinator.sol"].RefinanceCoordinator.abi.push(
+      unauthorized,
+    );
+    assert.throws(
+      () => validateCheckpointAbiAdditions(output, REGISTRY),
+      /compiled ABI differs from the historical plus additive set/,
+    );
+  }
+});
+
+test("compiled-output ABI comparison rejects additions assigned to the wrong contract", () => {
+  for (const [contract, misassigned] of [
+    ["RefinanceCoordinator", REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR],
+    ["LienRegistry", REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR],
+    ["LienRegistry", REFINANCE_STATE_TRANSITIONED_EVENT],
+  ]) {
+    const output = baselineCompiledOutput();
+    output.contracts[`compiled/${contract}.sol`][contract].abi.push(misassigned);
+    assert.throws(
+      () => validateCheckpointAbiAdditions(output, REGISTRY),
+      new RegExp(`${contract}: compiled ABI differs from the historical plus additive set`),
+    );
+  }
 });
 
 test("Node and Python checkpoint tooling share the exact evidence path list", () => {
@@ -319,6 +534,39 @@ test("Node and Python checkpoint tooling share the exact evidence path list", ()
       "uv.lock",
     ].every((path) => PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS.includes(path)),
   );
+});
+
+test("Node and Python checkpoint tooling bind the exact control path list", () => {
+  const python = readFileSync(
+    resolve("tools/check_phase9_implementation_checkpoints.py"),
+    "utf8",
+  );
+  const tuple = python.match(
+    /CONTROL_BUNDLE_PATHS = \(([\s\S]*?)\)\r?\n\r?\n# Prepared Foundry dependencies/,
+  );
+  assert.notEqual(tuple, null);
+  const pythonPaths = [...tuple[1].matchAll(/^\s*"([^"]+)",\s*$/gm)].map(
+    (match) => match[1],
+  );
+  assert.deepEqual(CONTROL_BUNDLE_PATHS, pythonPaths);
+  assert.deepEqual(CONTROL_BUNDLE_PATHS, [
+    "buf.gen.yaml",
+    "buf.yaml",
+    "protocol/foundry.toml",
+    "scripts/check-foundation.ps1",
+    "scripts/generate.ps1",
+    "tools/check_phase9.py",
+    "tools/check_phase9_implementation_checkpoints.py",
+    "tools/check_phase9_schema.py",
+    "tools/check_phase9_storage_layouts.py",
+    "tools/compile_phase9_storage_layouts.mjs",
+    "tools/tests/test_phase9_compatibility.py",
+    "tools/tests/test_phase9_implementation_checkpoints.py",
+    "tools/tests/test_phase9_schema.py",
+    "tools/tests/test_phase9_warning_policy.mjs",
+    "tools/tests/test_update_phase9_implementation_checkpoint.py",
+    "tools/update_phase9_implementation_checkpoint.py",
+  ]);
 });
 
 test("Git-clean evidence bytes are canonical LF across platforms", () => {
