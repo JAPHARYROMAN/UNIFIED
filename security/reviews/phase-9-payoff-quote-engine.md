@@ -14,7 +14,7 @@ Security reviewer: /root/phase9_payoff_recheck_security
 
 Tooling reviewer: /root/phase9_payoff_recheck_tooling
 
-Reviewed commit: 562cb5933ac49adcdd2684f1c3947933b0d174e2
+Reviewed commit: b1a510685fec84539a64cc81725a2ed51acbe489
 
 ## Scope and authority
 
