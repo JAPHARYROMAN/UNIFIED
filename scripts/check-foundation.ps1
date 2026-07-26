@@ -1,6 +1,8 @@
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
+# This hash-critical foundation entrypoint is stored with repository-canonical LF endings.
+
 $workspace = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 Set-Location -LiteralPath $workspace
 

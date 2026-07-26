@@ -30,7 +30,13 @@ BASELINE_RAW_FREEZE_ARTIFACTS_SHA256 = (
 )
 ACTIVATION_BACKLOG_ID = "UNI-ADR-015"
 ACTIVATED_IMPLEMENTATIONS = {"PayoffQuoteEngine": "UNI-PAYOFF-001"}
+SOLC_AST_TYPE_SUFFIX_PATTERN = re.compile(
+    r"(t_(?:contract|enum|struct|userDefinedValueType)\([^()]+\))\d+"
+)
 PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = (
+    ".gitattributes",
+    ".github/workflows/foundation.yml",
+    ".mise.toml",
     "adr/0020-phase-9-payoff-authority-and-implementation-activation.md",
     "apps/foundation-console/src/index.ts",
     "apps/foundation-console/src/phase9PayoffReferenceGolden.ts",
@@ -42,9 +48,12 @@ PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = (
     "infrastructure/local/phase9-payoff-deployment-evidence.schema.json",
     "models/foundation_model/src/unified_foundation/phase9_payoff_reference.py",
     "models/foundation_model/tests/test_phase9_payoff_reference.py",
+    "package.json",
     "packages/phase9/typescript/payoffReference.ts",
+    "pnpm-lock.yaml",
     "protocol/foundry.toml",
     "protocol/script/DeployPhase9Local.s.sol",
+    "protocol/src/ProtocolCompilation.sol",
     "protocol/test/Phase9InterfaceFreeze.t.sol",
     "protocol/test/Phase9PayoffLocalDeploymentEvidence.t.sol",
     "protocol/test/Phase9PayoffQuote.t.sol",
@@ -54,7 +63,10 @@ PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = (
     "protocol/test/Phase9PayoffQuoteGolden.t.sol",
     "protocol/test/Phase9PayoffQuoteHarness.sol",
     "protocol/test/Phase9PayoffQuoteInvariants.t.sol",
+    "pyproject.toml",
+    "scripts/check-contract-sizes.py",
     "scripts/check-foundation.ps1",
+    "scripts/prepare-foundry.ps1",
     "tools/check_phase9.py",
     "tools/check_phase9_implementation_checkpoints.py",
     "tools/check_phase9_storage_layouts.py",
@@ -66,6 +78,8 @@ PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = (
     "tools/tests/test_update_phase9_implementation_checkpoint.py",
     "tools/update_phase9_implementation_checkpoint.py",
     "tools/verify_phase9_payoff_deployment.py",
+    "tsconfig.json",
+    "uv.lock",
 )
 IMPLEMENTATION_EVIDENCE_PATHS = {
     "PayoffQuoteEngine": PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS,
@@ -76,10 +90,18 @@ IMPLEMENTATION_EVIDENCE_PATHS = {
 # commit instead binds the pinned package inputs and the only script that materializes
 # those bytes, in addition to every repository-tracked source in the closure.
 REVIEWED_COMMIT_PROVENANCE_PATHS = (
+    ".gitattributes",
+    ".github/workflows/foundation.yml",
+    ".mise.toml",
     "package.json",
     "pnpm-lock.yaml",
     "protocol/foundry.toml",
+    "protocol/src/ProtocolCompilation.sol",
+    "pyproject.toml",
+    "scripts/check-contract-sizes.py",
     "scripts/prepare-foundry.ps1",
+    "tsconfig.json",
+    "uv.lock",
 )
 PREPARED_DEPENDENCY_PREFIXES = ("protocol/lib/",)
 
@@ -166,9 +188,97 @@ def historical_manifest() -> dict[str, Any]:
     return manifest
 
 
+def normalize_solc_storage_type_id(type_id: str) -> str:
+    """Remove only unstable AST IDs from concrete Solidity storage type identifiers."""
+
+    return SOLC_AST_TYPE_SUFFIX_PATTERN.sub(r"\1<ast-id>", type_id)
+
+
+def normalized_storage_layout(storage_layout: object) -> dict[str, Any]:
+    """Normalize AST suffixes across a complete storage type graph, failing on ambiguity."""
+
+    if not isinstance(storage_layout, dict):
+        raise SystemExit("Phase 9 storage payload lacks storageLayout")
+    raw_storage = storage_layout.get("storage")
+    raw_types = storage_layout.get("types")
+    if not isinstance(raw_storage, list) or not isinstance(raw_types, dict):
+        raise SystemExit("Phase 9 storage payload has an incomplete storageLayout graph")
+
+    normalized_types: dict[str, Any] = {}
+    original_type_ids: dict[str, str] = {}
+    for raw_type_id, raw_description in raw_types.items():
+        if not isinstance(raw_type_id, str) or not isinstance(raw_description, dict):
+            raise SystemExit("Phase 9 storage payload has a malformed type graph")
+        normalized_type_id = normalize_solc_storage_type_id(raw_type_id)
+        previous = original_type_ids.get(normalized_type_id)
+        if previous is not None:
+            raise SystemExit(
+                "Phase 9 storage type normalization collision: "
+                f"{previous} and {raw_type_id} normalize to {normalized_type_id}"
+            )
+        original_type_ids[normalized_type_id] = raw_type_id
+
+        description = deepcopy(raw_description)
+        for reference_field in ("base", "key", "value"):
+            if reference_field not in description:
+                continue
+            reference = description[reference_field]
+            if not isinstance(reference, str) or reference not in raw_types:
+                raise SystemExit(
+                    f"Phase 9 storage type {raw_type_id} has an invalid {reference_field} reference"
+                )
+            description[reference_field] = normalize_solc_storage_type_id(reference)
+
+        if "members" in description:
+            members = description["members"]
+            if not isinstance(members, list):
+                raise SystemExit(f"Phase 9 storage type {raw_type_id} has malformed members")
+            normalized_members: list[dict[str, Any]] = []
+            for index, raw_member in enumerate(members):
+                if not isinstance(raw_member, dict):
+                    raise SystemExit(
+                        f"Phase 9 storage type {raw_type_id} member {index} is malformed"
+                    )
+                member_type = raw_member.get("type")
+                if not isinstance(member_type, str) or member_type not in raw_types:
+                    raise SystemExit(
+                        f"Phase 9 storage type {raw_type_id} member {index} has an invalid type"
+                    )
+                member = deepcopy(raw_member)
+                member["type"] = normalize_solc_storage_type_id(member_type)
+                normalized_members.append(member)
+            description["members"] = normalized_members
+        normalized_types[normalized_type_id] = description
+
+    normalized_storage: list[dict[str, Any]] = []
+    for index, raw_entry in enumerate(raw_storage):
+        if not isinstance(raw_entry, dict):
+            raise SystemExit(f"Phase 9 storage entry {index} is malformed")
+        entry_type = raw_entry.get("type")
+        if not isinstance(entry_type, str) or entry_type not in raw_types:
+            raise SystemExit(f"Phase 9 storage entry {index} has an invalid type")
+        entry = deepcopy(raw_entry)
+        entry["type"] = normalize_solc_storage_type_id(entry_type)
+        normalized_storage.append(entry)
+
+    normalized = deepcopy(storage_layout)
+    normalized["storage"] = normalized_storage
+    normalized["types"] = normalized_types
+    return normalized
+
+
+def normalized_storage_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Normalize type IDs while retaining every other storage and freeze field exactly."""
+
+    normalized = deepcopy(payload)
+    normalized["storageLayout"] = normalized_storage_layout(normalized.get("storageLayout"))
+    return normalized
+
+
 def structural_storage_payload(payload: dict[str, Any]) -> dict[str, Any]:
-    """Remove function-body evidence while retaining every storage-relevant field."""
-    structural = deepcopy(payload)
+    """Retain exact storage evidence while excluding functions and unstable AST suffixes."""
+
+    structural = normalized_storage_payload(payload)
     freeze_surface = structural.get("freezeSurface")
     if not isinstance(freeze_surface, dict):
         raise SystemExit("Phase 9 storage payload lacks freezeSurface")
@@ -399,9 +509,11 @@ def implementation_evidence_bundle_paths(contract: str) -> list[Path]:
 
 
 def implementation_evidence_bundle_hash(contract: str) -> str:
+    paths = implementation_evidence_bundle_paths(contract)
+    require_git_clean_worktree_bytes(contract, paths)
     payload = [
         {"path": path.relative_to(ROOT).as_posix(), "sha256": sha256_file(path)}
-        for path in implementation_evidence_bundle_paths(contract)
+        for path in paths
     ]
     return sha256_payload(payload)
 
@@ -538,7 +650,9 @@ def reviewed_commit_required_paths(
     return sorted(paths, key=ordinal_utf8_path_key)
 
 
-def run_git_bytes(arguments: tuple[str, ...]) -> subprocess.CompletedProcess[bytes]:
+def run_git_bytes(
+    arguments: tuple[str, ...], *, input_bytes: bytes | None = None
+) -> subprocess.CompletedProcess[bytes]:
     """Run a read-only Git object query from the repository root."""
 
     git_executable = shutil.which("git")
@@ -550,9 +664,46 @@ def run_git_bytes(arguments: tuple[str, ...]) -> subprocess.CompletedProcess[byt
             cwd=ROOT,
             capture_output=True,
             check=False,
+            input=input_bytes,
         )
     except OSError as exc:
         raise SystemExit("Git is required to validate the reviewed implementation commit") from exc
+
+
+def git_hash_paths(contract: str, relative_paths: tuple[str, ...], *, clean: bool) -> list[str]:
+    """Hash a path set in one Git process, with or without clean filters."""
+
+    if any("\n" in path or "\r" in path for path in relative_paths):
+        raise SystemExit(f"{contract}: reviewed input path contains a line break")
+    arguments = ["hash-object", "--stdin-paths"]
+    if not clean:
+        arguments.append("--no-filters")
+    path_input = ("\n".join(relative_paths) + "\n").encode("utf-8")
+    result = run_git_bytes(tuple(arguments), input_bytes=path_input)
+    digests = result.stdout.decode("ascii", errors="replace").splitlines()
+    if (
+        result.returncode != 0
+        or len(digests) != len(relative_paths)
+        or any(re.fullmatch(r"[0-9a-f]{40}", digest) is None for digest in digests)
+    ):
+        raise SystemExit(f"{contract}: Git cannot hash reviewed input paths")
+    return digests
+
+
+def require_git_clean_worktree_bytes(contract: str, paths: list[Path]) -> None:
+    """Reject worktree bytes that Git clean filters would rewrite before committing."""
+
+    relative_paths = tuple(path.relative_to(ROOT).as_posix() for path in paths)
+    raw_digests = git_hash_paths(contract, relative_paths, clean=False)
+    clean_digests = git_hash_paths(contract, relative_paths, clean=True)
+    for relative_path, raw_digest, clean_digest in zip(
+        relative_paths, raw_digests, clean_digests, strict=True
+    ):
+        if raw_digest != clean_digest:
+            raise SystemExit(
+                f"{contract}: worktree bytes differ from Git-clean canonical bytes: "
+                f"{relative_path}"
+            )
 
 
 def reviewed_commit_file_bytes(

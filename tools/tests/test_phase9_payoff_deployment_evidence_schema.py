@@ -44,10 +44,24 @@ class FakeRpc:
         self.responses = responses
 
     def __call__(self, method: str, params: list[object]) -> object:
-        key = (method, tuple(params))
+        key = _rpc_key(method, *params)
         if key not in self.responses:
             raise AssertionError(f"unexpected RPC call: {key}")
         return self.responses[key]
+
+
+def _freeze_rpc_parameter(value: object) -> object:
+    if isinstance(value, dict):
+        return tuple(
+            sorted((str(key), _freeze_rpc_parameter(item)) for key, item in value.items())
+        )
+    if isinstance(value, list):
+        return tuple(_freeze_rpc_parameter(item) for item in value)
+    return value
+
+
+def _rpc_key(method: str, *params: object) -> tuple[str, tuple[object, ...]]:
+    return method, tuple(_freeze_rpc_parameter(param) for param in params)
 
 
 def deployment_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
@@ -245,13 +259,13 @@ def deployment_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[
     _write_json(broadcast_path, broadcast)
 
     responses: dict[tuple[str, tuple[object, ...]], object] = {
-        ("eth_chainId", ()): "0x7a69"
+        _rpc_key("eth_chainId"): "0x7a69"
     }
     for tx_hash_value, nonce, creation_input, block_hash, block_number, receipt in (
         (token_hash, "0x5", token_input, token_block_hash, token_block, token_receipt),
         (pair_hash, "0x6", pair_input, pair_block_hash, pair_block, pair_receipt),
     ):
-        responses[("eth_getTransactionByHash", (tx_hash_value,))] = {
+        responses[_rpc_key("eth_getTransactionByHash", tx_hash_value)] = {
             "hash": tx_hash_value,
             "from": sender,
             "to": None,
@@ -262,19 +276,35 @@ def deployment_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[
             "blockHash": block_hash,
             "blockNumber": hex(block_number),
         }
-        responses[("eth_getTransactionReceipt", (tx_hash_value,))] = receipt
-    for name, address in (
-        ("token", token),
-        ("pair", pair),
-        ("engine", engine),
-        ("coordinator", coordinator),
+        responses[_rpc_key("eth_getTransactionReceipt", tx_hash_value)] = receipt
+    for name, address, observation_block_hash in (
+        ("token", token, token_block_hash),
+        ("pair", pair, pair_block_hash),
+        ("engine", engine, pair_block_hash),
+        ("coordinator", coordinator, pair_block_hash),
     ):
-        responses[("eth_getCode", (address, hex(pair_block)))] = "0x" + codes[name].hex()
+        responses[
+            _rpc_key("eth_getCode", address, verifier._block_reference(observation_block_hash))
+        ] = "0x" + codes[name].hex()
     expected_engine, expected_coordinator = verifier._expected_storage(facts)
     for slot, value in enumerate(expected_engine):
-        responses[("eth_getStorageAt", (engine, hex(slot), hex(pair_block)))] = value
+        responses[
+            _rpc_key(
+                "eth_getStorageAt",
+                engine,
+                hex(slot),
+                verifier._block_reference(pair_block_hash),
+            )
+        ] = value
     for slot, value in enumerate(expected_coordinator):
-        responses[("eth_getStorageAt", (coordinator, hex(slot), hex(pair_block)))] = value
+        responses[
+            _rpc_key(
+                "eth_getStorageAt",
+                coordinator,
+                hex(slot),
+                verifier._block_reference(pair_block_hash),
+            )
+        ] = value
     return {
         "candidate": candidate,
         "candidate_path": candidate_path,
@@ -287,6 +317,10 @@ def deployment_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[
         "pair": pair,
         "engine": engine,
         "coordinator": coordinator,
+        "codes": codes,
+        "token_block_hash": token_block_hash,
+        "pair_block_hash": pair_block_hash,
+        "pair_block": pair_block,
     }
 
 
@@ -458,8 +492,8 @@ def test_matched_expected_observed_code_substitution_still_rejects_reviewed_pin(
     candidate = copy.deepcopy(fixture["candidate"])
     candidate["expected_pair_runtime_code_hash"] = substituted_hash
     _write_json(fixture["candidate_path"], candidate)
-    block = fixture["broadcast"]["receipts"][1]["blockNumber"]
-    fixture["responses"][("eth_getCode", (fixture["pair"], block))] = (
+    block_reference = verifier._block_reference(fixture["pair_block_hash"])
+    fixture["responses"][_rpc_key("eth_getCode", fixture["pair"], block_reference)] = (
         "0x" + substituted_code.hex()
     )
     with pytest.raises(verifier.VerificationError, match="reviewed compiled artifacts"):
@@ -476,10 +510,10 @@ def test_raw_storage_substitution_rejects_and_rejection_requires_bounded_reset(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     fixture = deployment_fixture(tmp_path, monkeypatch)
-    block = fixture["broadcast"]["receipts"][1]["blockNumber"]
-    fixture["responses"][("eth_getStorageAt", (fixture["engine"], "0x3", block))] = (
-        "0x" + "00" * 32
-    )
+    block_reference = verifier._block_reference(fixture["pair_block_hash"])
+    fixture["responses"][
+        _rpc_key("eth_getStorageAt", fixture["engine"], "0x3", block_reference)
+    ] = "0x" + "00" * 32
     with pytest.raises(verifier.VerificationError, match="engine constructor storage"):
         verifier.verify(
             fixture["candidate_path"],
@@ -492,6 +526,25 @@ def test_raw_storage_substitution_rejects_and_rejection_requires_bounded_reset(
     assert rejection["activation_accepted"] is False
     assert rejection["bounded_local_reset_required"] is True
     assert rejection["deployment_history_reverted"] is False
+
+
+def test_state_observations_reject_same_height_alternate_block_hash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = deployment_fixture(tmp_path, monkeypatch)
+    canonical_reference = verifier._block_reference(fixture["pair_block_hash"])
+    alternate_hash = "0x" + "ab" * 32
+    alternate_reference = verifier._block_reference(alternate_hash)
+    correct_code = "0x" + fixture["codes"]["engine"].hex()
+    fixture["responses"][
+        _rpc_key("eth_getCode", fixture["engine"], alternate_reference)
+    ] = correct_code
+    fixture["responses"][
+        _rpc_key("eth_getCode", fixture["engine"], canonical_reference)
+    ] = "0x"
+
+    with pytest.raises(verifier.VerificationError, match="code for engine is empty"):
+        _verify_fixture(fixture)
 
 
 @pytest.mark.parametrize(
@@ -683,6 +736,24 @@ def test_symlinked_artifact_path_rejects(
         verifier.load_reviewed_hashes(fixture["pins_path"], fixture["root"])
 
 
+def test_junction_or_reparse_artifact_path_rejects(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = deployment_fixture(tmp_path, monkeypatch)
+    artifact_path = (tmp_path / verifier.REVIEWED_ARTIFACT_PATHS["pair"]).absolute()
+    original_is_junction = getattr(Path, "is_junction", None)
+
+    def reports_reviewed_artifact_as_junction(path: Path) -> bool:
+        original_result = (
+            bool(original_is_junction(path)) if callable(original_is_junction) else False
+        )
+        return path.absolute() == artifact_path or original_result
+
+    monkeypatch.setattr(Path, "is_junction", reports_reviewed_artifact_as_junction, raising=False)
+    with pytest.raises(verifier.VerificationError, match="junction or reparse"):
+        verifier.load_reviewed_hashes(fixture["pins_path"], fixture["root"])
+
+
 @pytest.mark.parametrize("value", [True, -1, "0x00", "0xA", "01", "-1", "0X1"])
 def test_quantities_reject_bool_negative_and_noncanonical_forms(value: object) -> None:
     with pytest.raises(verifier.VerificationError):
@@ -764,4 +835,79 @@ def test_cli_pin_only_mode_is_network_free_and_out_of_scope_output_survives(
         ],
     )
     assert verifier.main() == 1
+    assert outside.read_text(encoding="utf-8") == "preserve"
+
+
+def test_cli_success_writes_accepted_without_rejection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = deployment_fixture(tmp_path, monkeypatch)
+    monkeypatch.setattr(verifier, "ROOT", tmp_path)
+    monkeypatch.setattr(verifier, "HttpRpc", lambda _: fixture["rpc"])
+    output = tmp_path / verifier.ACCEPTED_RELATIVE
+    rejection = tmp_path / verifier.REJECTION_RELATIVE
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "verify_phase9_payoff_deployment.py",
+            "--candidate",
+            str(fixture["candidate_path"]),
+            "--broadcast",
+            str(fixture["broadcast_path"]),
+            "--rpc-url",
+            "http://127.0.0.1:8545",
+            "--pins",
+            str(fixture["pins_path"]),
+            "--output",
+            str(output),
+            "--rejection-output",
+            str(rejection),
+        ],
+    )
+
+    assert verifier.main() == 0
+    assert json.loads(output.read_text(encoding="utf-8"))["activation_accepted"] is True
+    assert not rejection.exists()
+
+
+def test_cli_stale_rejection_requires_reset_and_cannot_coexist_with_accepted(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    fixture = deployment_fixture(tmp_path, monkeypatch)
+    monkeypatch.setattr(verifier, "ROOT", tmp_path)
+    output = tmp_path / verifier.ACCEPTED_RELATIVE
+    rejection = tmp_path / verifier.REJECTION_RELATIVE
+    outside = tmp_path.parent / f"{tmp_path.name}-external-preserve.json"
+    _write_json(output, {"activation_accepted": True})
+    _write_json(rejection, verifier.rejection_payload("prior verification failed"))
+    outside.write_text("preserve", encoding="utf-8")
+
+    def unexpected_http_rpc(_: str) -> Any:
+        raise AssertionError("stale rejection must fail before RPC access")
+
+    monkeypatch.setattr(verifier, "HttpRpc", unexpected_http_rpc)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "verify_phase9_payoff_deployment.py",
+            "--candidate",
+            str(fixture["candidate_path"]),
+            "--broadcast",
+            str(fixture["broadcast_path"]),
+            "--rpc-url",
+            "http://127.0.0.1:8545",
+            "--pins",
+            str(fixture["pins_path"]),
+            "--output",
+            str(output),
+            "--rejection-output",
+            str(rejection),
+        ],
+    )
+
+    assert verifier.main() == 1
+    assert not output.exists()
+    assert json.loads(rejection.read_text(encoding="utf-8"))["bounded_local_reset_required"] is True
     assert outside.read_text(encoding="utf-8") == "preserve"

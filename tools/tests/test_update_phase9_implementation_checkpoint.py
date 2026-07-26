@@ -42,8 +42,6 @@ def _manifest() -> dict[str, Any]:
 def test_candidate_evidence_prepares_hashes_without_review_or_pass_status(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    storage: dict[str, Any] = {"freezeSurface": {"functions": [], "stateVariables": []}}
-    monkeypatch.setattr(updater, "read_json", lambda _path: storage)
     monkeypatch.setattr(updater, "sha256_file", lambda _path: "sha256:" + "1" * 64)
     monkeypatch.setattr(
         updater,
@@ -57,8 +55,8 @@ def test_candidate_evidence_prepares_hashes_without_review_or_pass_status(
     )
     monkeypatch.setattr(
         updater,
-        "structural_storage_hash",
-        lambda _storage: "sha256:" + "4" * 64,
+        "current_compatible_storage_hash",
+        lambda _contract: "sha256:" + "4" * 64,
     )
     monkeypatch.setattr(
         updater,
@@ -130,3 +128,21 @@ def test_candidate_entry_binds_structured_review_metadata(
 def test_candidate_evidence_rejects_backlog_substitution() -> None:
     with pytest.raises(SystemExit, match="backlog substitution"):
         updater.candidate_evidence("PayoffQuoteEngine", "UNI-REFI-001", _manifest())
+
+
+def test_candidate_evidence_and_entry_fail_closed_on_current_storage_check(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def reject_storage(_contract: str) -> str:
+        raise SystemExit("compiled storage evidence is stale")
+
+    monkeypatch.setattr(updater, "current_compatible_storage_hash", reject_storage)
+    with pytest.raises(SystemExit, match="compiled storage evidence is stale"):
+        updater.candidate_evidence("PayoffQuoteEngine", "UNI-PAYOFF-001", _manifest())
+    with pytest.raises(SystemExit, match="compiled storage evidence is stale"):
+        updater.candidate_entry(
+            "PayoffQuoteEngine",
+            "UNI-PAYOFF-001",
+            "security/reviews/phase-9-payoff-quote-engine.md",
+            _manifest(),
+        )

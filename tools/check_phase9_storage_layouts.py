@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Any, cast
 
 from check_phase9_implementation_checkpoints import (
+    normalized_storage_payload,
+    repository_solidity_dependency_hash,
     structural_storage_hash,
     structural_storage_payload,
     validate_checkpoints,
@@ -18,6 +20,7 @@ from check_phase9_implementation_checkpoints import (
 ROOT = Path(__file__).resolve().parents[1]
 ACTUAL_PATH = ROOT / ".cache/solc/phase9-storage-layouts.json"
 SNAPSHOT_ROOT = ROOT / "protocol/storage-layout/phase9"
+COMPILATION_ROOT = ROOT / "protocol/src/ProtocolCompilation.sol"
 
 PHASE9_CONTRACTS = (
     "Phase9LoanFactory",
@@ -168,8 +171,26 @@ def load_actual_layouts(
 ) -> dict[str, dict[str, Any]]:
     implemented_contracts = set() if implemented is None else implemented
     artifact = read_json(ACTUAL_PATH)
-    if artifact.get("schemaVersion") != 1 or not isinstance(artifact.get("contracts"), dict):
+    if (
+        set(artifact) != {
+            "compilationDependencyClosureSha256",
+            "contracts",
+            "schemaVersion",
+        }
+        or artifact.get("schemaVersion") != 2
+        or not isinstance(artifact.get("contracts"), dict)
+    ):
         raise SystemExit("compiled Phase 9 storage artifact has an unsupported schema")
+    recorded_dependency_closure = artifact.get("compilationDependencyClosureSha256")
+    if not isinstance(recorded_dependency_closure, str) or re.fullmatch(
+        r"sha256:[0-9a-f]{64}", recorded_dependency_closure
+    ) is None:
+        raise SystemExit("compiled Phase 9 storage artifact dependency closure is malformed")
+    current_dependency_closure = repository_solidity_dependency_hash(COMPILATION_ROOT)
+    if recorded_dependency_closure != current_dependency_closure:
+        raise SystemExit(
+            "compiled Phase 9 storage artifact is stale for the current source closure"
+        )
     contracts = cast(dict[str, Any], artifact["contracts"])
     expected = set(PHASE9_CONTRACTS)
     actual = set(contracts)
@@ -254,7 +275,9 @@ def check_snapshots(
                 if actual_hash != expected_hash:
                     difference = f"$.structuralHash: {expected_hash!r} != {actual_hash!r}"
         else:
-            difference = first_difference(snapshot, actual)
+            expected_payload = normalized_storage_payload(snapshot)
+            actual_payload = normalized_storage_payload(dict(actual))
+            difference = first_difference(expected_payload, actual_payload)
         if difference is not None:
             failures.append(f"{contract}: {difference}")
     if failures:
@@ -262,6 +285,17 @@ def check_snapshots(
             "\n".join(failures)
             + "\nReview compatibility and update snapshots through the Phase 9 freeze review."
         )
+
+
+def checked_implementation_storage_hash(contract: str) -> str:
+    """Return the current compiled hash only after full implemented-mode compatibility checks."""
+
+    if contract not in PHASE9_CONTRACTS or contract == "Phase9LocalSyntheticToken":
+        raise SystemExit(f"{contract}: current storage evidence is not implementation-eligible")
+    implemented = {contract}
+    actual_layouts = load_actual_layouts(implemented)
+    check_snapshots(actual_layouts, implemented)
+    return structural_storage_hash(actual_layouts[contract])
 
 
 def main() -> None:

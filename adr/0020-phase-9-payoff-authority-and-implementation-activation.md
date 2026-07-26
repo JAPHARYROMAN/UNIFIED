@@ -384,7 +384,12 @@ pinned as raw bytes; semantic JSON equality cannot conceal formatting or key-ord
 
 Activating `UNI-PAYOFF-001` creates a new exact-source implementation checkpoint:
 
-1. the external ABI and compiler storage layout are compared with the historical freeze;
+1. the external ABI and compiler storage layout are compared with the historical freeze.
+   Storage comparison normalizes only solc's unstable numeric AST suffixes across the
+   complete type-reference graph and rejects normalized-key collisions; slots, offsets,
+   labels, member order, concrete type labels, and state-variable declarations remain
+   exact. Checkpoint evidence is derived only from a freshly compiled artifact bound to
+   the current Solidity dependency closure after implemented-mode snapshot comparison;
 2. the current implementation source and complete reviewed Phase 9 source set receive new
    exact hashes in an implementation checkpoint manifest, and the activated contract's
    ordered transitive repository-local Solidity dependency closure receives a separate

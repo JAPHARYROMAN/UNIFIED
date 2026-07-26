@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import {
   mkdirSync,
   mkdtempSync,
@@ -16,6 +17,7 @@ import {
   PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS,
   phase9StubContracts,
   phase9WarningStubContracts,
+  requireGitCleanWorktreeBytes,
   repositorySolidityDependencyHash,
   repositorySolidityDependencyPaths,
   solidityImportsFromSource,
@@ -32,6 +34,16 @@ const BASELINE = {
     "sha256:b0d494141f0e229cf9fd542401036cd63ba04de73e2f056c1e89a25253cdb1a3",
   sourceSetSha256: "sha256:a40ac90f75c52fc7583651d2d57d2a4d82f1899ed673be8b460d17fb7b7425cb",
 };
+
+function runGit(root, ...arguments_) {
+  const result = spawnSync("git", arguments_, {
+    cwd: root,
+    encoding: "utf8",
+    windowsHide: true,
+  });
+  assert.equal(result.status, 0, result.stderr);
+  return result.stdout.trim();
+}
 
 function checkpointEntry(overrides = {}) {
   return {
@@ -244,7 +256,7 @@ test("node compilation guard verifies the current dependency closure", () => {
   const actual = repositorySolidityDependencyHash(
     "protocol/src/resolution/PayoffQuoteEngine.sol",
   );
-  assert.equal(actual, "sha256:c39437d021534fe2a34109252e2a595d04c9104790abc298f8a988c19718ce53");
+  assert.equal(actual, "sha256:443295b9b42d2b37581bba0a25c265fb25bd04f44dc419c198295623f863909d");
   const bundle = implementationEvidenceBundleSha256("PayoffQuoteEngine");
   const valid = checkpointRegistry([
     checkpointEntry({
@@ -290,6 +302,46 @@ test("Node and Python checkpoint tooling share the exact evidence path list", ()
     new Set(PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS).size,
     PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS.length,
   );
+  assert.ok(
+    [
+      ".gitattributes",
+      ".github/workflows/foundation.yml",
+      ".mise.toml",
+      "package.json",
+      "pnpm-lock.yaml",
+      "protocol/foundry.toml",
+      "protocol/src/ProtocolCompilation.sol",
+      "pyproject.toml",
+      "scripts/check-contract-sizes.py",
+      "scripts/check-foundation.ps1",
+      "scripts/prepare-foundry.ps1",
+      "tsconfig.json",
+      "uv.lock",
+    ].every((path) => PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS.includes(path)),
+  );
+});
+
+test("Git-clean evidence bytes are canonical LF across platforms", () => {
+  const root = mkdtempSync(join(tmpdir(), "unified-phase9-git-clean-"));
+  try {
+    mkdirSync(join(root, "scripts"), { recursive: true });
+    writeFileSync(join(root, ".gitattributes"), "* text=auto eol=lf\n*.ps1 text eol=lf\n");
+    writeFileSync(join(root, "scripts/check.ps1"), "Write-Output 'ok'\n");
+    runGit(root, "init", "--quiet");
+    runGit(root, "config", "user.name", "Phase 9 Test");
+    runGit(root, "config", "user.email", "phase9-test@unified.local");
+
+    assert.doesNotThrow(() =>
+      requireGitCleanWorktreeBytes([".gitattributes", "scripts/check.ps1"], { root }),
+    );
+    writeFileSync(join(root, "scripts/check.ps1"), "Write-Output 'ok'\r\n");
+    assert.throws(
+      () => requireGitCleanWorktreeBytes(["scripts/check.ps1"], { root }),
+      /Git-clean canonical bytes/,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test("recursive Foundry remapping dependencies are hashed and unresolved imports fail closed", () => {

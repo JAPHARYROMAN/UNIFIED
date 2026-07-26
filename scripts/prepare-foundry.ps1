@@ -1,5 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
+# This hash-critical dependency preparer is stored with repository-canonical LF endings.
+
 $workspace = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $source = Join-Path $workspace 'node_modules\@openzeppelin\contracts'
 $targetRoot = Join-Path $workspace 'protocol\lib\openzeppelin-contracts'

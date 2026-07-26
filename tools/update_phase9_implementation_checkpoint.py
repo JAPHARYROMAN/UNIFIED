@@ -15,15 +15,21 @@ from check_phase9_implementation_checkpoints import (
     current_reviewed_source_set_hash,
     historical_manifest,
     implementation_evidence_bundle_hash,
-    read_json,
     repository_solidity_dependency_hash,
     require_unambiguous_review_pass,
     review_content,
     sha256_file,
-    structural_storage_hash,
     validate_checkpoints,
     validate_review_path,
 )
+
+
+def current_compatible_storage_hash(contract: str) -> str:
+    """Load the storage checker lazily to avoid its checkpoint-module import cycle."""
+
+    from check_phase9_storage_layouts import checked_implementation_storage_hash
+
+    return checked_implementation_storage_hash(contract)
 
 
 def candidate_evidence(contract: str, backlog_id: str, manifest: dict[str, Any]) -> dict[str, str]:
@@ -35,9 +41,7 @@ def candidate_evidence(contract: str, backlog_id: str, manifest: dict[str, Any])
     if ACTIVATED_IMPLEMENTATIONS.get(contract) != backlog_id:
         raise SystemExit(f"{contract}: implementation checkpoint backlog substitution")
     baseline = contracts[contract]
-    storage = read_json(ROOT / baseline["storagePath"])
-    if not isinstance(storage, dict):
-        raise SystemExit(f"{contract}: baseline storage snapshot is malformed")
+    storage_hash = current_compatible_storage_hash(contract)
     evidence = {
         "abiSha256": baseline["abiSha256"],
         "backlogId": backlog_id,
@@ -48,7 +52,7 @@ def candidate_evidence(contract: str, backlog_id: str, manifest: dict[str, Any])
         "implementationEvidenceBundleSha256": implementation_evidence_bundle_hash(contract),
         "sourceSha256": sha256_file(ROOT / baseline["sourcePath"]),
         "sourceSetSha256": current_reviewed_source_set_hash(manifest),
-        "storageStructuralSha256": structural_storage_hash(cast(dict[str, Any], storage)),
+        "storageStructuralSha256": storage_hash,
     }
     if contract_order.index(contract) >= contract_order.index("Phase9LocalSyntheticToken"):
         raise SystemExit(f"{contract} is not a production implementation contract")

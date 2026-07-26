@@ -46,7 +46,7 @@
     },
     "rpc_chain_id": { "const": "0x7a69" },
     "pin_manifest_sha256": {
-      "const": "sha256:c2486f4fbb36ae30c1b75be4f0b7b48da340f9c2c0c542458aa0ce135f92ff0d"
+      "const": "sha256:8169db4dd2adb3966d80a4265d085475b3af2376b41daadc25b4df8ff473ed54"
     },
     "activation_accepted": { "const": true },
     "post_broadcast_verification_required": { "const": false },
