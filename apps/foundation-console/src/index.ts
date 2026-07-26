@@ -5,6 +5,7 @@ import {
   MoneySchema,
 } from "../../../packages/generated/typescript/unified/v1/types_pb.js";
 import { verifyCrossChainGoldenVectors } from "./crosschainGolden.js";
+import { verifyPhase9PayoffReferenceGoldenVectors } from "./phase9PayoffReferenceGolden.js";
 import { verifyPhase9QuoteGoldenVector } from "./phase9QuoteGolden.js";
 
 export function foundationAmount(units: string) {
@@ -21,3 +22,4 @@ if (amount.units !== "1000") {
 
 verifyCrossChainGoldenVectors();
 verifyPhase9QuoteGoldenVector();
+verifyPhase9PayoffReferenceGoldenVectors();

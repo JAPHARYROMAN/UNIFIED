@@ -4,6 +4,8 @@ $PSNativeCommandUseErrorActionPreference = $true
 $workspace = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 Set-Location -LiteralPath $workspace
 
+pwsh ./scripts/prepare-foundry.ps1
+
 buf lint
 buf build --output '.cache/unified-schema.binpb'
 buf breaking --against 'schemas/baseline/v0.1'
@@ -37,7 +39,6 @@ uv run python tools/check_phase9_storage_layouts.py
 uv run python tools/build_phase9_compatibility_manifest.py --check
 
 if (Get-Command forge -ErrorAction SilentlyContinue) {
-    pwsh ./scripts/prepare-foundry.ps1
     Push-Location protocol
     try {
         forge fmt --check src/FoundationProbe.sol src/ProtocolCompilation.sol `
@@ -45,6 +46,7 @@ if (Get-Command forge -ErrorAction SilentlyContinue) {
             src/kernel src/loan src/risk src/payment src/protection src/recovery src/resolution `
             src/token test script
         forge test
+        uv run python ../tools/verify_phase9_payoff_deployment.py --check-pins
         uv run python ../scripts/check-contract-sizes.py
     } finally {
         Pop-Location

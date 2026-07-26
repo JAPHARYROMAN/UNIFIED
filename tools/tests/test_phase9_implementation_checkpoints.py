@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import copy
 import json
+import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -79,6 +82,34 @@ def write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def run_git(repository: Path, *arguments: str) -> str:
+    git_executable = shutil.which("git")
+    assert git_executable is not None
+    result = subprocess.run(  # noqa: S603 - test-only argument vector, never a shell command
+        (git_executable, *arguments),
+        cwd=repository,
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    return result.stdout.strip()
+
+
+def create_candidate_commit(repository: Path, files: dict[str, bytes]) -> str:
+    repository.mkdir(parents=True, exist_ok=True)
+    run_git(repository, "init", "--quiet")
+    run_git(repository, "config", "user.name", "Phase 9 Test")
+    run_git(repository, "config", "user.email", "phase9-test@unified.local")
+    for relative_path, content in files.items():
+        path = repository / relative_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+    run_git(repository, "add", "--", *files)
+    run_git(repository, "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "candidate")
+    return run_git(repository, "rev-parse", "HEAD")
+
+
 def write_review(entry: dict[str, str], review_path: Path) -> None:
     review_path.write_text(
         "\n".join(
@@ -86,11 +117,17 @@ def write_review(entry: dict[str, str], review_path: Path) -> None:
                 "Decision: PASS",
                 "Architecture review: PASS",
                 "Security review: PASS",
+                f"Implementation author: {entry['implementationAuthor']}",
+                f"Architecture reviewer: {entry['architectureReviewer']}",
+                f"Security reviewer: {entry['securityReviewer']}",
+                f"Tooling reviewer: {entry['toolingReviewer']}",
+                f"Reviewed commit: {entry['reviewedCommit']}",
                 entry["contract"],
                 entry["backlogId"],
                 entry["sourceSha256"],
                 entry["sourceSetSha256"],
                 entry["dependencyClosureSha256"],
+                entry["implementationEvidenceBundleSha256"],
                 entry["abiSha256"],
                 entry["storageStructuralSha256"],
             )
@@ -128,6 +165,21 @@ def fixture(
     monkeypatch.setattr(checkpoints, "SOURCE_ROOTS", (source_path.parent,))
     monkeypatch.setattr(checkpoints, "TOKEN_SOURCE", source_path)
     monkeypatch.setattr(checkpoints, "ACTIVATED_IMPLEMENTATIONS", {"Example": "UNI-EXAMPLE-001"})
+    monkeypatch.setattr(
+        checkpoints,
+        "IMPLEMENTATION_EVIDENCE_PATHS",
+        {"Example": (source_relative,)},
+    )
+    monkeypatch.setattr(checkpoints, "REVIEWED_COMMIT_PROVENANCE_PATHS", ())
+
+    def current_worktree_blobs(
+        contract: str, commit: str, relative_paths: tuple[str, ...]
+    ) -> dict[str, bytes]:
+        assert contract == "Example"
+        assert commit == "1" * 40
+        return {relative: (root / relative).read_bytes() for relative in relative_paths}
+
+    monkeypatch.setattr(checkpoints, "reviewed_commit_file_bytes", current_worktree_blobs)
 
     baseline_source_hash = checkpoints.sha256_payload("historical stub source")
     abi_hash = checkpoints.sha256_payload(abi)
@@ -153,15 +205,23 @@ def fixture(
     )
     entry = {
         "abiSha256": abi_hash,
+        "architectureReviewer": "Architecture Reviewer",
         "backlogId": "UNI-EXAMPLE-001",
         "contract": "Example",
         "dependencyClosureSha256": checkpoints.repository_solidity_dependency_hash(source_path),
+        "implementationAuthor": "Implementation Author",
+        "implementationEvidenceBundleSha256": checkpoints.implementation_evidence_bundle_hash(
+            "Example"
+        ),
         "reviewPath": review_relative,
         "reviewSha256": "",
+        "reviewedCommit": "1" * 40,
+        "securityReviewer": "Security Reviewer",
         "sourceSha256": current_source_hash,
         "sourceSetSha256": current_source_set_hash,
         "status": "PASS",
         "storageStructuralSha256": checkpoints.structural_storage_hash(storage),
+        "toolingReviewer": "Tooling Reviewer",
     }
     review_path.parent.mkdir(parents=True, exist_ok=True)
     write_review(entry, review_path)
@@ -200,6 +260,70 @@ def test_valid_reviewed_checkpoint_passes(tmp_path: Path, monkeypatch: pytest.Mo
     assert set(checkpoints.validate_checkpoints(manifest=manifest, registry=registry)) == {
         "Example"
     }
+
+
+def test_fabricated_existing_like_reviewed_commit_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = tmp_path / "repository"
+    create_candidate_commit(repository, {"evidence.txt": b"reviewed\n"})
+    monkeypatch.setattr(checkpoints, "ROOT", repository)
+
+    with pytest.raises(SystemExit, match="reviewed commit does not exist"):
+        checkpoints.reviewed_commit_file_bytes(
+            "Example",
+            "f" * 40,
+            ("evidence.txt",),
+        )
+
+
+def test_evidence_drift_after_candidate_commit_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = tmp_path / "repository"
+    relative = "docs/architecture/evidence.md"
+    commit = create_candidate_commit(repository, {relative: b"reviewed evidence\n"})
+    evidence = repository / relative
+    evidence.write_bytes(b"drift after candidate\n")
+    monkeypatch.setattr(checkpoints, "ROOT", repository)
+
+    with pytest.raises(SystemExit, match="reviewed input differs from reviewed commit"):
+        checkpoints.validate_reviewed_commit_paths("Example", commit, [evidence])
+
+
+def test_post_candidate_review_backlog_and_checkpoint_files_may_differ(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repository = tmp_path / "repository"
+    source_relative = "protocol/src/resolution/Example.sol"
+    commit = create_candidate_commit(
+        repository,
+        {source_relative: b"contract Example { /* candidate */ }\n"},
+    )
+    monkeypatch.setattr(checkpoints, "ROOT", repository)
+    monkeypatch.setattr(
+        checkpoints,
+        "IMPLEMENTATION_EVIDENCE_PATHS",
+        {"Example": (source_relative,)},
+    )
+    monkeypatch.setattr(checkpoints, "REVIEWED_COMMIT_PROVENANCE_PATHS", ())
+    manifest: dict[str, Any] = {
+        "sources": [{"path": source_relative, "sha256": "sha256:" + "0" * 64}]
+    }
+    source = repository / source_relative
+    required = checkpoints.reviewed_commit_required_paths("Example", manifest, source)
+
+    post_candidate_paths = (
+        repository / "security/reviews/phase-9-example.md",
+        repository / "docs/backlog/phase-9.csv",
+        repository / "protocol/compatibility/phase9-implementation-checkpoints.json",
+    )
+    for path in post_candidate_paths:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("post-candidate state\n", encoding="utf-8")
+
+    assert required == [source]
+    checkpoints.validate_reviewed_commit_paths("Example", commit, required)
 
 
 def test_source_change_without_checkpoint_is_rejected(
@@ -277,6 +401,14 @@ def test_dependency_paths_use_explicit_ordinal_utf8_order(
     ]
 
 
+def test_foundation_prepares_remapped_sources_before_phase9_checkpoint_checks() -> None:
+    foundation_check = (ROOT / "scripts/check-foundation.ps1").read_text(encoding="utf-8")
+    preparation = "pwsh ./scripts/prepare-foundry.ps1"
+    checkpoint_check = "uv run python tools/check_phase9_implementation_checkpoints.py"
+    assert foundation_check.count(preparation) == 1
+    assert foundation_check.index(preparation) < foundation_check.index(checkpoint_check)
+
+
 def external_helper_checkpoint(
     manifest: dict[str, Any], registry: dict[str, Any], paths: dict[str, Path]
 ) -> Path:
@@ -296,6 +428,9 @@ def external_helper_checkpoint(
     source_set = [{"path": manifest["sources"][0]["path"], "sha256": entry["sourceSha256"]}]
     entry["sourceSetSha256"] = checkpoints.sha256_payload(source_set)
     registry["currentSourceSetSha256"] = entry["sourceSetSha256"]
+    entry["implementationEvidenceBundleSha256"] = checkpoints.implementation_evidence_bundle_hash(
+        "Example"
+    )
     return helper
 
 
@@ -324,6 +459,126 @@ def test_external_helper_only_mutation_is_rejected(
     helper.write_text(helper.read_text(encoding="utf-8").replace("return 1", "return 2"))
     with pytest.raises(SystemExit, match="dependency closure hash is stale"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+def test_remapped_recursive_dependency_mutation_changes_closure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(checkpoints, "ROOT", tmp_path)
+    foundry_config = tmp_path / "protocol/foundry.toml"
+    foundry_config.parent.mkdir(parents=True)
+    foundry_config.write_text(
+        '[profile.default]\nremappings = ["@vendor/=lib/vendor/contracts/"]\n',
+        encoding="utf-8",
+    )
+    source = tmp_path / "protocol/src/resolution/Example.sol"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        'import { Library } from "@vendor/Library.sol";\ncontract Example {}\n',
+        encoding="utf-8",
+    )
+    library = tmp_path / "protocol/lib/vendor/contracts/Library.sol"
+    nested = library.parent / "Nested.sol"
+    library.parent.mkdir(parents=True)
+    library.write_text(
+        'import { Nested } from "./Nested.sol";\nlibrary Library {}\n', encoding="utf-8"
+    )
+    nested.write_text(
+        "library Nested { function value() internal pure returns (uint256) { return 1; } }\n",
+        encoding="utf-8",
+    )
+
+    paths = [
+        path.relative_to(tmp_path).as_posix()
+        for path in checkpoints.repository_solidity_dependency_paths(source)
+    ]
+    assert paths == [
+        "protocol/lib/vendor/contracts/Library.sol",
+        "protocol/lib/vendor/contracts/Nested.sol",
+        "protocol/src/resolution/Example.sol",
+    ]
+    original = checkpoints.repository_solidity_dependency_hash(source)
+    nested.write_text(
+        nested.read_text(encoding="utf-8").replace("return 1", "return 2"),
+        encoding="utf-8",
+    )
+    assert checkpoints.repository_solidity_dependency_hash(source) != original
+
+
+@pytest.mark.parametrize("import_path", ("@vendor/Missing.sol", "@unmapped/Missing.sol"))
+def test_unresolved_nonrelative_or_remapped_import_fails_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, import_path: str
+) -> None:
+    monkeypatch.setattr(checkpoints, "ROOT", tmp_path)
+    foundry_config = tmp_path / "protocol/foundry.toml"
+    foundry_config.parent.mkdir(parents=True)
+    foundry_config.write_text(
+        '[profile.default]\nremappings = ["@vendor/=lib/vendor/contracts/"]\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "protocol/lib/vendor/contracts").mkdir(parents=True)
+    source = tmp_path / "protocol/src/resolution/Example.sol"
+    source.parent.mkdir(parents=True)
+    source.write_text(f'import "{import_path}";\ncontract Example {{}}\n', encoding="utf-8")
+
+    with pytest.raises(SystemExit, match="unresolved non-relative import"):
+        checkpoints.repository_solidity_dependency_paths(source)
+
+
+def test_payoff_implementation_evidence_bundle_paths_are_exact_and_cycle_free() -> None:
+    paths = checkpoints.PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS
+    assert list(paths) == sorted(paths, key=lambda path: path.encode("utf-8"))
+    assert len(paths) == len(set(paths))
+    assert {
+        "protocol/script/DeployPhase9Local.s.sol",
+        "tools/verify_phase9_payoff_deployment.py",
+        "infrastructure/local/phase9-payoff-deployment-candidate.schema.json",
+        "infrastructure/local/phase9-payoff-deployment-evidence.schema.json",
+        "infrastructure/local/phase9-payoff-deployment-code-hashes.json",
+        "protocol/test/Phase9PayoffQuoteAcceptanceMap.sol",
+        "models/foundation_model/src/unified_foundation/phase9_payoff_reference.py",
+        "packages/phase9/typescript/payoffReference.ts",
+        "tools/check_phase9_implementation_checkpoints.py",
+        "tools/compile_phase9_storage_layouts.mjs",
+    }.issubset(paths)
+    assert not any(
+        path.startswith("security/reviews/")
+        or path == "protocol/compatibility/phase9-implementation-checkpoints.json"
+        or path == "docs/backlog/phase-9.csv"
+        for path in paths
+    )
+
+
+def test_every_payoff_implementation_evidence_path_is_material_to_bundle_hash(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(checkpoints, "ROOT", tmp_path)
+    for relative_path in checkpoints.PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS:
+        path = tmp_path / relative_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"evidence:{relative_path}\n", encoding="utf-8")
+    baseline = checkpoints.implementation_evidence_bundle_hash("PayoffQuoteEngine")
+
+    for relative_path in checkpoints.PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS:
+        path = tmp_path / relative_path
+        original = path.read_bytes()
+        path.write_bytes(original + b"mutation\n")
+        assert checkpoints.implementation_evidence_bundle_hash("PayoffQuoteEngine") != baseline
+        path.write_bytes(original)
+
+
+def test_missing_payoff_implementation_evidence_fails_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(checkpoints, "ROOT", tmp_path)
+    first = checkpoints.PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS[0]
+    monkeypatch.setattr(
+        checkpoints,
+        "IMPLEMENTATION_EVIDENCE_PATHS",
+        {"PayoffQuoteEngine": (first,)},
+    )
+    with pytest.raises(SystemExit, match="implementation evidence is missing"):
+        checkpoints.implementation_evidence_bundle_hash("PayoffQuoteEngine")
 
 
 def test_wrong_backlog_or_unopened_contract_is_rejected(
@@ -423,7 +678,177 @@ def test_review_content_must_bind_pass_status_and_exact_hashes(
     manifest, registry, paths = fixture(tmp_path, monkeypatch)
     paths["review"].write_text("Decision: PENDING\n", encoding="utf-8")
     registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
-    with pytest.raises(SystemExit, match="review status or hashes mismatch"):
+    with pytest.raises(SystemExit, match="visible canonical Decision: PASS"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+@pytest.mark.parametrize(
+    ("label", "status"),
+    [
+        (label, status)
+        for label in ("Decision", "Architecture review", "Security review")
+        for status in ("FAIL", "PENDING", "BLOCKED")
+    ],
+)
+def test_each_nonpass_review_decision_is_rejected_even_when_pass_appears_in_prose(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    label: str,
+    status: str,
+) -> None:
+    manifest, registry, paths = fixture(tmp_path, monkeypatch)
+    content = (
+        paths["review"].read_text(encoding="utf-8").replace(f"{label}: PASS", f"{label}: {status}")
+    )
+    content += f"Historical quoted text said {label}: PASS, but it is not authoritative.\n"
+    paths["review"].write_text(content, encoding="utf-8")
+    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+
+    with pytest.raises(SystemExit, match=rf"visible canonical {label}: PASS"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+@pytest.mark.parametrize(
+    ("label", "duplicate_status"),
+    [
+        (label, status)
+        for label in ("Decision", "Architecture review", "Security review")
+        for status in ("PASS", "FAIL", "PENDING", "BLOCKED")
+    ],
+)
+def test_duplicate_or_contradictory_top_level_review_decisions_are_rejected(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    label: str,
+    duplicate_status: str,
+) -> None:
+    manifest, registry, paths = fixture(tmp_path, monkeypatch)
+    with paths["review"].open("a", encoding="utf-8") as handle:
+        handle.write(f"{label}: {duplicate_status}\n")
+    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+
+    with pytest.raises(SystemExit, match=rf"visible canonical {label}: PASS"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+@pytest.mark.parametrize("prefix", ("> ", "- ", "    ", "Body text: "))
+def test_non_top_level_pass_text_cannot_approve_a_review(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, prefix: str
+) -> None:
+    manifest, registry, paths = fixture(tmp_path, monkeypatch)
+    content = (
+        paths["review"]
+        .read_text(encoding="utf-8")
+        .replace("Decision: PASS", f"{prefix}Decision: PASS")
+    )
+    paths["review"].write_text(content, encoding="utf-8")
+    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+
+    with pytest.raises(SystemExit, match="visible canonical Decision: PASS"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+def test_fenced_pass_text_cannot_approve_a_review(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest, registry, paths = fixture(tmp_path, monkeypatch)
+    content = (
+        paths["review"]
+        .read_text(encoding="utf-8")
+        .replace("Decision: PASS", "```text\nDecision: PASS\n```")
+    )
+    paths["review"].write_text(content, encoding="utf-8")
+    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+
+    with pytest.raises(SystemExit, match="visible canonical Decision: PASS"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+@pytest.mark.parametrize(
+    "contradiction",
+    (
+        "# Decision: FAIL",
+        "- Decision: PENDING",
+        "> Decision: BLOCKED",
+        "```text\nDecision: FAIL\n```",
+        "<!-- Decision: FAIL -->",
+        "<!-- Decision: FAIL",
+        "Historical prose says Decision: FAIL and is contradictory.",
+        "Historical prose says Decision is FAIL and is contradictory.",
+        "Decision - FAIL",
+        "Decision = BLOCKED",
+    ),
+)
+def test_any_hidden_or_prose_status_occurrence_rejects_an_otherwise_valid_review(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    contradiction: str,
+) -> None:
+    manifest, registry, paths = fixture(tmp_path, monkeypatch)
+    with paths["review"].open("a", encoding="utf-8") as handle:
+        handle.write(contradiction + "\n")
+    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+
+    with pytest.raises(SystemExit, match="no other Decision status occurrence"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+@pytest.mark.parametrize(
+    ("field", "replacement", "message"),
+    (
+        ("Implementation author", "", "visible canonical Implementation author field"),
+        ("Architecture reviewer", "Implementation Author", "must all be distinct"),
+        ("Security reviewer", "Architecture Reviewer", "must all be distinct"),
+        ("Tooling reviewer", "Security Reviewer", "must all be distinct"),
+        ("Reviewed commit", "A" * 40, "exact lowercase 40-hex"),
+        ("Reviewed commit", "1" * 39, "exact lowercase 40-hex"),
+    ),
+)
+def test_review_identity_and_commit_fields_fail_closed(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    field: str,
+    replacement: str,
+    message: str,
+) -> None:
+    manifest, registry, paths = fixture(tmp_path, monkeypatch)
+    content = paths["review"].read_text(encoding="utf-8")
+    content = re.sub(rf"^{re.escape(field)}:.*$", f"{field}: {replacement}", content, flags=re.M)
+    paths["review"].write_text(content, encoding="utf-8")
+    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+
+    with pytest.raises(SystemExit, match=message):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+def test_checkpoint_identity_must_match_review_metadata(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest, registry, _ = fixture(tmp_path, monkeypatch)
+    registry["implementations"][0]["toolingReviewer"] = "Substituted Reviewer"
+    with pytest.raises(SystemExit, match="implementation review toolingReviewer mismatch"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+@pytest.mark.parametrize(
+    "wrapper",
+    (
+        lambda field: f"```text\n{field}\n```\n",
+        lambda field: f"<!-- {field} -->\n",
+        lambda field: f"<!-- {field}\n",
+    ),
+)
+def test_hidden_review_metadata_cannot_satisfy_required_fields(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    wrapper: Any,
+) -> None:
+    manifest, registry, paths = fixture(tmp_path, monkeypatch)
+    field = "Tooling reviewer: Tooling Reviewer"
+    content = paths["review"].read_text(encoding="utf-8").replace(f"{field}\n", "")
+    paths["review"].write_text(content + wrapper(field), encoding="utf-8")
+    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+    with pytest.raises(SystemExit, match="visible canonical Tooling reviewer field"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
 
 

@@ -1,10 +1,23 @@
 import assert from "node:assert/strict";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import test from "node:test";
 
 import {
+  implementationEvidenceBundleSha256,
   ordinalUtf8Compare,
+  PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS,
   phase9StubContracts,
+  phase9WarningStubContracts,
   repositorySolidityDependencyHash,
+  repositorySolidityDependencyPaths,
   solidityImportsFromSource,
   validateCheckpointDependencyClosures,
   validatePhase9MutabilityDiagnostics,
@@ -23,15 +36,21 @@ const BASELINE = {
 function checkpointEntry(overrides = {}) {
   return {
     abiSha256: HASH,
+    architectureReviewer: "Architecture Reviewer",
     backlogId: "UNI-PAYOFF-001",
     contract: "PayoffQuoteEngine",
     dependencyClosureSha256: HASH,
-    reviewPath: "security/reviews/phase-9-payoff-implementation.md",
+    implementationAuthor: "Implementation Author",
+    implementationEvidenceBundleSha256: HASH,
+    reviewPath: "security/reviews/phase-9-payoff-quote-engine.md",
     reviewSha256: HASH,
+    reviewedCommit: "1".repeat(40),
+    securityReviewer: "Security Reviewer",
     sourceSha256: HASH,
     sourceSetSha256: HASH,
     status: "PASS",
     storageStructuralSha256: HASH,
+    toolingReviewer: "Tooling Reviewer",
     ...overrides,
   };
 }
@@ -132,6 +151,19 @@ test("derives the exact stub set from implementation checkpoints", () => {
   assert.equal(stubs.length, 12);
 });
 
+test("derives the same warning stub set before and after an activated checkpoint", () => {
+  const beforeCheckpoint = phase9WarningStubContracts(checkpointRegistry());
+  const afterCheckpoint = phase9WarningStubContracts(
+    checkpointRegistry([checkpointEntry()]),
+  );
+
+  assert.equal(phase9StubContracts(checkpointRegistry()).includes("PayoffQuoteEngine"), true);
+  assert.equal(beforeCheckpoint.includes("PayoffQuoteEngine"), false);
+  assert.equal(beforeCheckpoint.includes("Phase9LoanAccount"), true);
+  assert.equal(beforeCheckpoint.length, 12);
+  assert.deepEqual(beforeCheckpoint, afterCheckpoint);
+});
+
 test("rejects unknown or duplicate checkpoint contracts", () => {
   assert.throws(
     () =>
@@ -182,17 +214,142 @@ test("rejects missing or malformed dependency-closure evidence", () => {
   );
 });
 
+test("Node checkpoint validation rejects ambiguous identities and malformed review commits", () => {
+  assert.throws(
+    () =>
+      phase9StubContracts(
+        checkpointRegistry([
+          checkpointEntry({ architectureReviewer: "Implementation Author" }),
+        ]),
+      ),
+    /contract set is invalid/,
+  );
+  assert.throws(
+    () =>
+      phase9StubContracts(
+        checkpointRegistry([checkpointEntry({ reviewedCommit: "A".repeat(40) })]),
+      ),
+    /contract set is invalid/,
+  );
+  assert.throws(
+    () =>
+      phase9StubContracts(
+        checkpointRegistry([checkpointEntry({ toolingReviewer: " " })]),
+      ),
+    /contract set is invalid/,
+  );
+});
+
 test("node compilation guard verifies the current dependency closure", () => {
   const actual = repositorySolidityDependencyHash(
     "protocol/src/resolution/PayoffQuoteEngine.sol",
   );
-  const valid = checkpointRegistry([checkpointEntry({ dependencyClosureSha256: actual })]);
+  assert.equal(actual, "sha256:c39437d021534fe2a34109252e2a595d04c9104790abc298f8a988c19718ce53");
+  const bundle = implementationEvidenceBundleSha256("PayoffQuoteEngine");
+  const valid = checkpointRegistry([
+    checkpointEntry({
+      dependencyClosureSha256: actual,
+      implementationEvidenceBundleSha256: bundle,
+    }),
+  ]);
   assert.doesNotThrow(() => validateCheckpointDependencyClosures(valid));
-  const stale = checkpointRegistry([checkpointEntry()]);
+  const stale = checkpointRegistry([
+    checkpointEntry({ implementationEvidenceBundleSha256: bundle }),
+  ]);
   assert.throws(
     () => validateCheckpointDependencyClosures(stale),
     /dependency closure hash is stale/,
   );
+  const staleBundle = checkpointRegistry([
+    checkpointEntry({ dependencyClosureSha256: actual }),
+  ]);
+  assert.throws(
+    () => validateCheckpointDependencyClosures(staleBundle),
+    /implementation evidence bundle hash is stale/,
+  );
+});
+
+test("Node and Python checkpoint tooling share the exact evidence path list", () => {
+  const python = readFileSync(
+    resolve("tools/check_phase9_implementation_checkpoints.py"),
+    "utf8",
+  );
+  const tuple = python.match(
+    /PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = \(([\s\S]*?)\)\r?\nIMPLEMENTATION_EVIDENCE_PATHS/,
+  );
+  assert.notEqual(tuple, null);
+  const pythonPaths = [...tuple[1].matchAll(/^\s*"([^"]+)",\s*$/gm)].map(
+    (match) => match[1],
+  );
+  assert.deepEqual(PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS, pythonPaths);
+  assert.equal(
+    [...PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS].sort(ordinalUtf8Compare).join("\n"),
+    PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS.join("\n"),
+  );
+  assert.equal(
+    new Set(PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS).size,
+    PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS.length,
+  );
+});
+
+test("recursive Foundry remapping dependencies are hashed and unresolved imports fail closed", () => {
+  const root = mkdtempSync(join(tmpdir(), "unified-phase9-node-"));
+  try {
+    const config = join(root, "protocol/foundry.toml");
+    const source = join(root, "protocol/src/resolution/PayoffQuoteEngine.sol");
+    const vendor = join(root, "protocol/lib/vendor/contracts");
+    mkdirSync(dirname(source), { recursive: true });
+    mkdirSync(vendor, { recursive: true });
+    writeFileSync(
+      config,
+      '[profile.default]\nremappings = ["@vendor/=lib/vendor/contracts/"]\n',
+    );
+    writeFileSync(source, 'import "@vendor/One.sol";\ncontract PayoffQuoteEngine {}\n');
+    writeFileSync(join(vendor, "One.sol"), 'import "./Two.sol";\nlibrary One {}\n');
+    writeFileSync(join(vendor, "Two.sol"), "library Two {}\n");
+
+    assert.deepEqual(
+      repositorySolidityDependencyPaths(
+        "protocol/src/resolution/PayoffQuoteEngine.sol",
+        { root },
+      ).map((path) => path.slice(root.length + 1).replaceAll("\\", "/")),
+      [
+        "protocol/lib/vendor/contracts/One.sol",
+        "protocol/lib/vendor/contracts/Two.sol",
+        "protocol/src/resolution/PayoffQuoteEngine.sol",
+      ],
+    );
+    const before = repositorySolidityDependencyHash(
+      "protocol/src/resolution/PayoffQuoteEngine.sol",
+      { root },
+    );
+    writeFileSync(join(vendor, "Two.sol"), "library Two { uint256 constant X = 1; }\n");
+    assert.notEqual(
+      repositorySolidityDependencyHash("protocol/src/resolution/PayoffQuoteEngine.sol", {
+        root,
+      }),
+      before,
+    );
+
+    writeFileSync(source, 'import "@vendor/Missing.sol";\ncontract PayoffQuoteEngine {}\n');
+    assert.throws(
+      () =>
+        repositorySolidityDependencyHash("protocol/src/resolution/PayoffQuoteEngine.sol", {
+          root,
+        }),
+      /unresolved non-relative import/,
+    );
+    writeFileSync(source, 'import "missing/Nope.sol";\ncontract PayoffQuoteEngine {}\n');
+    assert.throws(
+      () =>
+        repositorySolidityDependencyHash("protocol/src/resolution/PayoffQuoteEngine.sol", {
+          root,
+        }),
+      /unresolved non-relative import/,
+    );
+  } finally {
+    rmSync(root, { force: true, recursive: true });
+  }
 });
 
 test("Solidity import lexer preserves comment markers inside strings", () => {
