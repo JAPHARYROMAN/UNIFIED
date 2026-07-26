@@ -40,7 +40,7 @@ chain ID `31337`. It uses:
   semantics and no Phase 8 inheritance, address, role, or backing dependency;
 - one synthetic fungible collateral asset under canonical local custody;
 - one old secured loan with a canonical debt-component snapshot;
-- one proposed replacement loan and new lender;
+- one proposed replacement loan and one or more policy-bound new funders/positions;
 - immutable refinance and amendment policies;
 - a deterministic position-right snapshot with borrower consent and lender voting;
 - one segregated reserve pool funded with synthetic settlement assets;
@@ -54,7 +54,7 @@ The authoritative product flow is:
 ```text
 canonical debt snapshot
   -> expiring payoff quote
-  -> new lender funding escrow
+  -> new-funder commitment escrow
   -> exact old-lender payoff
   -> old senior lien extinguished
   -> collateral assigned to replacement loan
@@ -93,7 +93,7 @@ Authority remains divided:
 | --- | --- |
 | Debt components and debt state version | active loan account |
 | Payoff quote identity and expiry | payoff quote engine derived from the active loan |
-| Old-loan payoff and closure | old loan account |
+| Old-loan payoff and closure | old loan account, which atomically marks its exact canonical `LoanRegistry` record terminal through the existing registered-account authority |
 | Senior collateral lien | canonical lien registry |
 | New-loan terms and activation | replacement loan account and refinance coordinator |
 | Amendment policy | policy hash bound to the active loan before proposal |
@@ -170,7 +170,7 @@ policy-bound beneficiary; it grants no recipient-selection authority.
 
 ### 4. Refinance state and identity
 
-The monotonic local refinance states are:
+The canonical schema retains the complete refinance lifecycle vocabulary:
 
 ```text
 NONE
@@ -189,10 +189,32 @@ REFUNDABLE -> REFUNDED
 any safety contradiction -> DISPUTED
 ```
 
-The refinance ID binds the old loan, proposed loan, borrower, old and new lenders,
-quote, exact old payoff, new principal, settlement asset, collateral set and lien
-version, proposed terms, policy set, funding amount, borrower proceeds, fees, expiry,
-and nonce.
+ADR 0021 refines that vocabulary for the frozen five-selector first slice. Its
+reachable on-chain state begins `NONE -> ACCEPTED` because
+`requestRefinance` is direct borrower acceptance; `REQUESTED`, `QUOTED`, and
+`OFFERED` are off-chain evidence stages, `REJECTED` is an off-chain outcome, and
+`DISPUTED` is not callable. The first successful funding commitment advances
+`ACCEPTED -> FUNDING_ESCROWED`; later partial funding remains
+`FUNDING_ESCROWED`, and execution requires exact full funding.
+
+ADR 0021 also makes request identity acyclic: caller refinance/quote IDs and derived
+state are zero; one borrower-authenticated coordinator transaction optionally creates
+and fully secures the unique old bootstrap fixture, issues the quote internally,
+derives quote/refinance IDs, creates dormant replacement clones, and stores acceptance.
+No replacement preexists, and any failure rolls back bootstrap, quote, clones, and
+nonce. Exact request repeat fails the consumed old-loan refinance nonce before another
+quote.
+
+The frozen `uint64` old-loan refinance nonce is a tagged single-active lock: bit 63
+marks an active owner and low bits bind its nonce. Nonterminal/refundable state retains
+the lock; exact terminal completion/cancellation/expiry/final-refund advances and
+releases it without wrap.
+
+The refinance ID binds the old loan, proposed loan, borrower, old lender,
+factory-resolved replacement position manager, quote, exact old payoff, new principal,
+settlement asset, collateral set and lien version, proposed terms, policy set, funding
+amount, borrower proceeds, fees, expiry, and nonce. Each new funder and exact claim is
+bound separately by its funding commitment and the complete replacement-position tuple.
 
 New funding is pulled into coordinator escrow before execution. Execution is one local
 EVM transaction:
@@ -206,17 +228,30 @@ EVM transaction:
 5. activate the exact replacement loan;
 6. pay only the committed residual proceeds to the canonical borrower;
 7. record terminal refinance and old/new loan evidence; and
-8. leave no coordinator or lien-transfer balance.
+8. clear the refinance's attributed escrow and leave no lien-transfer balance.
 
 The lien registry has one enforceable owner per collateral ID. A pending target has no
 independent senior claim. Old ownership changes to new ownership only inside the
 successful execution transaction. Any revert restores funding, debt, lien, loan, and
 recipient balances atomically.
 
-Before execution, rejection, expiry, or cancellation returns escrow once to the
-canonical new lender. After execution begins, the transaction either completes or
+Before execution, expiry or cancellation makes every accepted commitment refundable
+once to its stored canonical funder; rejection remains an off-chain offer outcome in
+this selector-constrained slice. After execution begins, the transaction either completes or
 reverts; no operator-selected partial completion exists in this local slice. External
 settlement and non-atomic lien systems remain prohibited.
+
+An unsolicited direct token transfer creates no accepted funding, escrow liability,
+position, proceeds, or refund right. Global coordinator balance is therefore not a
+terminal invariant: execution and refund clear only the refinance's recognized escrow,
+and donation surplus is never swept or allowed to enable or block a transition.
+
+Old tranche/position/checkpoint values remain nominal historical issuance facts after
+payoff. Successful payoff atomically leaves the exact registry record terminal and the
+account `CLOSED/TERMINAL`; either canonical terminal signal or zero claim-bearing debt
+makes effective claim, vote, and payment rights zero. Every consumer must join the
+factory/registry account and current debt; no historical position getter alone proves
+an outstanding receivable.
 
 ### 5. Restructuring and consent
 
@@ -612,8 +647,9 @@ protected Foundation and Security checks.
 ## Consequences
 
 - A payoff quote is a deterministic view of canonical debt, not a lender invoice.
-- A refinance is one funding/payoff/lien/activation transaction, not a sequence of
-  operator assertions.
+- Refinance funding commitments are recorded before one atomic execution transaction
+  combines payoff, lien handoff, replacement activation, and value distribution; none
+  of those effects is a sequence of operator assertions.
 - Restructuring authority comes only from the amendment policy and exact protected
   consent bound at origination.
 - Coverage is constrained by actual segregated custody and stress policy.

@@ -17,8 +17,17 @@ from check_phase9_schema import (  # noqa: E402
 
 
 def test_phase9_descriptor_and_generated_boundary() -> None:
-    validate_descriptor_set(descriptor_set_from_buf())
+    descriptor_set = descriptor_set_from_buf()
+    validate_descriptor_set(descriptor_set)
     validate_sources_and_generated_outputs()
+
+    refinance = next(item for item in descriptor_set.file if item.name.endswith("/refinance.proto"))
+    request = next(item for item in refinance.message_type if item.name == "RefinanceRequest")
+    position_manager = next(
+        item for item in request.field if item.name == "new_position_manager"
+    )
+    assert position_manager.number == 24
+    assert position_manager.type == descriptor_pb2.FieldDescriptorProto.TYPE_BYTES
 
 
 def test_phase9_descriptor_check_rejects_wire_tag_mutation() -> None:

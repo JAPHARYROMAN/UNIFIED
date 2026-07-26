@@ -27,7 +27,7 @@ legal promise, or deployment authorization.
 
   old lender ──┐
                │    ┌───────────────────────┐
-  new lender ──┼───►│ RefinanceCoordinator │
+  new funders ─┼───►│ RefinanceCoordinator │
                │    └───────┬───────────────┘
   borrower ────┘            │
                    ┌─────────┼───────────┐
@@ -191,8 +191,10 @@ position votes no, eligible participation is 100%, approval is exactly 75%, and 
 borrower separately consents.
 
 A required failure scenario reverts immediately before lien completion. Old debt and
-lien remain unchanged, the new loan remains inactive, all 120 units remain refundable,
-and the borrower receives zero. Retrying the same immutable execution succeeds.
+lien remain unchanged, the new loan remains inactive, all 120 units remain escrowed in
+`FUNDING_ESCROWED`, and the borrower receives zero. Retrying the same immutable
+execution succeeds; refunds become callable only after borrower cancellation or expiry
+persists `REFUNDABLE`.
 
 ## Components
 
@@ -207,7 +209,9 @@ replace or mutate an existing Phase 3 through Phase 8 registration.
 
 - immutable loan, borrower, lender, settlement asset, policy, and collateral identity;
 - principal, accrued interest, fees, penalties, credits, and state version;
-- exact refinance payoff entrypoint callable only by the bound coordinator;
+- exact refinance payoff entrypoint callable only by the bound coordinator, which
+  closes debt, calls the existing registry terminal transition from the registered
+  account, and verifies the terminal postcondition atomically;
 - one-time replacement-loan activation;
 - bounded restructuring application;
 - covered-loss exposure, realized-loss, and explicit write-off records as distinct
@@ -566,12 +570,34 @@ collateral during handoff.
 The coordinator owns:
 
 - immutable policy registration;
-- refinance requests and exact quote binding;
-- new-lender offer and borrower acceptance;
+- refinance requests, direct borrower acceptance, and exact quote binding;
+- retained off-chain request, quote, offer, and rejection evidence;
 - exact funding escrow;
 - cancellation/expiry/refund before execution;
 - atomic payoff, lien handoff, replacement activation, and borrower proceeds; and
 - terminal replay evidence.
+
+The frozen five-selector first slice persists `ACCEPTED` on the successful
+`requestRefinance` call; it does not persist `REQUESTED`, `QUOTED`, `OFFERED`,
+`REJECTED`, or `DISPUTED`. The first accepted funding value enters
+`FUNDING_ESCROWED`, and further partial funding remains there until exact full funding
+makes execution eligible.
+
+The caller supplies zero refinance/quote IDs and zero derived state. After pure wire/
+derived/key checks the coordinator acquires the old-loan tagged lock before external
+resolver calls; policy, borrower, and acyclic new-loan/predicted-manager validation
+then occurs under rollback. The one borrower-authenticated request transaction has the registered coordinator create the
+unique old bootstrap clone if absent, register/validate old positions/custody/liens,
+issue the quote internally, derive quote/refinance IDs, create exact dormant
+replacement clones, validate, and store `ACCEPTED`. No replacement preexists. Failure
+rolls back bootstrap, quote, clones, nonce, state, and events; exact request repeat
+fails the consumed old-loan refinance nonce before a new quote.
+
+The existing `uint64` old-loan nonce uses bit 63 as an active lock and the low 63 bits
+as the matching nonce/next value. It is acquired before external request calls, held
+through `ACCEPTED`, `FUNDING_ESCROWED`, and `REFUNDABLE`, and advanced/released only
+after `COMPLETED`, `CANCELLED`, `EXPIRED`, or final `REFUNDED` effects. The all-low-bits
+mask is exhausted; no request, reentry, or same quote can overlap the active owner.
 
 The coordinator is non-upgradeable in the first slice. It has no general token rescue
 or arbitrary target call. Exact balance-delta checks reject fee, rebase, or callback
@@ -607,6 +633,15 @@ policy_hash
 Each accepted position proof binds the position ID, owner, tranche, voting weight, and
 snapshot root. One position can contribute its weight once. Transfers after the
 snapshot do not move or duplicate proposal voting power.
+
+Raw positions, tranches, and checkpoints are immutable nominal issuance history, not
+independently authoritative current receivables or votes. Every consumer resolves the
+manager to loan ID, proves factory/registry account agreement, and joins current debt.
+Registry terminal, account `CLOSED/TERMINAL`, or zero claim-bearing debt makes effective
+claim and voting power zero even if stored issuance remains `ACTIVE`.
+Payment/distribution, transfer, snapshot/vote/restructuring, quote, lien/collateral,
+liquidation, recovery, protection, and authorization consumers apply that gate;
+historical getters alone never authorize a current action.
 
 ### RestructuringController
 
@@ -778,21 +813,23 @@ quote nonce and ID.
 
 ### Refinance
 
-```text
-NONE
-  -> REQUESTED
-  -> QUOTED
-  -> OFFERED
-  -> ACCEPTED
-  -> FUNDING_ESCROWED
-  -> EXECUTING
-  -> COMPLETED
+The full schema vocabulary supports retained proposal evidence and later phases. ADR
+0021 fixes this five-selector slice's reachable on-chain graph as:
 
-OFFERED -> REJECTED | EXPIRED | CANCELLED
-ACCEPTED -> EXPIRED | CANCELLED
-FUNDING_ESCROWED -> REFUNDABLE -> REFUNDED
-* -> DISPUTED only on retained safety contradiction
+```text
+NONE -> ACCEPTED
+ACCEPTED --first successful funding commitment--> FUNDING_ESCROWED
+FUNDING_ESCROWED --additional partial funding--> FUNDING_ESCROWED
+FUNDING_ESCROWED -> EXECUTING -> COMPLETED
+
+ACCEPTED --borrower cancellation before expiry--> CANCELLED
+ACCEPTED --permissionless expiry at/after deadline--> EXPIRED
+FUNDING_ESCROWED --borrower cancellation or expiry--> REFUNDABLE
+REFUNDABLE --all stored commitments refunded--> REFUNDED
 ```
+
+`REQUESTED`, `QUOTED`, and `OFFERED` are off-chain evidence stages;
+`REJECTED` is an off-chain outcome; `DISPUTED` is unreachable in this slice.
 
 The local atomic execution cannot persist `EXECUTING`; it exists as a reentrancy guard
 within one transaction. Durable projections may observe the transaction result, never a
@@ -925,7 +962,8 @@ funding escrow
  + borrower proceeds
  + explicitly disclosed refinance fee
 
-terminal coordinator balance = 0
+terminal attributed escrow(refinance ID) = 0
+unsolicited coordinator token surplus is excluded from liabilities and readiness
 old outstanding debt = 0
 new activated principal = committed new principal
 enforceable senior lien count(collateral ID) = 1
@@ -1087,7 +1125,7 @@ The implementation must freeze the exact journal templates before use. Minimum b
 
 1. refinance funding escrow control;
 2. exact old payoff and old lender settlement;
-3. old claim extinguishment and new claim activation;
+3. old effective-claim extinguishment through terminal debt and new claim activation;
 4. borrower residual proceeds;
 5. refinance fee, if nonzero;
 6. restructuring waiver/capitalization/forgiveness;
@@ -1162,13 +1200,13 @@ tests absence directly and never attempts to read a deleted manifest.
 | --- | --- |
 | Debt changes after quote | quote cannot execute |
 | Competing refinance consumes quote | one completes; the other fails without value or lien effect |
-| New lender funds twice | exact replay only; no second escrow |
+| New funder commitment submitted twice | exact replay only; no second escrow |
 | Token callback or transfer fee | entire transition reverts |
 | Old payoff fails | no lien or new-loan change |
 | Lien handoff fails | payoff and all other effects revert |
 | New activation fails | payoff, lien, funding, and proceeds revert |
 | Borrower proceeds fail | entire refinance reverts |
-| Offer expires before execution | exact lender refund remains available once |
+| Accepted funded refinance expires before execution | `REFUNDABLE`; each stored funder commitment has one exact refund |
 | Position transfers after snapshot | vote right remains bound to snapshot owner/proof |
 | Vote replays | no duplicate weight |
 | Borrower signature changes field | proposal cannot execute |
@@ -1302,6 +1340,18 @@ For the first activation, `UNI-ADR-015` accepts ADR 0020 and its checker mapping
 external `IPayoffQuoteEngineV2` ABI and exact `PayoffQuoteEngine` storage layout remain
 compatible while its new source hashes and independent architecture/security review are
 recorded separately.
+
+For atomic refinance, `UNI-ADR-016` accepts ADR 0021's boundary only. The later
+implementation checkpoint is method-level: it may activate only the exact factory,
+account, custody, lien, coordinator, and position-manager methods listed by ADR 0021,
+retains the exact freeze stub for every other mutator, and requires
+`UNI-REFI-001` plus `UNI-REFI-002` as one bundled gate. The exact additive ABI allowlist
+contains only coordinator-owned `RefinanceStateTransitioned` and
+`UnknownFundingCommitment(bytes32)`, plus lien-registry-owned
+`UnknownLienHandoff(bytes32)`; no selector, other event/error, tuple, storage, base,
+slot, offset, type, or order may drift. Both refinance backlog
+rows remain incomplete until implementation, reference/deployment evidence, adversarial
+tests, and independent reviews pass on one source head.
 
 ### 9A — Boundary, schemas, and models
 

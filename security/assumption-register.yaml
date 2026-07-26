@@ -1,5 +1,5 @@
 version: 1
-reviewed_at: 2026-07-25
+reviewed_at: 2026-07-26
 assumptions:
   - id: ASM-001
     assumption: Foundation execution is local-only and carries no real value.
@@ -232,3 +232,80 @@ assumptions:
     expiry: 2026-10-25
     downstream_impact: Route chain adapter and aggregate bridge exposure limits
     validation: Immutable fixture digest exact cap-boundary tests and production supply-oracle deferral
+  - id: ASM-034
+    assumption: Every Phase 9 asset balance loan position reserve guarantee claim recovery party key and provider is synthetic and local.
+    owner: Release Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: All Phase 9 value trust privacy deployment accounting and release conclusions
+    validation: Require chain 31337 local fixture identities contains-real-value rejection secret scanning mocked providers and one-command reset before acceptance
+  - id: ASM-035
+    assumption: Registered Phase 9 tokens have exact balance-delta behavior with no transfer fee rebase hook blacklist or external freeze and settlement uses only the dedicated local fixture token.
+    owner: Security Authority
+    evidence: adr/0021-phase-9-atomic-refinance-authority-and-activation.md
+    expiry: 2026-10-25
+    downstream_impact: Funding escrow payoff fee proceeds refunds reserve custody and reconciliation
+    validation: Bind the exact token address asset identity and runtime code and reject unsupported token behavior through sender recipient coordinator and custody balance-delta tests
+  - id: ASM-036
+    assumption: Canonical Phase 9 debt uses deterministic local time and fixed complete principal interest fee penalty cost and credit inputs in one exact denomination.
+    owner: Accounting and Economic Risk Authority
+    evidence: adr/0021-phase-9-atomic-refinance-authority-and-activation.md
+    expiry: 2026-10-25
+    downstream_impact: Debt snapshots payoff quotes refinance funding replacement principal and accounting
+    validation: Use exact integer golden vectors debt-version invalidation and reject live benchmarks FX slippage rounding tax legal cost and external provider fees
+  - id: ASM-037
+    assumption: Initial Phase 9 refinancing is same-chain and atomic with no external settlement or legal-title handoff.
+    owner: Protocol Architecture Authority
+    evidence: adr/0021-phase-9-atomic-refinance-authority-and-activation.md
+    expiry: 2026-10-25
+    downstream_impact: Escrow payoff lien transfer replacement activation fee proceeds rollback and liveness
+    validation: Execute the complete refinance in one local EVM transaction and inject failure at every ordered step to prove total rollback
+  - id: ASM-038
+    assumption: The canonical local LienRegistry is the only senior-lien authority for Phase 9 synthetic collateral.
+    owner: Security Authority
+    evidence: adr/0021-phase-9-atomic-refinance-authority-and-activation.md
+    expiry: 2026-10-25
+    downstream_impact: Collateral custody lien uniqueness handoff release and recovery priority
+    validation: Bind one immutable coordinator and registry require versioned handoffs and prove pending targets never become independent enforceable claims
+  - id: ASM-039
+    assumption: The Phase 9 position set is bounded and local and its immutable snapshot fully represents eligible lender amendment rights.
+    owner: Protocol Architecture Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Position issuance transfer voting quorum amendment consent and lender-right conservation
+    validation: Enforce bounded tranche and position sets historical checkpoints immutable snapshot roots and one-position-one-vote consumption tests; every present amendment vote transfer payment or other rights consumer must join the canonical registry account and nonterminal positive debt because immutable snapshots alone are historical and cannot authorize an action after terminal payoff
+  - id: ASM-040
+    assumption: Synthetic Phase 9 reserve custody is actually prefunded but is available only to its registered local policy and creates no real insurance or capital promise.
+    owner: Accounting and Economic Risk Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Protection capacity claim approval reserve payment solvency reporting and user disclosure
+    validation: Reconcile exact dedicated fixture custody to restricted liabilities and reject unfunded commitments cross-policy use and production-value claims
+  - id: ASM-041
+    assumption: Phase 9 policy claim guarantee borrower adjudicator and recovery evidence is synthetic and does not establish production identity consent insurance or legal enforceability.
+    owner: Security Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Authorization claim payment guarantee recovery privacy and release interpretation
+    validation: Use reserved synthetic fixtures mocked identities and providers explicit local-only labels and no production credential or legal-evidence adapters
+  - id: ASM-042
+    assumption: Mocked guarantor and off-chain or legal recovery attestations have no economic value until an exact local token receipt is verified.
+    owner: Accounting and Economic Risk Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Covered loss write-off recovery allocation subrogation borrower surplus and journals
+    validation: Keep commitments as memorandum evidence and credit each canonical receipt source to one stored loss once with exact balance and replay checks
+  - id: ASM-043
+    assumption: Anvil verifies local transaction and state-machine mechanics but does not model production consensus finality custody title or legal priority.
+    owner: Protocol Architecture Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Interpretation of refinance lien reserve recovery finality and release evidence
+    validation: Pin chain 31337 label all evidence synthetic local-only and require separate production ADR security legal and operational review before any public deployment
+  - id: ASM-044
+    assumption: Phase 9 reserve valuation stress haircuts loss facts and confidence inputs are deterministic fixtures rather than oracle actuarial capital-adequacy or solvency evidence.
+    owner: Accounting and Economic Risk Authority
+    evidence: docs/architecture/phase-9-refinance-acceptance.md
+    expiry: 2026-10-25
+    downstream_impact: Reserve eligibility protection capacity claim limits loss measurement and solvency metrics
+    validation: Bind immutable fixture hashes and exact model vectors reject external feeds and prohibit production solvency or capital conclusions

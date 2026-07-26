@@ -310,6 +310,15 @@ The ordered collateral-set hash commits every collateral ID, asset ID, quantity,
 borrower, and prior lien version. Collateral entries are sorted by raw `bytes32`
 collateral ID before hashing.
 
+The external request supplies all-zero `refinance_id` and `quote_id` and empty
+`request_digest`. After pure wire/derived/key checks, the coordinator acquires the
+old-loan tagged nonce lock before calling external borrower/policy/new-loan/manager
+resolvers. The borrower-authenticated transaction then bootstraps the old fixture if absent,
+issues the quote internally, derives both IDs, creates the dormant replacement clones,
+and stores the accepted record. `new_loan_id`, clone salts, bootstrap/creation IDs, and
+predicted manager are quote/refinance-independent; replacement creation happens only
+after derivation and no replacement may preexist.
+
 `new_loan_nonce` is immutable, nonzero, stored in `resolution.refinance_requests`, and
 bound by `RefinanceRequest.new_loan_nonce`. The new-loan preimage never includes
 `refinance_id`; `refinance_id` may therefore bind the already-derived `new_loan_id`
@@ -649,6 +658,11 @@ disposition exists, `quote()` overlays `EXPIRED` at
 `block.timestamp >= validUntil` without writing. Coordinator invalidation then persists
 `EXPIRED`; before the boundary it persists `INVALIDATED`.
 
+For refinance-issued quotes the coordinator supplies the policy-bound proposal
+`expiresAt` as this sole `validUntil` input and accepts the request only when the returned
+quote and stored refinance record retain exact equality. Quote and refinance expiry can
+therefore never diverge.
+
 The disposition fields are the replay identity. Exact terminal replay is idempotent and
 does not write or emit twice. A changed replay of the same action is a
 `QuoteReplayConflict`; an attempted different terminal action is `QuoteTerminal`.
@@ -765,6 +779,16 @@ mutable:
   processed custody operation IDs
 ```
 
+For local bootstrap, `recordCustody` is coordinator-only through the immutable lien
+registry and is a value-bearing operation: it calls the constructor-bound asset
+source's exact `resolveCustodyAsset(bytes32)` tuple for the exact-balance chain-31337
+synthetic collateral token/runtime, matches the bootstrap-bound custody identity, pulls the exact quantity from the pre-approved
+canonical borrower, verifies both balance deltas, then records `HELD` and checked
+`total exact custody`. Only afterward may the coordinator register the lien. Exact
+existing replay validates record plus attributable holdings/aggregate without a second
+transfer; allowance, balance, token, code, fee/rebase/callback, delta, overflow, or
+reentrancy failure reverts the complete request.
+
 `LienRegistry` stores:
 
 ```text
@@ -815,6 +839,30 @@ mutable:
 version, exact accepted funding, execution-attempt count, and terminal evidence.
 Execution has no arbitrary target, recipient, token, amount, or calldata.
 
+`old_loan_id -> next_refinance_nonce` is tagged without changing its `uint64` storage:
+bit 63 is `ACTIVE`, low 63 bits are the active or next nonce, raw zero means unlocked
+next one, and unlocked `0x7fff_ffff_ffff_ffff` is exhausted. Acceptance requires a
+high-bit-clear matching nonce below the mask and stores the active encoding before
+external calls. `ACCEPTED`, `FUNDING_ESCROWED`, and `REFUNDABLE` retain it; exact
+terminal paths verify ownership then store `nonce + 1` after all effects. Terminal
+replay branches before lock validation.
+
+ADR 0021 freezes the internal policy dependency to exactly
+`resolveLoanCreation(bytes32 policySetHash,bytes32 loanId)` returning the full
+`LoanConfiguration`, closed creation mode, bootstrap ID, and active flag;
+`resolveBootstrap(bytes32 bootstrapId)` returning policy/loan IDs, exact initial
+`DebtState`, tranche/position/custody/lien vectors, and active flag; and
+`resolveRefinancePolicy(bytes32)` returning the exact refinance bindings and replacement
+template. Hard caps are collateral `16`, commitments `32`, tranches `8`, and positions
+`32`. The replacement template has zero `activeRefinanceId`; the coordinator injects
+only the derived ID at activation.
+
+Unknown refinance-scoped views revert `UnknownRefinance`; unknown commitments and
+handoffs use the exact two additive typed errors, and unknown liens use the historical
+`UnknownLien`. A known nonterminal `terminalResult` is the all-zero result. Boolean
+membership/processed views may return false. The one transition event and two typed
+errors are the complete additive ABI allowlist.
+
 ### `PositionManagerV2`
 
 ```text
@@ -840,6 +888,21 @@ mutable:
 Historical getters resolve the greatest checkpoint at or before the requested block.
 Position transfer after the snapshot cannot move, duplicate, or erase the snapshotted
 vote right.
+
+Tranches, positions, and checkpoints are nominal immutable issuance history rather
+than independent live receivables. Every current consumer resolves manager to loan,
+proves factory/registry account agreement, and joins current canonical debt. Registry
+terminal, `CLOSED/TERMINAL`, or zero claim-bearing debt makes effective claim and vote
+zero regardless of raw `ACTIVE` state or face claim; historical getters alone cannot
+authorize payment, transfer, vote, restructure, quote, lien/collateral, liquidation,
+recovery, protection, or another current action.
+
+On successful refinance payoff, the registered old account writes the exact closed
+debt, calls the existing `LoanRegistry.markTerminal(oldLoanId)` authority, verifies
+`isTerminal(oldLoanId)`, and returns atomically. The coordinator independently verifies
+the terminal flag and unchanged registry/factory/account identity. The old-debt result
+and effective-rights hashes bind that terminal fact; any mark failure, false
+postcondition, identity mismatch, or registry reentry rolls every payoff effect back.
 
 ### `RestructuringController`
 
@@ -1064,6 +1127,12 @@ LienHandoffState:
   DISPUTED=5
 ```
 
+The enums retain the complete cross-system vocabulary. Under ADR 0021 the frozen
+five-selector on-chain refinance slice first persists `ACCEPTED`; request/quote/offer
+and rejection are off-chain evidence stages/outcomes. Its first successful funded
+commitment enters `FUNDING_ESCROWED`, additional partial funding stays there, and exact
+full funding is required for execution.
+
 Frozen messages and field tags:
 
 ```text
@@ -1132,7 +1201,24 @@ RefinanceRequest {
   bytes request_digest=21
   RefinanceState state=22
   uint64 new_loan_nonce=23
+  bytes new_position_manager=24
 }
+
+`new_position_manager=24` is the additive ADR 0021 corroboration field. It must be
+exactly 20 bytes, decode to a nonzero EVM address, and equal the manager
+resolved from the approved factory and account/policy bindings before refinance-ID
+reconstruction. It never overrides on-chain authority; lengths `0`, `19`, `21`, and
+`32`, a zero 20-byte address, and a substituted 20-byte address are rejected.
+
+For this request, non-address `Identifier` and `LoanId` values are exactly `0x` plus
+64 lowercase hex digits; address-bearing `PartyId` values are exactly
+`evm:31337:0x` plus 40 lowercase hex digits. Money units use unsigned canonical
+decimal, every asset is exact `asset:phase9:p9unit` mapped directly to
+`0x61737365743a7068617365393a7039756e697400000000000000000000000000`,
+timestamps have `nanos=0`, and the refinance policy reference is exact
+`phase9-refinance`/`v1` with a 32-byte content hash. Other hash-bearing bytes are
+exactly 32 bytes/nonzero where required; input request digest is exactly empty. No
+string hash supplies the asset.
 
 RefinanceFundingCommitment {
   Identifier commitment_id=1
@@ -2172,6 +2258,10 @@ reconciliation:<difference_id>
   RECONCILIATION_DIFFERENCE_CONTROL
 ```
 
+`OLD_CLAIM_EXTINGUISHED` means that joined canonical debt makes the effective current
+claim zero. It does not mutate nominal tranche/position/checkpoint issuance facts or
+set a stored position to `EXHAUSTED`.
+
 Zero economic roles are omitted only when the frozen accounting delta explicitly marks
 them inapplicable. A nonzero quote component, fee, waiver, forgiveness, payout, loss, or
 allocation cannot be omitted.
@@ -2227,8 +2317,9 @@ Cr 1550 Restricted Refinance Escrow Asset        120
 ```
 
 The finalized contract event separately proves transfers of `95`, `5`, `2`, and `18`,
-the quote-bound recipient routes, exact recipient balance deltas, and zero terminal
-coordinator balance.
+the quote-bound recipient routes, exact recipient balance deltas, zero terminal
+attributed escrow for the refinance, and the exclusion of unsolicited coordinator token
+surplus from liabilities and readiness.
 
 Before execution, an authorized refund reclassifies and settles once:
 
@@ -2372,8 +2463,10 @@ net payoff = gross payoff - credits
 0 <= credits <= fees + penalties <= gross payoff
 
 funding escrow = net payoff + refinance fee + borrower proceeds
-terminal coordinator token balance = 0
-old debt after completed refinance = 0
+terminal attributed escrow(refinance ID) = 0
+unsolicited coordinator surplus is excluded from liabilities and readiness
+old debt after completed refinance = CLOSED/TERMINAL with every debt/loss/credit amount 0
+effective old position claim and voting power = 0 while nominal issuance history is unchanged
 new activated principal = committed new principal
 enforceable senior lien count per collateral = 1
 
@@ -2637,8 +2730,8 @@ broadcast, or named container-volume roots.
 - new-loan and refinance identifiers have acyclic preimages, and one immutable
   `new_loan_nonce` produces one new-loan identity in its bound scope;
 - one accepted funding commitment creates one escrow effect or one refund, never both;
-- a completed refinance consumes the exact quote once and leaves zero coordinator
-  balance;
+- a completed refinance consumes the exact quote once, clears its attributed escrow,
+  and neither consumes nor is blocked by unsolicited coordinator token surplus;
 - one collateral ID has exactly one enforceable senior loan before and after handoff;
 - an injected failure before lien completion leaves old debt, old lien, funding, new
   activation, and borrower balance unchanged;

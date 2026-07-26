@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 from typing import Any
@@ -13,11 +14,14 @@ import update_phase9_implementation_checkpoint as updater  # noqa: E402
 
 
 def _manifest() -> dict[str, Any]:
+    abi = json.loads(
+        (ROOT / "protocol/abi/phase9/PayoffQuoteEngine.abi.json").read_text(encoding="utf-8")
+    )
     return {
         "contracts": [
             {
                 "abiPath": "protocol/abi/phase9/PayoffQuoteEngine.abi.json",
-                "abiSha256": "sha256:" + "a" * 64,
+                "abiSha256": updater.sha256_payload(abi),
                 "contract": "PayoffQuoteEngine",
                 "sourcePath": "protocol/src/resolution/PayoffQuoteEngine.sol",
                 "sourceSha256": "sha256:" + "b" * 64,
@@ -39,9 +43,12 @@ def _manifest() -> dict[str, Any]:
     }
 
 
-def test_candidate_evidence_prepares_hashes_without_review_or_pass_status(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def _registry() -> dict[str, Any]:
+    return {"packages": []}
+
+
+def _candidate_mocks(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(updater, "validate_checkpoints", lambda **_kwargs: {})
     monkeypatch.setattr(updater, "sha256_file", lambda _path: "sha256:" + "1" * 64)
     monkeypatch.setattr(
         updater,
@@ -64,36 +71,39 @@ def test_candidate_evidence_prepares_hashes_without_review_or_pass_status(
         lambda _contract: "sha256:" + "5" * 64,
     )
 
-    evidence = updater.candidate_evidence("PayoffQuoteEngine", "UNI-PAYOFF-001", _manifest())
 
-    assert evidence == {
-        "abiSha256": "sha256:" + "a" * 64,
-        "backlogId": "UNI-PAYOFF-001",
-        "contract": "PayoffQuoteEngine",
-        "dependencyClosureSha256": "sha256:" + "2" * 64,
-        "implementationEvidenceBundleSha256": "sha256:" + "5" * 64,
-        "sourceSha256": "sha256:" + "1" * 64,
-        "sourceSetSha256": "sha256:" + "3" * 64,
-        "storageStructuralSha256": "sha256:" + "4" * 64,
-    }
-    assert "status" not in evidence
-    assert "reviewPath" not in evidence
-    assert "reviewSha256" not in evidence
+def test_candidate_evidence_prepares_package_without_review_or_pass_status(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _candidate_mocks(monkeypatch)
+    evidence = updater.candidate_evidence("P9-PAYOFF-001", _manifest(), registry=_registry())
+
+    assert evidence["checkpointId"] == "P9-PAYOFF-001"
+    assert evidence["requiredBacklogIds"] == ["UNI-ADR-015", "UNI-PAYOFF-001"]
+    assert "review" not in evidence
+    [revision] = evidence["revisions"]
+    assert revision["activatedSignatures"] == [
+        "consumeQuote(bytes32,bytes32,uint64,bytes32)",
+        "invalidateQuote(bytes32,bytes32)",
+        "issueQuote(bytes32,uint64)",
+    ]
+    assert revision["revision"] == 1
+    assert revision["supersedes"] is None
+    assert revision["dependencyClosureSha256"] == "sha256:" + "2" * 64
+    assert revision["implementationEvidenceBundleSha256"] == "sha256:" + "5" * 64
+    assert revision["sourceSha256"] == "sha256:" + "1" * 64
+    assert revision["sourceSetSha256"] == "sha256:" + "3" * 64
+    assert revision["storageStructuralSha256"] == "sha256:" + "4" * 64
 
 
-def test_candidate_entry_binds_structured_review_metadata(
+def test_candidate_package_binds_structured_review_metadata(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     review = ROOT / "security/reviews/phase-9-payoff-quote-engine.md"
     evidence = {
-        "abiSha256": "sha256:" + "a" * 64,
-        "backlogId": "UNI-PAYOFF-001",
-        "contract": "PayoffQuoteEngine",
-        "dependencyClosureSha256": "sha256:" + "b" * 64,
-        "implementationEvidenceBundleSha256": "sha256:" + "c" * 64,
-        "sourceSha256": "sha256:" + "d" * 64,
-        "sourceSetSha256": "sha256:" + "e" * 64,
-        "storageStructuralSha256": "sha256:" + "f" * 64,
+        "checkpointId": "P9-PAYOFF-001",
+        "requiredBacklogIds": ["UNI-ADR-015", "UNI-PAYOFF-001"],
+        "revisions": [],
     }
     metadata = {
         "implementationAuthor": "Implementation Author",
@@ -102,47 +112,85 @@ def test_candidate_entry_binds_structured_review_metadata(
         "toolingReviewer": "Tooling Reviewer",
         "reviewedCommit": "1" * 40,
     }
-    monkeypatch.setattr(updater, "candidate_evidence", lambda *_args: evidence)
+    monkeypatch.setattr(updater, "candidate_evidence", lambda *_args, **_kwargs: evidence)
     monkeypatch.setattr(updater, "validate_review_path", lambda _path: review)
     monkeypatch.setattr(updater, "review_content", lambda _path: "review")
     monkeypatch.setattr(
-        updater, "require_unambiguous_review_pass", lambda _contract, _content: metadata
+        updater, "require_unambiguous_review_pass", lambda _package, _content: metadata
     )
     monkeypatch.setattr(updater, "sha256_file", lambda _path: "sha256:" + "1" * 64)
 
-    entry = updater.candidate_entry(
-        "PayoffQuoteEngine",
-        "UNI-PAYOFF-001",
+    checkpoint_package = updater.candidate_package(
+        "P9-PAYOFF-001",
         "security/reviews/phase-9-payoff-quote-engine.md",
         _manifest(),
+        registry=_registry(),
     )
-    assert entry == {
+    assert checkpoint_package == {
         **evidence,
-        **metadata,
-        "reviewPath": "security/reviews/phase-9-payoff-quote-engine.md",
-        "reviewSha256": "sha256:" + "1" * 64,
-        "status": "PASS",
+        "review": {
+            **metadata,
+            "reviewPath": "security/reviews/phase-9-payoff-quote-engine.md",
+            "reviewSha256": "sha256:" + "1" * 64,
+            "status": "PASS",
+        },
     }
 
 
-def test_candidate_evidence_rejects_backlog_substitution() -> None:
-    with pytest.raises(SystemExit, match="backlog substitution"):
-        updater.candidate_evidence("PayoffQuoteEngine", "UNI-REFI-001", _manifest())
+def test_candidate_evidence_rejects_unactivated_package() -> None:
+    with pytest.raises(SystemExit, match="package is not activated"):
+        updater.candidate_evidence("P9-WRONG-001", _manifest(), registry=_registry())
 
 
-def test_candidate_evidence_and_entry_fail_closed_on_current_storage_check(
+def test_refinance_candidate_preflight_lists_every_unfrozen_evidence_contract_before_work(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    manifest = _manifest()
+
+    def bomb(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("candidate hashing/storage work ran before evidence-path preflight")
+
+    for name in (
+        "additive_abi_payload",
+        "baseline_contracts",
+        "current_compatible_storage_hash",
+        "current_reviewed_source_set_hash",
+        "implementation_evidence_bundle_hash",
+        "read_json",
+        "repository_solidity_dependency_hash",
+        "sha256_file",
+        "sha256_payload",
+        "validate_checkpoints",
+    ):
+        monkeypatch.setattr(updater, name, bomb)
+
+    expected = (
+        "P9-REFI-001: implementation evidence paths are not frozen for: "
+        "Phase9LoanFactory, Phase9LoanAccount, CollateralCustodyV2, LienRegistry, "
+        "RefinanceCoordinator, PositionManagerV2"
+    )
+    with pytest.raises(SystemExit) as failure:
+        updater.candidate_evidence("P9-REFI-001", manifest, registry=_registry())
+    assert str(failure.value) == expected
+
+
+def test_candidate_generation_allows_dirty_sources_but_requires_current_storage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    observed: list[bool] = []
+
+    def validate(**kwargs: Any) -> dict[str, dict[str, Any]]:
+        observed.append(kwargs["verify_current"])
+        return {}
+
+    _candidate_mocks(monkeypatch)
+    monkeypatch.setattr(updater, "validate_checkpoints", validate)
+    updater.candidate_evidence("P9-PAYOFF-001", _manifest(), registry=_registry())
+    assert observed == [False]
+
     def reject_storage(_contract: str) -> str:
         raise SystemExit("compiled storage evidence is stale")
 
     monkeypatch.setattr(updater, "current_compatible_storage_hash", reject_storage)
     with pytest.raises(SystemExit, match="compiled storage evidence is stale"):
-        updater.candidate_evidence("PayoffQuoteEngine", "UNI-PAYOFF-001", _manifest())
-    with pytest.raises(SystemExit, match="compiled storage evidence is stale"):
-        updater.candidate_entry(
-            "PayoffQuoteEngine",
-            "UNI-PAYOFF-001",
-            "security/reviews/phase-9-payoff-quote-engine.md",
-            _manifest(),
-        )
+        updater.candidate_evidence("P9-PAYOFF-001", _manifest(), registry=_registry())

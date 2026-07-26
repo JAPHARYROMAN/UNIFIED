@@ -23,14 +23,22 @@ from check_abi import ABI_PAIRS
 from check_phase9_implementation_checkpoints import (
     CHECKPOINT_PATH as PHASE9_IMPLEMENTATION_CHECKPOINT_PATH,
 )
-from check_phase9_implementation_checkpoints import validate_checkpoints
+from check_phase9_implementation_checkpoints import activated_signatures, validate_checkpoints
 
 ROOT = Path(__file__).resolve().parents[1]
 
 ADR_PATH = ROOT / "adr/0019-phase-9-resolution-protection-and-recovery-boundary.md"
 ACTIVATION_ADR_PATH = ROOT / "adr/0020-phase-9-payoff-authority-and-implementation-activation.md"
+REFINANCE_ADR_PATH = ROOT / "adr/0021-phase-9-atomic-refinance-authority-and-activation.md"
 ARCHITECTURE_PATH = ROOT / "docs/architecture/phase-9-resolution-protection-recovery.md"
 DATA_LAYOUTS_PATH = ROOT / "docs/architecture/phase-9-data-layouts.md"
+REFINANCE_ACCEPTANCE_PATH = ROOT / "docs/architecture/phase-9-refinance-acceptance.md"
+REFINANCE_REFERENCE_EVIDENCE_PATH = (
+    ROOT / "docs/architecture/phase-9-refinance-reference-evidence.md"
+)
+REFINANCE_DEPLOYMENT_EVIDENCE_PATH = (
+    ROOT / "docs/architecture/phase-9-refinance-deployment-evidence.md"
+)
 BACKLOG_PATH = ROOT / "docs/backlog/phase-9.csv"
 WORKSTREAMS_PATH = ROOT / "docs/ownership/WORKSTREAMS.md"
 MASTER_PLAN_PATH = (
@@ -110,6 +118,7 @@ BACKLOG_IDS = (
     "UNI-ABI-009",
     "UNI-ADR-015",
     "UNI-PAYOFF-001",
+    "UNI-ADR-016",
     "UNI-REFI-001",
     "UNI-REFI-002",
     "UNI-RESTRUCT-001",
@@ -131,6 +140,7 @@ BOUNDARY_COMPLETE_IDS = {
     "UNI-RESIDUAL-003",
     "UNI-RESIDUAL-004",
     "UNI-ADR-015",
+    "UNI-ADR-016",
 }
 SECURITY_REVIEW_ID = "UNI-SEC-014"
 EXIT_REVIEW_ID = "UNI-REVIEW-012"
@@ -138,6 +148,34 @@ ALLOWED_BACKLOG_STATUSES = {"TODO", "DONE"}
 
 REQUIRED_RISKS = {f"RISK-PHASE9-{index:03d}" for index in range(1, 16)}
 REQUIRED_ASSUMPTIONS = {f"ASM-{index:03d}" for index in range(34, 45)}
+REFINANCE_ACCEPTANCE_ID_COUNTS = {
+    "COMPAT": 3,
+    "CHECK": 2,
+    "RISK": 1,
+    "DEPLOY": 4,
+    "BOOT": 5,
+    "AUTH": 8,
+    "ID": 6,
+    "SRC": 6,
+    "STATE": 4,
+    "VIEW": 1,
+    "FUND": 5,
+    "EXEC": 9,
+    "EXIT": 5,
+    "RPL": 4,
+    "TIME": 1,
+    "FAIL": 4,
+    "DON": 4,
+    "EVT": 3,
+    "INV": 1,
+    "FZ": 1,
+    "LOCAL": 3,
+}
+REQUIRED_REFINANCE_ACCEPTANCE_IDS = {
+    f"P9R-{family}-{index:03d}"
+    for family, count in REFINANCE_ACCEPTANCE_ID_COUNTS.items()
+    for index in range(1, count + 1)
+}
 REQUIRED_INVARIANTS = {
     *(f"INV-ACC-{index:03d}" for index in range(1, 8)),
     *(f"INV-AUTH-{index:03d}" for index in range(1, 10)),
@@ -163,8 +201,12 @@ RELEASE_MANIFEST_PATH = "protocol/deployments/local/phase9-release-evidence.json
 BOUNDARY_PATHS = (
     ADR_PATH,
     ACTIVATION_ADR_PATH,
+    REFINANCE_ADR_PATH,
     ARCHITECTURE_PATH,
     DATA_LAYOUTS_PATH,
+    REFINANCE_ACCEPTANCE_PATH,
+    REFINANCE_REFERENCE_EVIDENCE_PATH,
+    REFINANCE_DEPLOYMENT_EVIDENCE_PATH,
     BACKLOG_PATH,
     WORKSTREAMS_PATH,
     MASTER_PLAN_PATH,
@@ -325,6 +367,18 @@ def check_backlog_precedence(by_id: dict[str, dict[str, str]]) -> None:
         + ", ".join(implementation_done),
     )
 
+    refinance_activation_done = by_id["UNI-ADR-016"]["status"] == "DONE"
+    refinance_done = [
+        identifier
+        for identifier in ("UNI-REFI-001", "UNI-REFI-002")
+        if by_id[identifier]["status"] == "DONE"
+    ]
+    require(
+        refinance_activation_done or not refinance_done,
+        "UNI-ADR-016 must be DONE before either Phase 9 refinance row can be DONE: "
+        + ", ".join(refinance_done),
+    )
+
 
 def declared_ids(text: str, pattern: str) -> set[str]:
     return set(re.findall(pattern, text, flags=re.MULTILINE))
@@ -366,6 +420,95 @@ def require_tokens(text: str, tokens: Iterable[str], label: str) -> None:
     lowered = text.lower()
     missing = [token for token in tokens if token.lower() not in lowered]
     require(not missing, f"{label} is missing: {', '.join(missing)}")
+
+
+def check_refinance_boundary_evidence() -> None:
+    refinance_adr = read(REFINANCE_ADR_PATH)
+    acceptance = read(REFINANCE_ACCEPTANCE_PATH)
+    reference = read(REFINANCE_REFERENCE_EVIDENCE_PATH)
+    deployment = read(REFINANCE_DEPLOYMENT_EVIDENCE_PATH)
+
+    actual_acceptance_ids = set(
+        re.findall(r"\b(P9R-[A-Z]+-\d{3})\b", acceptance, flags=re.MULTILINE)
+    )
+    require(
+        actual_acceptance_ids == REQUIRED_REFINANCE_ACCEPTANCE_IDS,
+        "Phase 9 refinance acceptance IDs drifted: "
+        f"missing={sorted(REQUIRED_REFINANCE_ACCEPTANCE_IDS - actual_acceptance_ids)} "
+        f"unexpected={sorted(actual_acceptance_ids - REQUIRED_REFINANCE_ACCEPTANCE_IDS)}",
+    )
+    require(
+        len(REQUIRED_REFINANCE_ACCEPTANCE_IDS) == 80,
+        "Phase 9 refinance acceptance-ID inventory must contain exactly 80 IDs",
+    )
+
+    require_tokens(
+        normalized(refinance_adr),
+        (
+            "requestRefinance` is the borrower's direct on-chain acceptance",
+            "ACCEPTED --first successful funding commitment--> FUNDING_ESCROWED",
+            "FUNDING_ESCROWED --additional partial funding--> FUNDING_ESCROWED",
+            "FUNDING_ESCROWED --borrower cancellation or expiry before execution--> REFUNDABLE",
+            "newPrincipal == fundingAmount",
+            "recognized escrow liability == escrowedUnits(refinanceId)",
+            "An unsolicited surplus",
+            "is excluded from refinance and ledger reconciliation",
+            "block.chainid == 31337",
+            "It does not activate a successful Solidity business path",
+            "Phase9ImplementationNotFrozen()",
+        ),
+        "Phase 9 atomic-refinance semantic boundary",
+    )
+    require_tokens(
+        normalized(acceptance),
+        (
+            "new_position_manager",
+            "with 0, 19, 20, 21, and 32 bytes",
+            "Only exactly 20 bytes is structurally admissible",
+            "Only the nonzero address equal to the factory-salt prediction",
+            "Length, nonzero, prediction, and resolver equality checks occur before "
+            "refinance-ID reconstruction",
+            "attributed escrow reaches zero",
+            "unrelated token surplus is excluded",
+            "newPrincipal == fundingAmount",
+            "Additional partial funding remains",
+            "REFUNDABLE",
+            "chain-31337",
+            "synthetic-local",
+            "It does not authorize a successful Solidity refinance path",
+        ),
+        "Phase 9 refinance acceptance semantics",
+    )
+    require_tokens(
+        normalized(reference),
+        (
+            "new_position_manager",
+            "exactly 20 bytes",
+            "attributed_escrow_*` is scoped to the refinance",
+            "Unsolicited surplus is excluded from every liability",
+        ),
+        "Phase 9 refinance reference evidence",
+    )
+    require_tokens(
+        normalized(deployment),
+        (
+            "chain ID is exactly `31337`",
+            "disposable synthetic-local evidence only",
+            "It does not authorize a deployment",
+            "does not change either backlog row from `TODO`",
+        ),
+        "Phase 9 refinance deployment evidence",
+    )
+
+    refinance_proto = read(ROOT / "schemas/proto/unified/v1/refinance.proto")
+    require(
+        re.search(
+            r"\bbytes\s+new_position_manager\s*=\s*24\s*;",
+            refinance_proto,
+        )
+        is not None,
+        "RefinanceRequest.new_position_manager must remain additive bytes field 24",
+    )
 
 
 def quote_preimage(text: str, label: str) -> tuple[str, ...]:
@@ -706,6 +849,7 @@ def check_boundary_evidence() -> None:
         "foundation check does not invoke the Phase 9 checker",
     )
     check_quote_preimage_order(adr, architecture, data_layouts)
+    check_refinance_boundary_evidence()
 
     with INVARIANT_CATALOG_PATH.open(encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle))
@@ -1305,21 +1449,74 @@ def check_implemented_freeze_abi_compatibility(contract: str, source: str) -> No
     )
 
 
+def activated_function_names(
+    contract: str,
+    mutator_names: set[str],
+    activation: set[str] | dict[str, frozenset[str]] | None,
+) -> set[str]:
+    if activation is None:
+        return set()
+    if isinstance(activation, set):
+        return set(mutator_names) if contract in activation else set()
+
+    signatures = activation.get(contract, frozenset())
+    names: list[str] = []
+    for signature in signatures:
+        require(
+            re.fullmatch(r"[A-Za-z_]\w*\(.*\)", signature) is not None,
+            f"{contract} has a malformed activated signature: {signature}",
+        )
+        names.append(signature.partition("(")[0])
+    require(
+        len(names) == len(set(names)),
+        f"{contract} has overloaded activated mutators that require AST-level disambiguation",
+    )
+    activated_names = set(names)
+    require(
+        activated_names <= mutator_names,
+        f"{contract} checkpoint activates unknown mutators: "
+        + ", ".join(sorted(activated_names - mutator_names)),
+    )
+    return activated_names
+
+
+def phase9_public_mutators(source: str) -> list[tuple[str, str]]:
+    mutators: list[tuple[str, str]] = []
+    for header, body in solidity_function_bodies(source):
+        header_words = set(re.findall(r"[A-Za-z_]\w*", header))
+        if not ({"public", "external"} & header_words) or {"view", "pure"} & header_words:
+            continue
+        function_name = re.match(r"\s*([A-Za-z_]\w*)", header)
+        if function_name is None:
+            raise SystemExit("ERROR: Phase 9 mutating function name is not parseable")
+        mutators.append((function_name.group(1), body))
+    names = [name for name, _body in mutators]
+    require(
+        len(names) == len(set(names)),
+        "Phase 9 overloaded mutators require AST-level signature matching",
+    )
+    return mutators
+
+
 def check_phase9_stub_sources(
-    imports: dict[str, Path], implemented: set[str] | None = None
+    imports: dict[str, Path],
+    implemented: set[str] | dict[str, frozenset[str]] | None = None,
 ) -> None:
-    implemented_contracts = set() if implemented is None else implemented
     forbidden = ("delegatecall", "selfdestruct", "assembly", "Phase8")
     for contract in PHASE9_PRODUCTION_CONTRACTS:
         source = strip_solidity_comments(read(imports[contract]))
         require_tokens(source, (f"contract {contract}",), f"{contract} Phase 9 source")
-        if contract not in implemented_contracts:
+        mutators = phase9_public_mutators(source)
+        mutator_names = {name for name, _body in mutators}
+        activated_names = activated_function_names(contract, mutator_names, implemented)
+        fully_activated = bool(mutator_names) and activated_names == mutator_names
+        if not activated_names:
             require_tokens(
                 source,
                 (PHASE9_FREEZE_ERROR,),
                 f"{contract} freeze stub",
             )
-        else:
+        elif fully_activated:
             check_implemented_freeze_abi_compatibility(contract, source)
         present = [token for token in forbidden if token.lower() in source.lower()]
         require(
@@ -1330,19 +1527,18 @@ def check_phase9_stub_sources(
             re.search(r"\b(?:fallback|receive)\s*\(", source) is None,
             f"{contract} exposes a fallback or receive function",
         )
-        for header, body in solidity_function_bodies(source):
-            header_words = set(re.findall(r"[A-Za-z_]\w*", header))
-            if not ({"public", "external"} & header_words):
-                continue
-            if {"view", "pure"} & header_words:
-                continue
-            function_name = re.match(r"\s*([A-Za-z_]\w*)", header)
-            label = function_name.group(1) if function_name else "<unknown>"
-            if contract in implemented_contracts:
+        for label, body in mutators:
+            if label in activated_names:
                 require(
                     not is_exact_freeze_revert(body),
                     f"{contract}.{label} retains exact freeze behavior after activation",
                 )
+                if not fully_activated:
+                    require(
+                        PHASE9_FREEZE_ERROR not in body
+                        and PHASE9_FREEZE_ABI_COMPATIBILITY_MARKER not in body,
+                        f"{contract}.{label} retains a reachable freeze path after activation",
+                    )
             else:
                 require(
                     is_exact_freeze_revert(body),
@@ -1353,9 +1549,8 @@ def check_phase9_stub_sources(
 def check_phase9_foundry_warning_policy(
     imports: dict[str, Path],
     config: dict[str, object] | None = None,
-    implemented: set[str] | None = None,
+    implemented: set[str] | dict[str, frozenset[str]] | None = None,
 ) -> None:
-    implemented_contracts = set() if implemented is None else implemented
     if config is None:
         with FOUNDRY_CONFIG_PATH.open("rb") as handle:
             config = cast(dict[str, object], tomllib.load(handle))
@@ -1412,13 +1607,20 @@ def check_phase9_foundry_warning_policy(
     )
 
     protocol_root = ROOT / "protocol"
+    contracts_requiring_warning = set()
+    for contract in PHASE9_PRODUCTION_CONTRACTS:
+        source = strip_solidity_comments(read(imports[contract]))
+        mutator_names = {name for name, _body in phase9_public_mutators(source)}
+        active_names = activated_function_names(contract, mutator_names, implemented)
+        if active_names != mutator_names:
+            contracts_requiring_warning.add(contract)
     expected = {
         (
             imports[contract].relative_to(protocol_root).as_posix(),
             (str(PHASE9_FOUNDRY_WARNING_CODE),),
         )
         for contract in PHASE9_PRODUCTION_CONTRACTS
-        if contract not in implemented_contracts
+        if contract in contracts_requiring_warning
     }
     missing = expected - actual
     unexpected = actual - expected
@@ -1534,13 +1736,17 @@ def check_pre_code_freeze(by_id: dict[str, dict[str, str]]) -> None:
 
     imports = phase9_compilation_imports()
     checkpoints = validate_checkpoints()
-    implemented = set(checkpoints)
+    activation = activated_signatures()
+    require(
+        set(activation) == set(checkpoints),
+        "Phase 9 activated-signature contracts differ from validated checkpoints",
+    )
     check_phase9_abi_pairs(imports)
     check_phase9_storage_layouts()
     check_phase9_formatting_scope(imports)
     check_phase9_contract_size_coverage()
-    check_phase9_stub_sources(imports, implemented)
-    check_phase9_foundry_warning_policy(imports, implemented=implemented)
+    check_phase9_stub_sources(imports, activation)
+    check_phase9_foundry_warning_policy(imports, implemented=activation)
     check_phase9_local_token_source(imports)
     check_phase9_compatibility_review()
 

@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -110,32 +110,36 @@ def create_candidate_commit(repository: Path, files: dict[str, bytes]) -> str:
     return run_git(repository, "rev-parse", "HEAD")
 
 
-def write_review(entry: dict[str, str], review_path: Path) -> None:
+def write_review(checkpoint_package: dict[str, Any], review_path: Path) -> None:
+    review = checkpoint_package["review"]
+    revision = checkpoint_package["revisions"][0]
     review_path.write_text(
         "\n".join(
             (
                 "Decision: PASS",
                 "Architecture review: PASS",
                 "Security review: PASS",
-                f"Implementation author: {entry['implementationAuthor']}",
-                f"Architecture reviewer: {entry['architectureReviewer']}",
-                f"Security reviewer: {entry['securityReviewer']}",
-                f"Tooling reviewer: {entry['toolingReviewer']}",
-                f"Reviewed commit: {entry['reviewedCommit']}",
-                entry["contract"],
-                entry["backlogId"],
-                entry["sourceSha256"],
-                entry["sourceSetSha256"],
-                entry["dependencyClosureSha256"],
-                entry["implementationEvidenceBundleSha256"],
-                entry["abiSha256"],
-                entry["storageStructuralSha256"],
+                f"Implementation author: {review['implementationAuthor']}",
+                f"Architecture reviewer: {review['architectureReviewer']}",
+                f"Security reviewer: {review['securityReviewer']}",
+                f"Tooling reviewer: {review['toolingReviewer']}",
+                f"Reviewed commit: {review['reviewedCommit']}",
+                checkpoint_package["checkpointId"],
+                *checkpoint_package["requiredBacklogIds"],
+                revision["contract"],
+                *revision["activatedSignatures"],
+                revision["sourceSha256"],
+                revision["sourceSetSha256"],
+                revision["dependencyClosureSha256"],
+                revision["implementationEvidenceBundleSha256"],
+                revision["abiSha256"],
+                revision["storageStructuralSha256"],
             )
         )
         + "\n",
         encoding="utf-8",
     )
-    entry["reviewSha256"] = checkpoints.sha256_file(review_path)
+    review["reviewSha256"] = checkpoints.sha256_file(review_path)
 
 
 def fixture(
@@ -146,6 +150,7 @@ def fixture(
     abi_relative = "protocol/abi/phase9/Example.abi.json"
     storage_relative = "protocol/storage-layout/phase9/Example.storage.json"
     review_relative = "security/reviews/phase-9-example-implementation.md"
+    control_relative = "tools/checkpoint-control.py"
     source_path = root / source_relative
     abi_path = root / abi_relative
     storage_path = root / storage_relative
@@ -154,7 +159,18 @@ def fixture(
 
     source_path.parent.mkdir(parents=True, exist_ok=True)
     source_path.write_text("contract Example { /* implemented */ }\n", encoding="utf-8")
-    abi: list[object] = []
+    control_path = root / control_relative
+    control_path.parent.mkdir(parents=True, exist_ok=True)
+    control_path.write_text("# checkpoint control\n", encoding="utf-8")
+    abi: list[object] = [
+        {
+            "inputs": [],
+            "name": "mutate",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function",
+        }
+    ]
     storage = storage_payload("Example", source_relative)
     write_json(abi_path, abi)
     write_json(storage_path, storage)
@@ -164,13 +180,24 @@ def fixture(
     monkeypatch.setattr(checkpoints, "SECURITY_REVIEW_ROOT", review_path.parent)
     monkeypatch.setattr(checkpoints, "SOURCE_ROOTS", (source_path.parent,))
     monkeypatch.setattr(checkpoints, "TOKEN_SOURCE", source_path)
-    monkeypatch.setattr(checkpoints, "ACTIVATED_IMPLEMENTATIONS", {"Example": "UNI-EXAMPLE-001"})
+    monkeypatch.setattr(
+        checkpoints,
+        "ACTIVATION_PACKAGES",
+        {
+            "P9-EXAMPLE-001": {
+                "abiAdditions": {},
+                "contracts": {"Example": ("mutate()",)},
+                "requiredBacklogIds": ("UNI-ADR-015", "UNI-EXAMPLE-001"),
+            }
+        },
+    )
     monkeypatch.setattr(
         checkpoints,
         "IMPLEMENTATION_EVIDENCE_PATHS",
         {"Example": (source_relative,)},
     )
     monkeypatch.setattr(checkpoints, "REVIEWED_COMMIT_PROVENANCE_PATHS", ())
+    monkeypatch.setattr(checkpoints, "CONTROL_BUNDLE_PATHS", (control_relative,))
     monkeypatch.setattr(
         checkpoints, "require_git_clean_worktree_bytes", lambda contract, paths: None
     )
@@ -178,7 +205,7 @@ def fixture(
     def current_worktree_blobs(
         contract: str, commit: str, relative_paths: tuple[str, ...]
     ) -> dict[str, bytes]:
-        assert contract == "Example"
+        assert contract in {"Example", "P9-EXAMPLE-001"}
         assert commit == "1" * 40
         return {relative: (root / relative).read_bytes() for relative in relative_paths}
 
@@ -206,28 +233,37 @@ def fixture(
     current_source_set_hash = checkpoints.sha256_payload(
         [{"path": source_relative, "sha256": current_source_hash}]
     )
-    entry = {
+    revision: dict[str, Any] = {
         "abiSha256": abi_hash,
-        "architectureReviewer": "Architecture Reviewer",
-        "backlogId": "UNI-EXAMPLE-001",
+        "activatedSignatures": ["mutate()"],
         "contract": "Example",
         "dependencyClosureSha256": checkpoints.repository_solidity_dependency_hash(source_path),
-        "implementationAuthor": "Implementation Author",
         "implementationEvidenceBundleSha256": checkpoints.implementation_evidence_bundle_hash(
             "Example"
         ),
-        "reviewPath": review_relative,
-        "reviewSha256": "",
-        "reviewedCommit": "1" * 40,
-        "securityReviewer": "Security Reviewer",
+        "revision": 1,
         "sourceSha256": current_source_hash,
         "sourceSetSha256": current_source_set_hash,
-        "status": "PASS",
         "storageStructuralSha256": checkpoints.structural_storage_hash(storage),
-        "toolingReviewer": "Tooling Reviewer",
+        "supersedes": None,
+    }
+    checkpoint_package: dict[str, Any] = {
+        "checkpointId": "P9-EXAMPLE-001",
+        "requiredBacklogIds": ["UNI-ADR-015", "UNI-EXAMPLE-001"],
+        "review": {
+            "architectureReviewer": "Architecture Reviewer",
+            "implementationAuthor": "Implementation Author",
+            "reviewPath": review_relative,
+            "reviewSha256": "",
+            "reviewedCommit": "1" * 40,
+            "securityReviewer": "Security Reviewer",
+            "status": "PASS",
+            "toolingReviewer": "Tooling Reviewer",
+        },
+        "revisions": [revision],
     }
     review_path.parent.mkdir(parents=True, exist_ok=True)
-    write_review(entry, review_path)
+    write_review(checkpoint_package, review_path)
     registry = {
         "baseline": {
             "commit": checkpoints.BASELINE_COMMIT,
@@ -235,9 +271,10 @@ def fixture(
             "rawFreezeArtifactsSha256": checkpoints.BASELINE_RAW_FREEZE_ARTIFACTS_SHA256,
             "sourceSetSha256": checkpoints.BASELINE_SOURCE_SET_SHA256,
         },
+        "currentControlBundleSha256": checkpoints.current_control_bundle_hash(),
         "currentSourceSetSha256": current_source_set_hash,
-        "implementations": [entry],
-        "schemaVersion": 1,
+        "packages": [checkpoint_package],
+        "schemaVersion": 2,
     }
 
     backlog_path.parent.mkdir(parents=True, exist_ok=True)
@@ -263,6 +300,192 @@ def test_valid_reviewed_checkpoint_passes(tmp_path: Path, monkeypatch: pytest.Mo
     assert set(checkpoints.validate_checkpoints(manifest=manifest, registry=registry)) == {
         "Example"
     }
+
+
+def test_stale_current_control_bundle_hash_is_rejected_directly(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest, registry, _ = fixture(tmp_path, monkeypatch)
+    registry["currentControlBundleSha256"] = "sha256:" + "9" * 64
+    with pytest.raises(SystemExit, match="current control-bundle hash is stale"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+def test_accepted_payoff_package_pin_rejects_historical_dependency_mutation() -> None:
+    registry = checkpoints.checkpoint_payload()
+    payoff_package = cast(dict[str, Any], cast(list[object], registry["packages"])[0])
+    assert checkpoints.sha256_payload(payoff_package) == checkpoints.PAYOFF_ACCEPTED_PACKAGE_SHA256
+    payoff_revision = cast(dict[str, Any], cast(list[object], payoff_package["revisions"])[0])
+    payoff_revision["dependencyClosureSha256"] = "sha256:" + "9" * 64
+
+    with pytest.raises(SystemExit, match="P9-PAYOFF-001: accepted package identity drifted"):
+        checkpoints.validate_checkpoints(
+            manifest=checkpoints.historical_manifest(),
+            registry=registry,
+            verify_current=False,
+            verify_reviews=False,
+            verify_backlog=False,
+        )
+
+
+def test_exact_refinance_coordinator_additions_are_allowed_and_any_drift_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest, registry, paths = fixture(tmp_path, monkeypatch)
+    event = copy.deepcopy(checkpoints.REFINANCE_STATE_TRANSITIONED_EVENT)
+    funding_error = copy.deepcopy(checkpoints.REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR)
+    additions = (funding_error, event)
+    assert additions == checkpoints.REFINANCE_COORDINATOR_ABI_ADDITIONS
+    checkpoints.ACTIVATION_PACKAGES["P9-EXAMPLE-001"]["abiAdditions"] = {"Example": additions}
+    abi = json.loads(paths["abi"].read_text(encoding="utf-8"))
+    revision = registry["packages"][0]["revisions"][0]
+    revision["abiSha256"] = checkpoints.sha256_payload(
+        checkpoints.additive_abi_payload(abi, additions)
+    )
+    write_review(registry["packages"][0], paths["review"])
+    checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+    substituted = copy.deepcopy(event)
+    substituted_inputs = cast(list[dict[str, Any]], substituted["inputs"])
+    substituted_inputs[3]["indexed"] = True
+    revision["abiSha256"] = checkpoints.sha256_payload(
+        checkpoints.additive_abi_payload(abi, (funding_error, substituted))
+    )
+    write_review(registry["packages"][0], paths["review"])
+    with pytest.raises(SystemExit, match="ABI differs from the additive allowlist"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+    substituted_error = copy.deepcopy(funding_error)
+    substituted_error_inputs = cast(list[dict[str, Any]], substituted_error["inputs"])
+    substituted_error_inputs[0]["name"] = "fundingId"
+    revision["abiSha256"] = checkpoints.sha256_payload(
+        checkpoints.additive_abi_payload(abi, (substituted_error, event))
+    )
+    write_review(registry["packages"][0], paths["review"])
+    with pytest.raises(SystemExit, match="ABI differs from the additive allowlist"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+    with pytest.raises(SystemExit, match="errors and events only"):
+        checkpoints.additive_abi_payload(
+            abi,
+            (
+                {
+                    "inputs": [],
+                    "name": "unauthorizedSelector",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function",
+                },
+            ),
+        )
+
+
+def test_exact_lien_registry_addition_is_allowed_and_any_drift_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest, registry, paths = fixture(tmp_path, monkeypatch)
+    handoff_error = copy.deepcopy(checkpoints.REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR)
+    additions = (handoff_error,)
+    assert additions == checkpoints.LIEN_REGISTRY_ABI_ADDITIONS
+    checkpoints.ACTIVATION_PACKAGES["P9-EXAMPLE-001"]["abiAdditions"] = {"Example": additions}
+    abi = json.loads(paths["abi"].read_text(encoding="utf-8"))
+    revision = registry["packages"][0]["revisions"][0]
+    revision["abiSha256"] = checkpoints.sha256_payload(
+        checkpoints.additive_abi_payload(abi, additions)
+    )
+    write_review(registry["packages"][0], paths["review"])
+    checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+    substituted = copy.deepcopy(handoff_error)
+    substituted_inputs = cast(list[dict[str, Any]], substituted["inputs"])
+    substituted_inputs[0]["name"] = "lienHandoffId"
+    revision["abiSha256"] = checkpoints.sha256_payload(
+        checkpoints.additive_abi_payload(abi, (substituted,))
+    )
+    write_review(registry["packages"][0], paths["review"])
+    with pytest.raises(SystemExit, match="ABI differs from the additive allowlist"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
+
+
+def test_refinance_additions_are_owned_by_their_exact_contracts() -> None:
+    additions = checkpoints.ACTIVATION_PACKAGES["P9-REFI-001"]["abiAdditions"]
+    assert additions == {
+        "LienRegistry": checkpoints.LIEN_REGISTRY_ABI_ADDITIONS,
+        "RefinanceCoordinator": checkpoints.REFINANCE_COORDINATOR_ABI_ADDITIONS,
+    }
+    assert checkpoints.REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR not in additions[
+        "RefinanceCoordinator"
+    ]
+    assert checkpoints.REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR not in additions[
+        "LienRegistry"
+    ]
+
+
+def test_later_revision_requires_exact_supersession_and_monotonic_activation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest, registry, paths = fixture(tmp_path, monkeypatch)
+    source_relative = cast(str, manifest["sources"][0]["path"])
+    first_source = paths["source"].read_bytes()
+    second_source = b"contract Example { /* revision 2 */ }\n"
+    second_hash = checkpoints.sha256_bytes(second_source)
+    second_source_set = checkpoints.sha256_payload(
+        [{"path": source_relative, "sha256": second_hash}]
+    )
+    second_revision = copy.deepcopy(registry["packages"][0]["revisions"][0])
+    second_revision.update(
+        {
+            "implementationEvidenceBundleSha256": second_source_set,
+            "revision": 2,
+            "sourceSetSha256": second_source_set,
+            "sourceSha256": second_hash,
+            "supersedes": {"checkpointId": "P9-EXAMPLE-001", "revision": 1},
+        }
+    )
+    second_review_path = paths["review"].parent / "phase-9-example-second.md"
+    second_package: dict[str, Any] = {
+        "checkpointId": "P9-EXAMPLE-002",
+        "requiredBacklogIds": ["UNI-EXAMPLE-002"],
+        "review": {
+            "architectureReviewer": "Architecture Reviewer 2",
+            "implementationAuthor": "Implementation Author 2",
+            "reviewPath": second_review_path.relative_to(tmp_path).as_posix(),
+            "reviewSha256": "",
+            "reviewedCommit": "2" * 40,
+            "securityReviewer": "Security Reviewer 2",
+            "status": "PASS",
+            "toolingReviewer": "Tooling Reviewer 2",
+        },
+        "revisions": [second_revision],
+    }
+    checkpoints.ACTIVATION_PACKAGES["P9-EXAMPLE-002"] = {
+        "abiAdditions": {},
+        "contracts": {"Example": ("mutate()",)},
+        "requiredBacklogIds": ("UNI-EXAMPLE-002",),
+    }
+    write_review(second_package, second_review_path)
+    registry["packages"].append(second_package)
+    registry["currentSourceSetSha256"] = second_source_set
+    with paths["backlog"].open("a", encoding="utf-8") as handle:
+        handle.write("UNI-EXAMPLE-002,DONE\n")
+
+    def committed_blobs(
+        _label: str, commit: str, relative_paths: tuple[str, ...]
+    ) -> dict[str, bytes]:
+        source = second_source if commit == "2" * 40 else first_source
+        return {relative: source for relative in relative_paths}
+
+    monkeypatch.setattr(checkpoints, "reviewed_commit_file_bytes", committed_blobs)
+    checkpoints.validate_checkpoints(manifest=manifest, registry=registry, verify_current=False)
+
+    second_revision["supersedes"] = {"checkpointId": "P9-WRONG-001", "revision": 1}
+    with pytest.raises(SystemExit, match="supersession chain drifted"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry, verify_current=False)
+    second_revision["supersedes"] = {"checkpointId": "P9-EXAMPLE-001", "revision": 1}
+    second_revision["activatedSignatures"] = []
+    checkpoints.ACTIVATION_PACKAGES["P9-EXAMPLE-002"]["contracts"] = {"Example": ()}
+    with pytest.raises(SystemExit, match="activation is not monotonic"):
+        checkpoints.validate_checkpoints(manifest=manifest, registry=registry, verify_current=False)
 
 
 def test_fabricated_existing_like_reviewed_commit_is_rejected(
@@ -358,7 +581,7 @@ def test_source_change_without_checkpoint_is_rejected(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     manifest, registry, paths = fixture(tmp_path, monkeypatch)
-    registry["implementations"] = []
+    registry["packages"] = []
     baseline_source_set = manifest.get("sources")
     assert isinstance(baseline_source_set, list)
     registry["currentSourceSetSha256"] = checkpoints.sha256_payload(baseline_source_set)
@@ -451,7 +674,7 @@ def external_helper_checkpoint(
         "return PayoffLogic.value(); } }\n",
         encoding="utf-8",
     )
-    entry = registry["implementations"][0]
+    entry = registry["packages"][0]["revisions"][0]
     entry["sourceSha256"] = checkpoints.sha256_file(paths["source"])
     source_set = [{"path": manifest["sources"][0]["path"], "sha256": entry["sourceSha256"]}]
     entry["sourceSetSha256"] = checkpoints.sha256_payload(source_set)
@@ -467,7 +690,7 @@ def test_external_helper_import_requires_dependency_closure_refresh(
 ) -> None:
     manifest, registry, paths = fixture(tmp_path, monkeypatch)
     external_helper_checkpoint(manifest, registry, paths)
-    write_review(registry["implementations"][0], paths["review"])
+    write_review(registry["packages"][0], paths["review"])
     with pytest.raises(SystemExit, match="dependency closure hash is stale"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
 
@@ -477,11 +700,11 @@ def test_external_helper_only_mutation_is_rejected(
 ) -> None:
     manifest, registry, paths = fixture(tmp_path, monkeypatch)
     helper = external_helper_checkpoint(manifest, registry, paths)
-    entry = registry["implementations"][0]
+    entry = registry["packages"][0]["revisions"][0]
     entry["dependencyClosureSha256"] = checkpoints.repository_solidity_dependency_hash(
         paths["source"]
     )
-    write_review(entry, paths["review"])
+    write_review(registry["packages"][0], paths["review"])
     checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
 
     helper.write_text(helper.read_text(encoding="utf-8").replace("return 1", "return 2"))
@@ -629,12 +852,12 @@ def test_wrong_backlog_or_unopened_contract_is_rejected(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     manifest, registry, _ = fixture(tmp_path, monkeypatch)
-    registry["implementations"][0]["backlogId"] = "UNI-WRONG-001"
-    with pytest.raises(SystemExit, match="backlog substitution"):
+    registry["packages"][0]["requiredBacklogIds"] = ["UNI-WRONG-001"]
+    with pytest.raises(SystemExit, match="required backlog IDs drifted"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
 
-    registry["implementations"][0]["backlogId"] = "UNI-EXAMPLE-001"
-    monkeypatch.setattr(checkpoints, "ACTIVATED_IMPLEMENTATIONS", {})
+    registry["packages"][0]["requiredBacklogIds"] = ["UNI-ADR-015", "UNI-EXAMPLE-001"]
+    monkeypatch.setattr(checkpoints, "ACTIVATION_PACKAGES", {})
     with pytest.raises(SystemExit, match="not activated"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
 
@@ -645,7 +868,7 @@ def test_stale_or_tampered_current_source_set_hash_is_rejected(
 ) -> None:
     manifest, registry, _ = fixture(tmp_path, monkeypatch)
     if target == "entry":
-        registry["implementations"][0]["sourceSetSha256"] = "sha256:" + "0" * 64
+        registry["packages"][0]["revisions"][0]["sourceSetSha256"] = "sha256:" + "0" * 64
         message = "source-set checkpoint is stale"
     else:
         registry["currentSourceSetSha256"] = "sha256:" + "0" * 64
@@ -656,7 +879,7 @@ def test_stale_or_tampered_current_source_set_hash_is_rejected(
 
 @pytest.mark.parametrize(
     ("target", "message"),
-    (("abi", "ABI snapshot"), ("storage", "storage payload|storage snapshot")),
+    (("abi", "ABI|JSON array"), ("storage", "storage payload|storage snapshot")),
 )
 def test_abi_or_storage_snapshot_drift_is_rejected(
     tmp_path: Path,
@@ -688,9 +911,12 @@ def test_checkpoint_baseline_identity_drift_is_rejected(
 @pytest.mark.parametrize(
     ("mutation", "message"),
     (
-        (lambda registry, paths: registry["implementations"][0].update(status="PENDING"), "status"),
         (
-            lambda registry, paths: registry["implementations"][0].update(
+            lambda registry, paths: registry["packages"][0]["review"].update(status="PENDING"),
+            "status",
+        ),
+        (
+            lambda registry, paths: registry["packages"][0]["review"].update(
                 reviewSha256="sha256:" + "0" * 64
             ),
             "review hash",
@@ -721,7 +947,7 @@ def test_review_content_must_bind_pass_status_and_exact_hashes(
 ) -> None:
     manifest, registry, paths = fixture(tmp_path, monkeypatch)
     paths["review"].write_text("Decision: PENDING\n", encoding="utf-8")
-    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+    registry["packages"][0]["review"]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
     with pytest.raises(SystemExit, match="visible canonical Decision: PASS"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
 
@@ -746,7 +972,7 @@ def test_each_nonpass_review_decision_is_rejected_even_when_pass_appears_in_pros
     )
     content += f"Historical quoted text said {label}: PASS, but it is not authoritative.\n"
     paths["review"].write_text(content, encoding="utf-8")
-    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+    registry["packages"][0]["review"]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
 
     with pytest.raises(SystemExit, match=rf"visible canonical {label}: PASS"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
@@ -769,7 +995,7 @@ def test_duplicate_or_contradictory_top_level_review_decisions_are_rejected(
     manifest, registry, paths = fixture(tmp_path, monkeypatch)
     with paths["review"].open("a", encoding="utf-8") as handle:
         handle.write(f"{label}: {duplicate_status}\n")
-    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+    registry["packages"][0]["review"]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
 
     with pytest.raises(SystemExit, match=rf"visible canonical {label}: PASS"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
@@ -786,7 +1012,7 @@ def test_non_top_level_pass_text_cannot_approve_a_review(
         .replace("Decision: PASS", f"{prefix}Decision: PASS")
     )
     paths["review"].write_text(content, encoding="utf-8")
-    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+    registry["packages"][0]["review"]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
 
     with pytest.raises(SystemExit, match="visible canonical Decision: PASS"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
@@ -802,7 +1028,7 @@ def test_fenced_pass_text_cannot_approve_a_review(
         .replace("Decision: PASS", "```text\nDecision: PASS\n```")
     )
     paths["review"].write_text(content, encoding="utf-8")
-    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+    registry["packages"][0]["review"]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
 
     with pytest.raises(SystemExit, match="visible canonical Decision: PASS"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
@@ -831,7 +1057,7 @@ def test_any_hidden_or_prose_status_occurrence_rejects_an_otherwise_valid_review
     manifest, registry, paths = fixture(tmp_path, monkeypatch)
     with paths["review"].open("a", encoding="utf-8") as handle:
         handle.write(contradiction + "\n")
-    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+    registry["packages"][0]["review"]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
 
     with pytest.raises(SystemExit, match="no other Decision status occurrence"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
@@ -859,7 +1085,7 @@ def test_review_identity_and_commit_fields_fail_closed(
     content = paths["review"].read_text(encoding="utf-8")
     content = re.sub(rf"^{re.escape(field)}:.*$", f"{field}: {replacement}", content, flags=re.M)
     paths["review"].write_text(content, encoding="utf-8")
-    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+    registry["packages"][0]["review"]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
 
     with pytest.raises(SystemExit, match=message):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
@@ -869,7 +1095,7 @@ def test_checkpoint_identity_must_match_review_metadata(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     manifest, registry, _ = fixture(tmp_path, monkeypatch)
-    registry["implementations"][0]["toolingReviewer"] = "Substituted Reviewer"
+    registry["packages"][0]["review"]["toolingReviewer"] = "Substituted Reviewer"
     with pytest.raises(SystemExit, match="implementation review toolingReviewer mismatch"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
 
@@ -891,7 +1117,7 @@ def test_hidden_review_metadata_cannot_satisfy_required_fields(
     field = "Tooling reviewer: Tooling Reviewer"
     content = paths["review"].read_text(encoding="utf-8").replace(f"{field}\n", "")
     paths["review"].write_text(content + wrapper(field), encoding="utf-8")
-    registry["implementations"][0]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
+    registry["packages"][0]["review"]["reviewSha256"] = checkpoints.sha256_file(paths["review"])
     with pytest.raises(SystemExit, match="visible canonical Tooling reviewer field"):
         checkpoints.validate_checkpoints(manifest=manifest, registry=registry)
 
@@ -921,9 +1147,7 @@ def test_structural_storage_ignores_bodies_but_not_variables_or_slots() -> None:
     )
 
 
-def ast_numbered_storage_payload(
-    contract_id: int, enum_id: int, struct_id: int
-) -> dict[str, Any]:
+def ast_numbered_storage_payload(contract_id: int, enum_id: int, struct_id: int) -> dict[str, Any]:
     payload = storage_payload("Example", "protocol/src/resolution/Example.sol")
     contract_type = f"t_contract(IRegistry){contract_id}"
     enum_type = f"t_enum(State){enum_id}"
@@ -1018,26 +1242,22 @@ def test_structural_storage_normalizes_only_solc_ast_type_suffixes_across_graph(
     assert layout["types"]["t_struct(Item)<ast-id>_storage"]["members"][0]["type"] == (
         "t_enum(State)<ast-id>"
     )
-    assert layout["types"]["t_struct(Item)<ast-id>_storage"]["members"][0]["label"] == (
-        "state"
-    )
+    assert layout["types"]["t_struct(Item)<ast-id>_storage"]["members"][0]["label"] == ("state")
     assert full_payload["freezeSurface"] == baseline["freezeSurface"]
     assert checkpoints.normalize_solc_storage_type_id("t_array(t_address)3_storage") == (
         "t_array(t_address)3_storage"
     )
 
     concrete_label_drift = copy.deepcopy(renumbered)
-    concrete_label_drift["storageLayout"]["types"][
-        "t_struct(Item)903_storage"
-    ]["label"] = "struct OtherNamespace.Item"
+    concrete_label_drift["storageLayout"]["types"]["t_struct(Item)903_storage"]["label"] = (
+        "struct OtherNamespace.Item"
+    )
     assert checkpoints.structural_storage_hash(
         concrete_label_drift
     ) != checkpoints.structural_storage_hash(baseline)
 
     member_order_drift = copy.deepcopy(renumbered)
-    member_order_drift["storageLayout"]["types"]["t_struct(Item)903_storage"][
-        "members"
-    ].reverse()
+    member_order_drift["storageLayout"]["types"]["t_struct(Item)903_storage"]["members"].reverse()
     assert checkpoints.structural_storage_hash(
         member_order_drift
     ) != checkpoints.structural_storage_hash(baseline)

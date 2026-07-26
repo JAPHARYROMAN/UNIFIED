@@ -47,7 +47,7 @@
     },
     {
       "path": "packages/generated/go/unified/v1/refinance.pb.go",
-      "sha256": "242c70600c8bf45a9470e4cc16887cb9dad97364deb24cc2e3702da169fa60c6"
+      "sha256": "f1bdfcfee45b20d4055e1ef94fd12babefe790969ff7aa99f2f6597f646e5154"
     },
     {
       "path": "packages/generated/go/unified/v1/restructuring.pb.go",
@@ -111,7 +111,7 @@
     },
     {
       "path": "packages/generated/typescript/unified/v1/refinance_pb.ts",
-      "sha256": "31c6b78faa0e9cb1c7043de25557666bf95bb3a77b5740bd1e0102564e98df23"
+      "sha256": "b440b62f21bb0f9cce2d068503a5128e68c6b603cb55f4113cd036b0942d3aec"
     },
     {
       "path": "packages/generated/typescript/unified/v1/restructuring_pb.ts",
@@ -183,7 +183,7 @@
     },
     {
       "path": "packages/generated/python/unified/v1/refinance_pb2.py",
-      "sha256": "1108fcb23fddd06cda43f1727e5e8743f3229474b691378fc0e30f3711162aff"
+      "sha256": "c490dfc4aa8b6ecf41000d8e69377d2e6eac556139b7c2379ccf825fef69d4fb"
     },
     {
       "path": "packages/generated/python/unified/v1/restructuring_pb2.py",
@@ -203,7 +203,7 @@
     },
     {
       "path": "protocol/src/generated/FoundationTypes.sol",
-      "sha256": "ae1d17f0e390eacb751730cc51d7dc82c892e680562a576977a659142b9b1308"
+      "sha256": "fbf8b9a23647930a48dbb09841dfead603f34c6c2a2c59beeaf903ac7b441c55"
     }
   ]
 }
