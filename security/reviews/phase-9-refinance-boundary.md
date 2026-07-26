@@ -111,14 +111,35 @@ run the pinned Foundry suite before merge.
 
 Decision: PASS
 
-Reviewed correction commit:
+Pre-merge reviewed correction commit:
 `5dcc3edffd86167d68ca23c26084bde37aad7b26`
 
-Reviewed correction parent:
+Pre-merge reviewed correction parent:
 `063f53524edf28e3b3ccda45d90dd1e290ae8b24`
 
-Reviewed correction tree:
+Landed correction commit:
+`43c6d1771e75ab604dec4bcd99a862957bb8851b`
+
+Landed correction parent:
+`9c26bdcd70460032aaad48b21c22b1a36b658323`
+
+Shared correction tree:
 `22b6a637baeba4c5b4e6b84b5da9146b6e0cbc51`
+
+Pre-merge reviewed metadata commit:
+`c49a4748f545ecfb56329e7c521327cdff8041df`
+
+Landed metadata commit:
+`ad5fb47f899d522d81b9b3c2555aad4488bdfbc4`
+
+Shared metadata tree:
+`162a1be6c03e7d15800045a3fbc006c8d2d45723`
+
+GitHub's required linear-history rebase changed commit IDs only. The pre-merge
+and landed parent, correction, and metadata tree pairs are byte-identical. The
+correction and metadata patch IDs also match exactly at
+`dea9c2927adb50d18c5a46c149013eac40e7dd33` and
+`e0e834027600e9797742cd4f97762f7783f901ca`, respectively.
 
 The correction closes implementation-reconstruction gaps discovered during the
 first implementation-slice decomposition. It does not activate successful
@@ -158,8 +179,8 @@ Bound correction evidence:
 - registry packages: only the previously accepted `P9-PAYOFF-001`; and
 - historical Payoff reviewed commit and all bound Payoff artifacts: unchanged.
 
-The exact correction commit completed the canonical foundation gate with exit
-`0` in 103.712 seconds: 315 plus 45 Python tests, 24 Node tests, 59 focused
+The exact pre-merge correction commit completed the canonical foundation gate
+with exit `0` in 103.712 seconds: 315 plus 45 Python tests, 24 Node tests, 59 focused
 compatibility tests, 101 checkpoint/updater tests, 2 schema tests, strict mypy
 over 44 files, 66 ABI checks, 14 storage layouts with 1 implemented contract,
 and 54 deterministic generated files with zero changed or new outputs. The
@@ -179,7 +200,7 @@ Correction reviewer verdicts:
   hashes, mutation suite, generated freshness, and protected-surface diff guards
   all passed.
 
-Any implementation, evidence, deployment, or checkpoint bytes added after the
-reviewed correction commit require a new exact-commit review. This review record
-is metadata about the accepted boundary and cannot be used as implementation or
-production authorization.
+Any implementation, evidence, deployment, or checkpoint bytes beyond the
+landed, reviewed metadata tree require a new exact-commit review. This review
+record is metadata about the accepted boundary and cannot be used as
+implementation or production authorization.
