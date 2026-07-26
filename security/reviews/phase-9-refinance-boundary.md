@@ -66,7 +66,7 @@ live-fund, legal, custody, insurance, recovery, or external-provider authority.
 ## Bound evidence
 
 - Acceptance inventory: exactly 80 unique `P9R-*` rows.
-- Current control-bundle hash:
+- Initial reviewed control-bundle hash:
   `sha256:c7b547b17af4d5e9f9afb9410c0cef12e25762462982f35176aa43918ddd4f9d`.
 - Refinance descriptor hash:
   `d18e2784420ec0665fbd5da1ed9a69abe79f08e25d75b2dfdc66a32fee10668b`.
@@ -107,7 +107,79 @@ run the pinned Foundry suite before merge.
   control hashing, storage compatibility, and fail-closed provisional activation
   verified.
 
+## Correction addendum
+
+Decision: PASS
+
+Reviewed correction commit:
+`5dcc3edffd86167d68ca23c26084bde37aad7b26`
+
+Reviewed correction parent:
+`063f53524edf28e3b3ccda45d90dd1e290ae8b24`
+
+Reviewed correction tree:
+`22b6a637baeba4c5b4e6b84b5da9146b6e0cbc51`
+
+The correction closes implementation-reconstruction gaps discovered during the
+first implementation-slice decomposition. It does not activate successful
+refinance business logic, add a provisional checkpoint, change either refinance
+backlog row from `TODO`, or modify Solidity, ABI, storage-layout, schema, or
+generated-binding bytes.
+
+The exact correction freezes and checks:
+
+- `newLoanNonce == refinanceNonce`, with no separate replacement-loan counter;
+- the exact request and funding emergency capability IDs, request pause lookup
+  after the local lock, funding replay classification before its pause lookup,
+  and unpaused execute/cancel/expiry/refund paths;
+- the exact custody operation domain, including old-loan collision scope, and
+  the custody identity's use of `bootstrap_custody_operation_id`;
+- lien-registry-resolved coordinator authority, nonzero custody operation IDs,
+  exact same-operation/same-record replay, and changed-record or
+  alternate-operation conflicts;
+- custody checks-effects-interactions ordering, exact post-transfer balance
+  deltas, and complete transaction rollback on transfer or delta failure; and
+- contract-authoritative custody operation identity versus correlation-only
+  activation, tranche, position, and lien hashes whose frozen selectors carry no
+  operation-ID argument.
+
+The checker parses the custody operation and identity formulas in both the ADR
+and reference evidence. Nineteen focused negative mutations reject stale
+identity input, weakened operation scope, pause-before-lock, replay, authority,
+ordering, capability, nonce, and correlation-only regressions.
+
+Bound correction evidence:
+
+- acceptance inventory: exactly 80 unique `P9R-*` rows;
+- current control-bundle hash:
+  `sha256:d298c4c11ab3f939e94c2b36cfc3fb41e6a6255a5429134eec92728f015c0a49`;
+- current source-set hash:
+  `sha256:69276c6de63238456ab2a42b85702536aee3a7a6ac29cc2be366f220d68ddbd9`;
+- registry packages: only the previously accepted `P9-PAYOFF-001`; and
+- historical Payoff reviewed commit and all bound Payoff artifacts: unchanged.
+
+The exact correction commit completed the canonical foundation gate with exit
+`0` in 103.712 seconds: 315 plus 45 Python tests, 24 Node tests, 59 focused
+compatibility tests, 101 checkpoint/updater tests, 2 schema tests, strict mypy
+over 44 files, 66 ABI checks, 14 storage layouts with 1 implemented contract,
+and 54 deterministic generated files with zero changed or new outputs. The
+worktree was clean before and after all exact-commit reviews. Forge was
+unavailable locally, so the canonical gate emitted its expected skip warning
+after Solidity compilation passed; GitHub CI must run the pinned Foundry suite
+before merge.
+
+Correction reviewer verdicts:
+
+- Architecture: PASS; exact commit, tree, identities, ordering, inventory, and
+  non-activation boundary verified with no remaining finding.
+- Security: PASS; no P0, P1, or P2 finding remains across nonce, custody,
+  replay, collision, emergency, exit-liveness, rollback, or historical-isolation
+  controls.
+- Tooling: PASS; the canonical foundation gate, independent Python/Node control
+  hashes, mutation suite, generated freshness, and protected-surface diff guards
+  all passed.
+
 Any implementation, evidence, deployment, or checkpoint bytes added after the
-reviewed candidate require a new exact-commit review. This review record is
-metadata about the accepted boundary and cannot be used as implementation or
+reviewed correction commit require a new exact-commit review. This review record
+is metadata about the accepted boundary and cannot be used as implementation or
 production authorization.
