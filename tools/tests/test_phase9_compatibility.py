@@ -251,6 +251,155 @@ def test_refinance_boundary_evidence_is_exact() -> None:
 
 
 @pytest.mark.parametrize(
+    ("path", "target", "replacement", "message"),
+    (
+        (
+            phase9.REFINANCE_ADR_PATH,
+            "exact `newLoanNonce == refinanceNonce` checks",
+            "exact `newLoanNonce != refinanceNonce` checks",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            "it is not a separately stored counter",
+            "it is a separately stored counter",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            'keccak256("CAPABILITY_PHASE9_REFINANCE_REQUEST")',
+            'keccak256("CAPABILITY_PHASE9_REQUEST")',
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            'keccak256("CAPABILITY_PHASE9_REFINANCE_FUNDING")',
+            'keccak256("CAPABILITY_PHASE9_FUNDING")',
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            "After the local old-loan lock is acquired and before any resolver/bootstrap/quote\n"
+            "effect, request acceptance calls `emergencyState` with the request capability",
+            "Before the local old-loan lock is acquired, request acceptance calls "
+            "`emergencyState` with the request capability",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            "exact replay returns inert and changed reuse conflicts without an\n"
+            "emergency lookup. Only a first new commitment checks the funding capability",
+            "exact replay consults the pause before classification",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            "Execute, cancel, expiry, and refund do not\nconsult either capability",
+            "Execute, cancel, expiry, and refund consult either capability",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            "authenticates `msg.sender` as the coordinator resolved\n"
+            "from its immutable lien registry",
+            "authenticates `msg.sender` as the borrower",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            "reconstructs this identity from the operation ID and record/resolver facts",
+            "reconstructs this identity from record/resolver facts",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            "asset_registry,\n  bootstrap_custody_operation_id,\n  collateral_id,",
+            "asset_registry,\n  bootstrap_id,\n  collateral_id,",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            "chainid, refinance_coordinator, bootstrap_id, old_loan_id,\n"
+            "  collateral_custody, collateral_id",
+            "chainid, refinance_coordinator, bootstrap_id,\n"
+            "  collateral_custody, collateral_id",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            "Reuse of an operation ID with a changed record, or use of an\n"
+            "alternate operation ID for an existing collateral record, conflicts",
+            "Changed-record operation-ID reuse is accepted",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            "Only `bootstrap_custody_operation_id` is carried by a frozen selector",
+            "Only `bootstrap_activation_operation_id` is carried by a frozen selector",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            "activation, tranche, position,\nand lien operation IDs are deterministic "
+            "reference/evidence correlation hashes only",
+            "activation, tranche, position, and lien operation IDs are contract authority",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ACCEPTANCE_PATH,
+            "exact funding replay remains inert, changed reuse still conflicts",
+            "exact funding replay is paused before classification",
+            "refinance acceptance semantics",
+        ),
+        (
+            phase9.REFINANCE_REFERENCE_EVIDENCE_PATH,
+            "Only `bootstrap_custody_operation_id` is passed through a frozen contract selector",
+            "",
+            "refinance reference evidence",
+        ),
+        (
+            phase9.REFINANCE_REFERENCE_EVIDENCE_PATH,
+            "asset_registry,\n  bootstrap_custody_operation_id,\n  collateral_id,",
+            "asset_registry,\n  bootstrap_id,\n  collateral_id,",
+            "refinance reference evidence",
+        ),
+        (
+            phase9.REFINANCE_REFERENCE_EVIDENCE_PATH,
+            "  bootstrap_id,\n  old_loan_id,\n  collateral_custody,",
+            "  bootstrap_id,\n  collateral_custody,",
+            "refinance reference evidence",
+        ),
+        (
+            phase9.DATA_LAYOUTS_PATH,
+            "marks the operation processed, records `HELD`, and increases\n"
+            "checked `total exact custody` before calling `transferFrom`",
+            "calls `transferFrom` before recording custody state",
+            "refinance data-layout custody semantics",
+        ),
+    ),
+)
+def test_refinance_stage0_semantic_corrections_fail_closed(
+    monkeypatch: pytest.MonkeyPatch,
+    path: Path,
+    target: str,
+    replacement: str,
+    message: str,
+) -> None:
+    canonical_read = phase9.read
+
+    def mutated_read(candidate: Path) -> str:
+        text = canonical_read(candidate)
+        if candidate != path:
+            return text
+        assert target in text
+        return text.replace(target, replacement, 1)
+
+    monkeypatch.setattr(phase9, "read", mutated_read)
+    with pytest.raises(SystemExit, match=message):
+        phase9.check_refinance_boundary_evidence()
+
+
+@pytest.mark.parametrize(
     "relative",
     (
         "protocol/src/resolution/OnlyInterface.sol",

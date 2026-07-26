@@ -63,7 +63,9 @@ The caller-supplied refinance ID and quote ID are their exact all-zero wire valu
 and `request_digest` is canonical empty bytes. They are outputs, not expected-input
 digests. State, state version, accepted funding, execution attempts, terminal
 evidence, commitment state, and funding result are likewise zero at their respective
-entry boundaries.
+entry boundaries. `new_loan_nonce == refinance_nonce`, and that shared value is
+nonzero, high-bit clear, and less than `NONCE_MASK`; inequality is rejected during
+the pure checks before the old-loan lock write.
 
 Pure normalization/derived-zero/local-key checks precede the local old-loan lock write.
 The lock is acquired before the first external resolver call; policy, borrower,
@@ -321,7 +323,7 @@ custody_identity_hash = keccak256(abi.encode(
   chainid,
   collateral_custody,
   asset_registry,
-  bootstrap_id,
+  bootstrap_custody_operation_id,
   collateral_id,
   asset_id,
   collateral_token,
@@ -363,13 +365,21 @@ bootstrap_custody_result_hash = keccak256(abi.encode(
 ))
 ```
 
-The factory loan nonce starts at one, advances only on successful creation, and
-cannot wrap. The replacement new-loan nonce has the same start/advance/wrap rule.
-The local-bootstrap tuple fixes `source_old_loan_id = 0`,
+Only `bootstrap_custody_operation_id` is passed through a frozen contract selector
+and acts as an on-chain replay/identity key. The activation, tranche, position, and
+lien operation IDs are deterministic model/event-correlation values only because the
+corresponding frozen selectors contain no operation-ID parameter. Reference models
+must not treat those correlation hashes as contract authority or processed storage;
+on-chain exact replay/conflict derives from initialization and exact record IDs/tuples.
+
+The factory-global loan nonce starts at one, advances only on successful unique
+creation, and cannot wrap. The replacement new-loan nonce is not another stored
+counter; it exactly equals the low-63-bit per-old-loan `refinance_nonce` governed by
+the tagged coordinator lock. The local-bootstrap tuple fixes `source_old_loan_id = 0`,
 `refinance_id_context = 0`, and `new_loan_nonce = 0`; the replacement tuple uses
-the source old-loan ID, the already-derived nonzero refinance-ID context, and its
-nonzero new-loan nonce. Exact creation replay returns the stored account/manager;
-changed reuse conflicts.
+the source old-loan ID, the already-derived nonzero refinance-ID context, and the
+equal nonzero refinance/new-loan nonce. Exact creation replay returns the stored
+account/manager; changed reuse conflicts.
 
 No new-loan, clone-salt, or bootstrap identity includes a quote/refinance ID.
 `creation_id` is computed only after the quote/refinance ID and includes the frozen
@@ -393,12 +403,14 @@ the borrower and complete configuration. Bootstrap initializes the old account
 directly `ACTIVE/CURRENT`, then the coordinator installs all old rights/security
 before quote issuance. Each missing custody record first calls exact
 `resolveCustodyAsset(assetId)` through the custody contract's constructor-bound asset
-source, matches token/runtime/active/exact-delta to
-the exact returned `CustodyRecord.identityHash`, and proves exact borrower-to-custody
-`transferFrom` balance deltas,
-then checked `totalCustody`, `HELD`, and only afterward the lien. Exact record replay
-proves attributable custody/aggregate/lien state without another transfer. The
-original position owner and sole canonical payoff
+source. The coordinator recomputes the nonzero operation ID; custody authenticates
+that coordinator, reconstructs `CustodyRecord.identityHash` from the passed operation
+ID plus the exact token/runtime/active/exact-delta and record tuple, records the
+processed operation/`HELD`/checked total before interaction, and proves exact
+borrower-to-custody `transferFrom` balance deltas. Only afterward may the lien exist.
+Exact same-operation/same-record replay proves attributable custody/aggregate/lien
+state without another transfer; changed-record or alternate-operation reuse conflicts.
+The original position owner and sole canonical payoff
 beneficiary equal `oldLender`; tranche/position claims, claim-bearing debt, and the
 quote route match exactly, with no alternate beneficiary. Replacement initializes only `CREATED/NONE` zero debt and no
 positions/custody/lien, bound to the one derived refinance.
@@ -406,6 +418,12 @@ positions/custody/lien, bound to the one derived refinance.
 ## Operation identities
 
 ```text
+CAPABILITY_PHASE9_REFINANCE_REQUEST =
+  keccak256("CAPABILITY_PHASE9_REFINANCE_REQUEST")
+
+CAPABILITY_PHASE9_REFINANCE_FUNDING =
+  keccak256("CAPABILITY_PHASE9_REFINANCE_FUNDING")
+
 request_operation_id = keccak256(abi.encode(
   "UNIFIED_REFINANCE_REQUEST_OPERATION_V1",
   chainid, refinance_coordinator, refinance_id
