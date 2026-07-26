@@ -689,6 +689,51 @@ activation; those reads are evidence only and are never claimed to cause the tra
 to revert. `CREATE2`, a mutable setter, a proxy, late registration, or rebinding is
 prohibited.
 
+### `Phase9LoanFactory`
+
+ADR 0022 fixes the implementation semantics of the already-frozen factory layout. The
+factory-global `_nextLoanNonce` starts at one. A unique creation reserves the current
+nonce and creation identity under transaction rollback, rejects exhaustion before an
+addition can wrap, and advances exactly once only when clone deployment, both
+initializations, registry registration, mapping writes, and the creation event all
+succeed.
+
+Creation replay is classified by the supplied `creationId` and the stored
+`_processedCreationIds`/`_creationRequests` entry before consulting the current global
+nonce or attempting a clone or registry effect. The exact stored request and the current
+active four-field creation-resolver tuple must still match. The full historical bootstrap
+payload is not compared because the frozen layout stores no initial-payload hash and live
+debt may legitimately change. An exact replay verifies the stored protocol-version-9
+registry identity and returns the stored account and manager without recomputing
+`creationId` from the now-advanced nonce, writing, emitting, or calling
+`LoanRegistry.registerLoan`; changed reuse reverts
+`InvalidPhase9LoanConfiguration`. A new creation identity for an already existing loan
+reverts `Phase9LoanAlreadyExists(loanId)`. Every other factory validation, authority,
+resolver, mode, nonce, prediction, implementation, deployment, initialization, or
+registration inconsistency uses `InvalidPhase9LoanConfiguration`; no clone-library error
+is added to the ABI.
+
+The two implementation instances have exact reviewed runtime code and disable their own
+initializers by setting the frozen `initialized` storage member to `true` through its
+declaration initializer. Fresh minimal-clone storage remains zero. The factory uses a
+private OpenZeppelin-5.6.1-byte-compatible EIP-1167 deterministic-clone helper so the
+standard salt, prediction, creation code, and runtime remain reproducible without
+importing additional OpenZeppelin errors into the frozen factory ABI. It deploys and
+checks both predicted clones only after reserving the exact request, processed flag,
+predicted account/manager mappings, and incremented nonce. It initializes the loan
+account first, then initializes the manager. Manager initialization authenticates the
+factory through the already-written account configuration and verifies the reciprocal
+loan ID, manager, and settlement-token bindings. Only then may the factory register and
+verify protocol version 9 in `LoanRegistry` and emit. Every failure reverts the
+reservation and all earlier effects.
+
+The factory and account validate the exact ADR-bound synthetic-local asset identifier,
+deployed settlement-token address, and reviewed `Phase9LocalSyntheticToken` runtime. They
+do not call or impersonate the coordinator's typed asset resolver and do not repurpose a
+policy-registry field as an asset source. The coordinator remains solely responsible for
+the asset registry's `active`, decimals, exact-balance-delta, and runtime-hash tuple and
+for equality with both loan configurations.
+
 ### `Phase9LoanAccount`
 
 ```text
@@ -744,6 +789,30 @@ mutable, in this order:
 Debt-changing operations increment `debt_state_version`. Terms-changing operations
 increment `terms_version`. A write-off does not delete historical debt, agreement, loss,
 position, or recovery-right records. Terminal closure cannot return to active servicing.
+
+Every identifier or commitment in `LoanConfiguration` is nonzero: settlement asset,
+loan, agreement, policy set, amendment policy, protection policy, and recovery policy.
+The borrower is nonzero, and every configured contract dependency is nonzero and contains
+code.
+Only the mode- and state-specific zero sentinels expressly enumerated by ADR 0021 and ADR
+0022 are accepted; there is no implicit optional zero policy hash. In particular, dormant
+replacement initialization retains `CREATED/NONE`, zero debt, versions, times, schedule,
+and active operation IDs, while an active bootstrap has the exact nonzero version and
+schedule required by its resolver.
+
+Agreement version zero is permanently the absent sentinel:
+`agreementVersionHash(0) == bytes32(0)`. Dormant initialization does not write a version
+zero mapping entry. Active bootstrap initialization records the immutable configuration
+agreement hash at its nonzero initial terms version; replacement activation does the same
+at its nonzero policy-bound terms version and rejects an already occupied version.
+
+Initialization authenticates before classifying initialized or configuration state: a
+wrong caller uses `UnauthorizedPhase9LoanCaller(caller)`, while an authenticated repeat
+or invalid configuration/debt shape uses `InvalidPhase9LoanOperation`. Reuse of a
+processed nonzero operation ID uses `Phase9LoanOperationReplay(operationId)`. A
+coordinator replay that has already been classified upstream does not call the account a
+second time. After validation, the account sets its initializer flag before any possible
+interaction, with transaction rollback preserving a clean failure.
 
 ### `PayoffQuoteEngine`
 
@@ -897,6 +966,26 @@ mutable:
 Historical getters resolve the greatest checkpoint at or before the requested block.
 Position transfer after the snapshot cannot move, duplicate, or erase the snapshotted
 vote right.
+
+Tranche IDs and position IDs are inserted in strictly increasing unsigned raw `bytes32`
+order, equivalently `uint256(currentId) > uint256(previousId)`. Zero, duplicate, or
+decreasing IDs are invalid; tranche `priority` is a separate semantic field and does not
+silently redefine the vector ordering. An existing ID is classified before the
+new-record order check: a byte-exact existing tranche or position is inert replay, while
+changed reuse reverts `InvalidPositionOperation` without a second array entry, checkpoint,
+or event. Initialization, tranche registration, and position issuance authenticate the
+factory or coordinator through the immutable account configuration on every call and
+verify the reciprocal account, manager, loan, and exact local-token runtime. The same
+error covers activated-method authority, initialization, cap,
+unknown-tranche, and tuple failures; it does not invent an unknown-tranche error or
+misuse `UnknownPosition`.
+
+Checkpoint writers require `block.number <= type(uint64).max`. When the final checkpoint
+has the current block number they overwrite it; otherwise they append. Owner checkpoints
+store the owner with zero value, while voting-power, claim, and total-voting-power
+checkpoints store the value with zero owner. Issuing several positions in one transaction
+therefore leaves one final total-voting-power checkpoint for that block, and exact issue
+replay leaves every checkpoint byte-identical.
 
 Tranches, positions, and checkpoints are nominal immutable issuance history rather
 than independent live receivables. Every current consumer resolves manager to loan,

@@ -6,7 +6,7 @@ Date: 2026-07-26
 
 ## Purpose and relationship to payoff evidence
 
-This document defines the deployment evidence required before the ADR 0021
+This document defines the deployment evidence required before the ADRs 0021 and 0022
 refinance method bundle can be activated. It does not authorize a deployment or
 claim that a candidate, verifier, manifest, or accepted evidence file exists.
 
@@ -61,9 +61,46 @@ creates. The sequence must satisfy all of the following:
   transaction. The one reviewed initialization call is mandatory configuration, not
   repair authority.
 
-The factory-internal deterministic minimal clones governed by ADR 0021 are a
+The factory-internal deterministic minimal clones governed by ADRs 0021 and 0022 are a
 separate per-loan mechanism. Their `CREATE2`-style salts do not authorize
 top-level `CREATE2` or weaken this sequence.
+
+## Per-loan clone and initialization evidence
+
+The reviewed factory implements the standard OpenZeppelin Contracts 5.6.1 EIP-1167
+creation/runtime bytes and deterministic prediction through a private helper. A literal
+library dependency may not add `FailedDeployment`, `InsufficientBalance`, or another
+error to the frozen factory ABI. The top-level account and position-manager
+implementation instances contain the exact reviewed runtime and have their existing
+`initialized` storage member set by declaration initialization; direct initialization of
+either implementation fails, while a fresh minimal clone begins with zero storage.
+
+For every bootstrap or replacement creation trace, evidence records the factory nonce,
+creation ID, both domain-separated salts, implementation addresses/runtime hashes,
+predicted and actual clone addresses, minimal-proxy creation/runtime hashes, and code at
+both clones. The trace proves the atomic order: reserve the unique creation identity,
+stored request, processed flag, predicted mappings, and incremented nonce; deploy both
+clones; initialize the account; initialize the manager after authenticating the factory
+and reciprocal fields through the account; register and verify protocol version 9 in
+`LoanRegistry`; and emit the one creation event. Failure injection at every step proves
+that no nonce reservation, clone, registry entry, mapping, or event survives a revert.
+
+An exact old `creationId` replay is tested after later successful creations have advanced
+the global nonce. It is classified from the stored request before the current nonce,
+revalidates the active four-field creation-resolver tuple and canonical clone/registry
+bindings, returns the stored pair, and produces no state-changing call, write, deployment,
+initialization, registration, nonce movement, or event. Changed reuse fails with
+`InvalidPhase9LoanConfiguration`; a distinct creation identity for an existing loan
+fails with `Phase9LoanAlreadyExists(loanId)`. Clone, resolver, authority, nonce, prediction,
+initialization, and registration failures expose no additional factory error.
+
+The same execution evidence proves unsigned raw-`bytes32` ordering and exact inert replay
+for tranche/position records, agreement-version-zero absence for a dormant account,
+nonzero `LoanConfiguration` identifiers and policy/agreement commitments, and overwrite-
+last same-block checkpoint coalescing. Asset evidence keeps the authority split exact:
+the factory/account verify the ADR-bound synthetic-local token/runtime, while only the
+coordinator calls the typed asset resolver and proves its active, decimals,
+exact-balance-delta, runtime, and two-configuration equality.
 
 ## Pre-broadcast manifest
 
@@ -77,7 +114,7 @@ contains:
 | RPC boundary | canonical literal loopback URL, no credentials/path/query/fragment/proxy, expected chain ID, and reset generation |
 | Compiler boundary | Solidity/Foundry versions, optimizer settings, EVM version, remappings, artifact paths, compiler source-set hashes, and exact creation/runtime bytecode hashes |
 | Ordered transactions | one row per top-level `CREATE` followed by exactly one `RoleManager.grantRole` row; exact ordinal, sender nonce, target/predicted address as applicable, artifact or selector, constructor/calldata ABI encoding, zero value, input hash, expected runtime hash for creates, and expected `RoleGranted` log for the grant |
-| Reciprocal bindings | predicted coordinator in lien registry and engine; actual engine and all exact registries/factory/controllers/token/recipients in coordinator; factory/account/position-manager/custody/lien caller authority |
+| Reciprocal bindings | predicted coordinator in lien registry and engine; actual engine and all exact registries/factory/controllers/token/recipients in coordinator; exact account/manager implementation runtimes and locked implementation initializers; factory/account-first/manager/registry caller and initialization authority; custody/lien caller authority |
 | Policy surfaces | exact code and behavior for `resolveLoanCreation`, `resolveBootstrap`, `resolveRefinancePolicy`, `resolveRefinanceAsset`, and `resolveCustodyAsset`, including active records, runtime hashes, exact-delta flags, and hard vector caps |
 | Storage pins | historical storage manifest digest and exact reviewed slots/offsets/types to observe after broadcast |
 | Scope | `contains_real_value=false`, mocks-only providers, synthetic identities/assets, no production key, no public network, and no live deployment authorization |
@@ -148,8 +185,9 @@ snapshots, and expected source head. It must independently prove:
    source and transaction/log completeness prove no other role grant or role-admin
    change, and no business action precedes it;
 10. factory/account/position-manager/custody implementations and every other
-   constructor-bound dependency agree through storage and behavioral getters, and
-   enforce the exact coordinator/factory caller graph in ADR 0021;
+    constructor-bound dependency agree through storage and behavioral getters, and
+    enforce the exact coordinator/factory caller graph and locked-implementation
+    semantics in ADRs 0021 and 0022;
 11. all recorded addresses are nonzero where required, contain code where
     required, and have no production-looking identity or provider binding;
 12. the historical ABI/storage freeze and exact additive allowlist of one transition
@@ -181,7 +219,8 @@ At minimum it observes:
 - lien registry slots `0..2`, including the exact coordinator binding and empty
   initial lien/handoff mappings;
 - custody, factory, account implementation, and position-manager implementation
-  constructor/configuration fields required by their historical layouts;
+  constructor/configuration fields required by their historical layouts, including
+  locked implementation initializers without an added constructor ABI item;
 - runtime code and exact code hashes for all resolver mocks, registries,
   controllers, implementations, token, custody, lien registry, factory, engine,
   and coordinator;
@@ -235,6 +274,7 @@ Donation residue is removed only with the disposable local reset.
 | `P9R-DEPLOY-002` | Independent CREATE prediction, reciprocal constructor binding, and exact factory-role call/receipt/log/EIP-1898 state evidence |
 | `P9R-DEPLOY-003` | Candidate, complete broadcast, RPC transaction/receipt/log, code, constructor, role, slot, behavior, schema, and accepted-digest verification |
 | `P9R-DEPLOY-004` | Negative evidence for wrong chain/key/order/nonce/prediction/code/constructor/RPC/provider/top-level CREATE2 or undeclared/mismatched/failed/late/post-hoc role action plus bounded reset |
+| `P9R-BOOT-005` | Per-loan factory nonce and replay classification, exact salts/predictions/runtime, account-before-manager initialization/authentication, registry/event order, frozen errors, raw-ID ordering, zero-version/policy rules, and same-block checkpoint coalescing with rollback at every step |
 | `P9R-DON-004` | One-command bounded-local-reset command/script, reset-generation manifest, before/after chain identity, observed removal of donated surplus, and proof that no production disposal/recovery authority exists |
 | `P9R-FZ-001` | Exact source, compiler, ABI, storage, one-event/two-error additive allowlist, and method-level checkpoint binding |
 | `P9R-LOCAL-001` | Synthetic-local dependency/provider/credential boundary scan |

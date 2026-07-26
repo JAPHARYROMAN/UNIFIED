@@ -471,6 +471,12 @@ def test_refinance_additions_are_owned_by_their_exact_contracts() -> None:
     assert checkpoints.REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR not in additions[
         "LienRegistry"
     ]
+    assert checkpoints.ACTIVATION_PACKAGES["P9-REFI-001"]["requiredBacklogIds"] == (
+        "UNI-ADR-016",
+        "UNI-ADR-017",
+        "UNI-REFI-001",
+        "UNI-REFI-002",
+    )
 
 
 def test_refinance_auxiliary_sources_have_exact_owners_and_order() -> None:
@@ -1045,6 +1051,58 @@ def test_payoff_implementation_evidence_bundle_paths_are_exact_and_cycle_free() 
         or path == "docs/backlog/phase-9.csv"
         for path in paths
     )
+
+
+def test_refinance_d1_evidence_paths_are_exact_shared_and_fail_closed() -> None:
+    paths = checkpoints.REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS
+    assert list(paths) == sorted(paths, key=lambda path: path.encode("utf-8"))
+    assert len(paths) == len(set(paths))
+    assert {
+        "adr/0021-phase-9-atomic-refinance-authority-and-activation.md",
+        "adr/0022-phase-9-factory-account-position-bootstrap-semantics.md",
+        "docs/architecture/phase-9-refinance-acceptance.md",
+        "protocol/test/Phase9RefinanceBootstrapAcceptanceMap.sol",
+        "protocol/test/Phase9RefinanceBootstrapHarness.sol",
+        "protocol/test/Phase9RefinanceCustodyLienBootstrap.t.sol",
+        "protocol/test/Phase9RefinanceFactoryBootstrap.t.sol",
+        "protocol/test/Phase9RefinanceRequest.t.sol",
+        "protocol/test/Phase9RefinanceRequestFuzz.t.sol",
+        "protocol/test/Phase9RefinanceRequestGolden.t.sol",
+        "protocol/test/Phase9RefinanceRequestInvariants.t.sol",
+    }.issubset(paths)
+    refinance_contracts = checkpoints.ACTIVATION_PACKAGES["P9-REFI-001"]["contracts"]
+    assert all(
+        checkpoints.IMPLEMENTATION_EVIDENCE_PATHS[contract] is paths
+        for contract in refinance_contracts
+    )
+    assert checkpoints.IMPLEMENTATION_EVIDENCE_CLOSURE_LIMITATIONS == {
+        "P9-REFI-001": "D2-D4 exact implementation evidence paths are not frozen"
+    }
+
+
+def test_refinance_package_cannot_activate_with_only_d1_evidence() -> None:
+    registry = checkpoints.checkpoint_payload()
+    registry["packages"].append(
+        {
+            "checkpointId": "P9-REFI-001",
+            "requiredBacklogIds": [
+                "UNI-ADR-016",
+                "UNI-ADR-017",
+                "UNI-REFI-001",
+                "UNI-REFI-002",
+            ],
+            "review": {},
+            "revisions": [],
+        }
+    )
+    with pytest.raises(SystemExit, match="D2-D4 exact implementation evidence paths"):
+        checkpoints.validate_checkpoints(
+            manifest=checkpoints.historical_manifest(),
+            registry=registry,
+            verify_current=False,
+            verify_reviews=False,
+            verify_backlog=False,
+        )
 
 
 def test_every_payoff_implementation_evidence_path_is_material_to_bundle_hash(

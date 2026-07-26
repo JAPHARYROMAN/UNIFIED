@@ -16,6 +16,8 @@ import {
   controlBundleSha256,
   CONTROL_BUNDLE_PATHS,
   implementationEvidenceBundleSha256,
+  IMPLEMENTATION_EVIDENCE_CLOSURE_LIMITATIONS,
+  IMPLEMENTATION_EVIDENCE_PATHS,
   LIEN_REGISTRY_ABI_ADDITIONS,
   ordinalUtf8Compare,
   PACKAGE_AUXILIARY_SOURCE_OWNERS,
@@ -27,6 +29,7 @@ import {
   REFINANCE_ACTIVATED_SIGNATURES,
   REFINANCE_AUXILIARY_SOURCE_OWNERS,
   REFINANCE_COORDINATOR_ABI_ADDITIONS,
+  REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS,
   REFINANCE_STATE_TRANSITIONED_EVENT,
   REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR,
   REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR,
@@ -544,7 +547,7 @@ test("Node and Python checkpoint tooling share the exact evidence path list", ()
     "utf8",
   );
   const tuple = python.match(
-    /PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = \(([\s\S]*?)\)\r?\nIMPLEMENTATION_EVIDENCE_PATHS/,
+    /PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = \(([\s\S]*?)\)\r?\nREFINANCE_IMPLEMENTATION_EVIDENCE_PATHS/,
   );
   assert.notEqual(tuple, null);
   const pythonPaths = [...tuple[1].matchAll(/^\s*"([^"]+)",\s*$/gm)].map(
@@ -575,6 +578,61 @@ test("Node and Python checkpoint tooling share the exact evidence path list", ()
       "tsconfig.json",
       "uv.lock",
     ].every((path) => PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS.includes(path)),
+  );
+
+  const refinanceTuple = python.match(
+    /REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS = \(([\s\S]*?)\)\r?\nIMPLEMENTATION_EVIDENCE_PATHS/,
+  );
+  assert.notEqual(refinanceTuple, null);
+  const pythonRefinancePaths = [
+    ...refinanceTuple[1].matchAll(/^\s*"([^"]+)",\s*$/gm),
+  ].map((match) => match[1]);
+  assert.deepEqual(REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS, pythonRefinancePaths);
+  assert.equal(
+    [...REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS].sort(ordinalUtf8Compare).join("\n"),
+    REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS.join("\n"),
+  );
+  assert.equal(
+    new Set(REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS).size,
+    REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS.length,
+  );
+  assert.ok(
+    [
+      "adr/0022-phase-9-factory-account-position-bootstrap-semantics.md",
+      "protocol/test/Phase9RefinanceBootstrapAcceptanceMap.sol",
+      "protocol/test/Phase9RefinanceBootstrapHarness.sol",
+      "protocol/test/Phase9RefinanceCustodyLienBootstrap.t.sol",
+      "protocol/test/Phase9RefinanceFactoryBootstrap.t.sol",
+      "protocol/test/Phase9RefinanceRequest.t.sol",
+      "protocol/test/Phase9RefinanceRequestFuzz.t.sol",
+      "protocol/test/Phase9RefinanceRequestGolden.t.sol",
+      "protocol/test/Phase9RefinanceRequestInvariants.t.sol",
+    ].every((path) => REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS.includes(path)),
+  );
+  for (const contract of REFINANCE_ACTIVATED_SIGNATURES.keys()) {
+    assert.equal(
+      IMPLEMENTATION_EVIDENCE_PATHS.get(contract),
+      REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS,
+    );
+  }
+  assert.equal(
+    IMPLEMENTATION_EVIDENCE_CLOSURE_LIMITATIONS.get("P9-REFI-001"),
+    "D2-D4 exact implementation evidence paths are not frozen",
+  );
+});
+
+test("node checkpoint validation rejects refinance while D2-D4 paths are unfrozen", () => {
+  const refinancePackage = {
+    checkpointId: "P9-REFI-001",
+    requiredBacklogIds: ["UNI-ADR-016", "UNI-ADR-017", "UNI-REFI-001", "UNI-REFI-002"],
+    review: {},
+    revisions: [],
+  };
+  assert.throws(
+    () => validateCheckpointDependencyClosures(
+      checkpointRegistry([checkpointPackage(), refinancePackage]),
+    ),
+    /D2-D4 exact implementation evidence paths are not frozen/,
   );
 });
 

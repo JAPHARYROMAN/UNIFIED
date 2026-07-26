@@ -229,17 +229,22 @@ def test_backlog_dependency_order_is_fail_closed() -> None:
         phase9.check_backlog_precedence(implementation_before_activation)
 
     for refinance_id in ("UNI-REFI-001", "UNI-REFI-002"):
-        refinance_before_activation = copy.deepcopy(rows)
-        refinance_before_activation["UNI-ADR-016"]["status"] = "TODO"
-        refinance_before_activation[refinance_id]["status"] = "DONE"
-        with pytest.raises(SystemExit, match="UNI-ADR-016"):
-            phase9.check_backlog_precedence(refinance_before_activation)
+        for required_adr in ("UNI-ADR-016", "UNI-ADR-017"):
+            refinance_before_activation = copy.deepcopy(rows)
+            refinance_before_activation[required_adr]["status"] = "TODO"
+            refinance_before_activation[refinance_id]["status"] = "DONE"
+            with pytest.raises(SystemExit, match=required_adr):
+                phase9.check_backlog_precedence(refinance_before_activation)
 
 
 def test_refinance_activation_row_and_acceptance_inventory_are_exact() -> None:
     refinance_index = phase9.BACKLOG_IDS.index("UNI-REFI-001")
-    assert phase9.BACKLOG_IDS[refinance_index - 1] == "UNI-ADR-016"
-    assert "UNI-ADR-016" in phase9.BOUNDARY_COMPLETE_IDS
+    assert phase9.BACKLOG_IDS[refinance_index - 2 : refinance_index] == (
+        "UNI-ADR-016",
+        "UNI-ADR-017",
+    )
+    assert {"UNI-ADR-016", "UNI-ADR-017"}.issubset(phase9.BOUNDARY_COMPLETE_IDS)
+    assert phase9.FACTORY_BOOTSTRAP_ADR_PATH in phase9.BOUNDARY_PATHS
     assert len(phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS) == 80
     assert "P9R-COMPAT-003" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
     assert "P9R-DON-004" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
@@ -254,6 +259,12 @@ def test_refinance_boundary_evidence_is_exact() -> None:
 @pytest.mark.parametrize(
     ("path", "target", "replacement", "message"),
     (
+        (
+            phase9.FACTORY_BOOTSTRAP_ADR_PATH,
+            "Work item: `UNI-ADR-017`",
+            "Work item: `UNI-ADR-999`",
+            "factory/account/position bootstrap semantic boundary",
+        ),
         (
             phase9.REFINANCE_ADR_PATH,
             "exact `newLoanNonce == refinanceNonce` checks",

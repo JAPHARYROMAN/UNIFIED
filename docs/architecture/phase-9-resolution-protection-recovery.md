@@ -205,6 +205,29 @@ with a new loan ID, registers the account in the existing `LoanRegistry`, and bi
 approved quote, refinance, amendment, protection, and recovery policies. It cannot
 replace or mutate an existing Phase 3 through Phase 8 registration.
 
+ADR 0022 fixes this bootstrap without changing the frozen ABI or storage. The factory
+classifies an exact stored creation replay before the current global nonce, revalidates
+the complete request, current active four-field creation-resolver tuple, stored clone
+mappings/code, and canonical protocol-version-9 registry identity, and returns the
+stored clones without another registration, nonce change, or event. It does
+not pretend to compare a historical full-bootstrap payload that the frozen layout did not
+store. A unique path reserves the
+request, processed flag, predicted mappings, and incremented nonce under rollback,
+deploys both reviewed deterministic minimal clones, initializes the account before the
+manager, has the manager authenticate the factory through that account's reciprocal
+configuration, then registers and verifies protocol version 9 and emits. The factory and
+account validate the exact synthetic-local token/runtime;
+the coordinator alone performs the typed asset-registry `active`, decimals,
+exact-balance-delta, and runtime checks.
+
+The account and manager implementation instances lock their own initializers through the
+existing `initialized` declaration while fresh clone storage begins unset. Clone creation
+uses the standard OpenZeppelin-5.6.1 EIP-1167 bytes and salt behavior through a private
+helper that does not add library errors to the frozen factory ABI. Factory conflicts use
+only `InvalidPhase9LoanConfiguration` or `Phase9LoanAlreadyExists(loanId)` according to
+ADR 0022; account and position-manager failures likewise use only their frozen typed
+errors.
+
 `Phase9LoanAccount` is the versioned debt authority dedicated to Phase 9. It exposes:
 
 - immutable loan, borrower, lender, settlement asset, policy, and collateral identity;
@@ -220,6 +243,12 @@ replace or mutate an existing Phase 3 through Phase 8 registration.
 
 Every debt-changing action increments `debt_state_version`. The quote engine and every
 resolution proposal bind that version.
+
+Every `LoanConfiguration` identifier and policy/agreement commitment is nonzero. Only the
+express bootstrap, dormant-replacement, activation-template, and operation sentinels may
+be zero. Agreement version zero remains absent: dormant initialization never writes it,
+while active bootstrap or replacement activation records the immutable agreement hash at
+the applicable nonzero terms version.
 
 ### PayoffQuoteEngine
 
@@ -603,6 +632,12 @@ The coordinator is non-upgradeable in the first slice. It has no general token r
 or arbitrary target call. Exact balance-delta checks reject fee, rebase, or callback
 behavior. Terminal exact replay returns stored results; changed reuse reverts.
 
+Factory creation replay is distinct from request replay. The factory recognizes a stored
+`creationId` before using the now-advanced factory nonce and returns only after the stored
+request, live resolver facts, clones, mappings, and registry identity agree. The external
+borrower request still rejects its consumed old-loan refinance nonce before issuing a
+second quote.
+
 ### PositionManagerV2
 
 `PositionManagerV2` owns the replacement loan's senior and junior positions and exposes
@@ -633,6 +668,14 @@ policy_hash
 Each accepted position proof binds the position ID, owner, tranche, voting weight, and
 snapshot root. One position can contribute its weight once. Transfers after the
 snapshot do not move or duplicate proposal voting power.
+
+Canonical tranche and position vectors are strictly increasing by unsigned raw
+`bytes32` ID, not by service order or tranche priority. Exact existing tuples are inert;
+changed reuse, zero/duplicate/decreasing IDs, authority failure, unknown tranche, or cap
+failure uses `InvalidPositionOperation`. Checkpoints coalesce within one block by
+overwriting the final same-block entry and otherwise append, so multi-position issuance
+has one final total-voting-power checkpoint for its block without duplicating an exact
+replay.
 
 Raw positions, tranches, and checkpoints are immutable nominal issuance history, not
 independently authoritative current receivables or votes. Every consumer resolves the
@@ -1341,9 +1384,11 @@ external `IPayoffQuoteEngineV2` ABI and exact `PayoffQuoteEngine` storage layout
 compatible while its new source hashes and independent architecture/security review are
 recorded separately.
 
-For atomic refinance, `UNI-ADR-016` accepts ADR 0021's boundary only. The later
+For atomic refinance, `UNI-ADR-016` accepts ADR 0021's boundary and `UNI-ADR-017`
+accepts ADR 0022's factory/account/position bootstrap semantics. The later
 implementation checkpoint is method-level: it may activate only the exact factory,
-account, custody, lien, coordinator, and position-manager methods listed by ADR 0021,
+account, custody, lien, coordinator, and position-manager methods listed by ADRs 0021
+and 0022,
 retains the exact freeze stub for every other mutator, and requires
 `UNI-REFI-001` plus `UNI-REFI-002` as one bundled gate. The exact additive ABI allowlist
 contains only coordinator-owned `RefinanceStateTransitioned` and

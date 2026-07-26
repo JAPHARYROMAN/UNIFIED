@@ -142,7 +142,7 @@ def test_candidate_evidence_rejects_unactivated_package() -> None:
         updater.candidate_evidence("P9-WRONG-001", _manifest(), registry=_registry())
 
 
-def test_refinance_candidate_preflight_lists_every_unfrozen_evidence_contract_before_work(
+def test_refinance_candidate_preflight_rejects_incomplete_d2_d4_closure_before_work(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     manifest = _manifest()
@@ -165,9 +165,8 @@ def test_refinance_candidate_preflight_lists_every_unfrozen_evidence_contract_be
         monkeypatch.setattr(updater, name, bomb)
 
     expected = (
-        "P9-REFI-001: implementation evidence paths are not frozen for: "
-        "Phase9LoanFactory, Phase9LoanAccount, CollateralCustodyV2, LienRegistry, "
-        "RefinanceCoordinator, PositionManagerV2"
+        "P9-REFI-001: implementation evidence closure is incomplete: "
+        "D2-D4 exact implementation evidence paths are not frozen"
     )
     with pytest.raises(SystemExit) as failure:
         updater.candidate_evidence("P9-REFI-001", manifest, registry=_registry())

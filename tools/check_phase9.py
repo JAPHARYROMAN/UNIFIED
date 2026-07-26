@@ -30,6 +30,9 @@ ROOT = Path(__file__).resolve().parents[1]
 ADR_PATH = ROOT / "adr/0019-phase-9-resolution-protection-and-recovery-boundary.md"
 ACTIVATION_ADR_PATH = ROOT / "adr/0020-phase-9-payoff-authority-and-implementation-activation.md"
 REFINANCE_ADR_PATH = ROOT / "adr/0021-phase-9-atomic-refinance-authority-and-activation.md"
+FACTORY_BOOTSTRAP_ADR_PATH = (
+    ROOT / "adr/0022-phase-9-factory-account-position-bootstrap-semantics.md"
+)
 ARCHITECTURE_PATH = ROOT / "docs/architecture/phase-9-resolution-protection-recovery.md"
 DATA_LAYOUTS_PATH = ROOT / "docs/architecture/phase-9-data-layouts.md"
 REFINANCE_ACCEPTANCE_PATH = ROOT / "docs/architecture/phase-9-refinance-acceptance.md"
@@ -119,6 +122,7 @@ BACKLOG_IDS = (
     "UNI-ADR-015",
     "UNI-PAYOFF-001",
     "UNI-ADR-016",
+    "UNI-ADR-017",
     "UNI-REFI-001",
     "UNI-REFI-002",
     "UNI-RESTRUCT-001",
@@ -141,6 +145,7 @@ BOUNDARY_COMPLETE_IDS = {
     "UNI-RESIDUAL-004",
     "UNI-ADR-015",
     "UNI-ADR-016",
+    "UNI-ADR-017",
 }
 SECURITY_REVIEW_ID = "UNI-SEC-014"
 EXIT_REVIEW_ID = "UNI-REVIEW-012"
@@ -202,6 +207,7 @@ BOUNDARY_PATHS = (
     ADR_PATH,
     ACTIVATION_ADR_PATH,
     REFINANCE_ADR_PATH,
+    FACTORY_BOOTSTRAP_ADR_PATH,
     ARCHITECTURE_PATH,
     DATA_LAYOUTS_PATH,
     REFINANCE_ACCEPTANCE_PATH,
@@ -368,6 +374,7 @@ def check_backlog_precedence(by_id: dict[str, dict[str, str]]) -> None:
     )
 
     refinance_activation_done = by_id["UNI-ADR-016"]["status"] == "DONE"
+    refinance_bootstrap_done = by_id["UNI-ADR-017"]["status"] == "DONE"
     refinance_done = [
         identifier
         for identifier in ("UNI-REFI-001", "UNI-REFI-002")
@@ -376,6 +383,11 @@ def check_backlog_precedence(by_id: dict[str, dict[str, str]]) -> None:
     require(
         refinance_activation_done or not refinance_done,
         "UNI-ADR-016 must be DONE before either Phase 9 refinance row can be DONE: "
+        + ", ".join(refinance_done),
+    )
+    require(
+        refinance_bootstrap_done or not refinance_done,
+        "UNI-ADR-017 must be DONE before either Phase 9 refinance row can be DONE: "
         + ", ".join(refinance_done),
     )
 
@@ -442,10 +454,26 @@ def require_abi_encode_formula(
 
 def check_refinance_boundary_evidence() -> None:
     refinance_adr = read(REFINANCE_ADR_PATH)
+    factory_bootstrap_adr = read(FACTORY_BOOTSTRAP_ADR_PATH)
     acceptance = read(REFINANCE_ACCEPTANCE_PATH)
     reference = read(REFINANCE_REFERENCE_EVIDENCE_PATH)
     deployment = read(REFINANCE_DEPLOYMENT_EVIDENCE_PATH)
     data_layouts = read(DATA_LAYOUTS_PATH)
+
+    require_tokens(
+        normalized(factory_bootstrap_adr),
+        (
+            "status: accepted for synthetic local specification and implementation review",
+            "work item: `uni-adr-017`",
+            "compares the complete stored and supplied `loancreationrequest` values",
+            "an exact replay must branch before `loanregistry.registerloan`",
+            "account-before-manager order is mandatory",
+            "the only settlement asset id is the direct, non-hashed mapping",
+            "every checkpoint series has at most one entry per block",
+            "this decision does not expand adr 0021's method allowlist",
+        ),
+        "Phase 9 factory/account/position bootstrap semantic boundary",
+    )
 
     actual_acceptance_ids = set(
         re.findall(r"\b(P9R-[A-Z]+-\d{3})\b", acceptance, flags=re.MULTILINE)

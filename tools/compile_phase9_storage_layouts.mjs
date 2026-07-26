@@ -91,8 +91,53 @@ export const PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = [
   "tsconfig.json",
   "uv.lock",
 ];
-const IMPLEMENTATION_EVIDENCE_PATHS = new Map([
+export const REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS = [
+  ".gitattributes",
+  ".github/workflows/foundation.yml",
+  ".mise.toml",
+  "adr/0021-phase-9-atomic-refinance-authority-and-activation.md",
+  "adr/0022-phase-9-factory-account-position-bootstrap-semantics.md",
+  "docs/architecture/phase-9-data-layouts.md",
+  "docs/architecture/phase-9-refinance-acceptance.md",
+  "docs/architecture/phase-9-refinance-deployment-evidence.md",
+  "docs/architecture/phase-9-refinance-reference-evidence.md",
+  "docs/architecture/phase-9-resolution-protection-recovery.md",
+  "protocol/foundry.toml",
+  "protocol/src/ProtocolCompilation.sol",
+  "protocol/test/Phase9InterfaceFreeze.t.sol",
+  "protocol/test/Phase9RefinanceBootstrapAcceptanceMap.sol",
+  "protocol/test/Phase9RefinanceBootstrapHarness.sol",
+  "protocol/test/Phase9RefinanceCustodyLienBootstrap.t.sol",
+  "protocol/test/Phase9RefinanceFactoryBootstrap.t.sol",
+  "protocol/test/Phase9RefinanceRequest.t.sol",
+  "protocol/test/Phase9RefinanceRequestFuzz.t.sol",
+  "protocol/test/Phase9RefinanceRequestGolden.t.sol",
+  "protocol/test/Phase9RefinanceRequestInvariants.t.sol",
+  "scripts/check-contract-sizes.py",
+  "scripts/check-foundation.ps1",
+  "scripts/prepare-foundry.ps1",
+  "tools/check_abi.py",
+  "tools/check_phase9.py",
+  "tools/check_phase9_implementation_checkpoints.py",
+  "tools/check_phase9_storage_layouts.py",
+  "tools/compile_phase9_storage_layouts.mjs",
+  "tools/tests/test_phase9_compatibility.py",
+  "tools/tests/test_phase9_implementation_checkpoints.py",
+  "tools/tests/test_phase9_warning_policy.mjs",
+  "tools/tests/test_update_phase9_implementation_checkpoint.py",
+  "tools/update_phase9_implementation_checkpoint.py",
+];
+export const IMPLEMENTATION_EVIDENCE_PATHS = new Map([
+  ["CollateralCustodyV2", REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS],
+  ["LienRegistry", REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS],
   ["PayoffQuoteEngine", PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS],
+  ["Phase9LoanAccount", REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS],
+  ["Phase9LoanFactory", REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS],
+  ["PositionManagerV2", REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS],
+  ["RefinanceCoordinator", REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS],
+]);
+export const IMPLEMENTATION_EVIDENCE_CLOSURE_LIMITATIONS = new Map([
+  ["P9-REFI-001", "D2-D4 exact implementation evidence paths are not frozen"],
 ]);
 const PAYOFF_ACTIVATED_SIGNATURES = [
   "consumeQuote(bytes32,bytes32,uint64,bytes32)",
@@ -256,7 +301,12 @@ const ACTIVATION_PACKAGES = new Map([
         ["RefinanceCoordinator", REFINANCE_COORDINATOR_ABI_ADDITIONS],
       ]),
       contracts: REFINANCE_ACTIVATED_SIGNATURES,
-      requiredBacklogIds: ["UNI-ADR-016", "UNI-REFI-001", "UNI-REFI-002"],
+      requiredBacklogIds: [
+        "UNI-ADR-016",
+        "UNI-ADR-017",
+        "UNI-REFI-001",
+        "UNI-REFI-002",
+      ],
     },
   ],
 ]);
@@ -1045,6 +1095,15 @@ function checkpointLatestRevisions(payload) {
     const definition = ACTIVATION_PACKAGES.get(checkpointPackage.checkpointId);
     if (definition === undefined || observedPackages.includes(checkpointPackage.checkpointId)) {
       throw new Error("Phase 9 checkpoint package is not uniquely activated");
+    }
+    const closureLimitation = IMPLEMENTATION_EVIDENCE_CLOSURE_LIMITATIONS.get(
+      checkpointPackage.checkpointId,
+    );
+    if (closureLimitation !== undefined) {
+      throw new Error(
+        `${checkpointPackage.checkpointId}: implementation evidence closure is incomplete: ` +
+          closureLimitation,
+      );
     }
     validatePackageAuxiliarySourceOwners(checkpointPackage.checkpointId);
     observedPackages.push(checkpointPackage.checkpointId);

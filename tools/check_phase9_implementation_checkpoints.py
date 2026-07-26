@@ -82,8 +82,56 @@ PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = (
     "tsconfig.json",
     "uv.lock",
 )
+REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS = (
+    ".gitattributes",
+    ".github/workflows/foundation.yml",
+    ".mise.toml",
+    "adr/0021-phase-9-atomic-refinance-authority-and-activation.md",
+    "adr/0022-phase-9-factory-account-position-bootstrap-semantics.md",
+    "docs/architecture/phase-9-data-layouts.md",
+    "docs/architecture/phase-9-refinance-acceptance.md",
+    "docs/architecture/phase-9-refinance-deployment-evidence.md",
+    "docs/architecture/phase-9-refinance-reference-evidence.md",
+    "docs/architecture/phase-9-resolution-protection-recovery.md",
+    "protocol/foundry.toml",
+    "protocol/src/ProtocolCompilation.sol",
+    "protocol/test/Phase9InterfaceFreeze.t.sol",
+    "protocol/test/Phase9RefinanceBootstrapAcceptanceMap.sol",
+    "protocol/test/Phase9RefinanceBootstrapHarness.sol",
+    "protocol/test/Phase9RefinanceCustodyLienBootstrap.t.sol",
+    "protocol/test/Phase9RefinanceFactoryBootstrap.t.sol",
+    "protocol/test/Phase9RefinanceRequest.t.sol",
+    "protocol/test/Phase9RefinanceRequestFuzz.t.sol",
+    "protocol/test/Phase9RefinanceRequestGolden.t.sol",
+    "protocol/test/Phase9RefinanceRequestInvariants.t.sol",
+    "scripts/check-contract-sizes.py",
+    "scripts/check-foundation.ps1",
+    "scripts/prepare-foundry.ps1",
+    "tools/check_abi.py",
+    "tools/check_phase9.py",
+    "tools/check_phase9_implementation_checkpoints.py",
+    "tools/check_phase9_storage_layouts.py",
+    "tools/compile_phase9_storage_layouts.mjs",
+    "tools/tests/test_phase9_compatibility.py",
+    "tools/tests/test_phase9_implementation_checkpoints.py",
+    "tools/tests/test_phase9_warning_policy.mjs",
+    "tools/tests/test_update_phase9_implementation_checkpoint.py",
+    "tools/update_phase9_implementation_checkpoint.py",
+)
 IMPLEMENTATION_EVIDENCE_PATHS = {
+    "CollateralCustodyV2": REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS,
+    "LienRegistry": REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS,
     "PayoffQuoteEngine": PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS,
+    "Phase9LoanAccount": REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS,
+    "Phase9LoanFactory": REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS,
+    "PositionManagerV2": REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS,
+    "RefinanceCoordinator": REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS,
+}
+
+# D1 has exact reviewed artifact names. D2-D4 currently have stage scopes only, so
+# emitting the refinance package remains forbidden until those exact paths are added.
+IMPLEMENTATION_EVIDENCE_CLOSURE_LIMITATIONS = {
+    "P9-REFI-001": "D2-D4 exact implementation evidence paths are not frozen",
 }
 
 PAYOFF_ACTIVATED_SIGNATURES = (
@@ -193,7 +241,12 @@ ACTIVATION_PACKAGES = {
             "LienRegistry": LIEN_REGISTRY_ABI_ADDITIONS,
             "RefinanceCoordinator": REFINANCE_COORDINATOR_ABI_ADDITIONS,
         },
-        "requiredBacklogIds": ("UNI-ADR-016", "UNI-REFI-001", "UNI-REFI-002"),
+        "requiredBacklogIds": (
+            "UNI-ADR-016",
+            "UNI-ADR-017",
+            "UNI-REFI-001",
+            "UNI-REFI-002",
+        ),
         "contracts": REFINANCE_ACTIVATED_SIGNATURES,
     },
 }
@@ -1304,6 +1357,13 @@ def validate_checkpoints(
             raise SystemExit(f"Phase 9 checkpoint package is duplicated: {checkpoint_id}")
         observed_packages.append(checkpoint_id)
         package_definition = ACTIVATION_PACKAGES[checkpoint_id]
+
+        closure_limitation = IMPLEMENTATION_EVIDENCE_CLOSURE_LIMITATIONS.get(checkpoint_id)
+        if closure_limitation is not None:
+            raise SystemExit(
+                f"{checkpoint_id}: implementation evidence closure is incomplete: "
+                f"{closure_limitation}"
+            )
 
         if (
             checkpoint_id == "P9-PAYOFF-001"

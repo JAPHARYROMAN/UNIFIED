@@ -9,6 +9,7 @@ from typing import Any, cast
 from check_phase9_implementation_checkpoints import (
     ACTIVATION_PACKAGES,
     CHECKPOINT_PATH,
+    IMPLEMENTATION_EVIDENCE_CLOSURE_LIMITATIONS,
     IMPLEMENTATION_EVIDENCE_PATHS,
     ROOT,
     additive_abi_payload,
@@ -51,6 +52,12 @@ def require_frozen_implementation_evidence_paths(checkpoint_id: str) -> None:
         raise SystemExit(
             f"{checkpoint_id}: implementation evidence paths are not frozen for: "
             + ", ".join(unfrozen)
+        )
+    closure_limitation = IMPLEMENTATION_EVIDENCE_CLOSURE_LIMITATIONS.get(checkpoint_id)
+    if closure_limitation is not None:
+        raise SystemExit(
+            f"{checkpoint_id}: implementation evidence closure is incomplete: "
+            f"{closure_limitation}"
         )
 
 

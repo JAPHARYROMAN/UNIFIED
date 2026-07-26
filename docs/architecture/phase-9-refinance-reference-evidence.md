@@ -6,9 +6,9 @@ Date: 2026-07-26
 
 ## Purpose
 
-This document fixes the independent evidence model required by ADR 0021 and the
-`P9R-*` acceptance matrix. It does not claim that a Solidity implementation or a
-golden-output bundle exists. The first accepted implementation checkpoint must
+This document fixes the independent evidence model required by ADR 0021, ADR 0022,
+and the `P9R-*` acceptance matrix. It does not claim that a Solidity implementation or
+a golden-output bundle exists. The first accepted implementation checkpoint must
 publish the calculated outputs for these exact inputs from Solidity, Go,
 TypeScript, and Python and prove byte equality.
 
@@ -373,13 +373,34 @@ must not treat those correlation hashes as contract authority or processed stora
 on-chain exact replay/conflict derives from initialization and exact record IDs/tuples.
 
 The factory-global loan nonce starts at one, advances only on successful unique
-creation, and cannot wrap. The replacement new-loan nonce is not another stored
-counter; it exactly equals the low-63-bit per-old-loan `refinance_nonce` governed by
-the tagged coordinator lock. The local-bootstrap tuple fixes `source_old_loan_id = 0`,
-`refinance_id_context = 0`, and `new_loan_nonce = 0`; the replacement tuple uses
-the source old-loan ID, the already-derived nonzero refinance-ID context, and the
-equal nonzero refinance/new-loan nonce. Exact creation replay returns the stored
-account/manager; changed reuse conflicts.
+creation, rejects `type(uint64).max`, and cannot wrap. The replacement new-loan nonce
+is not another stored counter; it exactly equals the low-63-bit per-old-loan
+`refinance_nonce` governed by the tagged coordinator lock. The local-bootstrap tuple
+fixes `source_old_loan_id = 0`, `refinance_id_context = 0`, and
+`new_loan_nonce = 0`; the replacement tuple uses the source old-loan ID, the
+already-derived nonzero refinance-ID context, and the equal nonzero
+refinance/new-loan nonce.
+
+A processed `creationId` is classified before the factory reads its current global
+nonce or tests fresh-loan absence. Exact replay compares the complete stored and
+supplied request, re-resolves the active four-field `resolveLoanCreation` tuple, proves
+the stored mode-specific facts and coordinator, verifies both stored clone mappings,
+code, and canonical protocol-version-9 registry identity, and returns the stored
+account/manager without a write, clone, initialization, registration, nonce change, or
+event. It never recomputes the creation ID with the current factory nonce:
+the original value is not separately recoverable from the frozen storage after later
+creations. First-execution validation, the stored request and creation commitment, and
+the emitted `loanNonce` are the historical evidence.
+
+For bootstrap replay, the factory revalidates the creation resolver's complete
+configuration, mode, and deterministic bootstrap ID. It does not claim to byte-compare
+the historical full `resolveBootstrap` payload because no such initial-payload hash is
+stored and live debt may legitimately change later. Fresh bootstrap still validates
+the complete active debt, tranche, position, custody, and lien payload before effects,
+and ADR 0021 requires that resolver record to be immutable. A changed request or
+creation-resolver fact under the processed identity reverts
+`InvalidPhase9LoanConfiguration`; a different creation identity colliding with an
+existing canonical loan reverts `Phase9LoanAlreadyExists(loanId)`.
 
 No new-loan, clone-salt, or bootstrap identity includes a quote/refinance ID.
 `creation_id` is computed only after the quote/refinance ID and includes the frozen
@@ -387,11 +408,28 @@ No new-loan, clone-salt, or bootstrap identity includes a quote/refinance ID.
 the already-derived refinance ID for replacement. The dependency order is therefore
 acyclic and two changed replacement contexts cannot share one creation identity.
 
-Clone-address evidence also includes the standard minimal-proxy creation-code
-hash, factory address, salt, predicted address, actual address, implementation
-address, implementation runtime code hash, clone runtime code hash, and successful
-single initialization. The top-level refinance deployment does not use these
-salts and is not `CREATE2`.
+Clone-address evidence also includes the standard OpenZeppelin-compatible EIP-1167
+minimal-proxy creation-code hash, factory address, salt, predicted address, actual
+address, implementation address, implementation runtime code hash, clone runtime code
+hash, and successful single initialization. A literal
+`Clones.cloneDeterministic` path is invalid when its `FailedDeployment` or
+`InsufficientBalance` errors enter the frozen factory ABI. Private prediction and
+`CREATE2` helpers instead use byte-for-byte-equivalent EIP-1167 creation/runtime bytes,
+validate implementation and clone code, and map deployment failure to
+`InvalidPhase9LoanConfiguration`. The top-level refinance deployment does not use
+these salts and is not `CREATE2`.
+
+The account and position-manager implementation instances set their existing final
+`_initialized` storage flag with the declaration initializer `= true`; fresh clone
+storage remains zero. No explicit no-argument constructor is added to either frozen
+ABI. After all validation, the factory reserves its exact request, processed marker,
+predicted mappings, and advanced nonce before clone deployment or
+initialization/registry effects. It deploys both clones, initializes the account first,
+initializes the manager second, registers and verifies the account once, and emits
+once. Failure at any step reverts every reservation, clone, initialization, registry,
+nonce, and event effect. The manager authenticates the factory without a new slot by
+reading the already-initialized account configuration and matching factory, loan ID,
+manager, and settlement token.
 
 The creation-policy reference model calls exact
 `resolveLoanCreation(policySetHash, loanId)` and accepts only mode
@@ -399,9 +437,26 @@ The creation-policy reference model calls exact
 `REFINANCE_REPLACEMENT=2` with zero bootstrap ID. Bootstrap also calls exact
 `resolveBootstrap(bootstrapId)`. The coordinator, not a forwarded borrower or
 `tx.origin`, is the factory caller inside `requestRefinance`; the resolver supplies
-the borrower and complete configuration. Bootstrap initializes the old account
-directly `ACTIVE/CURRENT`, then the coordinator installs all old rights/security
-before quote issuance. Each missing custody record first calls exact
+the borrower and complete configuration. Every configuration requires nonzero loan,
+agreement, policy-set, amendment-policy, protection-policy, recovery-policy, and
+settlement-asset hashes, a nonzero borrower, and nonzero deployed contract
+dependencies. None of the policy hashes is optional. The settlement asset ID is exact
+direct-mapped `asset:phase9:p9unit` from the normalization section, never the test-only
+hash of `SYNTHETIC_PHASE9_ASSET`; factory, account, manager, creation source, and
+coordinator agree on it and on the exact local-token runtime.
+
+The factory has no asset-source slot and neither adds one nor repurposes a policy
+registry. The coordinator alone calls its frozen `_assetRegistry` and validates the
+active, exact-balance-delta, six-decimal, address, resolver-runtime-hash, and deployed
+runtime tuple. Factory and account independently enforce chain `31337`, the exact asset
+ID, active creation-configuration equality, token code, and the exact
+`Phase9LocalSyntheticToken` runtime. The manager enforces account-token equality and
+that same runtime.
+
+Bootstrap initializes the old account directly `ACTIVE/CURRENT` with a nonzero terms
+version, writes the configuration agreement hash only at that version, then the
+coordinator installs all old rights/security before quote issuance. Each missing
+custody record first calls exact
 `resolveCustodyAsset(assetId)` through the custody contract's constructor-bound asset
 source. The coordinator recomputes the nonzero operation ID; custody authenticates
 that coordinator, reconstructs `CustodyRecord.identityHash` from the passed operation
@@ -410,10 +465,26 @@ processed operation/`HELD`/checked total before interaction, and proves exact
 borrower-to-custody `transferFrom` balance deltas. Only afterward may the lien exist.
 Exact same-operation/same-record replay proves attributable custody/aggregate/lien
 state without another transfer; changed-record or alternate-operation reuse conflicts.
-The original position owner and sole canonical payoff
-beneficiary equal `oldLender`; tranche/position claims, claim-bearing debt, and the
-quote route match exactly, with no alternate beneficiary. Replacement initializes only `CREATED/NONE` zero debt and no
-positions/custody/lien, bound to the one derived refinance.
+The original position owner and sole canonical payoff beneficiary equal `oldLender`;
+tranche/position claims, claim-bearing debt, and the quote route match exactly, with no
+alternate beneficiary. Replacement initializes only `CREATED/NONE` zero debt and no
+positions/custody/lien, bound to the one derived refinance. It leaves
+`agreementVersionHash(0) == 0`; later activation writes the agreement hash only at the
+nonzero effective terms version.
+
+Tranche, position, collateral, custody, and lien vectors are strictly increasing by
+unsigned raw `bytes32` identity, equivalent to
+`uint256(currentId) > uint256(previousId)`. Tranches compare `trancheId`; positions
+compare `positionId`; tranche `priority` is not the ordering comparator. The manager
+classifies an existing ID before append ordering: exact full-record replay is inert,
+while changed reuse and all activated manager-method failures revert
+`InvalidPositionOperation`.
+
+Every position checkpoint series has at most one entry per block. Writers reject a
+block number above `type(uint64).max`, overwrite the last entry at the current block,
+and append otherwise. Owner checkpoints use only `owner`; voting-power, claim, and
+total-vote checkpoints use only `value`. Multiple same-block issuances coalesce the
+cumulative total-vote entry, and exact issuance replay writes no checkpoint or event.
 
 ## Operation identities
 
@@ -791,6 +862,19 @@ commitments/positions, stale quote/debt/policy, dormant-clone reuse after every
 terminal branch, malicious raw `ACTIVE` old position use against every joined-state
 consumer, donation before each value operation, and injected failure at every request
 and execution step.
+
+The same bundle also includes factory replay after later successful creations without
+current-nonce reconstruction; changed request and creation-resolver reuse; an alternate
+creation ID for the same loan; global factory nonce start, advance, exhaustion, and
+rollback; direct implementation initialization; account-before-manager authentication;
+failure before and after each clone/initialization/registry step; exact
+`agreementVersionHash(0) == 0`; every required configuration hash changed to zero;
+direct-mapped settlement asset versus hashed/substituted asset IDs; wrong local-token
+runtime; raw-ID duplicate/decreasing order with independent tranche-priority changes;
+exact and changed tranche/position replay; same-block checkpoint coalescing; and
+`block.number > type(uint64).max`. ABI negatives prove that no no-argument constructor,
+OpenZeppelin deployment error, new selector, event, error, tuple field, base, or storage
+field appears.
 
 ## Cross-language acceptance
 
