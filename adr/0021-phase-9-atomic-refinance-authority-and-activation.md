@@ -182,9 +182,11 @@ terminalEvidenceHash == 0x00..00
 ```
 
 The Protobuf `request_digest` is canonical empty bytes. It does not carry an expected
-refinance ID. The caller supplies proposal facts, `newLoanId`, the nonzero new-loan
-nonce, and the corroborative predicted manager; the coordinator derives the quote ID,
-refinance ID, request operation ID, and every stored state/result fact.
+refinance ID. The caller supplies proposal facts, `newLoanId`, and the corroborative
+predicted manager. `newLoanNonce` must equal the same nonzero, high-bit-clear,
+less-than-`NONCE_MASK` `refinanceNonce`; it is not a separately stored counter. The
+coordinator derives the quote ID, refinance ID, request operation ID, and every stored
+state/result fact.
 
 `recordFundingCommitment` accepts a calldata commitment only when:
 
@@ -223,6 +225,23 @@ The emergency controller may stop creation of new requests or commitments. It ma
 not change an accepted record, consume a quote, move a lien, alter debt, redirect a
 recipient, sweep tokens, block a valid cancellation/expiry transition, or block an
 already-valid refund.
+
+The two compile-time private capability IDs are exact:
+
+```text
+CAPABILITY_PHASE9_REFINANCE_REQUEST =
+  keccak256("CAPABILITY_PHASE9_REFINANCE_REQUEST")
+CAPABILITY_PHASE9_REFINANCE_FUNDING =
+  keccak256("CAPABILITY_PHASE9_REFINANCE_FUNDING")
+```
+
+After the local old-loan lock is acquired and before any resolver/bootstrap/quote
+effect, request acceptance calls `emergencyState` with the request capability and
+reverts the complete transaction when active. Funding first classifies an existing
+commitment ID: exact replay returns inert and changed reuse conflicts without an
+emergency lookup. Only a first new commitment checks the funding capability before
+allowance, transfer, or storage effects. Execute, cancel, expiry, and refund do not
+consult either capability. The constants add no public getter or selector.
 
 ### 6. Canonical loan, quote, and replacement sources
 
@@ -285,7 +304,7 @@ recognized before lock-owner validation so release does not break idempotent rep
 The exact acyclic `requestRefinance` sequence is:
 
 1. perform only pure calldata normalization, derived-zero checks, local-chain syntax,
-   and nonzero old-loan-key validation;
+   nonzero old-loan-key validation, and exact `newLoanNonce == refinanceNonce` checks;
 2. require the old-loan lock to be unlocked, match the high-bit-clear next nonce, and
    store its active encoding before any external call, so concurrent/same-quote,
    reentrant, and exact-repeat requests fail before another quote can issue;
@@ -507,7 +526,7 @@ custody_identity_hash = keccak256(abi.encode(
   chainid,
   collateral_custody,
   asset_registry,
-  bootstrap_id,
+  bootstrap_custody_operation_id,
   collateral_id,
   asset_id,
   token,
@@ -519,27 +538,34 @@ custody_identity_hash = keccak256(abi.encode(
 ))
 ```
 
-`CollateralCustodyV2` calls `resolveCustodyAsset(asset_id)` through its
-constructor-bound asset source, requires token/runtime/active/exact-delta agreement,
-independently reads the deployed code hash, and reconstructs this identity. This is
-required to equal `CustodyRecord.identityHash` before transfer, storage, or replay
-acceptance. This is
+The coordinator ignores any alternate operation proposal and recomputes the exact
+nonzero `bootstrap_custody_operation_id` from Section 11 before calling custody.
+`CollateralCustodyV2` first authenticates `msg.sender` as the coordinator resolved
+from its immutable lien registry, requires that nonzero passed operation ID, calls
+`resolveCustodyAsset(asset_id)` through its constructor-bound asset source, requires
+token/runtime/active/exact-delta agreement, independently reads the deployed code
+hash, and reconstructs this identity from the operation ID and record/resolver facts.
+This is required to equal `CustodyRecord.identityHash` before transfer or first state
+effects. This is
 separate from Section 7's settlement resolver and permits a distinct synthetic
 collateral token without treating it as the refinance settlement asset. The identity commits each collateral
 ID to an active chain-31337 exact-balance synthetic token/runtime. For a missing record,
 `recordCustody` uses the canonical borrower's pre-approved allowance to
-`transferFrom` the exact quantity into `CollateralCustodyV2`, verifies exact borrower
-and custody before/after balance deltas, then stores `HELD` and increases
-`totalCustody(assetId)` with checked arithmetic. Only after that successful custody
-effect may the coordinator register the lien. Fee, rebase, hook/callback, wrong code,
+`transferFrom` the exact quantity into `CollateralCustodyV2`. After all checks, it
+marks the operation processed, stores `HELD`, and increases `totalCustody(assetId)`
+with checked arithmetic before the external transfer; it then verifies exact borrower
+and custody before/after balance deltas. Any transfer or delta failure rolls back those
+effects. Only after that successful custody effect may the coordinator register the
+lien. Fee, rebase, hook/callback, wrong code,
 wrong asset/token, insufficient allowance/balance, delta mismatch, overflow, or
 reentrancy reverts the quote, clones, and every bootstrap effect.
 
-Exact existing-record replay verifies record identity, code/asset binding, attributed
-holdings, aggregate `totalCustody`, and active lien without a second transfer or event.
-Unattributed direct surplus never substitutes for the record's exact custody. All
-bootstrap loops are bounded by the 16-collateral cap and guarded before the first
-external token call.
+Exact same-operation/same-record replay verifies record identity, code/asset binding,
+attributed holdings, aggregate `totalCustody`, and active lien without a second
+transfer or event. Reuse of an operation ID with a changed record, or use of an
+alternate operation ID for an existing collateral record, conflicts. Unattributed
+direct surplus never substitutes for the record's exact custody. All bootstrap loops
+are bounded by the 16-collateral cap and guarded before the first external token call.
 
 The collateral-set hash is exactly the ADR 0019/data-layout ordered commitment over
 each `(collateralId, assetId, quantity, vault, borrower, priorLienVersion)` tuple.
@@ -659,13 +685,16 @@ request-internal replacement call. This is acyclic because new loan/predicted cl
 then quote/refinance ID, then creation ID are derived in that order. The factory still
 independently resolves every creation fact.
 
-The factory loan nonce starts at one, advances only on successful creation, cannot
-wrap, and is bound to the creation record. The replacement new-loan nonce likewise
-starts at one, advances only on success, and cannot wrap. Local bootstrap instead
-uses `source_old_loan_id = 0`, `refinance_id_context = 0`, and
+The factory-global loan nonce starts at one, advances once only on successful unique
+creation, cannot wrap, and is bound to the creation record. There is no separate
+replacement new-loan counter: the coordinator requires
+`new_loan_nonce == refinance_nonce`, carries that low-63-bit per-old-loan value into
+the stored refinance and replacement creation request, and advances it only through
+the tagged refinance-lock rules in Section 6. Local bootstrap is the explicit
+exception and uses `source_old_loan_id = 0`, `refinance_id_context = 0`, and
 `new_loan_nonce = 0`; replacement creation uses the source old-loan ID, the derived
-nonzero refinance-ID context, and its nonzero new-loan nonce. Exact creation replay
-returns the stored account/manager; changed reuse conflicts.
+nonzero refinance-ID context, and the equal nonzero refinance/new-loan nonce. Exact
+creation replay returns the stored account/manager; changed reuse conflicts.
 
 The unique bootstrap identity and request-time operation identities are:
 
@@ -710,6 +739,14 @@ bootstrap_lien_operation_id = keccak256(abi.encode(
   lien_registry, collateral_id, lien_version
 ))
 ```
+
+Only `bootstrap_custody_operation_id` is carried by a frozen selector and is therefore
+contract-authoritative replay and identity input. The activation, tranche, position,
+and lien operation IDs are deterministic reference/evidence correlation hashes only:
+their frozen selectors carry no operation-ID argument, so an implementation must not
+pretend to receive, invert, store as processed, authorize with, or reject by those
+hashes. Account/manager/lien idempotency and conflicts instead use their initialized
+flag and exact canonical tranche, position, collateral, and full-record identities.
 
 Inside the canonical borrower's authenticated `requestRefinance` transaction, only
 the registered coordinator may call `createLoan` for the one `LOCAL_BOOTSTRAP`

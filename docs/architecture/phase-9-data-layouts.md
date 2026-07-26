@@ -320,9 +320,12 @@ predicted manager are quote/refinance-independent; replacement creation happens 
 after derivation and no replacement may preexist.
 
 `new_loan_nonce` is immutable, nonzero, stored in `resolution.refinance_requests`, and
-bound by `RefinanceRequest.new_loan_nonce`. The new-loan preimage never includes
-`refinance_id`; `refinance_id` may therefore bind the already-derived `new_loan_id`
-without a circular identity dependency.
+bound by `RefinanceRequest.new_loan_nonce`. It is not a separate counter: it must equal
+the low-63-bit per-old-loan `refinance_nonce` governed by the coordinator's tagged
+single-active lock. Local bootstrap alone uses zero. The factory-global creation nonce
+is independent. The new-loan preimage never includes `refinance_id`; `refinance_id`
+may therefore bind the already-derived `new_loan_id` without a circular identity
+dependency.
 
 ### Restructuring identities
 
@@ -780,14 +783,20 @@ mutable:
 ```
 
 For local bootstrap, `recordCustody` is coordinator-only through the immutable lien
-registry and is a value-bearing operation: it calls the constructor-bound asset
-source's exact `resolveCustodyAsset(bytes32)` tuple for the exact-balance chain-31337
-synthetic collateral token/runtime, matches the bootstrap-bound custody identity, pulls the exact quantity from the pre-approved
-canonical borrower, verifies both balance deltas, then records `HELD` and checked
-`total exact custody`. Only afterward may the coordinator register the lien. Exact
-existing replay validates record plus attributable holdings/aggregate without a second
-transfer; allowance, balance, token, code, fee/rebase/callback, delta, overflow, or
-reentrancy failure reverts the complete request.
+registry and is a value-bearing operation. It first authenticates `msg.sender` as the
+coordinator resolved from that registry, rejects a zero custody operation ID, calls the
+constructor-bound asset source's exact `resolveCustodyAsset(bytes32)` tuple for the
+exact-balance chain-31337 synthetic collateral token/runtime, and reconstructs the
+bootstrap-bound custody identity from the passed operation ID and canonical facts.
+After all checks, it marks the operation processed, records `HELD`, and increases
+checked `total exact custody` before calling `transferFrom`; it then verifies exact
+borrower and custody balance deltas. Any transfer or delta failure rolls back those
+effects. Only afterward may the coordinator register the lien. Exact
+same-operation/same-record replay validates record plus attributable
+holdings/aggregate without a second transfer; changed-record reuse of that operation
+ID or an alternate operation ID for existing collateral conflicts. Allowance, balance,
+token, code, fee/rebase/callback, delta, overflow, or reentrancy failure reverts the
+complete request.
 
 `LienRegistry` stores:
 

@@ -422,11 +422,30 @@ def require_tokens(text: str, tokens: Iterable[str], label: str) -> None:
     require(not missing, f"{label} is missing: {', '.join(missing)}")
 
 
+def require_abi_encode_formula(
+    text: str,
+    name: str,
+    expected_body: str,
+    label: str,
+) -> None:
+    matches = re.findall(
+        rf"\b{re.escape(name)}\s*=\s*keccak256\(abi\.encode\((.*?)\)\)",
+        text,
+        flags=re.DOTALL,
+    )
+    require(len(matches) == 1, f"{label} must declare exactly one {name} formula")
+    require(
+        normalized(matches[0]) == normalized(expected_body),
+        f"{label} {name} formula drifted",
+    )
+
+
 def check_refinance_boundary_evidence() -> None:
     refinance_adr = read(REFINANCE_ADR_PATH)
     acceptance = read(REFINANCE_ACCEPTANCE_PATH)
     reference = read(REFINANCE_REFERENCE_EVIDENCE_PATH)
     deployment = read(REFINANCE_DEPLOYMENT_EVIDENCE_PATH)
+    data_layouts = read(DATA_LAYOUTS_PATH)
 
     actual_acceptance_ids = set(
         re.findall(r"\b(P9R-[A-Z]+-\d{3})\b", acceptance, flags=re.MULTILINE)
@@ -442,6 +461,68 @@ def check_refinance_boundary_evidence() -> None:
         "Phase 9 refinance acceptance-ID inventory must contain exactly 80 IDs",
     )
 
+    custody_operation_body = """
+      "UNIFIED_PHASE9_BOOTSTRAP_CUSTODY_V1",
+      chainid,
+      refinance_coordinator,
+      bootstrap_id,
+      old_loan_id,
+      collateral_custody,
+      collateral_id
+    """
+    require_abi_encode_formula(
+        refinance_adr,
+        "bootstrap_custody_operation_id",
+        custody_operation_body,
+        "Phase 9 atomic-refinance semantic boundary",
+    )
+    require_abi_encode_formula(
+        reference,
+        "bootstrap_custody_operation_id",
+        custody_operation_body,
+        "Phase 9 refinance reference evidence",
+    )
+    require_abi_encode_formula(
+        refinance_adr,
+        "custody_identity_hash",
+        """
+          "UNIFIED_PHASE9_BOOTSTRAP_CUSTODY_IDENTITY_V1",
+          chainid,
+          collateral_custody,
+          asset_registry,
+          bootstrap_custody_operation_id,
+          collateral_id,
+          asset_id,
+          token,
+          token_runtime_code_hash,
+          token_decimals,
+          true, // exactBalanceDelta
+          borrower,
+          quantity
+        """,
+        "Phase 9 atomic-refinance semantic boundary",
+    )
+    require_abi_encode_formula(
+        reference,
+        "custody_identity_hash",
+        """
+          "UNIFIED_PHASE9_BOOTSTRAP_CUSTODY_IDENTITY_V1",
+          chainid,
+          collateral_custody,
+          asset_registry,
+          bootstrap_custody_operation_id,
+          collateral_id,
+          asset_id,
+          collateral_token,
+          collateral_token_runtime_code_hash,
+          collateral_token_decimals,
+          true, // exactBalanceDelta
+          borrower,
+          quantity
+        """,
+        "Phase 9 refinance reference evidence",
+    )
+
     require_tokens(
         normalized(refinance_adr),
         (
@@ -449,6 +530,33 @@ def check_refinance_boundary_evidence() -> None:
             "ACCEPTED --first successful funding commitment--> FUNDING_ESCROWED",
             "FUNDING_ESCROWED --additional partial funding--> FUNDING_ESCROWED",
             "FUNDING_ESCROWED --borrower cancellation or expiry before execution--> REFUNDABLE",
+            "exact `newLoanNonce == refinanceNonce` checks",
+            "it is not a separately stored counter",
+            'CAPABILITY_PHASE9_REFINANCE_REQUEST = '
+            'keccak256("CAPABILITY_PHASE9_REFINANCE_REQUEST")',
+            'CAPABILITY_PHASE9_REFINANCE_FUNDING = '
+            'keccak256("CAPABILITY_PHASE9_REFINANCE_FUNDING")',
+            "After the local old-loan lock is acquired and before any "
+            "resolver/bootstrap/quote effect, request acceptance calls `emergencyState` "
+            "with the request capability",
+            "Funding first classifies an existing commitment ID: exact replay returns inert "
+            "and changed reuse conflicts without an emergency lookup. Only a first new "
+            "commitment checks the funding capability",
+            "Execute, cancel, expiry, and refund do not consult either capability",
+            "authenticates `msg.sender` as the coordinator resolved from its immutable "
+            "lien registry",
+            'custody_identity_hash = keccak256(abi.encode( '
+            '"UNIFIED_PHASE9_BOOTSTRAP_CUSTODY_IDENTITY_V1", chainid, '
+            "collateral_custody, asset_registry, bootstrap_custody_operation_id, "
+            "collateral_id",
+            "reconstructs this identity from the operation ID and record/resolver facts",
+            "Reuse of an operation ID with a changed record, or use of an alternate "
+            "operation ID for an existing collateral record, conflicts",
+            "Only `bootstrap_custody_operation_id` is carried by a frozen selector",
+            "activation, tranche, position, and lien operation IDs are deterministic "
+            "reference/evidence correlation hashes only",
+            "must not pretend to receive, invert, store as processed, authorize with, or "
+            "reject by those hashes",
             "newPrincipal == fundingAmount",
             "recognized escrow liability == escrowedUnits(refinanceId)",
             "An unsolicited surplus",
@@ -472,6 +580,15 @@ def check_refinance_boundary_evidence() -> None:
             "unrelated token surplus is excluded",
             "newPrincipal == fundingAmount",
             "Additional partial funding remains",
+            "including operation-ID-bound custody identity and equal refinance/new-loan nonce",
+            "only custody's passed operation ID is contract-authoritative while "
+            "activation/tranche/position/lien operation hashes are correlation evidence",
+            "Only the matching capability stops a new request or first commitment",
+            "exact funding replay remains inert, changed reuse still conflicts",
+            "neither pause can alter accepted facts, redirect value, sweep donations, or "
+            "block execute/cancel/expiry/refund",
+            "Coordinator recomputes the operation ID and custody binds it into identity",
+            "exact same-operation/record replay is inert, changed/alternate reuse conflicts",
             "REFUNDABLE",
             "chain-31337",
             "synthetic-local",
@@ -484,10 +601,47 @@ def check_refinance_boundary_evidence() -> None:
         (
             "new_position_manager",
             "exactly 20 bytes",
+            "replacement new-loan nonce is not another stored counter",
+            "it exactly equals the low-63-bit per-old-loan `refinance_nonce`",
+            'CAPABILITY_PHASE9_REFINANCE_REQUEST = '
+            'keccak256("CAPABILITY_PHASE9_REFINANCE_REQUEST")',
+            'CAPABILITY_PHASE9_REFINANCE_FUNDING = '
+            'keccak256("CAPABILITY_PHASE9_REFINANCE_FUNDING")',
+            "custody authenticates that coordinator, reconstructs "
+            "`CustodyRecord.identityHash` from the passed operation ID",
+            'custody_identity_hash = keccak256(abi.encode( '
+            '"UNIFIED_PHASE9_BOOTSTRAP_CUSTODY_IDENTITY_V1", chainid, '
+            "collateral_custody, asset_registry, bootstrap_custody_operation_id, "
+            "collateral_id",
+            "Exact same-operation/same-record replay proves attributable "
+            "custody/aggregate/lien state without another transfer",
+            "changed-record or alternate-operation reuse conflicts",
+            "Only `bootstrap_custody_operation_id` is passed through a frozen contract "
+            "selector and acts as an on-chain replay/identity key",
+            "activation, tranche, position, and lien operation IDs are deterministic "
+            "model/event-correlation values only",
+            "must not treat those correlation hashes as contract authority or processed "
+            "storage",
             "attributed_escrow_*` is scoped to the refinance",
             "Unsolicited surplus is excluded from every liability",
         ),
         "Phase 9 refinance reference evidence",
+    )
+    require_tokens(
+        normalized(data_layouts),
+        (
+            "authenticates `msg.sender` as the coordinator resolved from that registry",
+            "reconstructs the bootstrap-bound custody identity from the passed operation "
+            "ID and canonical facts",
+            "marks the operation processed, records `HELD`, and increases checked `total "
+            "exact custody` before calling `transferFrom`",
+            "Any transfer or delta failure rolls back those effects",
+            "Exact same-operation/same-record replay validates record plus attributable "
+            "holdings/aggregate without a second transfer",
+            "changed-record reuse of that operation ID or an alternate operation ID for "
+            "existing collateral conflicts",
+        ),
+        "Phase 9 refinance data-layout custody semantics",
     )
     require_tokens(
         normalized(deployment),
