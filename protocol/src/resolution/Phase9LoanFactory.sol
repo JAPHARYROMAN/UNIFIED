@@ -123,7 +123,7 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
         positionManager_ = _positionManagers[stored.configuration.loanId];
         if (
             keccak256(abi.encode(resolution.configuration))
-                != keccak256(abi.encode(stored.configuration))
+                    != keccak256(abi.encode(stored.configuration))
                 || !_validMode(stored, resolution.creationMode, resolution.bootstrapId)
                 || !_validConfiguration(stored.configuration, positionManager_, true)
                 || msg.sender != resolution.configuration.refinanceCoordinator
@@ -148,7 +148,7 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
             _resolveCreation(request.configuration.policySetHash, request.configuration.loanId);
         if (
             keccak256(abi.encode(resolution.configuration))
-                != keccak256(abi.encode(request.configuration))
+                    != keccak256(abi.encode(request.configuration))
                 || msg.sender != resolution.configuration.refinanceCoordinator
         ) {
             revert InvalidPhase9LoanConfiguration();
@@ -161,8 +161,7 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
             abi.encode("UNIFIED_PHASE9_POSITION_MANAGER_CLONE_V1", request.configuration.loanId)
         );
         loanAccount_ = _predictDeterministicAddress(_loanAccountImplementation, accountSalt);
-        positionManager_ =
-            _predictDeterministicAddress(_positionManagerImplementation, managerSalt);
+        positionManager_ = _predictDeterministicAddress(_positionManagerImplementation, managerSalt);
 
         if (
             !_validMode(request, resolution.creationMode, resolution.bootstrapId)
@@ -214,8 +213,7 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
         _nextLoanNonce = loanNonce + 1;
 
         address deployedAccount = _cloneDeterministic(_loanAccountImplementation, accountSalt);
-        address deployedManager =
-            _cloneDeterministic(_positionManagerImplementation, managerSalt);
+        address deployedManager = _cloneDeterministic(_positionManagerImplementation, managerSalt);
         if (
             deployedAccount != loanAccount_ || deployedManager != positionManager_
                 || !_validCloneRuntime(deployedAccount, _loanAccountImplementation)
@@ -228,9 +226,10 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
         catch {
             revert InvalidPhase9LoanConfiguration();
         }
-        try IPositionManagerV2(deployedManager).initialize(
-            request.configuration.loanId, deployedAccount, request.configuration.settlementToken
-        ) { }
+        try IPositionManagerV2(deployedManager)
+            .initialize(
+                request.configuration.loanId, deployedAccount, request.configuration.settlementToken
+            ) { }
         catch {
             revert InvalidPhase9LoanConfiguration();
         }
@@ -264,9 +263,8 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
         view
         returns (CreationResolution memory resolution)
     {
-        try IPhase9RefinancePolicySource(_refinancePolicyRegistry).resolveLoanCreation(
-            policySetHash, loanId
-        ) returns (
+        try IPhase9RefinancePolicySource(_refinancePolicyRegistry)
+            .resolveLoanCreation(policySetHash, loanId) returns (
             Phase9Types.LoanConfiguration memory configuration_,
             uint8 creationMode,
             bytes32 bootstrapId,
@@ -274,9 +272,7 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
         ) {
             if (!active) revert InvalidPhase9LoanConfiguration();
             resolution = CreationResolution({
-                configuration: configuration_,
-                creationMode: creationMode,
-                bootstrapId: bootstrapId
+                configuration: configuration_, creationMode: creationMode, bootstrapId: bootstrapId
             });
         } catch {
             revert InvalidPhase9LoanConfiguration();
@@ -287,8 +283,8 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
         bytes32 bootstrapId,
         Phase9Types.LoanConfiguration memory configuration_
     ) private view returns (Phase9Types.DebtState memory initialDebt) {
-        try IPhase9RefinancePolicySource(_refinancePolicyRegistry).resolveBootstrap(bootstrapId)
-        returns (
+        try IPhase9RefinancePolicySource(_refinancePolicyRegistry)
+            .resolveBootstrap(bootstrapId) returns (
             bytes32 policySetHash,
             bytes32 loanId,
             Phase9Types.DebtState memory debt,
@@ -333,25 +329,27 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
                 && request.newLoanNonce == 0 && bootstrapId != bytes32(0)
                 && bootstrapId == expectedBootstrapId;
         }
-        if (creationMode != 2 || bootstrapId != bytes32(0) || request.oldLoanId == bytes32(0)
-            || request.refinanceId == bytes32(0) || request.newLoanNonce == 0
-            || request.newLoanNonce >= type(uint64).max >> 1) {
+        if (
+            creationMode != 2 || bootstrapId != bytes32(0) || request.oldLoanId == bytes32(0)
+                || request.refinanceId == bytes32(0) || request.newLoanNonce == 0
+                || request.newLoanNonce >= type(uint64).max >> 1
+        ) {
             return false;
         }
 
         return request.configuration.loanId
             == keccak256(
-                abi.encode(
-                    "UNIFIED_PHASE9_REFINANCED_LOAN_V1",
-                    block.chainid,
-                    address(this),
-                    request.oldLoanId,
-                    request.configuration.borrower,
-                    request.configuration.agreementHash,
-                    request.configuration.policySetHash,
-                    request.newLoanNonce
-                )
-            );
+            abi.encode(
+            "UNIFIED_PHASE9_REFINANCED_LOAN_V1",
+            block.chainid,
+            address(this),
+            request.oldLoanId,
+            request.configuration.borrower,
+            request.configuration.agreementHash,
+            request.configuration.policySetHash,
+            request.newLoanNonce
+        )
+        );
     }
 
     function _validConfiguration(
@@ -395,15 +393,12 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
             && address(_loanRegistry).code.length != 0 && _loanAccountImplementation != address(0)
             && _loanAccountImplementation.code.length != 0
             && _positionManagerImplementation != address(0)
-            && _positionManagerImplementation.code.length != 0
-            && _quotePolicyRegistry != address(0) && _quotePolicyRegistry.code.length != 0
-            && _refinancePolicyRegistry != address(0)
-            && _refinancePolicyRegistry.code.length != 0
-            && _amendmentPolicyRegistry != address(0)
-            && _amendmentPolicyRegistry.code.length != 0
-            && _protectionPolicyRegistry != address(0)
-            && _protectionPolicyRegistry.code.length != 0
-            && _recoveryPolicyRegistry != address(0) && _recoveryPolicyRegistry.code.length != 0;
+            && _positionManagerImplementation.code.length != 0 && _quotePolicyRegistry != address(0)
+            && _quotePolicyRegistry.code.length != 0 && _refinancePolicyRegistry != address(0)
+            && _refinancePolicyRegistry.code.length != 0 && _amendmentPolicyRegistry != address(0)
+            && _amendmentPolicyRegistry.code.length != 0 && _protectionPolicyRegistry != address(0)
+            && _protectionPolicyRegistry.code.length != 0 && _recoveryPolicyRegistry != address(0)
+            && _recoveryPolicyRegistry.code.length != 0;
     }
 
     function _requireFreshLoan(bytes32 loanId) private view {
@@ -429,9 +424,12 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
     {
         address account = _loanAccounts[loanId];
         address manager = _positionManagers[loanId];
-        if (account == address(0) || account.code.length == 0 || manager == address(0)
-            || manager.code.length == 0 || !_validCloneRuntime(account, _loanAccountImplementation)
-            || !_validCloneRuntime(manager, _positionManagerImplementation)) {
+        if (
+            account == address(0) || account.code.length == 0 || manager == address(0)
+                || manager.code.length == 0
+                || !_validCloneRuntime(account, _loanAccountImplementation)
+                || !_validCloneRuntime(manager, _positionManagerImplementation)
+        ) {
             revert InvalidPhase9LoanConfiguration();
         }
 
@@ -444,7 +442,8 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
             revert InvalidPhase9LoanConfiguration();
         }
         if (
-            configuration_.factory != address(this) || configuration_.loanRegistry != address(_loanRegistry)
+            configuration_.factory != address(this)
+                || configuration_.loanRegistry != address(_loanRegistry)
                 || configuration_.loanId != loanId || configuration_.positionManager != manager
                 || configuration_.refinanceCoordinator != refinanceCoordinator
         ) {
@@ -460,14 +459,16 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
     ) private view {
         if (
             _registryAddress(ILoanRegistry.loanAccount.selector, configuration_.loanId)
-                != loanAccount_
+                    != loanAccount_
                 || _registryAddress(ILoanRegistry.borrowerOf.selector, configuration_.loanId)
                     != configuration_.borrower
                 || _registryWord(ILoanRegistry.agreementHashOf.selector, configuration_.loanId)
                     != configuration_.agreementHash
                 || uint256(
-                    _registryWord(ILoanRegistry.protocolVersionOf.selector, configuration_.loanId)
-                ) != 9
+                        _registryWord(
+                            ILoanRegistry.protocolVersionOf.selector, configuration_.loanId
+                        )
+                    ) != 9
                 || (requireNonterminal
                     && _registryBool(ILoanRegistry.isTerminal.selector, configuration_.loanId))
         ) {
@@ -504,8 +505,7 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
                     || tranche_.originalClaim != tranche_.outstandingClaim
                     || tranche_.configurationHash == bytes32(0)
                     || (index != 0
-                        && uint256(tranche_.trancheId)
-                            <= uint256(tranches[index - 1].trancheId))
+                        && uint256(tranche_.trancheId) <= uint256(tranches[index - 1].trancheId))
             ) return false;
         }
         address beneficiary = positions[0].owner;
@@ -514,8 +514,8 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
             Phase9Types.Position memory position_ = positions[index];
             if (
                 position_.positionId == bytes32(0) || position_.owner == address(0)
-                    || position_.owner != beneficiary
-                    || position_.claim == 0 || position_.state != Phase9Types.PositionState.ACTIVE
+                    || position_.owner != beneficiary || position_.claim == 0
+                    || position_.state != Phase9Types.PositionState.ACTIVE
                     || (index != 0
                         && uint256(position_.positionId)
                             <= uint256(positions[index - 1].positionId))
@@ -528,7 +528,9 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
             uint256 allocated;
             for (uint256 positionIndex = 0; positionIndex < positionCount; ++positionIndex) {
                 if (positions[positionIndex].trancheId == tranches[trancheIndex].trancheId) {
-                    if (positions[positionIndex].claim > type(uint256).max - allocated) return false;
+                    if (positions[positionIndex].claim > type(uint256).max - allocated) {
+                        return false;
+                    }
                     allocated += positions[positionIndex].claim;
                 }
             }
@@ -640,7 +642,10 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
             mstore(ptr, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73)
             mstore(add(ptr, 0x58), salt)
             mstore(add(ptr, 0x78), keccak256(add(ptr, 0x0c), 0x37))
-            predicted := and(keccak256(add(ptr, 0x43), 0x55), 0xffffffffffffffffffffffffffffffffffffffff)
+            predicted := and(
+                keccak256(add(ptr, 0x43), 0x55),
+                0xffffffffffffffffffffffffffffffffffffffff
+            )
         }
     }
 
@@ -652,12 +657,12 @@ contract Phase9LoanFactory is IPhase9LoanFactory {
         return instance.code.length == 45
             && instance.codehash
                 == keccak256(
-                    abi.encodePacked(
-                        hex"363d3d373d3d3d363d73",
-                        bytes20(implementation),
-                        hex"5af43d82803e903d91602b57fd5bf3"
-                    )
-                );
+                abi.encodePacked(
+                hex"363d3d373d3d3d363d73",
+                bytes20(implementation),
+                hex"5af43d82803e903d91602b57fd5bf3"
+            )
+            );
     }
 
     function _registryAddress(bytes4 selector, bytes32 loanId) private view returns (address) {

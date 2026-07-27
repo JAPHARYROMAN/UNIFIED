@@ -7,7 +7,7 @@
   "required": [
     "schema_version", "artifact_type", "environment", "contains_real_value", "chain_id",
     "topology_only", "topology_verified", "role_grant_performed", "activation_accepted", "post_broadcast_verification_required",
-    "deployment_history_reverted", "plan_sha256", "source_commit", "working_tree_clean", "generated_at", "broadcaster", "starting_nonce", "final_nonce",
+    "deployment_history_reverted", "plan_sha256", "source_commit", "working_tree_clean", "generated_at", "broadcaster", "broadcaster_provenance", "starting_nonce", "final_nonce",
     "reset_identity", "reset_command", "nonce_transcript", "rpc_url", "rpc_chain_id", "addresses", "observations",
     "modules", "coordinator_links", "role_absence"
   ],
@@ -27,13 +27,14 @@
     "source_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
     "working_tree_clean": { "const": true },
     "generated_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" },
-    "broadcaster": { "$ref": "#/$defs/address" },
+    "broadcaster": { "const": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8" },
+    "broadcaster_provenance": { "$ref": "#/$defs/broadcasterProvenance" },
     "starting_nonce": { "const": 1 },
     "final_nonce": { "const": 11 },
     "reset_identity": { "$ref": "#/$defs/bytes32" },
-    "reset_command": { "type": "string", "minLength": 1 },
+    "reset_command": { "const": "pwsh ./scripts/smoke-phase9-refinance-anvil.ps1" },
     "nonce_transcript": { "$ref": "#/$defs/finalNonceTranscript" },
-    "rpc_url": { "type": "string", "pattern": "^http://(127\\.0\\.0\\.1|localhost|\\[::1\\]):[0-9]+$" },
+    "rpc_url": { "const": "http://127.0.0.1:18545" },
     "rpc_chain_id": { "const": "0x7a69" },
     "addresses": { "type": "object", "minProperties": 10, "maxProperties": 10, "additionalProperties": { "$ref": "#/$defs/address" } },
     "observations": {
@@ -63,6 +64,19 @@
   },
   "$defs": {
     "address": { "type": "string", "pattern": "^0x[0-9a-f]{40}$", "not": { "const": "0x0000000000000000000000000000000000000000" } },
+    "broadcasterProvenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["provider", "account_profile", "account_index", "address", "account_set_sha256", "unlocked", "private_key_input"],
+      "properties": {
+        "provider": { "const": "anvil" },
+        "account_profile": { "const": "foundry-default-account-1" },
+        "account_index": { "const": 1 },
+        "address": { "const": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8" },
+        "account_set_sha256": { "const": "sha256:19901d67310664f0f09541131dbc6669f2aa9ce4ffdb1cf497d8a7da8d1ba307" },
+        "unlocked": { "const": true },
+        "private_key_input": { "const": false }
+      }
+    },
     "bytes32": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
     "link": { "type": "object", "additionalProperties": false, "required": ["source", "library", "start", "length"], "properties": { "source": { "const": "src/resolution/RefinanceCoordinator.sol" }, "library": { "type": "string" }, "start": { "type": "integer", "minimum": 0 }, "length": { "const": 20 } } },
     "linkArtifact": { "type": "object", "additionalProperties": false, "required": ["entries", "linked_code_hash", "linked_bytes", "reproduced_executable_hash"], "properties": { "entries": { "type": "array", "minItems": 7, "maxItems": 7, "items": { "$ref": "#/$defs/link" } }, "linked_code_hash": { "$ref": "#/$defs/bytes32" }, "linked_bytes": { "type": "integer", "minimum": 1, "maximum": 49152 }, "reproduced_executable_hash": { "$ref": "#/$defs/bytes32" } } },

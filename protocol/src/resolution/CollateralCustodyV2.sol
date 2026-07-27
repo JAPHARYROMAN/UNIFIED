@@ -35,8 +35,8 @@ contract CollateralCustodyV2 is ICollateralCustodyV2 {
         (Phase9Types.CustodyRecord memory record, bytes32 operationId) =
             abi.decode(msg.data[4:], (Phase9Types.CustodyRecord, bytes32));
         if (
-            _processedCustodyOperationIds[_CUSTODY_REENTRANCY_GUARD]
-                || operationId == bytes32(0) || operationId == _CUSTODY_REENTRANCY_GUARD
+            _processedCustodyOperationIds[_CUSTODY_REENTRANCY_GUARD] || operationId == bytes32(0)
+                || operationId == _CUSTODY_REENTRANCY_GUARD
         ) {
             revert InvalidCustodyOperation();
         }
@@ -126,10 +126,10 @@ contract CollateralCustodyV2 is ICollateralCustodyV2 {
         }
     }
 
-    function _validateCustodyIdentity(
-        Phase9Types.CustodyRecord memory record_,
-        bytes32 operationId
-    ) private view {
+    function _validateCustodyIdentity(Phase9Types.CustodyRecord memory record_, bytes32 operationId)
+        private
+        view
+    {
         if (
             block.chainid != 31337 || _assetRegistry.code.length == 0
                 || record_.collateralId == bytes32(0) || record_.assetId == bytes32(0)

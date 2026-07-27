@@ -259,6 +259,25 @@ sequence. It may not execute or contain `CALL`, `CALLCODE`, `DELEGATECALL`, `SLO
 storage; forward value; choose a target or selector from caller-controlled protocol
 calldata; or return an uncapped byte array.
 
+The lifecycle module cannot link or call the validation module. It has exactly two
+separately AST-pinned inline-assembly exceptions and no other assembly:
+
+1. one private-view `_boundedStaticcall(address,bytes,uint256)` helper with the same
+   exact memory-safe bounded-copy body above, used only by
+   `_resolveRefinancePolicy`/`resolveRefinancePolicy` at 8,992 bytes,
+   `_requireFundingOpen`/`emergencyState` at 96 bytes, and
+   `_validateSettlementAsset`/`resolveRefinanceAsset` at 160 bytes; and
+2. one private-pure `_wordAt(bytes,uint256)` helper whose sole memory-safe Yul
+   statement is exactly `value := mload(add(add(encoded, 0x20), offset))`. It may read
+   only the already bounded `raw` response and only at the checker-pinned policy,
+   emergency-state, and asset-result offsets used to reject malformed words and dynamic
+   ABI offsets before `abi.decode`.
+
+The checker pins both helpers' signatures, mutability, complete Yul trees, call owners,
+selector/cap inventory, and `_wordAt` offset expressions. A validation-module link,
+another lifecycle assembly block, another Yul operation, an unlisted caller or offset,
+or a changed copy/load shape rejects the candidate.
+
 The sole dependency failure that may prove a semantic fact is the lien-absence check.
 For `ILienRegistry.lien(collateralId)`, `_boundedStaticcall` uses an exact 36-byte
 failure-data cap. Absence is accepted only when `!ok`, the returndata length is exactly
@@ -395,12 +414,12 @@ bootstrap, quote, refinance, or other business action, and it cannot write an
 activation-accepted artifact. Per-loan factory clones remain the separately authorized
 deterministic `CREATE2` operations and do not alter this top-level sequence.
 
-This nonce preconditioning is not the final activation-grade resolution. Before any
-`P9R-DEPLOY-*` row or `P9-REFI-001` checkpoint can pass, a later ADR must choose and freeze
-either a nonce-0 `RoleManager` bootstrap followed by the ten creations or explicit
-nonce preconditioning as an activation-grade deployment precondition. That ADR must
-also freeze the exact role initialization and activation order. This candidate does
-not prejudge that choice and grants no role or method authority.
+This candidate did not originally select the final activation-grade nonce form. ADR
+0024 now selects explicit nonce preconditioning for synthetic-local activation-topology
+evidence and rejects a nonce-0 `RoleManager` deployment by the candidate broadcaster.
+It also freezes verification before the one governance-executor factory-role grant.
+The preliminary topology in this ADR remains non-activating because it stops before
+that grant and grants no role or method authority.
 
 The candidate checkpoint reserves these expected implementation and evidence paths:
 
@@ -445,8 +464,9 @@ before this architecture can be accepted. They must:
   zero and unused, prove all three libraries are storage-free, and prove the validation
   module has no storage-pointer parameter;
 - forbid inline assembly and raw `sload`/`sstore` in all modules except the exact
-  AST-pinned validation `_boundedStaticcall` memory-safe block authorized in Section 4;
-  the only other assembly exception is the AST-pinned coordinator helper assignment
+  AST-pinned validation `_boundedStaticcall`, lifecycle `_boundedStaticcall`, and
+  lifecycle `_wordAt` memory-safe blocks authorized in Section 4; the only other
+  assembly exception is the AST-pinned coordinator helper assignment
   `layout.slot := 0`;
 - inventory public library entry points from the AST and compiler method identifiers
   separately, because storage-pointer entries are absent from the ordinary library
@@ -589,9 +609,10 @@ The seven-CREATE harness remains historical candidate code, and the prior nine-C
 candidate model is superseded. The nonce-preconditioned ten-CREATE sequence is
 authorized only as the non-activating disposable-Anvil topology checkpoint above. It
 performs no role grant, creates no accepted `P9R` evidence, and is not an approved
-deployment. A later ADR must resolve nonce-0 `RoleManager` bootstrap versus explicit
-nonce preconditioning before activation-grade evidence can be accepted. All unresolved
-D1 findings remain release blockers, and no D1-D4 refinance method, deployment,
+deployment. ADR 0024 selects explicit nonce preconditioning and the final
+verification-before-governance-grant order, but does not turn this preliminary
+topology into activation-grade evidence. All unresolved D1 findings remain release
+blockers, and no D1-D4 refinance method, deployment,
 backlog item, or implementation checkpoint may be treated as activated before the
 implementation, independent architecture/security/tooling reviews, and complete
 evidence package pass together.

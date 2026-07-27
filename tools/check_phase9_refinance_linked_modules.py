@@ -16,9 +16,7 @@ from typing import Any, Final, cast
 ROOT: Final = Path(__file__).resolve().parents[1]
 COMPILATION_SOURCE: Final = "protocol/src/ProtocolCompilation.sol"
 REFINANCE_SOURCE: Final = "protocol/src/resolution/RefinanceCoordinator.sol"
-STORAGE_SNAPSHOT: Final = Path(
-    "protocol/storage-layout/phase9/RefinanceCoordinator.storage.json"
-)
+STORAGE_SNAPSHOT: Final = Path("protocol/storage-layout/phase9/RefinanceCoordinator.storage.json")
 COORDINATOR: Final = "RefinanceCoordinator"
 VALIDATION_MODULE: Final = "Phase9RefinanceValidationModule"
 REQUEST_MODULE: Final = "Phase9RefinanceRequestModule"
@@ -36,30 +34,20 @@ COMPILER_SETTINGS: Final = {
 
 METHOD_IDENTIFIERS: Final = {
     VALIDATION_MODULE: {
-        "preflight(Phase9RefinanceValidationContext,Phase9Types.RefinanceRecord)": (
-            "4f9ee1ee"
-        ),
+        "preflight(Phase9RefinanceValidationContext,Phase9Types.RefinanceRecord)": ("4f9ee1ee"),
     },
     REQUEST_MODULE: {
-        "begin(Phase9RefinanceStorageLayout storage,Phase9Types.RefinanceRecord)": (
-            "3dc005b8"
-        ),
+        "begin(Phase9RefinanceStorageLayout storage,Phase9Types.RefinanceRecord)": ("3dc005b8"),
         "complete(Phase9RefinanceStorageLayout storage,Phase9Types.RefinanceRecord,bytes)": (
             "0be276bb"
         ),
     },
     LIFECYCLE_MODULE: {
-        "cancelRefinance(Phase9RefinanceStorageLayout storage,bytes32,bytes32)": (
-            "9521f7f9"
-        ),
-        "executeRefinance(Phase9RefinanceStorageLayout storage,bytes32,bytes32)": (
-            "ec32f45f"
-        ),
+        "cancelRefinance(Phase9RefinanceStorageLayout storage,bytes32,bytes32)": ("9521f7f9"),
+        "executeRefinance(Phase9RefinanceStorageLayout storage,bytes32,bytes32)": ("ec32f45f"),
         "recordFundingCommitment(Phase9RefinanceStorageLayout storage,"
         "Phase9Types.FundingCommitment)": "b145df9d",
-        "refundCommitment(Phase9RefinanceStorageLayout storage,bytes32,bytes32)": (
-            "8e2b3054"
-        ),
+        "refundCommitment(Phase9RefinanceStorageLayout storage,bytes32,bytes32)": ("8e2b3054"),
     },
 }
 COORDINATOR_LINK_COUNTS: Final = {
@@ -108,6 +96,36 @@ BOUNDED_STATICCALL_SITES: Final[dict[str, list[tuple[str | None, int]]]] = {
     "_custody": [("custody", 224)],
     "_lien": [("lien", 352)],
     "_wordCall": [(None, 32)],
+}
+LIFECYCLE_BOUNDED_STATICCALL_SITES: Final[dict[str, list[tuple[str | None, int]]]] = {
+    "_resolveRefinancePolicy": [("resolveRefinancePolicy", 8_992)],
+    "_requireFundingOpen": [("emergencyState", 96)],
+    "_validateSettlementAsset": [("resolveRefinanceAsset", 160)],
+}
+LIFECYCLE_WORD_AT_SITES: Final[dict[str, list[str]]] = {
+    "_validateRefinancePolicyEncoding": [
+        "96",
+        "128",
+        "160",
+        "224",
+        "256",
+        "288",
+        "320",
+        "352",
+        "384",
+        "416",
+        "192",
+        "896",
+        "928",
+        "collateralOffset",
+        "trancheOffset",
+        "positionOffset",
+        "((trancheOffset+64)+(i*160))",
+        "(positionStart+64)",
+        "(positionStart+160)",
+    ],
+    "_requireFundingOpen": ["0", "32"],
+    "_validateSettlementAsset": ["0", "32", "96", "128"],
 }
 
 
@@ -364,9 +382,7 @@ def _layout_signature(layout: Mapping[str, Any]) -> list[tuple[str, int, int, st
             raise LinkedModuleCheckError(f"coordinator storage type is missing: {type_id}")
         label = type_entry.get("label")
         if not isinstance(label, str):
-            raise LinkedModuleCheckError(
-                f"coordinator storage type has no label: {type_id}"
-            )
+            raise LinkedModuleCheckError(f"coordinator storage type has no label: {type_id}")
         result.append(
             (
                 str(entry.get("label")),
@@ -488,11 +504,7 @@ def _executable_opcode_bytes(bytecode: str) -> list[int]:
     if len(raw) >= 2:
         metadata_length = int.from_bytes(raw[-2:], "big")
         metadata_start = len(raw) - metadata_length - 2
-        if (
-            metadata_length > 0
-            and metadata_start >= 0
-            and 0xA0 <= raw[metadata_start] <= 0xBF
-        ):
+        if metadata_length > 0 and metadata_start >= 0 and 0xA0 <= raw[metadata_start] <= 0xBF:
             raw = raw[:metadata_start]
     opcodes: list[int] = []
     cursor = 0
@@ -675,10 +687,7 @@ def _validate_module_ast(definitions: Mapping[str, Mapping[str, Any]]) -> None:
         for node in _walk(definition):
             if node.get("nodeType") == "VariableDeclaration" and node.get("stateVariable"):
                 raise LinkedModuleCheckError(f"{module}: library declares a state variable")
-            if (
-                module != VALIDATION_MODULE
-                and node.get("nodeType") == "InlineAssembly"
-            ):
+            if module == REQUEST_MODULE and node.get("nodeType") == "InlineAssembly":
                 raise LinkedModuleCheckError(f"{module}: inline assembly is forbidden")
 
         public_functions = [
@@ -848,7 +857,11 @@ def _bounded_call_selector(call: Mapping[str, Any]) -> str | None:
     return name
 
 
-def _validate_bounded_call_sites(definition: Mapping[str, Any]) -> None:
+def _validate_bounded_call_sites(
+    definition: Mapping[str, Any],
+    expected_sites: Mapping[str, Sequence[tuple[str | None, int]]],
+    module: str,
+) -> None:
     observed: dict[str, list[tuple[str | None, int]]] = {}
     for function in definition.get("nodes", []):
         if not isinstance(function, dict) or function.get("nodeType") != "FunctionDefinition":
@@ -877,8 +890,8 @@ def _validate_bounded_call_sites(definition: Mapping[str, Any]) -> None:
         if sites:
             observed[function_name] = sites
     _require(
-        observed == BOUNDED_STATICCALL_SITES,
-        "bounded-staticcall selector/cap inventory drift",
+        observed == expected_sites,
+        f"{module}: bounded-staticcall selector/cap inventory drift",
     )
 
 
@@ -893,9 +906,7 @@ def _flatten_or(node: object) -> list[object]:
 
 def _is_identifier(node: object, name: str) -> bool:
     return (
-        isinstance(node, dict)
-        and node.get("nodeType") == "Identifier"
-        and node.get("name") == name
+        isinstance(node, dict) and node.get("nodeType") == "Identifier" and node.get("name") == name
     )
 
 
@@ -967,8 +978,10 @@ def _is_unknown_lien_hash_check(node: object) -> bool:
     if not isinstance(right, dict):
         return False
     arguments = right.get("arguments")
-    return isinstance(arguments, list) and len(arguments) == 1 and _is_unknown_lien_encoding(
-        arguments[0]
+    return (
+        isinstance(arguments, list)
+        and len(arguments) == 1
+        and _is_unknown_lien_encoding(arguments[0])
     )
 
 
@@ -1052,9 +1065,7 @@ def _validate_context_guard(definition: Mapping[str, Any]) -> None:
 
     nodes = list(_walk(context_validation))
     guard_indexes = [
-        index
-        for index, node in enumerate(nodes)
-        if _is_context_coordinator_guard(node)
+        index for index, node in enumerate(nodes) if _is_context_coordinator_guard(node)
     ]
     dependency_indexes = [
         index
@@ -1062,8 +1073,7 @@ def _validate_context_guard(definition: Mapping[str, Any]) -> None:
         if node.get("nodeType") == "FunctionCall"
         and isinstance(node.get("expression"), dict)
         and node["expression"].get("nodeType") == "Identifier"
-        and node["expression"].get("name")
-        in {"_addressCall", "_boundedStaticcall", "_wordCall"}
+        and node["expression"].get("name") in {"_addressCall", "_boundedStaticcall", "_wordCall"}
     ]
     _require(
         len(guard_indexes) == 1
@@ -1073,10 +1083,12 @@ def _validate_context_guard(definition: Mapping[str, Any]) -> None:
     )
 
 
-def _validate_validation_assembly(definition: Mapping[str, Any]) -> dict[str, Any]:
-    _validate_bounded_call_sites(definition)
-    _validate_unknown_lien_absence(definition)
-    _validate_context_guard(definition)
+def _validate_bounded_staticcall_assembly(
+    definition: Mapping[str, Any],
+    expected_sites: Mapping[str, Sequence[tuple[str | None, int]]],
+    module: str,
+) -> dict[str, Any]:
+    _validate_bounded_call_sites(definition, expected_sites, module)
     helpers = [
         node
         for node in definition.get("nodes", [])
@@ -1084,7 +1096,10 @@ def _validate_validation_assembly(definition: Mapping[str, Any]) -> dict[str, An
         and node.get("nodeType") == "FunctionDefinition"
         and node.get("name") == "_boundedStaticcall"
     ]
-    _require(len(helpers) == 1, "validation module must declare one _boundedStaticcall helper")
+    _require(
+        len(helpers) == 1,
+        f"{module}: must declare one _boundedStaticcall helper",
+    )
     helper = helpers[0]
     _require(
         helper.get("visibility") == "private" and helper.get("stateMutability") == "view",
@@ -1217,8 +1232,7 @@ def _validate_validation_assembly(definition: Mapping[str, Any]) -> dict[str, An
             for node in guard_assignments
         )
         and any(
-            _yul_assigned_names(node) == [size_name]
-            and _is_yul_number(node.get("value"), "0")
+            _yul_assigned_names(node) == [size_name] and _is_yul_number(node.get("value"), "0")
             for node in guard_assignments
         ),
         "oversized returndata must clear ok and the copy length",
@@ -1281,9 +1295,148 @@ def _validate_validation_assembly(definition: Mapping[str, Any]) -> dict[str, An
         "bounded staticcall statements are out of order",
     )
     _require(
-        _statement_index(statements, copy)
-        < _statement_index(statements, free_pointer_stores[0]),
+        _statement_index(statements, copy) < _statement_index(statements, free_pointer_stores[0]),
         "free-memory update must follow the bounded copy",
+    )
+    return assembly
+
+
+def _validate_validation_assembly(definition: Mapping[str, Any]) -> dict[str, Any]:
+    assembly = _validate_bounded_staticcall_assembly(
+        definition, BOUNDED_STATICCALL_SITES, VALIDATION_MODULE
+    )
+    _validate_unknown_lien_absence(definition)
+    _validate_context_guard(definition)
+    return assembly
+
+
+def _validate_lifecycle_assembly(definition: Mapping[str, Any]) -> dict[str, Any]:
+    return _validate_bounded_staticcall_assembly(
+        definition, LIFECYCLE_BOUNDED_STATICCALL_SITES, LIFECYCLE_MODULE
+    )
+
+
+def _word_at_offset_key(node: object) -> str:
+    if not isinstance(node, dict):
+        raise LinkedModuleCheckError("lifecycle _wordAt offset is malformed")
+    if node.get("nodeType") == "Literal" and node.get("kind") == "number":
+        value = node.get("value")
+        if isinstance(value, str) and re.fullmatch(r"(?:0|[1-9][0-9]*)", value):
+            return value
+    if node.get("nodeType") == "Identifier":
+        name = node.get("name")
+        if isinstance(name, str):
+            return name
+    if node.get("nodeType") == "BinaryOperation" and node.get("operator") in {"+", "*"}:
+        return (
+            f"({_word_at_offset_key(node.get('leftExpression'))}"
+            f"{node.get('operator')}{_word_at_offset_key(node.get('rightExpression'))})"
+        )
+    raise LinkedModuleCheckError("lifecycle _wordAt offset expression drift")
+
+
+def _validate_word_at_calls(definition: Mapping[str, Any]) -> None:
+    observed: dict[str, list[str]] = {}
+    for function in definition.get("nodes", []):
+        if not isinstance(function, dict) or function.get("nodeType") != "FunctionDefinition":
+            continue
+        function_name = function.get("name")
+        if not isinstance(function_name, str):
+            continue
+        offsets: list[str] = []
+        for node in _walk(function):
+            if node.get("nodeType") != "FunctionCall":
+                continue
+            expression = node.get("expression")
+            if not _is_identifier(expression, "_wordAt"):
+                continue
+            arguments = node.get("arguments")
+            if not isinstance(arguments, list) or len(arguments) != 2:
+                raise LinkedModuleCheckError("lifecycle _wordAt call arity drift")
+            _require(
+                _is_identifier(arguments[0], "raw"),
+                "lifecycle _wordAt may inspect only the bounded raw response",
+            )
+            offsets.append(_word_at_offset_key(arguments[1]))
+        if offsets:
+            observed[function_name] = offsets
+    _require(observed == LIFECYCLE_WORD_AT_SITES, "lifecycle _wordAt call inventory drift")
+
+
+def _validate_lifecycle_word_at_assembly(definition: Mapping[str, Any]) -> dict[str, Any]:
+    _validate_word_at_calls(definition)
+    helpers = [
+        node
+        for node in definition.get("nodes", [])
+        if isinstance(node, dict)
+        and node.get("nodeType") == "FunctionDefinition"
+        and node.get("name") == "_wordAt"
+    ]
+    _require(len(helpers) == 1, "lifecycle module must declare one _wordAt helper")
+    helper = helpers[0]
+    _require(
+        helper.get("visibility") == "private" and helper.get("stateMutability") == "pure",
+        "lifecycle _wordAt must be private pure",
+    )
+    _require(
+        _ast_parameter_signature(helper, "parameters")
+        == [("bytes", "memory"), ("uint256", "default")],
+        "lifecycle _wordAt parameter signature drift",
+    )
+    _require(
+        _ast_parameter_signature(helper, "returnParameters") == [("uint256", "default")],
+        "lifecycle _wordAt return signature drift",
+    )
+    body = helper.get("body")
+    if not isinstance(body, dict):
+        raise LinkedModuleCheckError("lifecycle _wordAt body is malformed")
+    body_statements = body.get("statements")
+    if not (
+        isinstance(body_statements, list)
+        and len(body_statements) == 1
+        and isinstance(body_statements[0], dict)
+        and body_statements[0].get("nodeType") == "InlineAssembly"
+    ):
+        raise LinkedModuleCheckError("lifecycle _wordAt must contain only its pinned assembly")
+    assembly = body_statements[0]
+    _require(
+        assembly.get("flags") == ["memory-safe"],
+        "lifecycle _wordAt assembly must be memory-safe",
+    )
+    block = assembly.get("AST")
+    if not isinstance(block, dict) or block.get("nodeType") != "YulBlock":
+        raise LinkedModuleCheckError("lifecycle _wordAt assembly is malformed")
+    statements = block.get("statements")
+    _require(
+        isinstance(statements, list)
+        and len(statements) == 1
+        and isinstance(statements[0], dict)
+        and statements[0].get("nodeType") == "YulAssignment",
+        "lifecycle _wordAt assembly must contain one assignment",
+    )
+    if not isinstance(statements, list):
+        raise LinkedModuleCheckError("lifecycle _wordAt assembly is malformed")
+    assignment = cast(dict[str, Any], statements[0])
+    _require(
+        _yul_assigned_names(assignment) == ["value"],
+        "lifecycle _wordAt assignment target drift",
+    )
+    load = _yul_arguments(assignment.get("value"), "mload", 1)
+    outer_add = _yul_arguments(load[0], "add", 2) if load is not None else None
+    inner_add = _yul_arguments(outer_add[0], "add", 2) if outer_add is not None else None
+    _require(
+        inner_add is not None
+        and outer_add is not None
+        and _is_yul_identifier(inner_add[0], "encoded")
+        and _is_yul_word_number(inner_add[1], 32)
+        and _is_yul_identifier(outer_add[1], "offset"),
+        "lifecycle _wordAt must load mload(add(add(encoded, 0x20), offset))",
+    )
+    calls = [node for node in _walk(block) if node.get("nodeType") == "YulFunctionCall"]
+    names = [_yul_call_name(node) for node in calls]
+    _require(
+        names.count("mload") == 1 and names.count("add") == 2 and len(names) == 3,
+        "lifecycle _wordAt Yul inventory drift",
     )
     return assembly
 
@@ -1429,20 +1582,23 @@ def _validate_assemblies(
     source_ast: Mapping[str, Any], definitions: Mapping[str, Mapping[str, Any]]
 ) -> None:
     validation_assembly = _validate_validation_assembly(definitions[VALIDATION_MODULE])
+    lifecycle_assembly = _validate_lifecycle_assembly(definitions[LIFECYCLE_MODULE])
+    lifecycle_word_at_assembly = _validate_lifecycle_word_at_assembly(definitions[LIFECYCLE_MODULE])
     coordinator_assemblies = [
-        node
-        for node in _walk(definitions[COORDINATOR])
-        if node.get("nodeType") == "InlineAssembly"
+        node for node in _walk(definitions[COORDINATOR]) if node.get("nodeType") == "InlineAssembly"
     ]
     _require(len(coordinator_assemblies) == 1, "coordinator layout assembly inventory drift")
     all_assemblies = [
         node for node in _walk(source_ast) if node.get("nodeType") == "InlineAssembly"
     ]
     _require(
-        len(all_assemblies) == 2
+        len(all_assemblies) == 4
         and validation_assembly in all_assemblies
+        and lifecycle_assembly in all_assemblies
+        and lifecycle_word_at_assembly in all_assemblies
         and coordinator_assemblies[0] in all_assemblies,
-        "source must contain only the validation and coordinator assembly exceptions",
+        "source must contain only the validation bounded-call, lifecycle bounded-call, "
+        "lifecycle word-read, and coordinator assembly exceptions",
     )
     assembly = coordinator_assemblies[0]
     block = assembly.get("AST")
@@ -1650,9 +1806,7 @@ def check_repository(root: Path = ROOT) -> dict[str, object]:
             "authoritative RefinanceCoordinator storage snapshot is unavailable"
         ) from error
     _require(isinstance(snapshot, dict), "authoritative storage snapshot is malformed")
-    return validate_compiler_output(
-        compile_protocol(root), coordinator_storage_snapshot=snapshot
-    )
+    return validate_compiler_output(compile_protocol(root), coordinator_storage_snapshot=snapshot)
 
 
 def main(argv: Sequence[str] | None = None) -> int:

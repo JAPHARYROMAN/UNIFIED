@@ -151,10 +151,10 @@ contract Phase9BootstrapPolicyResolver {
 
     mapping(bytes32 creationKey => CreationRecord record) private _creations;
     mapping(bytes32 bootstrapId => BootstrapRecord record) private _bootstraps;
-    mapping(bytes32 refinancePolicyHash => RefinancePolicyRecord record) private
-        _refinancePolicies;
-    mapping(bytes32 loanId => mapping(address loanAccount => CompositePayoffQuotePolicyRecord record))
-        private _payoffQuotePolicies;
+    mapping(bytes32 refinancePolicyHash => RefinancePolicyRecord record) private _refinancePolicies;
+    mapping(
+        bytes32 loanId => mapping(address loanAccount => CompositePayoffQuotePolicyRecord record)
+    ) private _payoffQuotePolicies;
     bool private _revertCreation;
     bool private _revertBootstrap;
 
@@ -310,8 +310,7 @@ contract Phase9BootstrapPolicyResolver {
             bool active
         )
     {
-        CompositePayoffQuotePolicyRecord memory record =
-            _payoffQuotePolicies[loanId][loanAccount];
+        CompositePayoffQuotePolicyRecord memory record = _payoffQuotePolicies[loanId][loanAccount];
         return (
             record.policyHash,
             record.boundPolicySetHash,
@@ -372,7 +371,6 @@ contract Phase9BootstrapPolicyResolver {
     function _creationKey(bytes32 policySetHash, bytes32 loanId) private pure returns (bytes32) {
         return keccak256(abi.encode(policySetHash, loanId));
     }
-
 }
 
 contract Phase9BootstrapEmergencyController {
@@ -384,17 +382,11 @@ contract Phase9BootstrapEmergencyController {
 
     mapping(bytes32 capability => EmergencyRecord record) private _emergencyStates;
 
-    function setEmergencyState(
-        bytes32 capability,
-        bool active,
-        uint64 expiry,
-        bytes32 reasonCode
-    ) external {
-        _emergencyStates[capability] = EmergencyRecord({
-            active: active,
-            expiry: expiry,
-            reasonCode: reasonCode
-        });
+    function setEmergencyState(bytes32 capability, bool active, uint64 expiry, bytes32 reasonCode)
+        external
+    {
+        _emergencyStates[capability] =
+            EmergencyRecord({ active: active, expiry: expiry, reasonCode: reasonCode });
     }
 
     function emergencyState(bytes32 capability)
@@ -504,9 +496,7 @@ contract Phase9RefinanceRequestDeployer {
         components.predictedCoordinator = predictCoordinator();
         components.lienRegistry = new LienRegistry(components.predictedCoordinator);
         components.collateralCustody = new CollateralCustodyV2(
-            inputs.assetRegistry,
-            address(components.lienRegistry),
-            inputs.emergencyController
+            inputs.assetRegistry, address(components.lienRegistry), inputs.emergencyController
         );
         components.loanAccountImplementation = new Phase9LoanAccount();
         components.positionManagerImplementation = new PositionManagerV2();
@@ -544,17 +534,18 @@ contract Phase9RefinanceRequestDeployer {
     }
 
     function predictCoordinator() public view returns (address) {
-        return address(
-            uint160(uint256(keccak256(abi.encodePacked(hex"d694", address(this), hex"07"))))
-        );
+        return
+            address(
+                uint160(uint256(keccak256(abi.encodePacked(hex"d694", address(this), hex"07"))))
+            );
     }
 }
 
 contract Phase9BootstrapUnauthorizedCaller {
-    function createLoan(IPhase9LoanFactory factory, Phase9Types.LoanCreationRequest calldata request)
-        external
-        returns (address loanAccount, address positionManager)
-    {
+    function createLoan(
+        IPhase9LoanFactory factory,
+        Phase9Types.LoanCreationRequest calldata request
+    ) external returns (address loanAccount, address positionManager) {
         return factory.createLoan(request);
     }
 
@@ -741,7 +732,9 @@ abstract contract Phase9RefinanceBootstrapHarness {
         policyResolver.setCreation(
             spec.policySetHash, spec.loanId, configuration, 1, bootstrapId, true
         );
-        policyResolver.setBootstrapAt(bootstrapId, _bootstrapRecord(spec, configuration, bootstrapId));
+        policyResolver.setBootstrapAt(
+            bootstrapId, _bootstrapRecord(spec, configuration, bootstrapId)
+        );
         canonicalBootstrapIds[spec.loanId] = bootstrapId;
 
         request.configuration = configuration;
@@ -783,12 +776,7 @@ abstract contract Phase9RefinanceBootstrapHarness {
 
     function _createReplacement(ReplacementSpec memory spec)
         internal
-        returns (
-            bytes32 loanId,
-            address loanAccount,
-            address positionManager,
-            bytes32 creationId
-        )
+        returns (bytes32 loanId, address loanAccount, address positionManager, bytes32 creationId)
     {
         Phase9Types.LoanCreationRequest memory request = _prepareReplacement(spec);
         loanId = request.configuration.loanId;
@@ -812,7 +800,8 @@ abstract contract Phase9RefinanceBootstrapHarness {
             stored.creationId != creationId
                 || keccak256(abi.encode(stored)) != keccak256(abi.encode(request))
                 || loanAccount != phase9LoanFactory.loanAccount(request.configuration.loanId)
-                || positionManager != phase9LoanFactory.positionManager(request.configuration.loanId)
+                || positionManager
+                    != phase9LoanFactory.positionManager(request.configuration.loanId)
         ) {
             revert InvalidBootstrapHarnessState();
         }
@@ -948,10 +937,7 @@ abstract contract Phase9RefinanceBootstrapHarness {
         bytes32 bootstrapId
     )
         private
-        returns (
-            Phase9Types.CustodyRecord[] memory custodyRecords,
-            Phase9Types.Lien[] memory liens
-        )
+        returns (Phase9Types.CustodyRecord[] memory custodyRecords, Phase9Types.Lien[] memory liens)
     {
         bytes32 tokenRuntimeHash = address(settlementToken).codehash;
         custodyAssetSource.setAsset(
@@ -996,8 +982,7 @@ abstract contract Phase9RefinanceBootstrapHarness {
         bytes32 bootstrapId,
         bytes32 tokenRuntimeHash
     ) private view returns (bytes32) {
-        bytes32 operationId =
-            _deriveCustodyOperationId(bootstrapId, spec.loanId, spec.collateralId);
+        bytes32 operationId = _deriveCustodyOperationId(bootstrapId, spec.loanId, spec.collateralId);
         return keccak256(
             abi.encode(
                 "UNIFIED_PHASE9_BOOTSTRAP_CUSTODY_IDENTITY_V1",
@@ -1035,11 +1020,7 @@ abstract contract Phase9RefinanceBootstrapHarness {
         );
     }
 
-    function _deriveReplacementLoanId(ReplacementSpec memory spec)
-        internal
-        view
-        returns (bytes32)
-    {
+    function _deriveReplacementLoanId(ReplacementSpec memory spec) internal view returns (bytes32) {
         return keccak256(
             abi.encode(
                 "UNIFIED_PHASE9_REFINANCED_LOAN_V1",
@@ -1079,11 +1060,11 @@ abstract contract Phase9RefinanceBootstrapHarness {
         return keccak256(abi.encode("UNIFIED_PHASE9_LOAN_CREATION_V1", identity));
     }
 
-    function _deriveCustodyOperationId(
-        bytes32 bootstrapId,
-        bytes32 loanId,
-        bytes32 collateralId
-    ) internal view returns (bytes32) {
+    function _deriveCustodyOperationId(bytes32 bootstrapId, bytes32 loanId, bytes32 collateralId)
+        internal
+        view
+        returns (bytes32)
+    {
         return keccak256(
             abi.encode(
                 "UNIFIED_PHASE9_BOOTSTRAP_CUSTODY_V1",
@@ -1239,9 +1220,7 @@ abstract contract Phase9RefinanceRequestHarness {
                 maximumQuoteValidity: REQUEST_MAXIMUM_VALIDITY
             });
         requestComponents = requestDeployer.deploy(inputs);
-        governance.grantLoanFactoryRole(
-            requestRoleManager, address(requestComponents.loanFactory)
-        );
+        governance.grantLoanFactoryRole(requestRoleManager, address(requestComponents.loanFactory));
 
         _configureRequestFixture(seed);
     }
@@ -1273,16 +1252,10 @@ abstract contract Phase9RefinanceRequestHarness {
             )
         );
         requestPolicyResolver.setCreation(
-            requestOldPolicySetHash,
-            oldLoanId,
-            oldConfiguration,
-            1,
-            requestOldBootstrapId,
-            true
+            requestOldPolicySetHash, oldLoanId, oldConfiguration, 1, requestOldBootstrapId, true
         );
         requestPolicyResolver.setBootstrapAt(
-            requestOldBootstrapId,
-            _requestBootstrapRecord(seed, oldLoanId, oldConfiguration)
+            requestOldBootstrapId, _requestBootstrapRecord(seed, oldLoanId, oldConfiguration)
         );
 
         _configureRequestReplacement(seed, oldLoanId);
@@ -1323,8 +1296,7 @@ abstract contract Phase9RefinanceRequestHarness {
         );
 
         Phase9Types.DebtState memory replacementDebt = _requestReplacementDebt(seed);
-        Phase9Types.Tranche[] memory replacementTranches =
-            _requestReplacementTranches(seed);
+        Phase9Types.Tranche[] memory replacementTranches = _requestReplacementTranches(seed);
         Phase9Types.Position[] memory replacementPositions =
             _requestReplacementPositions(seed, replacementTranches[0].trancheId);
         bytes32[] memory collateralIds = new bytes32[](1);
@@ -1385,14 +1357,13 @@ abstract contract Phase9RefinanceRequestHarness {
     }
 
     function _configureRequestAssets() private {
-        Phase9BootstrapAssetSource.AssetRecord memory asset =
-            Phase9BootstrapAssetSource.AssetRecord({
-                token: address(requestSettlementToken),
-                decimals: 6,
-                runtimeCodeHash: address(requestSettlementToken).codehash,
-                exactBalanceDelta: true,
-                active: true
-            });
+        Phase9BootstrapAssetSource.AssetRecord memory asset = Phase9BootstrapAssetSource.AssetRecord({
+            token: address(requestSettlementToken),
+            decimals: 6,
+            runtimeCodeHash: address(requestSettlementToken).codehash,
+            exactBalanceDelta: true,
+            active: true
+        });
         requestAssetSource.setAsset(REQUEST_SETTLEMENT_ASSET_ID, asset);
         requestAssetSource.setAsset(requestCollateralAssetId, asset);
     }
@@ -1441,26 +1412,26 @@ abstract contract Phase9RefinanceRequestHarness {
         bytes32 seed
     ) private view returns (Phase9Types.LoanConfiguration memory configuration) {
         configuration = Phase9Types.LoanConfiguration({
-            factory: address(requestComponents.loanFactory),
-            loanRegistry: address(requestLoanRegistry),
-            settlementToken: address(requestSettlementToken),
-            settlementAssetId: REQUEST_SETTLEMENT_ASSET_ID,
-            borrower: borrower,
-            positionManager: manager,
-            collateralCustody: address(requestComponents.collateralCustody),
-            lienRegistry: address(requestComponents.lienRegistry),
-            payoffQuoteEngine: address(requestComponents.payoffQuoteEngine),
-            refinanceCoordinator: address(requestComponents.refinanceCoordinator),
-            restructuringController: address(requestRestructuringController),
-            insuranceManager: address(requestInsuranceManager),
-            recoveryManager: address(requestRecoveryManager),
-            loanId: loanId,
-            agreementHash: agreementHash,
-            policySetHash: policySetHash,
-            amendmentPolicyHash: keccak256(abi.encode("P9R_AMENDMENT", seed)),
-            protectionPolicyHash: keccak256(abi.encode("P9R_PROTECTION", seed)),
-            recoveryPolicyHash: keccak256(abi.encode("P9R_RECOVERY", seed))
-        });
+                factory: address(requestComponents.loanFactory),
+                loanRegistry: address(requestLoanRegistry),
+                settlementToken: address(requestSettlementToken),
+                settlementAssetId: REQUEST_SETTLEMENT_ASSET_ID,
+                borrower: borrower,
+                positionManager: manager,
+                collateralCustody: address(requestComponents.collateralCustody),
+                lienRegistry: address(requestComponents.lienRegistry),
+                payoffQuoteEngine: address(requestComponents.payoffQuoteEngine),
+                refinanceCoordinator: address(requestComponents.refinanceCoordinator),
+                restructuringController: address(requestRestructuringController),
+                insuranceManager: address(requestInsuranceManager),
+                recoveryManager: address(requestRecoveryManager),
+                loanId: loanId,
+                agreementHash: agreementHash,
+                policySetHash: policySetHash,
+                amendmentPolicyHash: keccak256(abi.encode("P9R_AMENDMENT", seed)),
+                protectionPolicyHash: keccak256(abi.encode("P9R_PROTECTION", seed)),
+                recoveryPolicyHash: keccak256(abi.encode("P9R_RECOVERY", seed))
+            });
     }
 
     function _requestBootstrapRecord(

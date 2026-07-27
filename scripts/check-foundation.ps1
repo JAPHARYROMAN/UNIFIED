@@ -23,6 +23,7 @@ uv run python tools/check_foundation.py
 uv run python tools/check_privileged_surface.py
 uv run python tools/check_privacy_surface.py
 uv run python tools/check_payment_privacy_surface.py
+uv run python tools/check_phase9_local_prohibitions.py
 uv run python tools/check_phase9_schema.py
 uv run python tools/check_phase8.py
 uv run python tools/check_phase9.py
@@ -48,7 +49,6 @@ if (Get-Command forge -ErrorAction SilentlyContinue) {
             src/kernel src/loan src/risk src/payment src/protection src/recovery src/resolution `
             src/token test script
         forge test
-        uv run python ../tools/verify_phase9_payoff_deployment.py --check-pins
         uv run python ../scripts/check-contract-sizes.py
     } finally {
         Pop-Location

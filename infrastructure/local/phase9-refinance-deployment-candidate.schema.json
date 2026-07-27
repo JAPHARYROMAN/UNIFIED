@@ -31,7 +31,7 @@
     "environment": { "const": "local" }, "contains_real_value": { "const": false }, "chain_id": { "const": 31337 },
     "topology_only": { "const": true }, "topology_verified": { "const": false }, "role_grant_performed": { "const": false },
     "plan_sha256": { "$ref": "#/$defs/sha256" }, "reset_identity": { "$ref": "#/$defs/bytes32" },
-    "source_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }, "broadcaster": { "$ref": "#/$defs/address" },
+    "source_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }, "broadcaster": { "const": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" },
     "latest_nonce_before": { "const": "0x0" }, "pending_nonce_before": { "const": "0x0" },
     "latest_nonce_prepared": { "const": "0x1" }, "pending_nonce_prepared": { "const": "0x1" },
     "starting_nonce": { "const": 1 }, "final_nonce": { "const": 11 },

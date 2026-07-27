@@ -1226,26 +1226,28 @@ accounting roles.
 
 ## Release evidence and reset
 
-Phase 9 has one independent authoritative local manifest:
+The complete Phase 9 implementation will have one independent authoritative local
+manifest after `UNI-LOCAL-003` and the implementation/exit gates pass:
 
 ```text
 protocol/deployments/local/phase9-release-evidence.json
 ```
 
-It does not extend, import, or satisfy the Phase 8 manifest. The Phase 9 manifest is
-schema validated and binds `environment = "local"`, `contains_real_value = false`, the
+That future manifest will not extend, import, or satisfy the Phase 8 manifest. It will
+be schema validated and bind `environment = "local"`, `contains_real_value = false`, the
 checked-out `source_commit`, a clean source tree at assembly, chain `31337`, exact
 contract addresses and code hashes, policy and role hashes, canonical events, migration
 and privilege checks, balanced journal identities, object and broker evidence,
 PostgreSQL checkpoints, reconciliation closure, restart/replay results, and reset
-scope. Required live sections cover the successful flow and every named negative,
-concurrency, and injected-failure scenario.
+scope. Its required live sections will cover the successful flow and every named
+negative, concurrency, and injected-failure scenario.
 
-The pre-reset verifier reads only this manifest and live local resources. The
-one-command reset deletes all Phase 9 contracts' generated manifests, local token
-balances, database rows and schemas, object prefixes, broker streams, cached fixture
-keys, and run artifacts within the reviewed workspace paths. The post-reset verifier
-tests absence directly and never attempts to read a deleted manifest.
+The future pre-reset verifier will read only this manifest and live local resources.
+The complete one-command reset will delete all Phase 9 contracts' generated manifests,
+local token balances, database rows and schemas, object prefixes, broker streams,
+cached fixture keys, and run artifacts within the reviewed workspace paths. The future
+post-reset verifier will test absence directly and never attempt to read a deleted
+manifest.
 
 ## Failure matrix
 
@@ -1397,11 +1399,13 @@ recorded separately.
 For atomic refinance, `UNI-ADR-016` accepts ADR 0021's boundary, `UNI-ADR-017`
 accepts ADR 0022's factory/account/position bootstrap semantics, and `UNI-ADR-018`
 accepts ADR 0023's synthetic-local three-library/seven-call/ten-CREATE candidate
-architecture without activating an implementation or deployment. The later
+architecture without activating an implementation or deployment. `UNI-ADR-019`
+accepts ADR 0024's explicit Anvil nonce precondition and exact
+verification-before-governance-grant order without executing that grant. The later
 implementation checkpoint is method-level: it may activate only the exact factory,
 account, custody, lien, coordinator, and position-manager methods listed by ADRs 0021
 and 0022, while the candidate must also pass ADR 0023's linked-module checker and
-nonce-10 deployment-evidence gates,
+nonce-10 deployment-evidence gates plus ADR 0024's activation-topology controls,
 retains the exact freeze stub for every other mutator, and requires
 `UNI-REFI-001` plus `UNI-REFI-002` as one bundled gate. The exact additive ABI allowlist
 contains only coordinator-owned `RefinanceStateTransitioned` and

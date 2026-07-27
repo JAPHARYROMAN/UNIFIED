@@ -153,12 +153,11 @@ if ($RpcUrl -cne 'http://127.0.0.1:18545') {
     throw 'The reset-bound topology harness is pinned to http://127.0.0.1:18545.'
 }
 if (
-    $RpcUrl -notmatch '^http://127\.0\.0\.1:[0-9]+/?$' -or
-    $rpc.Scheme -ne 'http' -or $rpc.Host -ne '127.0.0.1' -or $rpc.Port -le 0 -or
+    $rpc.Scheme -cne 'http' -or $rpc.Host -cne '127.0.0.1' -or $rpc.Port -ne 18545 -or
     $rpc.AbsolutePath -ne '/' -or -not [string]::IsNullOrEmpty($rpc.Query) -or
     -not [string]::IsNullOrEmpty($rpc.Fragment) -or -not [string]::IsNullOrEmpty($rpc.UserInfo)
 ) {
-    throw 'RPC URL must be credential-free literal 127.0.0.1 HTTP with an explicit port.'
+    throw 'RPC URL must be the credential-free canonical http://127.0.0.1:18545 endpoint.'
 }
 if ((git -C $workspace status --porcelain --untracked-files=all | Out-String).Trim()) {
     throw 'Phase 9 topology evidence requires a clean tracked and untracked source worktree.'
@@ -302,6 +301,15 @@ try {
         [string]$plan.nonce_transcript.latest_prepared -ne '0x1' -or
         [string]$plan.nonce_transcript.pending_prepared -ne '0x1' -or
         [string]$plan.pre_broadcast_block.hash -notmatch '^0x[0-9a-f]{64}$' -or
+        [string]$plan.broadcaster -ne $candidateBroadcaster -or
+        [string]$plan.broadcaster_provenance.provider -ne 'anvil' -or
+        [string]$plan.broadcaster_provenance.account_profile -ne 'foundry-default-account-1' -or
+        [int]$plan.broadcaster_provenance.account_index -ne 1 -or
+        [string]$plan.broadcaster_provenance.address -ne $candidateBroadcaster -or
+        [string]$plan.broadcaster_provenance.account_set_sha256 -ne `
+            'sha256:19901d67310664f0f09541131dbc6669f2aa9ce4ffdb1cf497d8a7da8d1ba307' -or
+        $plan.broadcaster_provenance.unlocked -ne $true -or
+        $plan.broadcaster_provenance.private_key_input -ne $false -or
         [string]$plan.reset_command -ne 'pwsh ./scripts/smoke-phase9-refinance-anvil.ps1'
     ) {
         throw 'Prepared plan did not bind the verifier-owned raw nonce transcript.'
@@ -395,6 +403,15 @@ try {
         $evidence.activation_accepted -ne $false -or
         $evidence.role_grant_performed -ne $false -or
         $evidence.contains_real_value -ne $false -or
+        [string]$evidence.broadcaster -ne $candidateBroadcaster -or
+        [string]$evidence.broadcaster_provenance.provider -ne 'anvil' -or
+        [string]$evidence.broadcaster_provenance.account_profile -ne 'foundry-default-account-1' -or
+        [int]$evidence.broadcaster_provenance.account_index -ne 1 -or
+        [string]$evidence.broadcaster_provenance.address -ne $candidateBroadcaster -or
+        [string]$evidence.broadcaster_provenance.account_set_sha256 -ne `
+            'sha256:19901d67310664f0f09541131dbc6669f2aa9ce4ffdb1cf497d8a7da8d1ba307' -or
+        $evidence.broadcaster_provenance.unlocked -ne $true -or
+        $evidence.broadcaster_provenance.private_key_input -ne $false -or
         [string]$evidence.reset_command -ne 'pwsh ./scripts/smoke-phase9-refinance-anvil.ps1'
     ) {
         throw 'Verified evidence escaped the non-activating topology boundary.'

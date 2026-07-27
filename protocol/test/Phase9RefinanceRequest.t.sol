@@ -38,13 +38,11 @@ contract Phase9RefinanceRequestTest is Phase9RefinanceRequestHarness {
         );
 
         address oldAccount = requestComponents.loanFactory.loanAccount(requestRecord.oldLoanId);
-        address oldManager =
-            requestComponents.loanFactory.positionManager(requestRecord.oldLoanId);
+        address oldManager = requestComponents.loanFactory.positionManager(requestRecord.oldLoanId);
         require(oldAccount == _requestPredictAccount(requestRecord.oldLoanId), "old account");
         require(oldManager.code.length != 0, "old manager");
         require(
-            requestLoanRegistry.loanAccount(requestRecord.oldLoanId) == oldAccount,
-            "old registry"
+            requestLoanRegistry.loanAccount(requestRecord.oldLoanId) == oldAccount, "old registry"
         );
         Phase9Types.DebtState memory oldDebt = IPhase9LoanAccount(oldAccount).debtState();
         require(oldDebt.lifecycle == Phase9Types.LoanLifecycle.ACTIVE, "old active");
@@ -71,8 +69,7 @@ contract Phase9RefinanceRequestTest is Phase9RefinanceRequestHarness {
         );
 
         address newAccount = requestComponents.loanFactory.loanAccount(requestRecord.newLoanId);
-        address newManager =
-            requestComponents.loanFactory.positionManager(requestRecord.newLoanId);
+        address newManager = requestComponents.loanFactory.positionManager(requestRecord.newLoanId);
         require(newAccount == _requestPredictAccount(requestRecord.newLoanId), "new account");
         require(newManager == requestRecord.newPositionManager, "new manager");
         Phase9Types.DebtState memory newDebt = IPhase9LoanAccount(newAccount).debtState();
@@ -97,12 +94,13 @@ contract Phase9RefinanceRequestTest is Phase9RefinanceRequestHarness {
 
     function test_P9R_AUTH001_SubstitutedCallerCannotAccept() public {
         Phase9BootstrapUnauthorizedCaller attacker = new Phase9BootstrapUnauthorizedCaller();
-        (bool success, bytes memory returned) = address(attacker).call(
-            abi.encodeCall(
-                Phase9BootstrapUnauthorizedCaller.requestRefinance,
-                (requestComponents.refinanceCoordinator, requestRecord)
-            )
-        );
+        (bool success, bytes memory returned) = address(attacker)
+            .call(
+                abi.encodeCall(
+                    Phase9BootstrapUnauthorizedCaller.requestRefinance,
+                    (requestComponents.refinanceCoordinator, requestRecord)
+                )
+            );
         require(!success, "substituted borrower");
         require(
             _requestSelector(returned) == IRefinanceCoordinator.InvalidRefinance.selector,
@@ -117,23 +115,19 @@ contract Phase9RefinanceRequestTest is Phase9RefinanceRequestHarness {
             requestComponents.refinanceCoordinator.refinance(refinanceId);
         uint64 factoryNonce = requestComponents.loanFactory.nextLoanNonce();
 
-        (bool success, bytes memory returned) =
-            address(requestComponents.refinanceCoordinator).call(
-                abi.encodeCall(IRefinanceCoordinator.requestRefinance, (requestRecord))
-            );
+        (bool success, bytes memory returned) = address(requestComponents.refinanceCoordinator)
+            .call(abi.encodeCall(IRefinanceCoordinator.requestRefinance, (requestRecord)));
         require(!success, "outer replay");
         require(
             _requestSelector(returned) == IRefinanceCoordinator.InvalidRefinance.selector,
             "replay selector"
         );
         require(
-            requestComponents.loanFactory.nextLoanNonce() == factoryNonce,
-            "replay factory nonce"
+            requestComponents.loanFactory.nextLoanNonce() == factoryNonce, "replay factory nonce"
         );
         require(
-            keccak256(
-                abi.encode(requestComponents.refinanceCoordinator.refinance(refinanceId))
-            ) == keccak256(abi.encode(accepted)),
+            keccak256(abi.encode(requestComponents.refinanceCoordinator.refinance(refinanceId)))
+                == keccak256(abi.encode(accepted)),
             "accepted mutation"
         );
     }
@@ -177,10 +171,8 @@ contract Phase9RefinanceRequestTest is Phase9RefinanceRequestHarness {
     }
 
     function _expectInvalidRequest(Phase9Types.RefinanceRecord memory supplied) private {
-        (bool success, bytes memory returned) =
-            address(requestComponents.refinanceCoordinator).call(
-                abi.encodeCall(IRefinanceCoordinator.requestRefinance, (supplied))
-            );
+        (bool success, bytes memory returned) = address(requestComponents.refinanceCoordinator)
+            .call(abi.encodeCall(IRefinanceCoordinator.requestRefinance, (supplied)));
         require(!success, "expected invalid refinance");
         require(
             _requestSelector(returned) == IRefinanceCoordinator.InvalidRefinance.selector,

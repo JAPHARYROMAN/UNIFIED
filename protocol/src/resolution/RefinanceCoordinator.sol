@@ -148,6 +148,8 @@ bytes32 constant PHASE9_SETTLEMENT_ASSET_ID =
     0x61737365743a7068617365393a7039756e697400000000000000000000000000;
 bytes32 constant PHASE9_REFINANCE_REQUEST_CAPABILITY =
     keccak256("CAPABILITY_PHASE9_REFINANCE_REQUEST");
+bytes32 constant PHASE9_REFINANCE_FUNDING_CAPABILITY =
+    keccak256("CAPABILITY_PHASE9_REFINANCE_FUNDING");
 bytes32 constant PHASE9_LOCAL_TOKEN_RUNTIME_CODE_HASH =
     0xb4cb1bc940c6783f3ecad43dc045c0fa93b02fae77d6e874a8adaf7216c907e5;
 
@@ -348,14 +350,13 @@ library Phase9RefinanceRequestModule {
         oldLoan.bootstrapId = plan.bootstrapId;
         oldLoan.fresh = plan.freshOldLoan;
         if (oldLoan.fresh) {
-            Phase9Types.LoanCreationRequest memory oldCreation =
-                Phase9Types.LoanCreationRequest({
-                    oldLoanId: bytes32(0),
-                    newLoanNonce: 0,
-                    refinanceId: bytes32(0),
-                    configuration: plan.oldConfiguration,
-                    creationId: bytes32(0)
-                });
+            Phase9Types.LoanCreationRequest memory oldCreation = Phase9Types.LoanCreationRequest({
+                oldLoanId: bytes32(0),
+                newLoanNonce: 0,
+                refinanceId: bytes32(0),
+                configuration: plan.oldConfiguration,
+                creationId: bytes32(0)
+            });
             (oldLoan.loanAccount, oldLoan.positionManager) =
                 IPhase9LoanFactory(state.phase9LoanFactory).createLoan(oldCreation);
             _validateLoanGraph(
@@ -367,10 +368,9 @@ library Phase9RefinanceRequestModule {
                 oldLoan.positionManager
             );
             oldLoan.debt = _accountDebt(oldLoan.loanAccount);
-            if (
-                keccak256(abi.encode(oldLoan.debt))
-                    != keccak256(abi.encode(plan.bootstrap.debt))
-            ) revert IRefinanceCoordinator.InvalidRefinance();
+            if (keccak256(abi.encode(oldLoan.debt)) != keccak256(abi.encode(plan.bootstrap.debt))) {
+                revert IRefinanceCoordinator.InvalidRefinance();
+            }
             _installBootstrap(state, request, plan.policy, oldLoan, plan.bootstrap);
         }
         _validateLoanGraph(
@@ -388,14 +388,11 @@ library Phase9RefinanceRequestModule {
 
         PayoffPolicyFacts memory payoffPolicy =
             _resolvePayoffPolicy(state, request, plan.policy, oldLoan);
-        bytes32 quoteId =
-            _issueAndValidateQuote(state, request, oldLoan, payoffPolicy);
+        bytes32 quoteId = _issueAndValidateQuote(state, request, oldLoan, payoffPolicy);
         refinanceId = _deriveRefinanceId(request, quoteId);
 
         (address newLoanAccount, address newPositionManager) =
-            _createReplacementLoan(
-                state, request, refinanceId, plan.replacementConfiguration
-            );
+            _createReplacementLoan(state, request, refinanceId, plan.replacementConfiguration);
         _validateReplacementGraph(
             state,
             request,
@@ -414,10 +411,7 @@ library Phase9RefinanceRequestModule {
 
         bytes32 operationId = keccak256(
             abi.encode(
-                "UNIFIED_REFINANCE_REQUEST_OPERATION_V1",
-                block.chainid,
-                address(this),
-                refinanceId
+                "UNIFIED_REFINANCE_REQUEST_OPERATION_V1", block.chainid, address(this), refinanceId
             )
         );
         state.processedOperationIds[operationId] = true;
@@ -434,9 +428,7 @@ library Phase9RefinanceRequestModule {
                 operationId
             )
         );
-        emit RefinanceRequested(
-            refinanceId, request.oldLoanId, request.newLoanId, quoteId
-        );
+        emit RefinanceRequested(refinanceId, request.oldLoanId, request.newLoanId, quoteId);
         emit RefinanceStateTransitioned(
             refinanceId,
             Phase9Types.RefinanceState.NONE,
@@ -472,10 +464,7 @@ library Phase9RefinanceRequestModule {
         ) revert IRefinanceCoordinator.InvalidRefinance();
     }
 
-    function _validationContextHash(
-        Phase9RefinanceStorageLayout storage state,
-        bytes32 oldLoanId
-    )
+    function _validationContextHash(Phase9RefinanceStorageLayout storage state, bytes32 oldLoanId)
         private
         view
         returns (bytes32)
@@ -499,11 +488,7 @@ library Phase9RefinanceRequestModule {
         );
     }
 
-    function _validationPlanBodyHash(ValidationPlan memory plan)
-        private
-        pure
-        returns (bytes32)
-    {
+    function _validationPlanBodyHash(ValidationPlan memory plan) private pure returns (bytes32) {
         return keccak256(
             abi.encode(
                 plan.policy,
@@ -523,29 +508,23 @@ library Phase9RefinanceRequestModule {
         if (
             block.chainid != 31337 || block.timestamp > type(uint64).max
                 || request.refinanceId != bytes32(0) || request.quoteId != bytes32(0)
-                || request.state != Phase9Types.RefinanceState.NONE
-                || request.stateVersion != 0 || request.acceptedFunding != 0
-                || request.executionAttempts != 0
-                || request.terminalEvidenceHash != bytes32(0)
-                || request.oldLoanId == bytes32(0) || request.newLoanId == bytes32(0)
-                || request.oldLoanId == request.newLoanId || request.borrower == address(0)
-                || request.oldLender == address(0)
+                || request.state != Phase9Types.RefinanceState.NONE || request.stateVersion != 0
+                || request.acceptedFunding != 0 || request.executionAttempts != 0
+                || request.terminalEvidenceHash != bytes32(0) || request.oldLoanId == bytes32(0)
+                || request.newLoanId == bytes32(0) || request.oldLoanId == request.newLoanId
+                || request.borrower == address(0) || request.oldLender == address(0)
                 || request.newPositionManager == address(0)
                 || request.componentBeneficiaryHash == bytes32(0)
                 || request.settlementAssetId != PHASE9_SETTLEMENT_ASSET_ID
                 || request.collateralSetHash == bytes32(0) || request.lienVersion == 0
-                || request.proposedTermsHash == bytes32(0)
-                || request.newPolicySetHash == bytes32(0)
-                || request.refinancePolicyHash == bytes32(0)
-                || request.refinanceNonce == 0
+                || request.proposedTermsHash == bytes32(0) || request.newPolicySetHash == bytes32(0)
+                || request.refinancePolicyHash == bytes32(0) || request.refinanceNonce == 0
                 || request.refinanceNonce >= PHASE9_REFINANCE_NONCE_MASK
                 || request.newLoanNonce != request.refinanceNonce
                 || request.expiresAt <= block.timestamp || msg.sender != request.borrower
                 || request.oldNetPayoff == 0 || request.newPrincipal == 0
-                || request.fundingAmount == 0
-                || request.newPrincipal != request.fundingAmount
-                || request.fundingAmount
-                    != _checkedAdd(payoffAndFee, request.borrowerProceeds)
+                || request.fundingAmount == 0 || request.newPrincipal != request.fundingAmount
+                || request.fundingAmount != _checkedAdd(payoffAndFee, request.borrowerProceeds)
         ) revert IRefinanceCoordinator.InvalidRefinance();
     }
 
@@ -556,41 +535,36 @@ library Phase9RefinanceRequestModule {
     ) private {
         uint64 raw = state.nextRefinanceNonce[oldLoanId];
         if (
-            (raw & PHASE9_REFINANCE_ACTIVE_MASK) != 0
-                || raw == PHASE9_REFINANCE_NONCE_MASK
+            (raw & PHASE9_REFINANCE_ACTIVE_MASK) != 0 || raw == PHASE9_REFINANCE_NONCE_MASK
                 || refinanceNonce != (raw == 0 ? 1 : raw)
         ) revert IRefinanceCoordinator.InvalidRefinance();
-        state.nextRefinanceNonce[oldLoanId] =
-            PHASE9_REFINANCE_ACTIVE_MASK | refinanceNonce;
+        state.nextRefinanceNonce[oldLoanId] = PHASE9_REFINANCE_ACTIVE_MASK | refinanceNonce;
     }
 
-    function _validateCoreDependencies(Phase9RefinanceStorageLayout storage state)
-        private
-        view
-    {
+    function _validateCoreDependencies(Phase9RefinanceStorageLayout storage state) private view {
         if (
             state.loanRegistry.code.length == 0 || state.phase9LoanFactory.code.length == 0
-                || state.payoffQuoteEngine.code.length == 0
-                || state.lienRegistry.code.length == 0 || state.assetRegistry.code.length == 0
-                || state.policyRegistry.code.length == 0
+                || state.payoffQuoteEngine.code.length == 0 || state.lienRegistry.code.length == 0
+                || state.assetRegistry.code.length == 0 || state.policyRegistry.code.length == 0
                 || state.emergencyController.code.length == 0
                 || state.treasuryFeeRecipient == address(0)
                 || address(state.settlementToken).code.length == 0
         ) revert IRefinanceCoordinator.InvalidRefinance();
         if (
             _addressCall(
-                state.lienRegistry,
-                abi.encodeCall(ILienRegistry.registeredRefinanceCoordinator, ())
-            ) != address(this)
+                    state.lienRegistry,
+                    abi.encodeCall(ILienRegistry.registeredRefinanceCoordinator, ())
+                ) != address(this)
         ) {
             revert IRefinanceCoordinator.InvalidRefinance();
         }
     }
 
     function _requireRequestOpen(Phase9RefinanceStorageLayout storage state) private view {
-        try IEmergencyController(state.emergencyController).emergencyState(
-            PHASE9_REFINANCE_REQUEST_CAPABILITY
-        ) returns (bool active, uint64, bytes32) {
+        try IEmergencyController(state.emergencyController)
+            .emergencyState(PHASE9_REFINANCE_REQUEST_CAPABILITY) returns (
+            bool active, uint64, bytes32
+        ) {
             if (active) revert IRefinanceCoordinator.InvalidRefinance();
         } catch {
             revert IRefinanceCoordinator.InvalidRefinance();
@@ -601,15 +575,11 @@ library Phase9RefinanceRequestModule {
         Phase9RefinanceStorageLayout storage state,
         bytes32 settlementAssetId
     ) private view {
-        if (
-            PHASE9_LOCAL_TOKEN_RUNTIME_CODE_HASH
-                != address(state.settlementToken).codehash
-        ) {
+        if (PHASE9_LOCAL_TOKEN_RUNTIME_CODE_HASH != address(state.settlementToken).codehash) {
             revert IRefinanceCoordinator.InvalidRefinance();
         }
-        try IPhase9RefinanceAssetSource(state.assetRegistry).resolveRefinanceAsset(
-            settlementAssetId
-        ) returns (
+        try IPhase9RefinanceAssetSource(state.assetRegistry)
+            .resolveRefinanceAsset(settlementAssetId) returns (
             address token,
             uint8 decimals,
             bytes32 runtimeCodeHash,
@@ -618,8 +588,7 @@ library Phase9RefinanceRequestModule {
         ) {
             if (
                 !active || !exactBalanceDelta || decimals != 6
-                    || token != address(state.settlementToken)
-                    || runtimeCodeHash != token.codehash
+                    || token != address(state.settlementToken) || runtimeCodeHash != token.codehash
                     || runtimeCodeHash != PHASE9_LOCAL_TOKEN_RUNTIME_CODE_HASH
             ) revert IRefinanceCoordinator.InvalidRefinance();
         } catch {
@@ -631,9 +600,8 @@ library Phase9RefinanceRequestModule {
         Phase9RefinanceStorageLayout storage state,
         Phase9Types.RefinanceRecord calldata request
     ) private view returns (RefinancePolicyFacts memory policy) {
-        try IPhase9RefinancePolicySource(state.policyRegistry).resolveRefinancePolicy(
-            request.refinancePolicyHash
-        ) returns (
+        try IPhase9RefinancePolicySource(state.policyRegistry)
+            .resolveRefinancePolicy(request.refinancePolicyHash) returns (
             bytes32 oldPolicySetHash,
             bytes32 newPolicySetHash,
             bytes32 proposedTermsHash,
@@ -665,10 +633,8 @@ library Phase9RefinanceRequestModule {
                 || policy.proposedTermsHash != request.proposedTermsHash
                 || policy.maximumValidity == 0 || policy.maximumCommitments == 0
                 || policy.maximumCommitments > 32 || policy.collateralIds.length == 0
-                || policy.collateralIds.length > 16
-                || policy.replacementTranches.length == 0
-                || policy.replacementTranches.length > 8
-                || policy.replacementPositions.length == 0
+                || policy.collateralIds.length > 16 || policy.replacementTranches.length == 0
+                || policy.replacementTranches.length > 8 || policy.replacementPositions.length == 0
                 || policy.replacementPositions.length > 32
                 || uint256(request.expiresAt) - block.timestamp > policy.maximumValidity
         ) revert IRefinanceCoordinator.InvalidRefinance();
@@ -684,9 +650,10 @@ library Phase9RefinanceRequestModule {
         bytes32 policyHash,
         RefinancePolicyFacts memory policy
     ) private view {
-        (bool ok, bytes memory raw) = state.policyRegistry.staticcall(
-            abi.encodeCall(IPhase9RefinancePolicySource.resolveRefinancePolicy, (policyHash))
-        );
+        (bool ok, bytes memory raw) = state.policyRegistry
+            .staticcall(
+                abi.encodeCall(IPhase9RefinancePolicySource.resolveRefinancePolicy, (policyHash))
+            );
         bytes memory canonical = abi.encode(
             policy.oldPolicySetHash,
             policy.newPolicySetHash,
@@ -709,9 +676,8 @@ library Phase9RefinanceRequestModule {
         bytes32 policySetHash,
         bytes32 loanId
     ) private view returns (CreationFacts memory creation) {
-        try IPhase9RefinancePolicySource(state.policyRegistry).resolveLoanCreation(
-            policySetHash, loanId
-        ) returns (
+        try IPhase9RefinancePolicySource(state.policyRegistry)
+            .resolveLoanCreation(policySetHash, loanId) returns (
             Phase9Types.LoanConfiguration memory configuration,
             uint8 mode,
             bytes32 bootstrapId,
@@ -721,11 +687,12 @@ library Phase9RefinanceRequestModule {
         } catch {
             revert IRefinanceCoordinator.InvalidRefinance();
         }
-        (bool ok, bytes memory raw) = state.policyRegistry.staticcall(
-            abi.encodeCall(
-                IPhase9RefinancePolicySource.resolveLoanCreation, (policySetHash, loanId)
-            )
-        );
+        (bool ok, bytes memory raw) = state.policyRegistry
+            .staticcall(
+                abi.encodeCall(
+                    IPhase9RefinancePolicySource.resolveLoanCreation, (policySetHash, loanId)
+                )
+            );
         bytes memory canonical = abi.encode(
             creation.configuration, creation.mode, creation.bootstrapId, creation.active
         );
@@ -787,8 +754,9 @@ library Phase9RefinanceRequestModule {
         RefinancePolicyFacts memory policy,
         CreationFacts memory replacement
     ) private returns (OldLoanFacts memory oldLoan) {
-        CreationFacts memory creation =
-            _resolveCreation(state, policy.oldPolicySetHash, request.oldLoanId);
+        CreationFacts memory creation = _resolveCreation(
+            state, policy.oldPolicySetHash, request.oldLoanId
+        );
         if (!creation.active || creation.configuration.policySetHash != policy.oldPolicySetHash) {
             revert IRefinanceCoordinator.InvalidRefinance();
         }
@@ -798,15 +766,15 @@ library Phase9RefinanceRequestModule {
         address registeredAccount = _registryLoanAccount(state, request.oldLoanId);
         bool registered = _registryExists(state, request.oldLoanId);
         oldLoan.fresh = oldLoan.loanAccount == address(0);
-        if (
-            replacement.configuration.collateralCustody
-                != creation.configuration.collateralCustody
-        ) revert IRefinanceCoordinator.InvalidRefinance();
+        if (replacement.configuration.collateralCustody != creation.configuration.collateralCustody)
+        {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
 
         if (oldLoan.fresh) {
             if (
-                oldLoan.positionManager != address(0) || registered || registeredAccount != address(0)
-                    || creation.mode != PHASE9_LOCAL_BOOTSTRAP
+                oldLoan.positionManager != address(0) || registered
+                    || registeredAccount != address(0) || creation.mode != PHASE9_LOCAL_BOOTSTRAP
                     || creation.bootstrapId
                         != _deriveBootstrapId(state, request, policy.oldPolicySetHash)
             ) revert IRefinanceCoordinator.InvalidRefinance();
@@ -822,14 +790,13 @@ library Phase9RefinanceRequestModule {
             BootstrapFacts memory bootstrap =
                 _resolveBootstrap(state, request, policy, creation.bootstrapId);
             _preflightFreshCollateral(state, request, policy, creation.configuration, bootstrap);
-            Phase9Types.LoanCreationRequest memory creationRequest =
-                Phase9Types.LoanCreationRequest({
-                    oldLoanId: bytes32(0),
-                    newLoanNonce: 0,
-                    refinanceId: bytes32(0),
-                    configuration: creation.configuration,
-                    creationId: bytes32(0)
-                });
+            Phase9Types.LoanCreationRequest memory creationRequest = Phase9Types.LoanCreationRequest({
+                oldLoanId: bytes32(0),
+                newLoanNonce: 0,
+                refinanceId: bytes32(0),
+                configuration: creation.configuration,
+                creationId: bytes32(0)
+            });
             (oldLoan.loanAccount, oldLoan.positionManager) =
                 IPhase9LoanFactory(state.phase9LoanFactory).createLoan(creationRequest);
             _validateLoanGraph(
@@ -844,23 +811,17 @@ library Phase9RefinanceRequestModule {
             if (keccak256(abi.encode(oldLoan.debt)) != keccak256(abi.encode(bootstrap.debt))) {
                 revert IRefinanceCoordinator.InvalidRefinance();
             }
-            _installBootstrap(
-                state, request, policy, oldLoan, bootstrap
-            );
+            _installBootstrap(state, request, policy, oldLoan, bootstrap);
         } else {
             if (
                 oldLoan.positionManager == address(0) || !registered
                     || registeredAccount != oldLoan.loanAccount
                     || _registryTerminal(state, request.oldLoanId)
-                    || !(
-                        creation.mode == PHASE9_REFINANCE_REPLACEMENT
-                            && creation.bootstrapId == bytes32(0)
-                            || creation.mode == PHASE9_LOCAL_BOOTSTRAP
-                                && creation.bootstrapId
-                                    == _deriveBootstrapId(
-                                        state, request, policy.oldPolicySetHash
-                                    )
-                    )
+                    || !(creation.mode == PHASE9_REFINANCE_REPLACEMENT
+                        && creation.bootstrapId == bytes32(0)
+                        || creation.mode == PHASE9_LOCAL_BOOTSTRAP
+                        && creation.bootstrapId
+                            == _deriveBootstrapId(state, request, policy.oldPolicySetHash))
             ) revert IRefinanceCoordinator.InvalidRefinance();
             _validateConfiguration(
                 state,
@@ -891,8 +852,8 @@ library Phase9RefinanceRequestModule {
         RefinancePolicyFacts memory policy,
         bytes32 bootstrapId
     ) private view returns (BootstrapFacts memory bootstrap) {
-        try IPhase9RefinancePolicySource(state.policyRegistry).resolveBootstrap(bootstrapId)
-        returns (
+        try IPhase9RefinancePolicySource(state.policyRegistry)
+            .resolveBootstrap(bootstrapId) returns (
             bytes32 policySetHash,
             bytes32 loanId,
             Phase9Types.DebtState memory debt,
@@ -918,8 +879,7 @@ library Phase9RefinanceRequestModule {
             !bootstrap.active || bootstrap.policySetHash != policy.oldPolicySetHash
                 || bootstrap.loanId != request.oldLoanId || bootstrap.tranches.length == 0
                 || bootstrap.tranches.length > 8 || bootstrap.positions.length != 1
-                || bootstrap.custodyRecords.length == 0
-                || bootstrap.custodyRecords.length > 16
+                || bootstrap.custodyRecords.length == 0 || bootstrap.custodyRecords.length > 16
                 || bootstrap.custodyRecords.length != bootstrap.liens.length
                 || bootstrap.liens.length != policy.collateralIds.length
         ) revert IRefinanceCoordinator.InvalidRefinance();
@@ -932,9 +892,10 @@ library Phase9RefinanceRequestModule {
         bytes32 bootstrapId,
         BootstrapFacts memory bootstrap
     ) private view {
-        (bool ok, bytes memory raw) = state.policyRegistry.staticcall(
-            abi.encodeCall(IPhase9RefinancePolicySource.resolveBootstrap, (bootstrapId))
-        );
+        (bool ok, bytes memory raw) = state.policyRegistry
+            .staticcall(
+                abi.encodeCall(IPhase9RefinancePolicySource.resolveBootstrap, (bootstrapId))
+            );
         bytes memory canonical = abi.encode(
             bootstrap.policySetHash,
             bootstrap.loanId,
@@ -990,18 +951,16 @@ library Phase9RefinanceRequestModule {
         uint256 grossPayoff = _checkedAdd(lenderClaim, feePenalty);
         if (
             debt.lifecycle != Phase9Types.LoanLifecycle.ACTIVE
-                || !(
-                    debt.servicingState == Phase9Types.ServicingState.CURRENT
-                        || debt.servicingState == Phase9Types.ServicingState.DELINQUENT
-                        || debt.servicingState == Phase9Types.ServicingState.DEFAULTED
-                ) || debt.termsVersion == 0 || debt.debtStateVersion == 0 || debt.stateNonce == 0
+                || !(debt.servicingState == Phase9Types.ServicingState.CURRENT
+                    || debt.servicingState == Phase9Types.ServicingState.DELINQUENT
+                    || debt.servicingState == Phase9Types.ServicingState.DEFAULTED)
+                || debt.termsVersion == 0 || debt.debtStateVersion == 0 || debt.stateNonce == 0
                 || debt.scheduleHash == bytes32(0) || debt.commencementTime == 0
                 || debt.maturityTime <= debt.commencementTime || lenderClaim == 0
                 || debt.capitalizedInterest != 0 || debt.recoverableCosts != 0
                 || debt.unappliedCredit > feePenalty || debt.coveredLossExposure != 0
                 || debt.realizedLoss != 0 || debt.writtenOffAmount != 0
-                || debt.recoveredAfterWriteoff != 0
-                || debt.activeRefinanceId != bytes32(0)
+                || debt.recoveredAfterWriteoff != 0 || debt.activeRefinanceId != bytes32(0)
                 || debt.activeRestructureId != bytes32(0)
                 || grossPayoff - debt.unappliedCredit != request.oldNetPayoff
         ) revert IRefinanceCoordinator.InvalidRefinance();
@@ -1111,10 +1070,9 @@ library Phase9RefinanceRequestModule {
     ) private pure {
         if (
             collateralId == bytes32(0) || custodyRecord.collateralId != collateralId
-                || lienRecord.collateralId != collateralId
-                || custodyRecord.assetId == bytes32(0)
-                || custodyRecord.assetId != lienRecord.assetId
-                || custodyRecord.token == address(0) || custodyRecord.identityHash == bytes32(0)
+                || lienRecord.collateralId != collateralId || custodyRecord.assetId == bytes32(0)
+                || custodyRecord.assetId != lienRecord.assetId || custodyRecord.token == address(0)
+                || custodyRecord.identityHash == bytes32(0)
                 || custodyRecord.borrower != request.borrower
                 || lienRecord.borrower != request.borrower || custodyRecord.quantity == 0
                 || custodyRecord.quantity != lienRecord.quantity
@@ -1135,9 +1093,8 @@ library Phase9RefinanceRequestModule {
         bytes32 operationId
     ) private view {
         CustodyAssetFacts memory asset;
-        try IPhase9RefinanceAssetSource(state.assetRegistry).resolveCustodyAsset(
-            record_.assetId
-        ) returns (
+        try IPhase9RefinanceAssetSource(state.assetRegistry)
+            .resolveCustodyAsset(record_.assetId) returns (
             address token,
             uint8 decimals,
             bytes32 runtimeCodeHash,
@@ -1167,9 +1124,7 @@ library Phase9RefinanceRequestModule {
         fields.quantity = record_.quantity;
         if (
             record_.identityHash
-                != keccak256(
-                    abi.encode("UNIFIED_PHASE9_BOOTSTRAP_CUSTODY_IDENTITY_V1", fields)
-                )
+                != keccak256(abi.encode("UNIFIED_PHASE9_BOOTSTRAP_CUSTODY_IDENTITY_V1", fields))
         ) revert IRefinanceCoordinator.InvalidRefinance();
     }
 
@@ -1182,9 +1137,7 @@ library Phase9RefinanceRequestModule {
         if (existing.collateralId != bytes32(0)) {
             revert IRefinanceCoordinator.InvalidRefinance();
         }
-        try ILienRegistry(state.lienRegistry).lien(collateralId) returns (
-            Phase9Types.Lien memory
-        ) {
+        try ILienRegistry(state.lienRegistry).lien(collateralId) returns (Phase9Types.Lien memory) {
             revert IRefinanceCoordinator.InvalidRefinance();
         } catch (bytes memory reason) {
             if (
@@ -1217,9 +1170,9 @@ library Phase9RefinanceRequestModule {
                 oldLoan.configuration.collateralCustody,
                 policy.collateralIds[i]
             );
-            try ICollateralCustodyV2(oldLoan.configuration.collateralCustody).recordCustody(
-                bootstrap.custodyRecords[i], operationId
-            ) { } catch {
+            try ICollateralCustodyV2(oldLoan.configuration.collateralCustody)
+                .recordCustody(bootstrap.custodyRecords[i], operationId) { }
+            catch {
                 revert IRefinanceCoordinator.InvalidRefinance();
             }
             try ILienRegistry(state.lienRegistry).registerLien(bootstrap.liens[i]) { }
@@ -1228,13 +1181,12 @@ library Phase9RefinanceRequestModule {
             }
             if (
                 keccak256(
-                    abi.encode(
-                        _custody(
-                            oldLoan.configuration.collateralCustody,
-                            policy.collateralIds[i]
-                        )
-                    )
-                ) != keccak256(abi.encode(bootstrap.custodyRecords[i]))
+                            abi.encode(
+                                _custody(
+                                    oldLoan.configuration.collateralCustody, policy.collateralIds[i]
+                                )
+                            )
+                        ) != keccak256(abi.encode(bootstrap.custodyRecords[i]))
                     || keccak256(abi.encode(_lien(state, policy.collateralIds[i])))
                         != keccak256(abi.encode(bootstrap.liens[i]))
             ) revert IRefinanceCoordinator.InvalidRefinance();
@@ -1247,12 +1199,13 @@ library Phase9RefinanceRequestModule {
         RefinancePolicyFacts memory policy,
         OldLoanFacts memory oldLoan
     ) private view returns (PayoffPolicyFacts memory payoff) {
-        (bool ok, bytes memory raw) = state.policyRegistry.staticcall(
-            abi.encodeCall(
-                IPhase9PayoffQuotePolicySource.resolvePayoffQuotePolicy,
-                (request.oldLoanId, oldLoan.loanAccount)
-            )
-        );
+        (bool ok, bytes memory raw) = state.policyRegistry
+            .staticcall(
+                abi.encodeCall(
+                    IPhase9PayoffQuotePolicySource.resolvePayoffQuotePolicy,
+                    (request.oldLoanId, oldLoan.loanAccount)
+                )
+            );
         if (!ok || raw.length != 7 * 32) {
             revert IRefinanceCoordinator.InvalidRefinance();
         }
@@ -1288,7 +1241,9 @@ library Phase9RefinanceRequestModule {
                 || payoff.settlementToken != address(state.settlementToken)
                 || payoff.maximumValidity != policy.maximumValidity
                 || payoff.policyHash
-                    != _derivePayoffPolicyHash(state, request.oldLoanId, oldLoan.loanAccount, payoff)
+                    != _derivePayoffPolicyHash(
+                        state, request.oldLoanId, oldLoan.loanAccount, payoff
+                    )
         ) revert IRefinanceCoordinator.InvalidRefinance();
     }
 
@@ -1321,9 +1276,10 @@ library Phase9RefinanceRequestModule {
         OldLoanFacts memory oldLoan,
         PayoffPolicyFacts memory payoff
     ) private returns (bytes32 quoteId) {
-        try IPayoffQuoteEngineV2(state.payoffQuoteEngine).issueQuote(
-            request.oldLoanId, request.expiresAt
-        ) returns (bytes32 quoteId_) {
+        try IPayoffQuoteEngineV2(state.payoffQuoteEngine)
+            .issueQuote(request.oldLoanId, request.expiresAt) returns (
+            bytes32 quoteId_
+        ) {
             quoteId = quoteId_;
         } catch {
             revert IRefinanceCoordinator.InvalidRefinance();
@@ -1353,19 +1309,16 @@ library Phase9RefinanceRequestModule {
     ) private view {
         uint256 lenderClaim =
             _checkedAdd(oldLoan.debt.outstandingPrincipal, oldLoan.debt.accruedInterest);
-        uint256 feePenalty =
-            _checkedAdd(oldLoan.debt.accruedFees, oldLoan.debt.accruedPenalties);
+        uint256 feePenalty = _checkedAdd(oldLoan.debt.accruedFees, oldLoan.debt.accruedPenalties);
         uint256 gross = _checkedAdd(lenderClaim, feePenalty);
         if (components.length != 5) revert IRefinanceCoordinator.InvalidRefinance();
         _validateComponents(request, oldLoan.debt, payoff, components);
-        bytes32 componentHash = keccak256(
-            abi.encode("UNIFIED_PAYOFF_COMPONENT_BENEFICIARIES_V1", components)
-        );
+        bytes32 componentHash =
+            keccak256(abi.encode("UNIFIED_PAYOFF_COMPONENT_BENEFICIARIES_V1", components));
         bytes32 routeHash = _deriveSettlementRouteHash(state, request, oldLoan, payoff);
         if (
-            quote.quoteId != quoteId || quoteId == bytes32(0)
-                || quote.loanId != request.oldLoanId || quote.loanAccount != oldLoan.loanAccount
-                || quote.policyHash != payoff.policyHash
+            quote.quoteId != quoteId || quoteId == bytes32(0) || quote.loanId != request.oldLoanId
+                || quote.loanAccount != oldLoan.loanAccount || quote.policyHash != payoff.policyHash
                 || quote.debtStateVersion != oldLoan.debt.debtStateVersion
                 || quote.principal != oldLoan.debt.outstandingPrincipal
                 || quote.accruedInterest != oldLoan.debt.accruedInterest
@@ -1406,10 +1359,7 @@ library Phase9RefinanceRequestModule {
             quoteId
                 != keccak256(
                     abi.encode(
-                        "UNIFIED_PAYOFF_QUOTE_V1",
-                        state.payoffQuoteEngine,
-                        block.chainid,
-                        identity
+                        "UNIFIED_PAYOFF_QUOTE_V1", state.payoffQuoteEngine, block.chainid, identity
                     )
                 )
         ) revert IRefinanceCoordinator.InvalidRefinance();
@@ -1448,10 +1398,8 @@ library Phase9RefinanceRequestModule {
             components[0].kind != IPayoffQuoteEngineV2.ComponentKind.PRINCIPAL
                 || components[0].amount != debt.outstandingPrincipal
                 || components[0].beneficiary != request.oldLender
-                || keccak256(bytes(components[0].obligationCode))
-                    != keccak256(bytes("PRINCIPAL"))
-                || components[1].kind
-                    != IPayoffQuoteEngineV2.ComponentKind.ACCRUED_INTEREST
+                || keccak256(bytes(components[0].obligationCode)) != keccak256(bytes("PRINCIPAL"))
+                || components[1].kind != IPayoffQuoteEngineV2.ComponentKind.ACCRUED_INTEREST
                 || components[1].amount != debt.accruedInterest
                 || components[1].beneficiary != request.oldLender
                 || keccak256(bytes(components[1].obligationCode))
@@ -1463,14 +1411,15 @@ library Phase9RefinanceRequestModule {
                 || components[3].kind != IPayoffQuoteEngineV2.ComponentKind.PENALTY
                 || components[3].amount != debt.accruedPenalties
                 || components[3].beneficiary != payoff.feePenaltyBeneficiary
-                || keccak256(bytes(components[3].obligationCode))
-                    != keccak256(bytes("PENALTY"))
+                || keccak256(bytes(components[3].obligationCode)) != keccak256(bytes("PENALTY"))
                 || components[4].kind != IPayoffQuoteEngineV2.ComponentKind.CREDIT
                 || components[4].amount != debt.unappliedCredit
                 || components[4].beneficiary != payoff.feePenaltyBeneficiary
                 || keccak256(bytes(components[4].obligationCode))
                     != keccak256(bytes("FEE_PENALTY_CREDIT"))
-        ) revert IRefinanceCoordinator.InvalidRefinance();
+        ) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
     }
 
     function _createReplacementLoan(
@@ -1502,16 +1451,11 @@ library Phase9RefinanceRequestModule {
             revert IRefinanceCoordinator.InvalidRefinance();
         }
         _validateLoanGraph(
-            state,
-            request.newLoanId,
-            request.borrower,
-            configuration,
-            loanAccount,
-            positionManager
+            state, request.newLoanId, request.borrower, configuration, loanAccount, positionManager
         );
         if (
             keccak256(abi.encode(_accountDebt(loanAccount)))
-                != keccak256(abi.encode(_emptyReplacementDebt()))
+                    != keccak256(abi.encode(_emptyReplacementDebt()))
                 || _agreementVersionHash(loanAccount, 0) != bytes32(0)
         ) revert IRefinanceCoordinator.InvalidRefinance();
     }
@@ -1527,13 +1471,12 @@ library Phase9RefinanceRequestModule {
                 || debt.termsVersion == 0 || debt.debtStateVersion == 0 || debt.stateNonce == 0
                 || debt.scheduleHash == bytes32(0) || debt.commencementTime == 0
                 || debt.maturityTime <= debt.commencementTime
-                || debt.outstandingPrincipal != request.newPrincipal
-                || debt.accruedInterest != 0 || debt.capitalizedInterest != 0
-                || debt.accruedFees != 0 || debt.accruedPenalties != 0
-                || debt.recoverableCosts != 0 || debt.unappliedCredit != 0
-                || debt.coveredLossExposure != 0 || debt.realizedLoss != 0
-                || debt.writtenOffAmount != 0 || debt.recoveredAfterWriteoff != 0
-                || debt.activeRefinanceId != bytes32(0)
+                || debt.outstandingPrincipal != request.newPrincipal || debt.accruedInterest != 0
+                || debt.capitalizedInterest != 0 || debt.accruedFees != 0
+                || debt.accruedPenalties != 0 || debt.recoverableCosts != 0
+                || debt.unappliedCredit != 0 || debt.coveredLossExposure != 0
+                || debt.realizedLoss != 0 || debt.writtenOffAmount != 0
+                || debt.recoveredAfterWriteoff != 0 || debt.activeRefinanceId != bytes32(0)
                 || debt.activeRestructureId != bytes32(0)
         ) revert IRefinanceCoordinator.InvalidRefinance();
         uint256 trancheClaims;
@@ -1590,8 +1533,8 @@ library Phase9RefinanceRequestModule {
                 || configuration.refinanceCoordinator != address(this)
                 || configuration.restructuringController.code.length == 0
                 || configuration.insuranceManager.code.length == 0
-                || configuration.recoveryManager.code.length == 0
-                || configuration.loanId != loanId || configuration.agreementHash == bytes32(0)
+                || configuration.recoveryManager.code.length == 0 || configuration.loanId != loanId
+                || configuration.agreementHash == bytes32(0)
                 || configuration.policySetHash != policySetHash
                 || configuration.amendmentPolicyHash == bytes32(0)
                 || configuration.protectionPolicyHash == bytes32(0)
@@ -1610,11 +1553,9 @@ library Phase9RefinanceRequestModule {
         address positionManager
     ) private view {
         if (
-            positionManager.code.length == 0
-                || _factoryLoanAccount(state, loanId) != loanAccount
+            positionManager.code.length == 0 || _factoryLoanAccount(state, loanId) != loanAccount
                 || _factoryPositionManager(state, loanId) != positionManager
-                || !_registryExists(state, loanId)
-                || _registryTerminal(state, loanId)
+                || !_registryExists(state, loanId) || _registryTerminal(state, loanId)
                 || _registryLoanAccount(state, loanId) != loanAccount
                 || _registryBorrower(state, loanId) != borrower
                 || _registryAgreementHash(state, loanId) != expectedConfiguration.agreementHash
@@ -1624,33 +1565,33 @@ library Phase9RefinanceRequestModule {
         ) revert IRefinanceCoordinator.InvalidRefinance();
     }
 
-    function _factoryLoanAccount(
-        Phase9RefinanceStorageLayout storage state,
-        bytes32 loanId
-    ) private view returns (address account) {
+    function _factoryLoanAccount(Phase9RefinanceStorageLayout storage state, bytes32 loanId)
+        private
+        view
+        returns (address account)
+    {
         account = _addressCall(
-            state.phase9LoanFactory,
-            abi.encodeCall(IPhase9LoanFactory.loanAccount, (loanId))
+            state.phase9LoanFactory, abi.encodeCall(IPhase9LoanFactory.loanAccount, (loanId))
         );
     }
 
-    function _factoryPositionManager(
-        Phase9RefinanceStorageLayout storage state,
-        bytes32 loanId
-    ) private view returns (address manager) {
+    function _factoryPositionManager(Phase9RefinanceStorageLayout storage state, bytes32 loanId)
+        private
+        view
+        returns (address manager)
+    {
         manager = _addressCall(
-            state.phase9LoanFactory,
-            abi.encodeCall(IPhase9LoanFactory.positionManager, (loanId))
+            state.phase9LoanFactory, abi.encodeCall(IPhase9LoanFactory.positionManager, (loanId))
         );
     }
 
-    function _registryLoanAccount(
-        Phase9RefinanceStorageLayout storage state,
-        bytes32 loanId
-    ) private view returns (address account) {
-        account = _addressCall(
-            state.loanRegistry, abi.encodeCall(ILoanRegistry.loanAccount, (loanId))
-        );
+    function _registryLoanAccount(Phase9RefinanceStorageLayout storage state, bytes32 loanId)
+        private
+        view
+        returns (address account)
+    {
+        account =
+            _addressCall(state.loanRegistry, abi.encodeCall(ILoanRegistry.loanAccount, (loanId)));
     }
 
     function _registryExists(Phase9RefinanceStorageLayout storage state, bytes32 loanId)
@@ -1661,42 +1602,41 @@ library Phase9RefinanceRequestModule {
         exists = _boolCall(state.loanRegistry, abi.encodeCall(ILoanRegistry.exists, (loanId)));
     }
 
-    function _registryTerminal(
-        Phase9RefinanceStorageLayout storage state,
-        bytes32 loanId
-    ) private view returns (bool terminal) {
-        terminal = _boolCall(
-            state.loanRegistry, abi.encodeCall(ILoanRegistry.isTerminal, (loanId))
-        );
+    function _registryTerminal(Phase9RefinanceStorageLayout storage state, bytes32 loanId)
+        private
+        view
+        returns (bool terminal)
+    {
+        terminal = _boolCall(state.loanRegistry, abi.encodeCall(ILoanRegistry.isTerminal, (loanId)));
     }
 
-    function _registryBorrower(
-        Phase9RefinanceStorageLayout storage state,
-        bytes32 loanId
-    ) private view returns (address borrower) {
+    function _registryBorrower(Phase9RefinanceStorageLayout storage state, bytes32 loanId)
+        private
+        view
+        returns (address borrower)
+    {
         borrower = _addressCall(
             state.loanRegistry, abi.encodeCall(ILoanRegistry.borrowerOf, (loanId))
         );
     }
 
-    function _registryAgreementHash(
-        Phase9RefinanceStorageLayout storage state,
-        bytes32 loanId
-    ) private view returns (bytes32 agreementHash) {
+    function _registryAgreementHash(Phase9RefinanceStorageLayout storage state, bytes32 loanId)
+        private
+        view
+        returns (bytes32 agreementHash)
+    {
         agreementHash = _wordCall(
             state.loanRegistry, abi.encodeCall(ILoanRegistry.agreementHashOf, (loanId))
         );
     }
 
-    function _registryProtocolVersion(
-        Phase9RefinanceStorageLayout storage state,
-        bytes32 loanId
-    ) private view returns (uint32 version) {
+    function _registryProtocolVersion(Phase9RefinanceStorageLayout storage state, bytes32 loanId)
+        private
+        view
+        returns (uint32 version)
+    {
         uint256 value = uint256(
-            _wordCall(
-                state.loanRegistry,
-                abi.encodeCall(ILoanRegistry.protocolVersionOf, (loanId))
-            )
+            _wordCall(state.loanRegistry, abi.encodeCall(ILoanRegistry.protocolVersionOf, (loanId)))
         );
         if (value > type(uint32).max) {
             revert IRefinanceCoordinator.InvalidRefinance();
@@ -1723,9 +1663,7 @@ library Phase9RefinanceRequestModule {
         view
         returns (Phase9Types.DebtState memory debt)
     {
-        try IPhase9LoanAccount(account).debtState() returns (
-            Phase9Types.DebtState memory debt_
-        ) {
+        try IPhase9LoanAccount(account).debtState() returns (Phase9Types.DebtState memory debt_) {
             debt = debt_;
         } catch {
             revert IRefinanceCoordinator.InvalidRefinance();
@@ -1742,11 +1680,7 @@ library Phase9RefinanceRequestModule {
         );
     }
 
-    function _wordCall(address target, bytes memory input)
-        private
-        view
-        returns (bytes32 result)
-    {
+    function _wordCall(address target, bytes memory input) private view returns (bytes32 result) {
         (bool ok, bytes memory raw) = target.staticcall(input);
         if (!ok || raw.length != 32) revert IRefinanceCoordinator.InvalidRefinance();
         result = abi.decode(raw, (bytes32));
@@ -1810,10 +1744,11 @@ library Phase9RefinanceRequestModule {
         }
     }
 
-    function _deriveRefinanceId(
-        Phase9Types.RefinanceRecord calldata request,
-        bytes32 quoteId
-    ) private view returns (bytes32) {
+    function _deriveRefinanceId(Phase9Types.RefinanceRecord calldata request, bytes32 quoteId)
+        private
+        view
+        returns (bytes32)
+    {
         RefinanceIdentityFields memory fields = RefinanceIdentityFields({
             chainId: block.chainid,
             coordinator: address(this),
@@ -1845,31 +1780,32 @@ library Phase9RefinanceRequestModule {
         Phase9Types.RefinanceRecord calldata request,
         RefinancePolicyFacts memory policy
     ) private view returns (bytes32) {
-        RefinancePolicyIdentityFields memory fields = RefinancePolicyIdentityFields({
-            chainId: block.chainid,
-            coordinator: address(this),
-            policyRegistry: state.policyRegistry,
-            oldLoanId: request.oldLoanId,
-            newLoanId: request.newLoanId,
-            borrower: request.borrower,
-            oldLender: request.oldLender,
-            newPositionManager: request.newPositionManager,
-            oldPolicySetHash: policy.oldPolicySetHash,
-            newPolicySetHash: policy.newPolicySetHash,
-            proposedTermsHash: policy.proposedTermsHash,
-            settlementAssetId: request.settlementAssetId,
-            collateralSetHash: request.collateralSetHash,
-            fundingAmount: request.fundingAmount,
-            refinanceFee: request.refinanceFee,
-            borrowerProceeds: request.borrowerProceeds,
-            expiresAt: request.expiresAt,
-            maximumValidity: policy.maximumValidity,
-            maximumCommitments: policy.maximumCommitments,
-            collateralIdsHash: keccak256(abi.encode(policy.collateralIds)),
-            replacementDebtHash: keccak256(abi.encode(policy.replacementDebt)),
-            replacementTranchesHash: keccak256(abi.encode(policy.replacementTranches)),
-            replacementPositionsHash: keccak256(abi.encode(policy.replacementPositions))
-        });
+        RefinancePolicyIdentityFields memory fields =
+            RefinancePolicyIdentityFields({
+                chainId: block.chainid,
+                coordinator: address(this),
+                policyRegistry: state.policyRegistry,
+                oldLoanId: request.oldLoanId,
+                newLoanId: request.newLoanId,
+                borrower: request.borrower,
+                oldLender: request.oldLender,
+                newPositionManager: request.newPositionManager,
+                oldPolicySetHash: policy.oldPolicySetHash,
+                newPolicySetHash: policy.newPolicySetHash,
+                proposedTermsHash: policy.proposedTermsHash,
+                settlementAssetId: request.settlementAssetId,
+                collateralSetHash: request.collateralSetHash,
+                fundingAmount: request.fundingAmount,
+                refinanceFee: request.refinanceFee,
+                borrowerProceeds: request.borrowerProceeds,
+                expiresAt: request.expiresAt,
+                maximumValidity: policy.maximumValidity,
+                maximumCommitments: policy.maximumCommitments,
+                collateralIdsHash: keccak256(abi.encode(policy.collateralIds)),
+                replacementDebtHash: keccak256(abi.encode(policy.replacementDebt)),
+                replacementTranchesHash: keccak256(abi.encode(policy.replacementTranches)),
+                replacementPositionsHash: keccak256(abi.encode(policy.replacementPositions))
+            });
         return keccak256(abi.encode("UNIFIED_REFINANCE_POLICY_V1", fields));
     }
 
@@ -1930,10 +1866,9 @@ library Phase9RefinanceRequestModule {
 
     function _validateStrictIds(bytes32[] memory ids) private pure {
         for (uint256 i = 0; i < ids.length; ++i) {
-            if (
-                ids[i] == bytes32(0)
-                    || (i != 0 && uint256(ids[i]) <= uint256(ids[i - 1]))
-            ) revert IRefinanceCoordinator.InvalidRefinance();
+            if (ids[i] == bytes32(0) || (i != 0 && uint256(ids[i]) <= uint256(ids[i - 1]))) {
+                revert IRefinanceCoordinator.InvalidRefinance();
+            }
         }
     }
 
@@ -1948,11 +1883,7 @@ library Phase9RefinanceRequestModule {
         return false;
     }
 
-    function _emptyReplacementDebt()
-        private
-        pure
-        returns (Phase9Types.DebtState memory debt)
-    {
+    function _emptyReplacementDebt() private pure returns (Phase9Types.DebtState memory debt) {
         debt.lifecycle = Phase9Types.LoanLifecycle.CREATED;
         debt.servicingState = Phase9Types.ServicingState.NONE;
     }
@@ -2002,8 +1933,7 @@ library Phase9RefinanceValidationModule {
             bytes32 expectedBootstrapId =
                 _deriveBootstrapId(context, request, policy.oldPolicySetHash);
             if (
-                oldPositionManager != address(0) || registered
-                    || registeredAccount != address(0)
+                oldPositionManager != address(0) || registered || registeredAccount != address(0)
                     || oldCreation.mode != PHASE9_LOCAL_BOOTSTRAP
                     || oldCreation.bootstrapId != expectedBootstrapId
             ) revert IRefinanceCoordinator.InvalidRefinance();
@@ -2015,9 +1945,7 @@ library Phase9RefinanceValidationModule {
                 policy.oldPolicySetHash,
                 true
             );
-            bootstrap = _resolveBootstrap(
-                context, request, policy, oldCreation.bootstrapId
-            );
+            bootstrap = _resolveBootstrap(context, request, policy, oldCreation.bootstrapId);
             _preflightFreshCollateral(
                 context, request, policy, oldCreation.configuration, bootstrap
             );
@@ -2026,15 +1954,11 @@ library Phase9RefinanceValidationModule {
                 oldPositionManager == address(0) || !registered
                     || registeredAccount != oldLoanAccount
                     || _registryTerminal(context, request.oldLoanId)
-                    || !(
-                        oldCreation.mode == PHASE9_REFINANCE_REPLACEMENT
-                            && oldCreation.bootstrapId == bytes32(0)
-                            || oldCreation.mode == PHASE9_LOCAL_BOOTSTRAP
-                                && oldCreation.bootstrapId
-                                    == _deriveBootstrapId(
-                                        context, request, policy.oldPolicySetHash
-                                    )
-                    )
+                    || !(oldCreation.mode == PHASE9_REFINANCE_REPLACEMENT
+                        && oldCreation.bootstrapId == bytes32(0)
+                        || oldCreation.mode == PHASE9_LOCAL_BOOTSTRAP
+                        && oldCreation.bootstrapId
+                            == _deriveBootstrapId(context, request, policy.oldPolicySetHash))
             ) revert IRefinanceCoordinator.InvalidRefinance();
             _validateConfiguration(
                 context,
@@ -2055,16 +1979,12 @@ library Phase9RefinanceValidationModule {
             Phase9Types.DebtState memory debt = _accountDebt(oldLoanAccount);
             _validateOldDebt(request, debt);
             _validateExistingLenderPosition(request, oldPositionManager, debt);
-            _preflightExistingCollateral(
-                context, request, policy, oldCreation.configuration
-            );
+            _preflightExistingCollateral(context, request, policy, oldCreation.configuration);
         }
 
         Phase9RefinanceRequestModule.ValidationPlan memory plan;
         plan.domain = keccak256("UNIFIED_REFINANCE_VALIDATION_PLAN_V1");
-        plan.contextHash = keccak256(
-            abi.encode("UNIFIED_REFINANCE_VALIDATION_CONTEXT_V1", context)
-        );
+        plan.contextHash = keccak256(abi.encode("UNIFIED_REFINANCE_VALIDATION_CONTEXT_V1", context));
         plan.requestHash = keccak256(abi.encode(request));
         plan.policy = policy;
         plan.replacementConfiguration = replacement.configuration;
@@ -2095,22 +2015,19 @@ library Phase9RefinanceValidationModule {
         if (
             context.chainId != block.chainid || block.chainid != 31337
                 || context.coordinator != address(this)
-                || context.activeLock
-                    != (PHASE9_REFINANCE_ACTIVE_MASK | request.refinanceNonce)
-                || context.coordinator.code.length == 0
-                || context.loanRegistry.code.length == 0
+                || context.activeLock != (PHASE9_REFINANCE_ACTIVE_MASK | request.refinanceNonce)
+                || context.coordinator.code.length == 0 || context.loanRegistry.code.length == 0
                 || context.phase9LoanFactory.code.length == 0
                 || context.payoffQuoteEngine.code.length == 0
-                || context.lienRegistry.code.length == 0
-                || context.assetRegistry.code.length == 0
+                || context.lienRegistry.code.length == 0 || context.assetRegistry.code.length == 0
                 || context.policyRegistry.code.length == 0
                 || context.emergencyController.code.length == 0
                 || context.treasuryFeeRecipient == address(0)
                 || context.settlementToken.code.length == 0
                 || _addressCall(
-                    context.lienRegistry,
-                    abi.encodeCall(ILienRegistry.registeredRefinanceCoordinator, ())
-                ) != context.coordinator
+                        context.lienRegistry,
+                        abi.encodeCall(ILienRegistry.registeredRefinanceCoordinator, ())
+                    ) != context.coordinator
         ) revert IRefinanceCoordinator.InvalidRefinance();
     }
 
@@ -2121,8 +2038,7 @@ library Phase9RefinanceValidationModule {
         (bool emergencyOk, bytes memory emergencyRaw) = _boundedStaticcall(
             context.emergencyController,
             abi.encodeCall(
-                IEmergencyController.emergencyState,
-                (PHASE9_REFINANCE_REQUEST_CAPABILITY)
+                IEmergencyController.emergencyState, (PHASE9_REFINANCE_REQUEST_CAPABILITY)
             ),
             96
         );
@@ -2132,15 +2048,13 @@ library Phase9RefinanceValidationModule {
         (bool emergencyActive,,) = abi.decode(emergencyRaw, (bool, uint64, bytes32));
         if (
             emergencyActive
-                || context.settlementToken.codehash
-                    != PHASE9_LOCAL_TOKEN_RUNTIME_CODE_HASH
+                || context.settlementToken.codehash != PHASE9_LOCAL_TOKEN_RUNTIME_CODE_HASH
         ) revert IRefinanceCoordinator.InvalidRefinance();
 
         (bool assetOk, bytes memory assetRaw) = _boundedStaticcall(
             context.assetRegistry,
             abi.encodeCall(
-                IPhase9RefinanceAssetSource.resolveRefinanceAsset,
-                (request.settlementAssetId)
+                IPhase9RefinanceAssetSource.resolveRefinanceAsset, (request.settlementAssetId)
             ),
             160
         );
@@ -2155,8 +2069,8 @@ library Phase9RefinanceValidationModule {
             bool active
         ) = abi.decode(assetRaw, (address, uint8, bytes32, bool, bool));
         if (
-            !active || !exactBalanceDelta || decimals != 6
-                || token != context.settlementToken || runtimeCodeHash != token.codehash
+            !active || !exactBalanceDelta || decimals != 6 || token != context.settlementToken
+                || runtimeCodeHash != token.codehash
                 || runtimeCodeHash != PHASE9_LOCAL_TOKEN_RUNTIME_CODE_HASH
         ) revert IRefinanceCoordinator.InvalidRefinance();
     }
@@ -2168,8 +2082,7 @@ library Phase9RefinanceValidationModule {
         (bool ok, bytes memory raw) = _boundedStaticcall(
             context.policyRegistry,
             abi.encodeCall(
-                IPhase9RefinancePolicySource.resolveRefinancePolicy,
-                (request.refinancePolicyHash)
+                IPhase9RefinancePolicySource.resolveRefinancePolicy, (request.refinancePolicyHash)
             ),
             8_992
         );
@@ -2182,10 +2095,8 @@ library Phase9RefinanceValidationModule {
                 || policy.proposedTermsHash != request.proposedTermsHash
                 || policy.maximumValidity == 0 || policy.maximumCommitments == 0
                 || policy.maximumCommitments > 32 || policy.collateralIds.length == 0
-                || policy.collateralIds.length > 16
-                || policy.replacementTranches.length == 0
-                || policy.replacementTranches.length > 8
-                || policy.replacementPositions.length == 0
+                || policy.collateralIds.length > 16 || policy.replacementTranches.length == 0
+                || policy.replacementTranches.length > 8 || policy.replacementPositions.length == 0
                 || policy.replacementPositions.length > 32
                 || uint256(request.expiresAt) - block.timestamp > policy.maximumValidity
         ) revert IRefinanceCoordinator.InvalidRefinance();
@@ -2243,18 +2154,19 @@ library Phase9RefinanceValidationModule {
         bytes memory raw,
         Phase9RefinanceRequestModule.RefinancePolicyFacts memory policy
     ) private pure {
-        bytes memory canonical = abi.encode(
-            policy.oldPolicySetHash,
-            policy.newPolicySetHash,
-            policy.proposedTermsHash,
-            policy.maximumValidity,
-            policy.maximumCommitments,
-            policy.active,
-            policy.collateralIds,
-            policy.replacementDebt,
-            policy.replacementTranches,
-            policy.replacementPositions
-        );
+        bytes memory canonical =
+            abi.encode(
+                policy.oldPolicySetHash,
+                policy.newPolicySetHash,
+                policy.proposedTermsHash,
+                policy.maximumValidity,
+                policy.maximumCommitments,
+                policy.active,
+                policy.collateralIds,
+                policy.replacementDebt,
+                policy.replacementTranches,
+                policy.replacementPositions
+            );
         if (raw.length != canonical.length || keccak256(raw) != keccak256(canonical)) {
             revert IRefinanceCoordinator.InvalidRefinance();
         }
@@ -2268,8 +2180,7 @@ library Phase9RefinanceValidationModule {
         (bool ok, bytes memory raw) = _boundedStaticcall(
             context.policyRegistry,
             abi.encodeCall(
-                IPhase9RefinancePolicySource.resolveLoanCreation,
-                (policySetHash, loanId)
+                IPhase9RefinancePolicySource.resolveLoanCreation, (policySetHash, loanId)
             ),
             704
         );
@@ -2285,10 +2196,7 @@ library Phase9RefinanceValidationModule {
             revert IRefinanceCoordinator.InvalidRefinance();
         }
         creation = Phase9RefinanceRequestModule.CreationFacts({
-            configuration: configuration,
-            mode: mode,
-            bootstrapId: bootstrapId,
-            active: active
+            configuration: configuration, mode: mode, bootstrapId: bootstrapId, active: active
         });
     }
 
@@ -2327,14 +2235,7 @@ library Phase9RefinanceValidationModule {
             )
         );
         bytes memory canonical = abi.encode(
-            policySetHash,
-            loanId,
-            debt,
-            tranches,
-            positions,
-            custodyRecords,
-            liens,
-            active
+            policySetHash, loanId, debt, tranches, positions, custodyRecords, liens, active
         );
         if (raw.length != canonical.length || keccak256(raw) != keccak256(canonical)) {
             revert IRefinanceCoordinator.InvalidRefinance();
@@ -2348,9 +2249,8 @@ library Phase9RefinanceValidationModule {
         bootstrap.liens = liens;
         bootstrap.active = active;
         if (
-            !active || policySetHash != policy.oldPolicySetHash
-                || loanId != request.oldLoanId || tranches.length == 0
-                || tranches.length > 8 || positions.length != 1
+            !active || policySetHash != policy.oldPolicySetHash || loanId != request.oldLoanId
+                || tranches.length == 0 || tranches.length > 8 || positions.length != 1
                 || custodyRecords.length == 0 || custodyRecords.length > 16
                 || custodyRecords.length != liens.length
                 || liens.length != policy.collateralIds.length
@@ -2405,13 +2305,12 @@ library Phase9RefinanceValidationModule {
                 || debt.termsVersion == 0 || debt.debtStateVersion == 0 || debt.stateNonce == 0
                 || debt.scheduleHash == bytes32(0) || debt.commencementTime == 0
                 || debt.maturityTime <= debt.commencementTime
-                || debt.outstandingPrincipal != request.newPrincipal
-                || debt.accruedInterest != 0 || debt.capitalizedInterest != 0
-                || debt.accruedFees != 0 || debt.accruedPenalties != 0
-                || debt.recoverableCosts != 0 || debt.unappliedCredit != 0
-                || debt.coveredLossExposure != 0 || debt.realizedLoss != 0
-                || debt.writtenOffAmount != 0 || debt.recoveredAfterWriteoff != 0
-                || debt.activeRefinanceId != bytes32(0)
+                || debt.outstandingPrincipal != request.newPrincipal || debt.accruedInterest != 0
+                || debt.capitalizedInterest != 0 || debt.accruedFees != 0
+                || debt.accruedPenalties != 0 || debt.recoverableCosts != 0
+                || debt.unappliedCredit != 0 || debt.coveredLossExposure != 0
+                || debt.realizedLoss != 0 || debt.writtenOffAmount != 0
+                || debt.recoveredAfterWriteoff != 0 || debt.activeRefinanceId != bytes32(0)
                 || debt.activeRestructureId != bytes32(0)
         ) revert IRefinanceCoordinator.InvalidRefinance();
         uint256 trancheClaims;
@@ -2488,18 +2387,16 @@ library Phase9RefinanceValidationModule {
         uint256 grossPayoff = _checkedAdd(lenderClaim, feePenalty);
         if (
             debt.lifecycle != Phase9Types.LoanLifecycle.ACTIVE
-                || !(
-                    debt.servicingState == Phase9Types.ServicingState.CURRENT
-                        || debt.servicingState == Phase9Types.ServicingState.DELINQUENT
-                        || debt.servicingState == Phase9Types.ServicingState.DEFAULTED
-                ) || debt.termsVersion == 0 || debt.debtStateVersion == 0 || debt.stateNonce == 0
+                || !(debt.servicingState == Phase9Types.ServicingState.CURRENT
+                    || debt.servicingState == Phase9Types.ServicingState.DELINQUENT
+                    || debt.servicingState == Phase9Types.ServicingState.DEFAULTED)
+                || debt.termsVersion == 0 || debt.debtStateVersion == 0 || debt.stateNonce == 0
                 || debt.scheduleHash == bytes32(0) || debt.commencementTime == 0
                 || debt.maturityTime <= debt.commencementTime || lenderClaim == 0
                 || debt.capitalizedInterest != 0 || debt.recoverableCosts != 0
                 || debt.unappliedCredit > feePenalty || debt.coveredLossExposure != 0
                 || debt.realizedLoss != 0 || debt.writtenOffAmount != 0
-                || debt.recoveredAfterWriteoff != 0
-                || debt.activeRefinanceId != bytes32(0)
+                || debt.recoveredAfterWriteoff != 0 || debt.activeRefinanceId != bytes32(0)
                 || debt.activeRestructureId != bytes32(0)
                 || grossPayoff - debt.unappliedCredit != request.oldNetPayoff
         ) revert IRefinanceCoordinator.InvalidRefinance();
@@ -2609,10 +2506,9 @@ library Phase9RefinanceValidationModule {
     ) private pure {
         if (
             collateralId == bytes32(0) || custodyRecord.collateralId != collateralId
-                || lienRecord.collateralId != collateralId
-                || custodyRecord.assetId == bytes32(0)
-                || custodyRecord.assetId != lienRecord.assetId
-                || custodyRecord.token == address(0) || custodyRecord.identityHash == bytes32(0)
+                || lienRecord.collateralId != collateralId || custodyRecord.assetId == bytes32(0)
+                || custodyRecord.assetId != lienRecord.assetId || custodyRecord.token == address(0)
+                || custodyRecord.identityHash == bytes32(0)
                 || custodyRecord.borrower != request.borrower
                 || lienRecord.borrower != request.borrower || custodyRecord.quantity == 0
                 || custodyRecord.quantity != lienRecord.quantity
@@ -2635,9 +2531,7 @@ library Phase9RefinanceValidationModule {
     ) private view {
         (bool ok, bytes memory raw) = _boundedStaticcall(
             context.assetRegistry,
-            abi.encodeCall(
-                IPhase9RefinanceAssetSource.resolveCustodyAsset, (record_.assetId)
-            ),
+            abi.encodeCall(IPhase9RefinanceAssetSource.resolveCustodyAsset, (record_.assetId)),
             160
         );
         if (!ok || raw.length != 160) revert IRefinanceCoordinator.InvalidRefinance();
@@ -2662,12 +2556,10 @@ library Phase9RefinanceValidationModule {
         fields.borrower = record_.borrower;
         fields.quantity = record_.quantity;
         if (
-            !active || !exactBalanceDelta || token != record_.token
-                || runtimeCodeHash == bytes32(0) || token.codehash != runtimeCodeHash
+            !active || !exactBalanceDelta || token != record_.token || runtimeCodeHash == bytes32(0)
+                || token.codehash != runtimeCodeHash
                 || record_.identityHash
-                    != keccak256(
-                        abi.encode("UNIFIED_PHASE9_BOOTSTRAP_CUSTODY_IDENTITY_V1", fields)
-                    )
+                    != keccak256(abi.encode("UNIFIED_PHASE9_BOOTSTRAP_CUSTODY_IDENTITY_V1", fields))
         ) revert IRefinanceCoordinator.InvalidRefinance();
     }
 
@@ -2680,9 +2572,7 @@ library Phase9RefinanceValidationModule {
             revert IRefinanceCoordinator.InvalidRefinance();
         }
         (bool ok, bytes memory raw) = _boundedStaticcall(
-            context.lienRegistry,
-            abi.encodeCall(ILienRegistry.lien, (collateralId)),
-            36
+            context.lienRegistry, abi.encodeCall(ILienRegistry.lien, (collateralId)), 36
         );
         if (
             ok || raw.length != 36
@@ -2713,8 +2603,8 @@ library Phase9RefinanceValidationModule {
                 || configuration.refinanceCoordinator != context.coordinator
                 || configuration.restructuringController.code.length == 0
                 || configuration.insuranceManager.code.length == 0
-                || configuration.recoveryManager.code.length == 0
-                || configuration.loanId != loanId || configuration.agreementHash == bytes32(0)
+                || configuration.recoveryManager.code.length == 0 || configuration.loanId != loanId
+                || configuration.agreementHash == bytes32(0)
                 || configuration.policySetHash != policySetHash
                 || configuration.amendmentPolicyHash == bytes32(0)
                 || configuration.protectionPolicyHash == bytes32(0)
@@ -2739,19 +2629,18 @@ library Phase9RefinanceValidationModule {
                 || !_registryExists(context, loanId) || _registryTerminal(context, loanId)
                 || _registryLoanAccount(context, loanId) != loanAccount
                 || _addressCall(
-                    context.loanRegistry,
-                    abi.encodeCall(ILoanRegistry.borrowerOf, (loanId))
-                ) != borrower
+                        context.loanRegistry, abi.encodeCall(ILoanRegistry.borrowerOf, (loanId))
+                    ) != borrower
                 || _wordCall(
-                    context.loanRegistry,
-                    abi.encodeCall(ILoanRegistry.agreementHashOf, (loanId))
-                ) != expectedConfiguration.agreementHash
-                || uint256(
-                    _wordCall(
                         context.loanRegistry,
-                        abi.encodeCall(ILoanRegistry.protocolVersionOf, (loanId))
-                    )
-                ) != PHASE9_PROTOCOL_VERSION
+                        abi.encodeCall(ILoanRegistry.agreementHashOf, (loanId))
+                    ) != expectedConfiguration.agreementHash
+                || uint256(
+                        _wordCall(
+                            context.loanRegistry,
+                            abi.encodeCall(ILoanRegistry.protocolVersionOf, (loanId))
+                        )
+                    ) != PHASE9_PROTOCOL_VERSION
                 || keccak256(abi.encode(_accountConfiguration(loanAccount)))
                     != keccak256(abi.encode(expectedConfiguration))
         ) revert IRefinanceCoordinator.InvalidRefinance();
@@ -2766,16 +2655,18 @@ library Phase9RefinanceValidationModule {
                 || _factoryPositionManager(context, loanId) != address(0)
                 || _registryLoanAccount(context, loanId) != address(0)
                 || _registryExists(context, loanId)
-        ) revert IRefinanceCoordinator.InvalidRefinance();
+        ) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
     }
 
-    function _factoryLoanAccount(
-        Phase9RefinanceValidationContext memory context,
-        bytes32 loanId
-    ) private view returns (address) {
+    function _factoryLoanAccount(Phase9RefinanceValidationContext memory context, bytes32 loanId)
+        private
+        view
+        returns (address)
+    {
         return _addressCall(
-            context.phase9LoanFactory,
-            abi.encodeCall(IPhase9LoanFactory.loanAccount, (loanId))
+            context.phase9LoanFactory, abi.encodeCall(IPhase9LoanFactory.loanAccount, (loanId))
         );
     }
 
@@ -2784,36 +2675,33 @@ library Phase9RefinanceValidationModule {
         bytes32 loanId
     ) private view returns (address) {
         return _addressCall(
-            context.phase9LoanFactory,
-            abi.encodeCall(IPhase9LoanFactory.positionManager, (loanId))
+            context.phase9LoanFactory, abi.encodeCall(IPhase9LoanFactory.positionManager, (loanId))
         );
     }
 
-    function _registryLoanAccount(
-        Phase9RefinanceValidationContext memory context,
-        bytes32 loanId
-    ) private view returns (address) {
-        return _addressCall(
-            context.loanRegistry, abi.encodeCall(ILoanRegistry.loanAccount, (loanId))
-        );
+    function _registryLoanAccount(Phase9RefinanceValidationContext memory context, bytes32 loanId)
+        private
+        view
+        returns (address)
+    {
+        return
+            _addressCall(context.loanRegistry, abi.encodeCall(ILoanRegistry.loanAccount, (loanId)));
     }
 
-    function _registryExists(
-        Phase9RefinanceValidationContext memory context,
-        bytes32 loanId
-    ) private view returns (bool) {
-        return _boolCall(
-            context.loanRegistry, abi.encodeCall(ILoanRegistry.exists, (loanId))
-        );
+    function _registryExists(Phase9RefinanceValidationContext memory context, bytes32 loanId)
+        private
+        view
+        returns (bool)
+    {
+        return _boolCall(context.loanRegistry, abi.encodeCall(ILoanRegistry.exists, (loanId)));
     }
 
-    function _registryTerminal(
-        Phase9RefinanceValidationContext memory context,
-        bytes32 loanId
-    ) private view returns (bool) {
-        return _boolCall(
-            context.loanRegistry, abi.encodeCall(ILoanRegistry.isTerminal, (loanId))
-        );
+    function _registryTerminal(Phase9RefinanceValidationContext memory context, bytes32 loanId)
+        private
+        view
+        returns (bool)
+    {
+        return _boolCall(context.loanRegistry, abi.encodeCall(ILoanRegistry.isTerminal, (loanId)));
     }
 
     function _accountConfiguration(address account)
@@ -2821,9 +2709,8 @@ library Phase9RefinanceValidationModule {
         view
         returns (Phase9Types.LoanConfiguration memory configuration)
     {
-        (bool ok, bytes memory raw) = _boundedStaticcall(
-            account, abi.encodeCall(IPhase9LoanAccount.configuration, ()), 608
-        );
+        (bool ok, bytes memory raw) =
+            _boundedStaticcall(account, abi.encodeCall(IPhase9LoanAccount.configuration, ()), 608);
         if (!ok || raw.length != 608) revert IRefinanceCoordinator.InvalidRefinance();
         configuration = abi.decode(raw, (Phase9Types.LoanConfiguration));
         if (keccak256(raw) != keccak256(abi.encode(configuration))) {
@@ -2867,9 +2754,7 @@ library Phase9RefinanceValidationModule {
         returns (Phase9Types.CustodyRecord memory result)
     {
         (bool ok, bytes memory raw) = _boundedStaticcall(
-            custodyAddress,
-            abi.encodeCall(ICollateralCustodyV2.custody, (collateralId)),
-            224
+            custodyAddress, abi.encodeCall(ICollateralCustodyV2.custody, (collateralId)), 224
         );
         if (!ok || raw.length != 224) revert IRefinanceCoordinator.InvalidRefinance();
         result = abi.decode(raw, (Phase9Types.CustodyRecord));
@@ -2878,10 +2763,11 @@ library Phase9RefinanceValidationModule {
         }
     }
 
-    function _lien(
-        Phase9RefinanceValidationContext memory context,
-        bytes32 collateralId
-    ) private view returns (Phase9Types.Lien memory result) {
+    function _lien(Phase9RefinanceValidationContext memory context, bytes32 collateralId)
+        private
+        view
+        returns (Phase9Types.Lien memory result)
+    {
         (bool ok, bytes memory raw) = _boundedStaticcall(
             context.lienRegistry, abi.encodeCall(ILienRegistry.lien, (collateralId)), 352
         );
@@ -2892,11 +2778,7 @@ library Phase9RefinanceValidationModule {
         }
     }
 
-    function _wordCall(address target, bytes memory input)
-        private
-        view
-        returns (bytes32 result)
-    {
+    function _wordCall(address target, bytes memory input) private view returns (bytes32 result) {
         (bool ok, bytes memory raw) = _boundedStaticcall(target, input, 32);
         if (!ok || raw.length != 32) revert IRefinanceCoordinator.InvalidRefinance();
         result = abi.decode(raw, (bytes32));
@@ -3026,10 +2908,9 @@ library Phase9RefinanceValidationModule {
 
     function _validateStrictIds(bytes32[] memory ids) private pure {
         for (uint256 i = 0; i < ids.length; ++i) {
-            if (
-                ids[i] == bytes32(0)
-                    || (i != 0 && uint256(ids[i]) <= uint256(ids[i - 1]))
-            ) revert IRefinanceCoordinator.InvalidRefinance();
+            if (ids[i] == bytes32(0) || (i != 0 && uint256(ids[i]) <= uint256(ids[i - 1]))) {
+                revert IRefinanceCoordinator.InvalidRefinance();
+            }
         }
     }
 
@@ -3053,11 +2934,11 @@ library Phase9RefinanceValidationModule {
         }
     }
 
-    function _boundedStaticcall(
-        address target,
-        bytes memory input,
-        uint256 maximumReturndata
-    ) private view returns (bool ok, bytes memory output) {
+    function _boundedStaticcall(address target, bytes memory input, uint256 maximumReturndata)
+        private
+        view
+        returns (bool ok, bytes memory output)
+    {
         assembly ("memory-safe") {
             ok := staticcall(gas(), target, add(input, 0x20), mload(input), 0, 0)
             let size := returndatasize()
@@ -3068,42 +2949,665 @@ library Phase9RefinanceValidationModule {
             output := mload(0x40)
             mstore(output, size)
             returndatacopy(add(output, 0x20), 0, size)
-            mstore(
-                0x40,
-                and(add(add(output, 0x20), add(size, 0x1f)), not(0x1f))
-            )
+            mstore(0x40, and(add(add(output, 0x20), add(size, 0x1f)), not(0x1f)))
         }
     }
 }
 
 library Phase9RefinanceLifecycleModule {
+    struct FundingTransition {
+        Phase9Types.RefinanceState previousState;
+        uint64 stateVersionAfter;
+        uint256 acceptedFundingAfter;
+        uint256 escrowedUnitsAfter;
+        uint256 commitmentCountAfter;
+        bytes32 fundingResultHash;
+        bytes32 transitionEvidenceHash;
+    }
+
+    event RefinanceCommitmentRecorded(
+        bytes32 indexed refinanceId,
+        bytes32 indexed commitmentId,
+        address indexed funder,
+        uint256 amount
+    );
+    event RefinanceStateTransitioned(
+        bytes32 indexed refinanceId,
+        Phase9Types.RefinanceState indexed previousState,
+        Phase9Types.RefinanceState indexed nextState,
+        uint64 stateVersion,
+        bytes32 operationId,
+        bytes32 evidenceHash
+    );
+
     function recordFundingCommitment(
-        Phase9RefinanceStorageLayout storage,
-        Phase9Types.FundingCommitment calldata
-    ) public pure {
-        revert Phase9ImplementationNotFrozen();
+        Phase9RefinanceStorageLayout storage state,
+        Phase9Types.FundingCommitment calldata commitment
+    ) public {
+        if (commitment.commitmentId == bytes32(0)) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+        Phase9Types.FundingCommitment storage existing = state.commitments[commitment.commitmentId];
+        if (existing.commitmentId != bytes32(0)) {
+            if (
+                commitment.state != Phase9Types.FundingCommitmentState.NONE
+                    || commitment.fundingResultHash != bytes32(0)
+                    || !_sameCommitment(existing, commitment)
+            ) {
+                revert IRefinanceCoordinator.RefinanceReplayConflict(existing.refinanceId);
+            }
+            return;
+        }
+        _validateNewCommitmentFields(commitment);
+
+        Phase9Types.RefinanceRecord memory refinance_ = state.refinances[commitment.refinanceId];
+        _validateRefinanceForFunding(state, refinance_, commitment);
+        Phase9RefinanceRequestModule.RefinancePolicyFacts memory policy =
+            _resolveRefinancePolicy(state, refinance_);
+        _validatePolicyCommitment(state, refinance_, commitment, policy);
+        FundingTransition memory transition = _fundingTransition(state, refinance_, commitment);
+
+        _requireFundingOpen(state);
+        _validateSettlementAsset(state, refinance_.settlementAssetId);
+        uint256 coordinatorBalanceBefore = _tokenWord(
+            address(state.settlementToken), abi.encodeCall(IERC20.balanceOf, (address(this)))
+        );
+        uint256 funderBalanceBefore = _tokenWord(
+            address(state.settlementToken), abi.encodeCall(IERC20.balanceOf, (commitment.funder))
+        );
+        if (
+            _tokenWord(
+                    address(state.settlementToken),
+                    abi.encodeCall(IERC20.allowance, (commitment.funder, address(this)))
+                ) < commitment.amount
+        ) revert IRefinanceCoordinator.InvalidRefinance();
+
+        _persistFunding(state, refinance_, commitment, transition);
+        _transferFunding(state, commitment, coordinatorBalanceBefore, funderBalanceBefore);
+
+        emit RefinanceCommitmentRecorded(
+            commitment.refinanceId, commitment.commitmentId, commitment.funder, commitment.amount
+        );
+        emit RefinanceStateTransitioned(
+            commitment.refinanceId,
+            transition.previousState,
+            Phase9Types.RefinanceState.FUNDING_ESCROWED,
+            transition.stateVersionAfter,
+            commitment.commitmentId,
+            transition.transitionEvidenceHash
+        );
     }
 
-    function executeRefinance(
-        Phase9RefinanceStorageLayout storage,
-        bytes32,
-        bytes32
-    ) public pure returns (Phase9Types.RefinanceTerminalResult memory) {
-        revert Phase9ImplementationNotFrozen();
-    }
-
-    function cancelRefinance(Phase9RefinanceStorageLayout storage, bytes32, bytes32)
+    function executeRefinance(Phase9RefinanceStorageLayout storage, bytes32, bytes32)
         public
         pure
+        returns (Phase9Types.RefinanceTerminalResult memory)
     {
         revert Phase9ImplementationNotFrozen();
     }
 
-    function refundCommitment(Phase9RefinanceStorageLayout storage, bytes32, bytes32)
-        public
+    function cancelRefinance(Phase9RefinanceStorageLayout storage, bytes32, bytes32) public pure {
+        revert Phase9ImplementationNotFrozen();
+    }
+
+    function refundCommitment(Phase9RefinanceStorageLayout storage, bytes32, bytes32) public pure {
+        revert Phase9ImplementationNotFrozen();
+    }
+
+    function _validateNewCommitmentFields(Phase9Types.FundingCommitment calldata commitment)
+        private
         pure
     {
-        revert Phase9ImplementationNotFrozen();
+        if (
+            commitment.state != Phase9Types.FundingCommitmentState.NONE
+                || commitment.fundingResultHash != bytes32(0)
+        ) revert IRefinanceCoordinator.InvalidRefinance();
+    }
+
+    function _sameCommitment(
+        Phase9Types.FundingCommitment storage existing,
+        Phase9Types.FundingCommitment calldata supplied
+    ) private view returns (bool) {
+        return existing.commitmentId == supplied.commitmentId
+            && existing.refinanceId == supplied.refinanceId
+            && existing.positionId == supplied.positionId
+            && existing.trancheId == supplied.trancheId && existing.funder == supplied.funder
+            && existing.amount == supplied.amount
+            && existing.commitmentNonce == supplied.commitmentNonce
+            && existing.commitmentDigest == supplied.commitmentDigest
+            && existing.state == Phase9Types.FundingCommitmentState.FUNDED
+            && existing.fundingResultHash != bytes32(0);
+    }
+
+    function _validateRefinanceForFunding(
+        Phase9RefinanceStorageLayout storage state,
+        Phase9Types.RefinanceRecord memory refinance_,
+        Phase9Types.FundingCommitment calldata commitment
+    ) private view {
+        if (refinance_.refinanceId == bytes32(0)) {
+            revert IRefinanceCoordinator.UnknownRefinance(commitment.refinanceId);
+        }
+        uint64 activeLock = state.nextRefinanceNonce[refinance_.oldLoanId];
+        if (
+            block.chainid != 31337 || block.timestamp > type(uint64).max
+                || commitment.refinanceId != refinance_.refinanceId
+                || commitment.positionId == bytes32(0) || commitment.trancheId == bytes32(0)
+                || commitment.funder == address(0) || commitment.amount == 0
+                || commitment.commitmentNonce == 0 || commitment.commitmentDigest == bytes32(0)
+                || msg.sender != commitment.funder
+                || (refinance_.state != Phase9Types.RefinanceState.ACCEPTED
+                    && refinance_.state != Phase9Types.RefinanceState.FUNDING_ESCROWED)
+                || refinance_.stateVersion == type(uint64).max || refinance_.executionAttempts != 0
+                || refinance_.terminalEvidenceHash != bytes32(0)
+                || refinance_.expiresAt <= block.timestamp
+                || refinance_.settlementAssetId != PHASE9_SETTLEMENT_ASSET_ID
+                || refinance_.refinancePolicyHash == bytes32(0) || refinance_.fundingAmount == 0
+                || refinance_.newPrincipal != refinance_.fundingAmount
+                || refinance_.acceptedFunding >= refinance_.fundingAmount
+                || state.escrowedUnits[refinance_.refinanceId] != refinance_.acceptedFunding
+                || activeLock != (PHASE9_REFINANCE_ACTIVE_MASK | refinance_.refinanceNonce)
+                || state.processedOperationIds[commitment.commitmentId]
+        ) revert IRefinanceCoordinator.InvalidRefinance();
+
+        bytes32 expectedCommitmentId = keccak256(
+            abi.encode(
+                "UNIFIED_REFINANCE_FUNDING_COMMITMENT_V1",
+                commitment.refinanceId,
+                commitment.positionId,
+                commitment.trancheId,
+                commitment.funder,
+                commitment.amount,
+                commitment.commitmentNonce
+            )
+        );
+        bytes32 expectedCommitmentDigest = keccak256(
+            abi.encode(
+                "UNIFIED_REFINANCE_FUNDING_COMMITMENT_DIGEST_V1",
+                block.chainid,
+                address(this),
+                commitment.commitmentId,
+                commitment.refinanceId,
+                commitment.positionId,
+                commitment.trancheId,
+                commitment.funder,
+                commitment.amount,
+                commitment.commitmentNonce,
+                refinance_.refinancePolicyHash,
+                refinance_.expiresAt
+            )
+        );
+        if (
+            commitment.commitmentId != expectedCommitmentId
+                || commitment.commitmentDigest != expectedCommitmentDigest
+        ) revert IRefinanceCoordinator.InvalidRefinance();
+    }
+
+    function _resolveRefinancePolicy(
+        Phase9RefinanceStorageLayout storage state,
+        Phase9Types.RefinanceRecord memory refinance_
+    ) private view returns (Phase9RefinanceRequestModule.RefinancePolicyFacts memory policy) {
+        (bool ok, bytes memory raw) = _boundedStaticcall(
+            state.policyRegistry,
+            abi.encodeCall(
+                IPhase9RefinancePolicySource.resolveRefinancePolicy,
+                (refinance_.refinancePolicyHash)
+            ),
+            8_992
+        );
+        if (!ok || raw.length == 0) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+        _validateRefinancePolicyEncoding(raw);
+        (
+            bytes32 oldPolicySetHash,
+            bytes32 newPolicySetHash,
+            bytes32 proposedTermsHash,
+            uint64 maximumValidity,
+            uint32 maximumCommitments,
+            bool active,
+            bytes32[] memory collateralIds,
+            Phase9Types.DebtState memory replacementDebt,
+            Phase9Types.Tranche[] memory replacementTranches,
+            Phase9Types.Position[] memory replacementPositions
+        ) = abi.decode(
+            raw,
+            (
+                bytes32,
+                bytes32,
+                bytes32,
+                uint64,
+                uint32,
+                bool,
+                bytes32[],
+                Phase9Types.DebtState,
+                Phase9Types.Tranche[],
+                Phase9Types.Position[]
+            )
+        );
+        bytes memory canonical = abi.encode(
+            oldPolicySetHash,
+            newPolicySetHash,
+            proposedTermsHash,
+            maximumValidity,
+            maximumCommitments,
+            active,
+            collateralIds,
+            replacementDebt,
+            replacementTranches,
+            replacementPositions
+        );
+        if (raw.length != canonical.length || keccak256(raw) != keccak256(canonical)) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+        policy.oldPolicySetHash = oldPolicySetHash;
+        policy.newPolicySetHash = newPolicySetHash;
+        policy.proposedTermsHash = proposedTermsHash;
+        policy.maximumValidity = maximumValidity;
+        policy.maximumCommitments = maximumCommitments;
+        policy.active = active;
+        policy.collateralIds = collateralIds;
+        policy.replacementDebt = replacementDebt;
+        policy.replacementTranches = replacementTranches;
+        policy.replacementPositions = replacementPositions;
+    }
+
+    function _validateRefinancePolicyEncoding(bytes memory raw) private pure {
+        if (
+            raw.length < 1_056 || raw.length > 8_992 || raw.length % 32 != 0
+                || _wordAt(raw, 96) > type(uint64).max || _wordAt(raw, 128) > type(uint32).max
+                || _wordAt(raw, 160) > 1 || _wordAt(raw, 224) >= 5 || _wordAt(raw, 256) >= 5
+                || _wordAt(raw, 288) > type(uint64).max || _wordAt(raw, 320) > type(uint64).max
+                || _wordAt(raw, 352) > type(uint64).max || _wordAt(raw, 384) > type(uint64).max
+                || _wordAt(raw, 416) > type(uint64).max
+        ) revert IRefinanceCoordinator.InvalidRefinance();
+
+        uint256 collateralOffset = _wordAt(raw, 192);
+        uint256 trancheOffset = _wordAt(raw, 896);
+        uint256 positionOffset = _wordAt(raw, 928);
+        if (collateralOffset != 960) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+        uint256 collateralCount = _wordAt(raw, collateralOffset);
+        if (collateralCount > 16 || trancheOffset != collateralOffset + 32 + collateralCount * 32) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+        uint256 trancheCount = _wordAt(raw, trancheOffset);
+        if (trancheCount > 8 || positionOffset != trancheOffset + 32 + trancheCount * 160) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+        uint256 positionCount = _wordAt(raw, positionOffset);
+        if (positionCount > 32 || raw.length != positionOffset + 32 + positionCount * 192) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+
+        for (uint256 i = 0; i < trancheCount; ++i) {
+            if (_wordAt(raw, trancheOffset + 64 + i * 160) > type(uint32).max) {
+                revert IRefinanceCoordinator.InvalidRefinance();
+            }
+        }
+        for (uint256 i = 0; i < positionCount; ++i) {
+            uint256 positionStart = positionOffset + 32 + i * 192;
+            if (
+                _wordAt(raw, positionStart + 64) > type(uint160).max
+                    || _wordAt(raw, positionStart + 160) >= 4
+            ) revert IRefinanceCoordinator.InvalidRefinance();
+        }
+    }
+
+    function _wordAt(bytes memory encoded, uint256 offset) private pure returns (uint256 value) {
+        assembly ("memory-safe") {
+            value := mload(add(add(encoded, 0x20), offset))
+        }
+    }
+
+    function _validatePolicyCommitment(
+        Phase9RefinanceStorageLayout storage state,
+        Phase9Types.RefinanceRecord memory refinance_,
+        Phase9Types.FundingCommitment calldata commitment,
+        Phase9RefinanceRequestModule.RefinancePolicyFacts memory policy
+    ) private view {
+        if (
+            !policy.active || policy.oldPolicySetHash == bytes32(0)
+                || policy.newPolicySetHash != refinance_.newPolicySetHash
+                || policy.proposedTermsHash != refinance_.proposedTermsHash
+                || policy.maximumValidity == 0 || policy.maximumCommitments == 0
+                || policy.maximumCommitments > 32 || policy.collateralIds.length == 0
+                || policy.collateralIds.length > 16 || policy.replacementTranches.length == 0
+                || policy.replacementTranches.length > 8 || policy.replacementPositions.length == 0
+                || policy.replacementPositions.length > 32
+                || policy.replacementPositions.length > policy.maximumCommitments
+                || state.commitmentIds[refinance_.refinanceId].length >= policy.maximumCommitments
+                || state.commitmentIds[refinance_.refinanceId].length >= 32
+                || _deriveRefinancePolicyHash(state, refinance_, policy)
+                    != refinance_.refinancePolicyHash
+        ) revert IRefinanceCoordinator.InvalidRefinance();
+
+        _validateStrictIds(policy.collateralIds);
+        _validatePolicyPositions(refinance_, commitment, policy);
+        _validatePriorCommitments(state, refinance_, commitment.positionId);
+    }
+
+    function _validatePolicyPositions(
+        Phase9Types.RefinanceRecord memory refinance_,
+        Phase9Types.FundingCommitment calldata commitment,
+        Phase9RefinanceRequestModule.RefinancePolicyFacts memory policy
+    ) private pure {
+        uint256 trancheClaims;
+        bytes32 priorId;
+        for (uint256 i = 0; i < policy.replacementTranches.length; ++i) {
+            Phase9Types.Tranche memory tranche_ = policy.replacementTranches[i];
+            if (
+                tranche_.trancheId == bytes32(0)
+                    || (i != 0 && uint256(tranche_.trancheId) <= uint256(priorId))
+                    || tranche_.originalClaim == 0
+                    || tranche_.outstandingClaim != tranche_.originalClaim
+                    || tranche_.configurationHash == bytes32(0)
+            ) revert IRefinanceCoordinator.InvalidRefinance();
+            priorId = tranche_.trancheId;
+            trancheClaims = _checkedAdd(trancheClaims, tranche_.outstandingClaim);
+        }
+
+        bool matched;
+        uint256 positionClaims;
+        priorId = bytes32(0);
+        for (uint256 i = 0; i < policy.replacementPositions.length; ++i) {
+            Phase9Types.Position memory position_ = policy.replacementPositions[i];
+            if (
+                position_.positionId == bytes32(0)
+                    || (i != 0 && uint256(position_.positionId) <= uint256(priorId))
+                    || position_.trancheId == bytes32(0) || position_.owner == address(0)
+                    || position_.votingPower == 0 || position_.claim == 0
+                    || position_.state != Phase9Types.PositionState.ACTIVE
+                    || !_containsTranche(policy.replacementTranches, position_.trancheId)
+            ) revert IRefinanceCoordinator.InvalidRefinance();
+            priorId = position_.positionId;
+            positionClaims = _checkedAdd(positionClaims, position_.claim);
+            if (position_.positionId == commitment.positionId) {
+                if (
+                    position_.trancheId != commitment.trancheId
+                        || position_.owner != commitment.funder
+                        || position_.claim != commitment.amount
+                ) revert IRefinanceCoordinator.InvalidRefinance();
+                matched = true;
+            }
+        }
+        if (
+            !matched || trancheClaims != refinance_.newPrincipal
+                || positionClaims != refinance_.newPrincipal
+        ) revert IRefinanceCoordinator.InvalidRefinance();
+    }
+
+    function _validatePriorCommitments(
+        Phase9RefinanceStorageLayout storage state,
+        Phase9Types.RefinanceRecord memory refinance_,
+        bytes32 nextPositionId
+    ) private view {
+        bytes32[] storage ids = state.commitmentIds[refinance_.refinanceId];
+        uint256 attributedFunding;
+        for (uint256 i = 0; i < ids.length; ++i) {
+            Phase9Types.FundingCommitment storage prior = state.commitments[ids[i]];
+            if (
+                prior.commitmentId != ids[i] || prior.refinanceId != refinance_.refinanceId
+                    || prior.positionId == nextPositionId
+                    || prior.state != Phase9Types.FundingCommitmentState.FUNDED
+                    || prior.fundingResultHash == bytes32(0) || !state.processedOperationIds[ids[i]]
+            ) revert IRefinanceCoordinator.InvalidRefinance();
+            for (uint256 j = 0; j < i; ++j) {
+                if (state.commitments[ids[j]].positionId == prior.positionId) {
+                    revert IRefinanceCoordinator.InvalidRefinance();
+                }
+            }
+            attributedFunding = _checkedAdd(attributedFunding, prior.amount);
+        }
+        if (attributedFunding != refinance_.acceptedFunding) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+    }
+
+    function _fundingTransition(
+        Phase9RefinanceStorageLayout storage state,
+        Phase9Types.RefinanceRecord memory refinance_,
+        Phase9Types.FundingCommitment calldata commitment
+    ) private view returns (FundingTransition memory transition) {
+        transition.previousState = refinance_.state;
+        transition.stateVersionAfter = refinance_.stateVersion + 1;
+        transition.acceptedFundingAfter = _checkedAdd(refinance_.acceptedFunding, commitment.amount);
+        transition.escrowedUnitsAfter =
+            _checkedAdd(state.escrowedUnits[refinance_.refinanceId], commitment.amount);
+        transition.commitmentCountAfter = state.commitmentIds[refinance_.refinanceId].length + 1;
+        if (
+            transition.acceptedFundingAfter > refinance_.fundingAmount
+                || transition.escrowedUnitsAfter != transition.acceptedFundingAfter
+        ) revert IRefinanceCoordinator.InvalidRefinance();
+        transition.fundingResultHash = keccak256(
+            abi.encode(
+                "UNIFIED_REFINANCE_FUNDING_RESULT_V1",
+                block.chainid,
+                address(this),
+                refinance_.refinanceId,
+                commitment.commitmentId,
+                commitment.funder,
+                commitment.amount,
+                commitment.commitmentNonce,
+                transition.acceptedFundingAfter,
+                transition.escrowedUnitsAfter,
+                transition.commitmentCountAfter,
+                Phase9Types.RefinanceState.FUNDING_ESCROWED,
+                transition.stateVersionAfter
+            )
+        );
+        transition.transitionEvidenceHash = keccak256(
+            abi.encode(
+                "UNIFIED_REFINANCE_STATE_TRANSITION_V1",
+                block.chainid,
+                address(this),
+                refinance_.refinanceId,
+                transition.previousState,
+                Phase9Types.RefinanceState.FUNDING_ESCROWED,
+                transition.stateVersionAfter,
+                commitment.commitmentId,
+                transition.fundingResultHash
+            )
+        );
+    }
+
+    function _requireFundingOpen(Phase9RefinanceStorageLayout storage state) private view {
+        (bool ok, bytes memory raw) = _boundedStaticcall(
+            state.emergencyController,
+            abi.encodeCall(
+                IEmergencyController.emergencyState, (PHASE9_REFINANCE_FUNDING_CAPABILITY)
+            ),
+            96
+        );
+        if (!ok || raw.length != 96 || _wordAt(raw, 0) > 1 || _wordAt(raw, 32) > type(uint64).max) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+        (bool active,,) = abi.decode(raw, (bool, uint64, bytes32));
+        if (active) revert IRefinanceCoordinator.InvalidRefinance();
+    }
+
+    function _validateSettlementAsset(
+        Phase9RefinanceStorageLayout storage state,
+        bytes32 settlementAssetId
+    ) private view {
+        if (address(state.settlementToken).codehash != PHASE9_LOCAL_TOKEN_RUNTIME_CODE_HASH) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+        (bool ok, bytes memory raw) = _boundedStaticcall(
+            state.assetRegistry,
+            abi.encodeCall(IPhase9RefinanceAssetSource.resolveRefinanceAsset, (settlementAssetId)),
+            160
+        );
+        if (
+            !ok || raw.length != 160 || _wordAt(raw, 0) > type(uint160).max
+                || _wordAt(raw, 32) > type(uint8).max || _wordAt(raw, 96) > 1
+                || _wordAt(raw, 128) > 1
+        ) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+        (
+            address token,
+            uint8 decimals,
+            bytes32 runtimeCodeHash,
+            bool exactBalanceDelta,
+            bool active
+        ) = abi.decode(raw, (address, uint8, bytes32, bool, bool));
+        if (
+            !active || !exactBalanceDelta || decimals != 6
+                || token != address(state.settlementToken) || runtimeCodeHash != token.codehash
+                || runtimeCodeHash != PHASE9_LOCAL_TOKEN_RUNTIME_CODE_HASH
+        ) revert IRefinanceCoordinator.InvalidRefinance();
+    }
+
+    function _persistFunding(
+        Phase9RefinanceStorageLayout storage state,
+        Phase9Types.RefinanceRecord memory refinance_,
+        Phase9Types.FundingCommitment calldata commitment,
+        FundingTransition memory transition
+    ) private {
+        Phase9Types.RefinanceRecord storage storedRefinance =
+            state.refinances[refinance_.refinanceId];
+        storedRefinance.state = Phase9Types.RefinanceState.FUNDING_ESCROWED;
+        storedRefinance.stateVersion = transition.stateVersionAfter;
+        storedRefinance.acceptedFunding = transition.acceptedFundingAfter;
+        state.escrowedUnits[refinance_.refinanceId] = transition.escrowedUnitsAfter;
+        state.commitmentIds[refinance_.refinanceId].push(commitment.commitmentId);
+        state.commitments[commitment.commitmentId] = Phase9Types.FundingCommitment({
+            commitmentId: commitment.commitmentId,
+            refinanceId: commitment.refinanceId,
+            positionId: commitment.positionId,
+            trancheId: commitment.trancheId,
+            funder: commitment.funder,
+            amount: commitment.amount,
+            commitmentNonce: commitment.commitmentNonce,
+            commitmentDigest: commitment.commitmentDigest,
+            state: Phase9Types.FundingCommitmentState.FUNDED,
+            fundingResultHash: transition.fundingResultHash
+        });
+        state.processedOperationIds[commitment.commitmentId] = true;
+    }
+
+    function _transferFunding(
+        Phase9RefinanceStorageLayout storage state,
+        Phase9Types.FundingCommitment calldata commitment,
+        uint256 coordinatorBalanceBefore,
+        uint256 funderBalanceBefore
+    ) private {
+        (bool success, bytes memory returned) = address(state.settlementToken)
+            .call(
+                abi.encodeCall(
+                    IERC20.transferFrom, (commitment.funder, address(this), commitment.amount)
+                )
+            );
+        if (!success || returned.length != 32 || _decodedBoolean(returned) != true) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+
+        uint256 coordinatorBalanceAfter = _tokenWord(
+            address(state.settlementToken), abi.encodeCall(IERC20.balanceOf, (address(this)))
+        );
+        uint256 funderBalanceAfter = _tokenWord(
+            address(state.settlementToken), abi.encodeCall(IERC20.balanceOf, (commitment.funder))
+        );
+        if (
+            coordinatorBalanceBefore > type(uint256).max - commitment.amount
+                || coordinatorBalanceAfter != coordinatorBalanceBefore + commitment.amount
+                || funderBalanceAfter > funderBalanceBefore
+                || funderBalanceBefore - funderBalanceAfter != commitment.amount
+        ) revert IRefinanceCoordinator.InvalidRefinance();
+    }
+
+    function _tokenWord(address token, bytes memory input) private view returns (uint256 value) {
+        (bool success, bytes memory returned) = token.staticcall(input);
+        if (!success || returned.length != 32) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+        value = abi.decode(returned, (uint256));
+    }
+
+    function _decodedBoolean(bytes memory encoded) private pure returns (bool value) {
+        uint256 word = abi.decode(encoded, (uint256));
+        if (word > 1) revert IRefinanceCoordinator.InvalidRefinance();
+        value = word == 1;
+    }
+
+    function _boundedStaticcall(address target, bytes memory input, uint256 maximumReturndata)
+        private
+        view
+        returns (bool ok, bytes memory output)
+    {
+        assembly ("memory-safe") {
+            ok := staticcall(gas(), target, add(input, 0x20), mload(input), 0, 0)
+            let size := returndatasize()
+            if gt(size, maximumReturndata) {
+                ok := 0
+                size := 0
+            }
+            output := mload(0x40)
+            mstore(output, size)
+            returndatacopy(add(output, 0x20), 0, size)
+            mstore(0x40, and(add(add(output, 0x20), add(size, 0x1f)), not(0x1f)))
+        }
+    }
+
+    function _deriveRefinancePolicyHash(
+        Phase9RefinanceStorageLayout storage state,
+        Phase9Types.RefinanceRecord memory refinance_,
+        Phase9RefinanceRequestModule.RefinancePolicyFacts memory policy
+    ) private view returns (bytes32) {
+        Phase9RefinanceRequestModule.RefinancePolicyIdentityFields memory fields;
+        fields.chainId = block.chainid;
+        fields.coordinator = address(this);
+        fields.policyRegistry = state.policyRegistry;
+        fields.oldLoanId = refinance_.oldLoanId;
+        fields.newLoanId = refinance_.newLoanId;
+        fields.borrower = refinance_.borrower;
+        fields.oldLender = refinance_.oldLender;
+        fields.newPositionManager = refinance_.newPositionManager;
+        fields.oldPolicySetHash = policy.oldPolicySetHash;
+        fields.newPolicySetHash = policy.newPolicySetHash;
+        fields.proposedTermsHash = policy.proposedTermsHash;
+        fields.settlementAssetId = refinance_.settlementAssetId;
+        fields.collateralSetHash = refinance_.collateralSetHash;
+        fields.fundingAmount = refinance_.fundingAmount;
+        fields.refinanceFee = refinance_.refinanceFee;
+        fields.borrowerProceeds = refinance_.borrowerProceeds;
+        fields.expiresAt = refinance_.expiresAt;
+        fields.maximumValidity = policy.maximumValidity;
+        fields.maximumCommitments = policy.maximumCommitments;
+        fields.collateralIdsHash = keccak256(abi.encode(policy.collateralIds));
+        fields.replacementDebtHash = keccak256(abi.encode(policy.replacementDebt));
+        fields.replacementTranchesHash = keccak256(abi.encode(policy.replacementTranches));
+        fields.replacementPositionsHash = keccak256(abi.encode(policy.replacementPositions));
+        return keccak256(abi.encode("UNIFIED_REFINANCE_POLICY_V1", fields));
+    }
+
+    function _validateStrictIds(bytes32[] memory ids) private pure {
+        for (uint256 i = 0; i < ids.length; ++i) {
+            if (ids[i] == bytes32(0) || (i != 0 && uint256(ids[i]) <= uint256(ids[i - 1]))) {
+                revert IRefinanceCoordinator.InvalidRefinance();
+            }
+        }
+    }
+
+    function _containsTranche(Phase9Types.Tranche[] memory tranches, bytes32 trancheId)
+        private
+        pure
+        returns (bool)
+    {
+        for (uint256 i = 0; i < tranches.length; ++i) {
+            if (tranches[i].trancheId == trancheId) return true;
+        }
+        return false;
+    }
+
+    function _checkedAdd(uint256 left, uint256 right) private pure returns (uint256 result) {
+        if (left > type(uint256).max - right) {
+            revert IRefinanceCoordinator.InvalidRefinance();
+        }
+        unchecked {
+            result = left + right;
+        }
     }
 }
 
@@ -3184,9 +3688,7 @@ contract RefinanceCoordinator is IRefinanceCoordinator {
         override
         returns (Phase9Types.RefinanceTerminalResult memory)
     {
-        return Phase9RefinanceLifecycleModule.executeRefinance(
-            _layout(), refinanceId, operationId
-        );
+        return Phase9RefinanceLifecycleModule.executeRefinance(_layout(), refinanceId, operationId);
     }
 
     function cancelRefinance(bytes32 refinanceId, bytes32 operationId) external override {
@@ -3203,7 +3705,9 @@ contract RefinanceCoordinator is IRefinanceCoordinator {
         override
         returns (Phase9Types.RefinanceRecord memory)
     {
-        return _refinances[refinanceId];
+        Phase9Types.RefinanceRecord memory result = _refinances[refinanceId];
+        if (result.refinanceId == bytes32(0)) revert UnknownRefinance(refinanceId);
+        return result;
     }
 
     function fundingCommitment(bytes32 commitmentId)
@@ -3212,14 +3716,24 @@ contract RefinanceCoordinator is IRefinanceCoordinator {
         override
         returns (Phase9Types.FundingCommitment memory)
     {
-        return _commitments[commitmentId];
+        Phase9Types.FundingCommitment memory result = _commitments[commitmentId];
+        if (result.commitmentId == bytes32(0)) {
+            revert UnknownFundingCommitment(commitmentId);
+        }
+        return result;
     }
 
     function commitmentIds(bytes32 refinanceId) external view override returns (bytes32[] memory) {
+        if (_refinances[refinanceId].refinanceId == bytes32(0)) {
+            revert UnknownRefinance(refinanceId);
+        }
         return _commitmentIds[refinanceId];
     }
 
     function escrowedUnits(bytes32 refinanceId) external view override returns (uint256) {
+        if (_refinances[refinanceId].refinanceId == bytes32(0)) {
+            revert UnknownRefinance(refinanceId);
+        }
         return _escrowedUnits[refinanceId];
     }
 
@@ -3229,6 +3743,9 @@ contract RefinanceCoordinator is IRefinanceCoordinator {
         override
         returns (Phase9Types.RefinanceTerminalResult memory)
     {
+        if (_refinances[refinanceId].refinanceId == bytes32(0)) {
+            revert UnknownRefinance(refinanceId);
+        }
         return _terminalResults[refinanceId];
     }
 
@@ -3236,10 +3753,11 @@ contract RefinanceCoordinator is IRefinanceCoordinator {
         return _processedOperationIds[operationId];
     }
 
-    function _validationContext(
-        Phase9RefinanceStorageLayout storage state,
-        bytes32 oldLoanId
-    ) private view returns (Phase9RefinanceValidationContext memory context) {
+    function _validationContext(Phase9RefinanceStorageLayout storage state, bytes32 oldLoanId)
+        private
+        view
+        returns (Phase9RefinanceValidationContext memory context)
+    {
         context.chainId = block.chainid;
         context.coordinator = address(this);
         context.loanRegistry = state.loanRegistry;

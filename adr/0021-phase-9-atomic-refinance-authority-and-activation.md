@@ -839,8 +839,25 @@ The coordinator accepts the first commitment only in `ACCEPTED` and later
 commitments only in `FUNDING_ESCROWED`, always before `expiresAt`, while the
 commitment count is below both the policy maximum and the hard cap of 32 and
 `acceptedFunding + amount <= fundingAmount`. It performs `transferFrom` and requires
-exact coordinator and funder balance deltas. Only then does it store `FUNDED`, its
-funding-result hash, the ordered commitment ID, accepted funding, and escrowed units.
+exact coordinator and funder balance deltas. Immediately before `transferFrom`, the
+coordinator provisionally applies the `FUNDED` commitment, funding-result hash,
+ordered commitment ID, accepted funding, escrowed units, processed-operation marker,
+state, and version as checks-effects-interactions reentrancy protection. The
+commitment is considered recorded only after `transferFrom` succeeds and both exact
+balance deltas pass. Any token revert, false/malformed return, insufficient balance,
+allowance failure, or delta mismatch reverts the complete transaction, including
+every provisional write, allowance change, token balance, and event.
+
+Funding dependency reads use bounded `staticcall`, so resolver and emergency
+callbacks inherit static execution. A callback may enter a coordinator wrapper and
+run validation, but an otherwise-valid state-changing path halts at its first write;
+no callback can complete a durable state change. The only token whose balance,
+allowance, or `transferFrom` may be called is the exact chain-31337 settlement token
+whose address and runtime code hash are frozen by the coordinator and asset record.
+An asset record that substitutes a callback-capable token is rejected before any
+`balanceOf`, `allowance`, or `transferFrom` call is made to that substitute. This
+proof exercises the combined address-and-runtime identity check; it does not claim
+to isolate the runtime-code-hash branch from the address-equality branch.
 
 The first successful funding commitment changes the refinance to
 `FUNDING_ESCROWED`; additional partial funding remains `FUNDING_ESCROWED`. Custody

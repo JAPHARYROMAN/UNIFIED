@@ -7,13 +7,16 @@ Date: 2026-07-26
 ## Purpose and authority
 
 This document is the acceptance contract for the first synthetic-local atomic
-refinance slice governed by ADR 0019, ADR 0020, ADR 0021, ADR 0022, and the
-candidate-only fixed-module boundary in ADR 0023. ADR 0021
+refinance slice governed by ADR 0019, ADR 0020, ADR 0021, ADR 0022, the
+candidate-only fixed-module boundary in ADR 0023, and the synthetic-local
+activation-topology control in ADR 0024. ADR 0021
 controls where earlier Phase 9 prose describes a state or authority that the frozen
 five coordinator selectors cannot reach; ADR 0022 controls factory, account, manager,
 clone, creation-replay, version-zero, ordering, and checkpoint implementation details
 left open by that boundary. ADR 0023 changes only the candidate code partition and its
-evidence gates; it does not activate a selector, method, checkpoint, or deployment.
+evidence gates; ADR 0024 selects explicit Anvil nonce preconditioning and the exact
+verification-before-governance-grant order. Neither decision activates a selector,
+method, checkpoint, or deployment.
 
 This is a boundary-only milestone. It does not authorize a successful Solidity
 refinance path, mark `UNI-REFI-001` or `UNI-REFI-002` complete, authorize real
@@ -32,9 +35,12 @@ top-level `CREATE` transactions at nonces 1 through 10. Immediate pre-broadcast 
 reads must be `0x1`; post-broadcast `latest` and `pending` reads must be `0xb`. The
 checkpoint stops after the nonce-10 coordinator creation and performs no role grant,
 policy/setup/repair call, business action, method activation, or checkpoint activation.
-A later ADR must freeze nonce-0 `RoleManager` bootstrap versus explicit nonce
-preconditioning and the final role/activation order before activation-grade deployment
-evidence can pass.
+ADR 0024 rejects a nonce-0 `RoleManager` deployment by the candidate broadcaster and
+selects explicit nonce preconditioning for activation-grade synthetic-local evidence.
+It requires the complete ten-CREATE graph to verify with the factory role absent before
+one distinct governance executor grants the exact factory role. The preliminary
+checkpoint here still stops before that grant and cannot satisfy activation-grade
+deployment evidence.
 
 ## Fixed first-slice interpretation
 
@@ -101,7 +107,7 @@ every covered row.
 | `P9R-COMPAT-002` | Compare each candidate ABI with the historical snapshot plus the reviewed per-contract additive allowlist | The coordinator adds only the exact typed transition event and funding error; the lien registry adds only the exact typed handoff error; no account/manager constructor or OpenZeppelin clone error is added | ADR 0021 section 3 and ADR 0022 sections 1 and 3 |
 | `P9R-COMPAT-003` | Scan the candidate source set for added selectors, other events/errors, tuple/storage fields, bases, constructor ABI items, imported clone errors, layout drift, undeclared libraries, module storage, nested links, and delegatecall drift | No unapproved surface or storage change exists; exactly the three ADR 0023 same-file libraries are present and storage-free; the validation module is storage-blind; only the request and lifecycle modules use the exact slot-zero mirror; directly deployed account/manager implementations are locked through their existing final initialized flags; and the factory retains the historical freeze error only through an unreachable compatibility marker | ADR 0021 section 3, ADR 0022 sections 1, 3, and 6, and ADR 0023 sections 1 through 3 |
 | `P9R-CHECK-001` | Evaluate the method-level activation manifest and linked-module checker against the exact source head | Only ADR-activated methods may differ from their fail-closed bodies; every unopened mutator retains the exact freeze error; the exact three-module/seven-call compiler-linked candidate passes its pinned layout, assembly, opcode, link, ABI, compiler, and EIP-170 gates | ADR 0021 section 17, ADR 0022 section 6, and ADR 0023 sections 5, 6, and 8 |
-| `P9R-CHECK-002` | Attempt to accept only one refinance backlog item, only part of the method bundle, or evidence omitting an ADR 0022 or ADR 0023 pin | Activation fails unless `UNI-ADR-018`, `UNI-REFI-001`, and `UNI-REFI-002` are bound to the same reviewed head and every required method/evidence row and D1 decision check passes; the accepted candidate architecture alone activates nothing | ADR 0021 section 17, ADR 0022 section 6, and ADR 0023 activation gate |
+| `P9R-CHECK-002` | Attempt to accept only one refinance backlog item, only part of the method bundle, or evidence omitting an ADR 0022, ADR 0023, or ADR 0024 pin | Activation fails unless `UNI-ADR-018`, `UNI-ADR-019`, `UNI-REFI-001`, and `UNI-REFI-002` are bound to the same reviewed head and every required method/evidence row and D1 decision check passes; the accepted candidate architecture and topology control alone activate nothing | ADR 0021 section 17, ADR 0022 section 6, ADR 0023 activation gate, and ADR 0024 section 6 |
 | `P9R-RISK-001` | Cross-check the risk and assumption registers against this matrix | Every existential or critical refinance risk and assumption has an owner, mitigation, evidence target, and status | ADR 0021 Verification and registered risk/assumption evidence |
 
 ### Deployment and local bootstrap
@@ -114,10 +120,10 @@ the activation-grade rows below.
 
 | ID | Test | Required result | Trace |
 |---|---|---|---|
-| `P9R-DEPLOY-001` | After the later topology ADR, deploy the full refinance graph using its selected nonce-0 bootstrap or nonce-preconditioning form and its frozen role-initialization order | Exactly ten top-level `CREATE`s occur at nonces 1 through 10 in the ADR 0023 order: validation/request/lifecycle modules are 6/7/8, payoff engine is 9, and the fully linked coordinator is 10; the selected nonce-zero/precondition and role sequence are separately evidenced and approved | ADR 0021 section 18, ADR 0023 section 7, and the required later topology ADR |
-| `P9R-DEPLOY-002` | Independently predict the nonce-10 coordinator and nonce-6/7/8 modules, reproduce all seven fixed links, verify reciprocal constructor bindings, and verify the later-ADR-selected RoleManager bootstrap and role initialization | The coordinator prediction uses RLP nonce byte `0x0a`; lien registry and payoff engine bind that exact address; linked coordinator bytecode embeds only the three predicted module addresses at the seven compiler-reported offsets; coordinator dependencies and final factory-role authority match the later frozen topology exactly | ADR 0021 section 18, ADR 0023 sections 6 and 7, and the required later topology ADR |
-| `P9R-DEPLOY-003` | Verify every activation-grade manifest transaction, receipt/log, code, constructor argument, module self-address runtime patch, link offset, fully linked runtime hash, dependency getter, role expiry/membership, reviewed storage slot, runtime/initcode size, and direct account/manager implementation lock | Candidate and post-broadcast evidence agree exactly through canonical block-hash reads after the nonce-zero and role topology is frozen; every module and coordinator artifact matches the pinned compiler output and applicable size limit; missing, stale, unresolved, swapped, or mismatched evidence fails | Refinance deployment evidence, ADR 0022 section 3, ADR 0023 sections 6 through 8, and the required later topology ADR |
-| `P9R-DEPLOY-004` | Attempt public-chain, reused/production key, real value, wrong or unevidenced nonce preconditioning, CREATE2 top-level, reordered/undeclared transaction, role/setup/business action in the topology-only candidate, mismatched activation-grade role initialization, post-hoc repair, or external-provider deployment | Every attempt is rejected, requires bounded reset, and creates no accepted deployment checkpoint | ADR 0021 sections 1 and 18 and ADR 0023 section 7 |
+| `P9R-DEPLOY-001` | Deploy the full refinance graph using ADR 0024's explicit nonce-preconditioning form and frozen role-initialization order | A pairwise-distinct roleless candidate broadcaster is observed at nonce zero, preconditioned exactly once to nonce one, and sends exactly ten top-level `CREATE`s at nonces 1 through 10 in ADR 0023 order; the complete role-absent graph verifies before one distinct governance executor grants the factory role | ADR 0021 section 18, ADR 0023 section 7, and ADR 0024 sections 1 through 5 |
+| `P9R-DEPLOY-002` | Independently verify the prerequisite RoleManager, nonce precondition, nonce-10 coordinator, nonce-6/7/8 modules, all seven fixed links, reciprocal constructor bindings, and final governance role initialization | The setup administrator and governance executor receive only their constructor roles; the candidate receives none; the coordinator prediction uses RLP nonce byte `0x0a`; the factory role is absent through topology verification; then the governance executor's only nonce-zero transaction grants `LOAN_FACTORY_ROLE` to the verified factory with maximum expiry | ADR 0021 section 18, ADR 0023 sections 6 and 7, and ADR 0024 sections 2 through 5 |
+| `P9R-DEPLOY-003` | Verify every activation-grade manifest transaction, receipt/log, code, constructor argument, module self-address runtime patch, link offset, fully linked runtime hash, dependency getter, role expiry/membership, reviewed storage slot, runtime/initcode size, and direct account/manager implementation lock | Candidate and post-broadcast evidence agree exactly through canonical block-hash reads; every module and coordinator artifact matches the pinned compiler output and applicable size limit; the exact single role grant is the last activation-topology transaction; missing, stale, unresolved, swapped, extra, or mismatched evidence fails | Refinance deployment evidence, ADR 0022 section 3, ADR 0023 sections 6 through 8, and ADR 0024 sections 4 through 7 |
+| `P9R-DEPLOY-004` | Attempt public-chain, reused/production key, real value, nonce-zero candidate RoleManager, wrong or unevidenced nonce preconditioning, CREATE2 top-level, reordered/undeclared transaction, premature or wrong-sender role grant, role-admin change, setup/business action, post-hoc repair, or external-provider deployment | Every attempt is rejected, requires bounded reset, and creates no accepted deployment checkpoint | ADR 0021 sections 1 and 18, ADR 0023 section 7, and ADR 0024 section 7 |
 | `P9R-BOOT-001` | Request when the unique old bootstrap clone/records are absent | The borrower calls the coordinator; the coordinator-only factory call resolves borrower/configuration itself, deploys both clones, initializes the account before its manager, records the agreement hash only at the nonzero active terms version, registers the account once, then installs positions/custody/liens before quote issuance in one transaction; old position owner/beneficiary/claims equal `oldLender` and the old debt/quote route with no alternate | ADR 0021 sections 6, 8, and 11 and ADR 0022 sections 3 and 4 |
 | `P9R-BOOT-002` | Retry exact bootstrap records; mutate one; invoke after the unique marker is consumed or off chain 31337 | Exact existing records are inert; any mismatch or unauthorized reuse reverts the complete request, including clone and quote effects | ADR 0021 section 11 |
 | `P9R-BOOT-003` | Observe replacement creation during a successful request and query agreement versions zero and the later nonzero activation version | No replacement preexists; after internal quote and refinance-ID derivation the coordinator creates deterministic clones as `CREATED/NONE`, zero debt, no position/lien/custody, and `agreementVersionHash(0) == 0`, bound to that refinance only; activation writes the agreement hash only at its nonzero effective terms version | ADR 0021 sections 6 and 11 and ADR 0022 section 4 |
@@ -234,8 +240,8 @@ source head:
 2. deterministic reference vectors defined by
    `phase-9-refinance-reference-evidence.md` in Solidity, Go, TypeScript, and
    Python;
-3. the non-activating candidate topology evidence and, only after the required later
-   topology ADR, fresh-chain activation-grade deployment evidence defined by
+3. the non-activating candidate topology evidence and, under ADR 0024's selected
+   nonce and role order, fresh-chain activation-grade deployment evidence defined by
    `phase-9-refinance-deployment-evidence.md`;
 4. unit, boundary, authorization, negative, differential, fuzz, and stateful
    invariant results keyed to every `P9R-*` row;
@@ -248,11 +254,12 @@ source head:
 
 `UNI-REFI-001` and `UNI-REFI-002` remain `TODO` until the complete bundled
 implementation passes every applicable row above on a clean checkout and the
-reviewed method-level checkpoint is recorded. Before `P9-REFI-001` can pass, the
-required later topology ADR must also freeze nonce-0 `RoleManager` bootstrap versus
-explicit nonce preconditioning and the final role-initialization order. The
-non-activating topology candidate does not satisfy that requirement. Neither backlog
-row may be accepted alone.
+reviewed method-level checkpoint is recorded. Before `P9-REFI-001` can pass,
+`UNI-ADR-019` must remain accepted and activation-grade evidence must prove ADR 0024's
+explicit nonce precondition, pairwise-distinct authorities, verification-before-grant
+order, and exact single governance-executor factory-role grant. The non-activating
+topology candidate does not satisfy that requirement. Neither backlog row may be
+accepted alone.
 No result from this matrix authorizes real value, a public chain, a production
 credential, an external provider, a production-like identity, or a mainnet
 deployment.

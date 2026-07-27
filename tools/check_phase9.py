@@ -35,8 +35,9 @@ REFINANCE_ADR_PATH = ROOT / "adr/0021-phase-9-atomic-refinance-authority-and-act
 FACTORY_BOOTSTRAP_ADR_PATH = (
     ROOT / "adr/0022-phase-9-factory-account-position-bootstrap-semantics.md"
 )
-REFINANCE_MODULE_ADR_PATH = (
-    ROOT / "adr/0023-phase-9-refinance-fixed-module-partition.md"
+REFINANCE_MODULE_ADR_PATH = ROOT / "adr/0023-phase-9-refinance-fixed-module-partition.md"
+REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH = (
+    ROOT / "adr/0024-phase-9-refinance-activation-topology-control.md"
 )
 ARCHITECTURE_PATH = ROOT / "docs/architecture/phase-9-resolution-protection-recovery.md"
 DATA_LAYOUTS_PATH = ROOT / "docs/architecture/phase-9-data-layouts.md"
@@ -134,6 +135,7 @@ BACKLOG_IDS = (
     "UNI-ADR-016",
     "UNI-ADR-017",
     "UNI-ADR-018",
+    "UNI-ADR-019",
     "UNI-REFI-001",
     "UNI-REFI-002",
     "UNI-RESTRUCT-001",
@@ -158,6 +160,7 @@ BOUNDARY_COMPLETE_IDS = {
     "UNI-ADR-016",
     "UNI-ADR-017",
     "UNI-ADR-018",
+    "UNI-ADR-019",
 }
 SECURITY_REVIEW_ID = "UNI-SEC-014"
 EXIT_REVIEW_ID = "UNI-REVIEW-012"
@@ -221,6 +224,7 @@ BOUNDARY_PATHS = (
     REFINANCE_ADR_PATH,
     FACTORY_BOOTSTRAP_ADR_PATH,
     REFINANCE_MODULE_ADR_PATH,
+    REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH,
     ARCHITECTURE_PATH,
     DATA_LAYOUTS_PATH,
     REFINANCE_ACCEPTANCE_PATH,
@@ -389,6 +393,7 @@ def check_backlog_precedence(by_id: dict[str, dict[str, str]]) -> None:
     refinance_activation_done = by_id["UNI-ADR-016"]["status"] == "DONE"
     refinance_bootstrap_done = by_id["UNI-ADR-017"]["status"] == "DONE"
     refinance_module_candidate_done = by_id["UNI-ADR-018"]["status"] == "DONE"
+    refinance_activation_topology_done = by_id["UNI-ADR-019"]["status"] == "DONE"
     refinance_done = [
         identifier
         for identifier in ("UNI-REFI-001", "UNI-REFI-002")
@@ -408,6 +413,49 @@ def check_backlog_precedence(by_id: dict[str, dict[str, str]]) -> None:
         refinance_module_candidate_done or not refinance_done,
         "UNI-ADR-018 must be DONE before either Phase 9 refinance row can be DONE: "
         + ", ".join(refinance_done),
+    )
+    require(
+        refinance_activation_topology_done or not refinance_done,
+        "UNI-ADR-019 must be DONE before either Phase 9 refinance row can be DONE: "
+        + ", ".join(refinance_done),
+    )
+
+
+def check_refinance_checkpoint_precedence(
+    by_id: dict[str, dict[str, str]], checkpoint_packages: Iterable[dict[str, object]]
+) -> None:
+    refinance_packages = [
+        package for package in checkpoint_packages if package.get("checkpointId") == "P9-REFI-001"
+    ]
+    require(
+        len(refinance_packages) <= 1,
+        "P9-REFI-001 checkpoint package is duplicated",
+    )
+    if not refinance_packages:
+        return
+    raw_required = refinance_packages[0].get("requiredBacklogIds")
+    require(
+        isinstance(raw_required, list) and all(isinstance(value, str) for value in raw_required),
+        "P9-REFI-001 required backlog IDs are malformed",
+    )
+    required_backlog_ids = cast(list[str], raw_required)
+    require(
+        "UNI-ADR-019" in required_backlog_ids,
+        "P9-REFI-001 must bind UNI-ADR-019 in requiredBacklogIds",
+    )
+    require(
+        by_id["UNI-ADR-019"]["status"] == "DONE",
+        "P9-REFI-001 cannot exist before UNI-ADR-019 is DONE",
+    )
+    incomplete = [
+        identifier
+        for identifier in ("UNI-REFI-001", "UNI-REFI-002")
+        if by_id[identifier]["status"] != "DONE"
+    ]
+    require(
+        not incomplete,
+        "P9-REFI-001 cannot exist before the bundled refinance rows are DONE: "
+        + ", ".join(incomplete),
     )
 
 
@@ -475,6 +523,7 @@ def check_refinance_boundary_evidence() -> None:
     refinance_adr = read(REFINANCE_ADR_PATH)
     factory_bootstrap_adr = read(FACTORY_BOOTSTRAP_ADR_PATH)
     refinance_module_adr = read(REFINANCE_MODULE_ADR_PATH)
+    refinance_activation_topology_adr = read(REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH)
     acceptance = read(REFINANCE_ACCEPTANCE_PATH)
     reference = read(REFINANCE_REFERENCE_EVIDENCE_PATH)
     deployment = read(REFINANCE_DEPLOYMENT_EVIDENCE_PATH)
@@ -510,6 +559,46 @@ def check_refinance_boundary_evidence() -> None:
             "it does not activate any method",
         ),
         "Phase 9 refinance fixed-module candidate boundary",
+    )
+    require_tokens(
+        normalized(refinance_activation_topology_adr),
+        (
+            "status: accepted for synthetic-local activation-topology specification; "
+            "implementation activation pending",
+            "work item: `uni-adr-019`",
+            "explicit nonce preconditioning is selected",
+            "the candidate broadcaster does not deploy `rolemanager`",
+            "supersedes only adr 0021 section 18's statement that the refinance graph "
+            "broadcaster is also the governance executor",
+            "all four identities are nonzero and pairwise distinct",
+            "`0x70997970c51812dc3a010c7d01b50e0d17dc79c8`",
+            "`0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc`",
+            "not caller-supplied private-key, mnemonic, keystore, hardware-wallet, or kms inputs",
+            "exactly one successful `anvil_setnonce(candidatebroadcaster, 0x1)` call",
+            "1. `lienregistry`; 2. `collateralcustodyv2`; 3. `phase9loanaccount` "
+            "implementation; 4. `positionmanagerv2` implementation; 5. "
+            "`phase9loanfactory`; 6. `phase9refinancevalidationmodule`; 7. "
+            "`phase9refinancerequestmodule`; 8. `phase9refinancelifecyclemodule`; 9. "
+            "`payoffquoteengine`; and 10. the fully linked `refinancecoordinator`.",
+            "verification precedes the only role grant",
+            "only after the verification in section 4",
+            "rolemanager.grantrole(",
+            "protocolroles.loan_factory_role",
+            "the sender is the constructor-bound governance executor",
+            "rolegranted(loan_factory_role, phase9loanfactory, type(uint64).max, "
+            "governanceexecutor)` log",
+            "roleexpiry(loan_factory_role, phase9loanfactory) == type(uint64).max",
+            "no role-admin change, second grant, revocation, or other state-changing "
+            "transaction occurred",
+            "the grant is the last activation-topology transaction",
+            "`p9-refi-001` remains absent",
+            "requires bounded reset to the exact genesis identity",
+            "reset evidence must prove candidate and governance nonces return to zero, "
+            "every prerequisite and graph address has empty code, the role grant and all "
+            "logs disappear, the exact genesis hash is restored, generated sensitive "
+            "configuration is removed, and the disposable anvil process stops.",
+        ),
+        "Phase 9 refinance activation-topology control",
     )
 
     actual_acceptance_ids = set(
@@ -597,9 +686,9 @@ def check_refinance_boundary_evidence() -> None:
             "FUNDING_ESCROWED --borrower cancellation or expiry before execution--> REFUNDABLE",
             "exact `newLoanNonce == refinanceNonce` checks",
             "it is not a separately stored counter",
-            'CAPABILITY_PHASE9_REFINANCE_REQUEST = '
+            "CAPABILITY_PHASE9_REFINANCE_REQUEST = "
             'keccak256("CAPABILITY_PHASE9_REFINANCE_REQUEST")',
-            'CAPABILITY_PHASE9_REFINANCE_FUNDING = '
+            "CAPABILITY_PHASE9_REFINANCE_FUNDING = "
             'keccak256("CAPABILITY_PHASE9_REFINANCE_FUNDING")',
             "After the local old-loan lock is acquired and before any "
             "resolver/bootstrap/quote effect, request acceptance calls `emergencyState` "
@@ -610,7 +699,7 @@ def check_refinance_boundary_evidence() -> None:
             "Execute, cancel, expiry, and refund do not consult either capability",
             "authenticates `msg.sender` as the coordinator resolved from its immutable "
             "lien registry",
-            'custody_identity_hash = keccak256(abi.encode( '
+            "custody_identity_hash = keccak256(abi.encode( "
             '"UNIFIED_PHASE9_BOOTSTRAP_CUSTODY_IDENTITY_V1", chainid, '
             "collateral_custody, asset_registry, bootstrap_custody_operation_id, "
             "collateral_id",
@@ -659,9 +748,11 @@ def check_refinance_boundary_evidence() -> None:
             "synthetic-local",
             "exactly seven fixed compiler-linked call sites",
             "No module may link or delegate again",
-            "Exactly ten top-level `CREATE`s occur at nonces 1 through 10",
-            "`UNI-ADR-018`, `UNI-REFI-001`, and `UNI-REFI-002`",
-            "the accepted candidate architecture alone activates nothing",
+            "exactly ten top-level `CREATE`s at nonces 1 through 10",
+            "`UNI-ADR-018`, `UNI-ADR-019`, `UNI-REFI-001`, and `UNI-REFI-002`",
+            "the accepted candidate architecture and topology control alone activate nothing",
+            "explicit nonce precondition, pairwise-distinct authorities, "
+            "verification-before-grant order",
             "It does not authorize a successful Solidity refinance path",
         ),
         "Phase 9 refinance acceptance semantics",
@@ -673,13 +764,13 @@ def check_refinance_boundary_evidence() -> None:
             "exactly 20 bytes",
             "replacement new-loan nonce is not another stored counter",
             "it exactly equals the low-63-bit per-old-loan `refinance_nonce`",
-            'CAPABILITY_PHASE9_REFINANCE_REQUEST = '
+            "CAPABILITY_PHASE9_REFINANCE_REQUEST = "
             'keccak256("CAPABILITY_PHASE9_REFINANCE_REQUEST")',
-            'CAPABILITY_PHASE9_REFINANCE_FUNDING = '
+            "CAPABILITY_PHASE9_REFINANCE_FUNDING = "
             'keccak256("CAPABILITY_PHASE9_REFINANCE_FUNDING")',
             "custody authenticates that coordinator, reconstructs "
             "`CustodyRecord.identityHash` from the passed operation ID",
-            'custody_identity_hash = keccak256(abi.encode( '
+            "custody_identity_hash = keccak256(abi.encode( "
             '"UNIFIED_PHASE9_BOOTSTRAP_CUSTODY_IDENTITY_V1", chainid, '
             "collateral_custody, asset_registry, bootstrap_custody_operation_id, "
             "collateral_id",
@@ -690,8 +781,7 @@ def check_refinance_boundary_evidence() -> None:
             "selector and acts as an on-chain replay/identity key",
             "activation, tranche, position, and lien operation IDs are deterministic "
             "model/event-correlation values only",
-            "must not treat those correlation hashes as contract authority or processed "
-            "storage",
+            "must not treat those correlation hashes as contract authority or processed storage",
             "attributed_escrow_*` is scoped to the refinance",
             "Unsolicited surplus is excluded from every liability",
             "fixed compiler-linked request `begin` dispatch",
@@ -726,7 +816,10 @@ def check_refinance_boundary_evidence() -> None:
             "exact seven compiler-reported offsets",
             "module runtime self-patch offsets",
             "It does not authorize a deployment",
-            "does not change either backlog row from `TODO`",
+            "change either backlog row from `TODO`",
+            "ADR 0024 activation-grade extension",
+            "that grant is the last activation-topology transaction",
+            "insufficient to activate any method or checkpoint",
         ),
         "Phase 9 refinance deployment evidence",
     )
@@ -1586,6 +1679,34 @@ def solidity_function_bodies(source: str) -> list[tuple[str, str]]:
     return functions
 
 
+def solidity_definition_bodies(source: str) -> list[tuple[str, str, str]]:
+    """Return top-level contract/library bodies for owner-scoped ABI inspection."""
+
+    definitions: list[tuple[str, str, str]] = []
+    pattern = re.compile(
+        r"\b(?P<kind>contract|library)\s+(?P<name>[A-Za-z_]\w*)[^;{]*\{",
+        re.DOTALL,
+    )
+    for match in pattern.finditer(source):
+        depth = 1
+        cursor = match.end()
+        while cursor < len(source) and depth:
+            if source[cursor] == "{":
+                depth += 1
+            elif source[cursor] == "}":
+                depth -= 1
+            cursor += 1
+        require(depth == 0, "Phase 9 Solidity definition body is not parseable")
+        definitions.append(
+            (
+                match.group("kind"),
+                match.group("name"),
+                source[match.end() : cursor - 1],
+            )
+        )
+    return definitions
+
+
 def is_exact_freeze_revert(body: str) -> bool:
     return (
         re.fullmatch(
@@ -1606,7 +1727,7 @@ def check_implemented_freeze_abi_compatibility(contract: str, source: str) -> No
         return
 
     exact_import = re.compile(
-        rf'import\s*\{{\s*{PHASE9_FREEZE_ERROR}\s*\}}\s*from\s*'
+        rf"import\s*\{{\s*{PHASE9_FREEZE_ERROR}\s*\}}\s*from\s*"
         r'"\.\./interfaces/phase9/Phase9Errors\.sol"\s*;'
     )
     require(
@@ -1711,9 +1832,26 @@ def activated_function_names(
     return activated_names
 
 
-def phase9_public_mutators(source: str) -> list[tuple[str, str]]:
+def phase9_public_mutators(source: str, contract: str | None = None) -> list[tuple[str, str]]:
+    scope = source
+    if contract is not None:
+        # The compiler-AST linked-module gate proves the exact public library signatures
+        # and the one-to-one lifecycle wrapper call graph. This ABI freeze pass must inspect
+        # only the named contract definition; otherwise an exact public library/wrapper pair
+        # is misclassified as a Solidity overload.
+        owned_definitions = [
+            body
+            for kind, name, body in solidity_definition_bodies(source)
+            if kind == "contract" and name == contract
+        ]
+        require(
+            len(owned_definitions) == 1,
+            f"{contract} contract definition inventory drifted",
+        )
+        scope = owned_definitions[0]
+
     mutators: list[tuple[str, str]] = []
-    for header, body in solidity_function_bodies(source):
+    for header, body in solidity_function_bodies(scope):
         header_words = set(re.findall(r"[A-Za-z_]\w*", header))
         if not ({"public", "external"} & header_words) or {"view", "pure"} & header_words:
             continue
@@ -1752,7 +1890,7 @@ def check_phase9_stub_sources(
                 raise SystemExit(
                     "RefinanceCoordinator ADR 0023 linked-module check failed: " + str(error)
                 ) from error
-        mutators = phase9_public_mutators(source)
+        mutators = phase9_public_mutators(source, contract)
         mutator_names = {name for name, _body in mutators}
         activated_names = activated_function_names(contract, mutator_names, implemented)
         fully_activated = bool(mutator_names) and activated_names == mutator_names
@@ -1857,7 +1995,7 @@ def check_phase9_foundry_warning_policy(
     contracts_requiring_warning = set()
     for contract in PHASE9_PRODUCTION_CONTRACTS:
         source = strip_solidity_comments(read(imports[contract]))
-        mutator_names = {name for name, _body in phase9_public_mutators(source)}
+        mutator_names = {name for name, _body in phase9_public_mutators(source, contract)}
         active_names = activated_function_names(contract, mutator_names, implemented)
         if active_names != mutator_names:
             contracts_requiring_warning.add(contract)
@@ -1983,6 +2121,17 @@ def check_pre_code_freeze(by_id: dict[str, dict[str, str]]) -> None:
 
     imports = phase9_compilation_imports()
     checkpoints = validate_checkpoints()
+    checkpoint_payload = json.loads(read(PHASE9_IMPLEMENTATION_CHECKPOINT_PATH))
+    raw_packages = checkpoint_payload.get("packages")
+    require(
+        isinstance(raw_packages, list)
+        and all(isinstance(package, dict) for package in raw_packages),
+        "Phase 9 checkpoint packages are malformed",
+    )
+    check_refinance_checkpoint_precedence(
+        by_id,
+        cast(list[dict[str, object]], raw_packages),
+    )
     activation = activated_signatures()
     require(
         set(activation) == set(checkpoints),

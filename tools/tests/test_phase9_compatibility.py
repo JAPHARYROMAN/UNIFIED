@@ -187,9 +187,7 @@ def test_checked_implementation_hash_loads_and_compares_in_implemented_mode(
         observed.append(("load", set() if implemented is None else implemented))
         return {"PayoffQuoteEngine": layout}
 
-    def compare(
-        _actual: dict[str, dict[str, Any]], implemented: set[str] | None = None
-    ) -> None:
+    def compare(_actual: dict[str, dict[str, Any]], implemented: set[str] | None = None) -> None:
         observed.append(("compare", set() if implemented is None else implemented))
 
     monkeypatch.setattr(storage, "load_actual_layouts", load)
@@ -229,7 +227,12 @@ def test_backlog_dependency_order_is_fail_closed() -> None:
         phase9.check_backlog_precedence(implementation_before_activation)
 
     for refinance_id in ("UNI-REFI-001", "UNI-REFI-002"):
-        for required_adr in ("UNI-ADR-016", "UNI-ADR-017", "UNI-ADR-018"):
+        for required_adr in (
+            "UNI-ADR-016",
+            "UNI-ADR-017",
+            "UNI-ADR-018",
+            "UNI-ADR-019",
+        ):
             refinance_before_activation = copy.deepcopy(rows)
             refinance_before_activation[required_adr]["status"] = "TODO"
             refinance_before_activation[refinance_id]["status"] = "DONE"
@@ -239,21 +242,52 @@ def test_backlog_dependency_order_is_fail_closed() -> None:
 
 def test_refinance_activation_row_and_acceptance_inventory_are_exact() -> None:
     refinance_index = phase9.BACKLOG_IDS.index("UNI-REFI-001")
-    assert phase9.BACKLOG_IDS[refinance_index - 3 : refinance_index] == (
+    assert phase9.BACKLOG_IDS[refinance_index - 4 : refinance_index] == (
         "UNI-ADR-016",
         "UNI-ADR-017",
         "UNI-ADR-018",
+        "UNI-ADR-019",
     )
-    assert {"UNI-ADR-016", "UNI-ADR-017", "UNI-ADR-018"}.issubset(
+    assert {"UNI-ADR-016", "UNI-ADR-017", "UNI-ADR-018", "UNI-ADR-019"}.issubset(
         phase9.BOUNDARY_COMPLETE_IDS
     )
     assert phase9.FACTORY_BOOTSTRAP_ADR_PATH in phase9.BOUNDARY_PATHS
     assert phase9.REFINANCE_MODULE_ADR_PATH in phase9.BOUNDARY_PATHS
+    assert phase9.REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH in phase9.BOUNDARY_PATHS
     assert len(phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS) == 80
     assert "P9R-COMPAT-003" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
     assert "P9R-DON-004" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
     assert "P9R-EVT-003" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
     assert "P9R-LOCAL-003" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
+
+
+def test_refinance_checkpoint_requires_activation_topology_and_bundled_rows() -> None:
+    rows = {identifier: {"status": "TODO"} for identifier in phase9.BACKLOG_IDS}
+    for identifier in phase9.BOUNDARY_COMPLETE_IDS:
+        rows[identifier]["status"] = "DONE"
+
+    phase9.check_refinance_checkpoint_precedence(
+        rows,
+        [{"checkpointId": "P9-PAYOFF-001", "requiredBacklogIds": ["UNI-PAYOFF-001"]}],
+    )
+
+    missing_binding = [{"checkpointId": "P9-REFI-001", "requiredBacklogIds": []}]
+    with pytest.raises(SystemExit, match="must bind UNI-ADR-019"):
+        phase9.check_refinance_checkpoint_precedence(rows, missing_binding)
+
+    refinance_package = [{"checkpointId": "P9-REFI-001", "requiredBacklogIds": ["UNI-ADR-019"]}]
+
+    rows["UNI-ADR-019"]["status"] = "TODO"
+    with pytest.raises(SystemExit, match="UNI-ADR-019"):
+        phase9.check_refinance_checkpoint_precedence(rows, refinance_package)
+
+    rows["UNI-ADR-019"]["status"] = "DONE"
+    with pytest.raises(SystemExit, match="bundled refinance rows"):
+        phase9.check_refinance_checkpoint_precedence(rows, refinance_package)
+
+    rows["UNI-REFI-001"]["status"] = "DONE"
+    rows["UNI-REFI-002"]["status"] = "DONE"
+    phase9.check_refinance_checkpoint_precedence(rows, refinance_package)
 
 
 def test_refinance_boundary_evidence_is_exact() -> None:
@@ -274,6 +308,43 @@ def test_refinance_boundary_evidence_is_exact() -> None:
             "Work item: `UNI-ADR-018`",
             "Work item: `UNI-ADR-999`",
             "refinance fixed-module candidate boundary",
+        ),
+        (
+            phase9.REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH,
+            "Explicit nonce preconditioning is selected",
+            "Nonce-zero candidate RoleManager bootstrap is selected",
+            "refinance activation-topology control",
+        ),
+        (
+            phase9.REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH,
+            "1. `LienRegistry`;\n2. `CollateralCustodyV2`;",
+            "1. `CollateralCustodyV2`;\n2. `LienRegistry`;",
+            "refinance activation-topology control",
+        ),
+        (
+            phase9.REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH,
+            "the sender is the constructor-bound\ngovernance executor",
+            "the sender is the candidate broadcaster",
+            "refinance activation-topology control",
+        ),
+        (
+            phase9.REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH,
+            "`roleExpiry(LOAN_FACTORY_ROLE, phase9LoanFactory) == type(uint64).max`;",
+            "`roleExpiry(LOAN_FACTORY_ROLE, phase9LoanFactory) == 1`;",
+            "refinance activation-topology control",
+        ),
+        (
+            phase9.REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH,
+            "no role-admin change, second grant, revocation, or other state-changing "
+            "transaction\n  occurred",
+            "a second grant or role-admin change may occur",
+            "refinance activation-topology control",
+        ),
+        (
+            phase9.REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH,
+            "Reset evidence must prove candidate and governance nonces return to zero",
+            "Reset evidence need not prove authority nonces return to zero",
+            "refinance activation-topology control",
         ),
         (
             phase9.REFINANCE_ADR_PATH,
@@ -343,8 +414,7 @@ def test_refinance_boundary_evidence_is_exact() -> None:
             phase9.REFINANCE_ADR_PATH,
             "chainid, refinance_coordinator, bootstrap_id, old_loan_id,\n"
             "  collateral_custody, collateral_id",
-            "chainid, refinance_coordinator, bootstrap_id,\n"
-            "  collateral_custody, collateral_id",
+            "chainid, refinance_coordinator, bootstrap_id,\n  collateral_custody, collateral_id",
             "atomic-refinance semantic boundary",
         ),
         (
@@ -451,7 +521,7 @@ def test_mutating_stub_source_must_be_exact_revert() -> None:
 
 
 def implemented_abi_compatibility_fixture(extra_body: str = "") -> str:
-    return f'''
+    return f"""
 import {{ Phase9ImplementationNotFrozen }} from "../interfaces/phase9/Phase9Errors.sol";
 
 contract Example {{
@@ -464,7 +534,7 @@ contract Example {{
         revert Phase9ImplementationNotFrozen();
     }}
 }}
-'''
+"""
 
 
 def test_activated_contract_allows_only_exact_unreachable_freeze_abi_marker(
@@ -482,9 +552,7 @@ def test_activated_contract_allows_only_exact_unreachable_freeze_abi_marker(
 
 
 def test_activated_contract_rejects_exact_freeze_behavior_on_public_mutator() -> None:
-    source = implemented_abi_compatibility_fixture(
-        "revert Phase9ImplementationNotFrozen();"
-    )
+    source = implemented_abi_compatibility_fixture("revert Phase9ImplementationNotFrozen();")
     with pytest.raises(SystemExit, match="retains fail-closed freeze behavior"):
         phase9.check_implemented_freeze_abi_compatibility("Example", source)
 
@@ -617,6 +685,84 @@ def test_refinance_candidate_delegates_exact_assembly_gate(
     phase9.check_phase9_stub_sources({"RefinanceCoordinator": path})
 
     assert observed == ["checked"]
+
+
+def test_refinance_library_wrapper_pair_is_owner_scoped(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = """
+    library Phase9RefinanceValidationModule {}
+    library Phase9RefinanceRequestModule {}
+    library Phase9RefinanceLifecycleModule {
+        function recordFundingCommitment(
+            Phase9RefinanceStorageLayout storage state,
+            Phase9Types.FundingCommitment calldata commitment
+        ) public { state; commitment; }
+    }
+    contract RefinanceCoordinator {
+        function recordFundingCommitment(
+            Phase9Types.FundingCommitment calldata commitment
+        ) external { commitment; }
+    }
+    """
+    path = tmp_path / "RefinanceCoordinator.sol"
+    path.write_text(source, encoding="utf-8")
+    monkeypatch.setattr(phase9, "PHASE9_PRODUCTION_CONTRACTS", ("RefinanceCoordinator",))
+    monkeypatch.setattr(phase9, "check_refinance_linked_modules", lambda: None)
+
+    phase9.check_phase9_stub_sources(
+        {"RefinanceCoordinator": path},
+        {
+            "RefinanceCoordinator": frozenset(
+                {
+                    "recordFundingCommitment((bytes32,bytes32,bytes32,bytes32,address,"
+                    "uint256,uint64,bytes32,uint8,bytes32))"
+                }
+            )
+        },
+    )
+
+    assert [
+        name for name, _body in phase9.phase9_public_mutators(source, "RefinanceCoordinator")
+    ] == ["recordFundingCommitment"]
+
+
+def test_refinance_real_coordinator_overload_drift_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = """
+    library Phase9RefinanceValidationModule {}
+    library Phase9RefinanceRequestModule {}
+    library Phase9RefinanceLifecycleModule {
+        function recordFundingCommitment(
+            Phase9RefinanceStorageLayout storage state,
+            Phase9Types.FundingCommitment calldata commitment
+        ) public { state; commitment; }
+    }
+    contract RefinanceCoordinator {
+        function recordFundingCommitment(
+            Phase9Types.FundingCommitment calldata commitment
+        ) external { commitment; }
+        function recordFundingCommitment(bytes32 commitmentId) external { commitmentId; }
+    }
+    """
+    path = tmp_path / "RefinanceCoordinator.sol"
+    path.write_text(source, encoding="utf-8")
+    monkeypatch.setattr(phase9, "PHASE9_PRODUCTION_CONTRACTS", ("RefinanceCoordinator",))
+    monkeypatch.setattr(phase9, "check_refinance_linked_modules", lambda: None)
+
+    with pytest.raises(SystemExit, match="overloaded mutators"):
+        phase9.check_phase9_stub_sources(
+            {"RefinanceCoordinator": path},
+            {
+                "RefinanceCoordinator": frozenset(
+                    {
+                        "recordFundingCommitment((bytes32,bytes32,bytes32,bytes32,address,"
+                        "uint256,uint64,bytes32,uint8,bytes32))"
+                    }
+                )
+            },
+        )
 
 
 def test_refinance_candidate_rejects_unattested_assembly(

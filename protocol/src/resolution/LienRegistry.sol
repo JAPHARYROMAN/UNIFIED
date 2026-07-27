@@ -74,11 +74,10 @@ contract LienRegistry is ILienRegistry {
     function _validInitialLien(Phase9Types.Lien memory lien_) private view returns (bool) {
         return block.chainid == 31337 && lien_.collateralId != bytes32(0)
             && lien_.collateralManager != address(0) && lien_.vault != address(0)
-            && lien_.assetId != bytes32(0) && lien_.quantity != 0
-            && lien_.borrower != address(0) && lien_.seniorLoanId != bytes32(0)
-            && lien_.lienVersion != 0 && lien_.status == Phase9Types.LienStatus.ACTIVE
-            && lien_.pendingRefinanceId == bytes32(0)
-            && lien_.pendingTargetLoanId == bytes32(0);
+            && lien_.assetId != bytes32(0) && lien_.quantity != 0 && lien_.borrower != address(0)
+            && lien_.seniorLoanId != bytes32(0) && lien_.lienVersion != 0
+            && lien_.status == Phase9Types.LienStatus.ACTIVE
+            && lien_.pendingRefinanceId == bytes32(0) && lien_.pendingTargetLoanId == bytes32(0);
     }
 
     function _sameLien(Phase9Types.Lien memory left, Phase9Types.Lien memory right)

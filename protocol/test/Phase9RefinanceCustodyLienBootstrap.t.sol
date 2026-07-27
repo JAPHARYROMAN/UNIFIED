@@ -47,16 +47,14 @@ contract Phase9RefinanceCustodyLienBootstrapTest is Phase9RefinanceBootstrapHarn
         require(borrowerBefore - borrowerAfter == _spec.collateralQuantity, "borrower delta");
         require(custodyAfter - custodyBefore == _spec.collateralQuantity, "custody delta");
         require(
-            collateralCustody.totalCustody(_spec.collateralAssetId)
-                == _spec.collateralQuantity,
+            collateralCustody.totalCustody(_spec.collateralAssetId) == _spec.collateralQuantity,
             "attributed custody"
         );
 
         _recordBootstrapSecurity(_spec.loanId);
         require(settlementToken.balanceOf(address(this)) == borrowerAfter, "replay borrower");
         require(
-            settlementToken.balanceOf(address(collateralCustody)) == custodyAfter,
-            "replay custody"
+            settlementToken.balanceOf(address(collateralCustody)) == custodyAfter, "replay custody"
         );
         require(
             lienRegistry.lien(_spec.collateralId).status == Phase9Types.LienStatus.ACTIVE,
@@ -89,9 +87,8 @@ contract Phase9RefinanceCustodyLienBootstrapTest is Phase9RefinanceBootstrapHarn
 
         Phase9Types.Lien memory changedLien = record.liens[0];
         changedLien.quantity += 1;
-        (bool success, bytes memory returned) = address(lienRegistry).call(
-            abi.encodeCall(ILienRegistry.registerLien, (changedLien))
-        );
+        (bool success, bytes memory returned) =
+            address(lienRegistry).call(abi.encodeCall(ILienRegistry.registerLien, (changedLien)));
         require(!success, "changed lien replay");
         require(_selector(returned) == ILienRegistry.InvalidLien.selector, "lien selector");
     }
@@ -129,31 +126,32 @@ contract Phase9RefinanceCustodyLienBootstrapTest is Phase9RefinanceBootstrapHarn
             canonicalBootstrapIds[_spec.loanId], _spec.loanId, _spec.collateralId
         );
         Phase9CustodyUnauthorizedCaller attacker = new Phase9CustodyUnauthorizedCaller();
-        (bool success, bytes memory returned) = address(attacker).call(
-            abi.encodeCall(
-                Phase9CustodyUnauthorizedCaller.recordCustody,
-                (collateralCustody, record.custodyRecords[0], operationId)
-            )
-        );
+        (bool success, bytes memory returned) = address(attacker)
+            .call(
+                abi.encodeCall(
+                    Phase9CustodyUnauthorizedCaller.recordCustody,
+                    (collateralCustody, record.custodyRecords[0], operationId)
+                )
+            );
         require(!success, "unauthorized custody");
         require(
             _selector(returned) == ICollateralCustodyV2.InvalidCustodyOperation.selector,
             "custody auth selector"
         );
-        (success, returned) = address(attacker).call(
-            abi.encodeCall(
-                Phase9CustodyUnauthorizedCaller.registerLien, (lienRegistry, record.liens[0])
-            )
-        );
+        (success, returned) = address(attacker)
+            .call(
+                abi.encodeCall(
+                    Phase9CustodyUnauthorizedCaller.registerLien, (lienRegistry, record.liens[0])
+                )
+            );
         require(!success, "unauthorized lien");
         require(_selector(returned) == ILienRegistry.InvalidLien.selector, "lien auth selector");
     }
 
     function test_P9R_VIEW001_UnknownLienUsesTypedError() public view {
         bytes32 unknown = keccak256("UNKNOWN_COLLATERAL");
-        (bool success, bytes memory returned) = address(lienRegistry).staticcall(
-            abi.encodeCall(ILienRegistry.lien, (unknown))
-        );
+        (bool success, bytes memory returned) =
+            address(lienRegistry).staticcall(abi.encodeCall(ILienRegistry.lien, (unknown)));
         require(!success, "unknown lien returned");
         require(_selector(returned) == ILienRegistry.UnknownLien.selector, "unknown selector");
     }

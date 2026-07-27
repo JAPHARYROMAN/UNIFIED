@@ -234,11 +234,11 @@ contract Phase9LoanAccount is IPhase9LoanAccount {
             && debt.debtStateVersion == 0 && debt.stateNonce == 0 && debt.commencementTime == 0
             && debt.maturityTime == 0 && debt.scheduleHash == bytes32(0)
             && debt.outstandingPrincipal == 0 && debt.accruedInterest == 0
-            && debt.capitalizedInterest == 0 && debt.accruedFees == 0
-            && debt.accruedPenalties == 0 && debt.recoverableCosts == 0
-            && debt.unappliedCredit == 0 && debt.coveredLossExposure == 0 && debt.realizedLoss == 0
-            && debt.writtenOffAmount == 0 && debt.recoveredAfterWriteoff == 0
-            && debt.activeRefinanceId == bytes32(0) && debt.activeRestructureId == bytes32(0);
+            && debt.capitalizedInterest == 0 && debt.accruedFees == 0 && debt.accruedPenalties == 0
+            && debt.recoverableCosts == 0 && debt.unappliedCredit == 0
+            && debt.coveredLossExposure == 0 && debt.realizedLoss == 0 && debt.writtenOffAmount == 0
+            && debt.recoveredAfterWriteoff == 0 && debt.activeRefinanceId == bytes32(0)
+            && debt.activeRestructureId == bytes32(0);
     }
 
     function _storeConfiguration(Phase9Types.LoanConfiguration memory configuration_) private {

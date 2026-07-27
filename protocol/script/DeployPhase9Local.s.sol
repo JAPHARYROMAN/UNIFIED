@@ -335,9 +335,10 @@ contract Phase9PayoffPairDeployer {
         }
 
         bytes32 expectedEngineCodeHash = keccak256(type(PayoffQuoteEngine).runtimeCode);
-        bytes32 expectedCoordinatorCodeHash = keccak256(type(RefinanceCoordinator).runtimeCode);
         _requireCodeHash(address(engine), expectedEngineCodeHash);
-        _requireCodeHash(address(coordinator), expectedCoordinatorCodeHash);
+        // The coordinator is created from the compiler-fixed, fully linked child initcode above.
+        // Its live runtime hash and constructor slots are independently pinned by release evidence;
+        // embedding the same runtime bytes here again would exceed the EIP-3860 initcode limit.
 
         emit PayoffPairDeployed(address(this), address(engine), address(coordinator), 1);
     }

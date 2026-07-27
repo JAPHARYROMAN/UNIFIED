@@ -40,8 +40,7 @@ contract PositionManagerV2 is IPositionManagerV2 {
             revert InvalidPositionOperation();
         }
 
-        Phase9Types.LoanConfiguration memory configuration_ =
-            _accountConfiguration(loanAccount_);
+        Phase9Types.LoanConfiguration memory configuration_ = _accountConfiguration(loanAccount_);
         if (
             configuration_.factory != msg.sender || configuration_.loanId != loanId_
                 || configuration_.positionManager != address(this)
@@ -59,8 +58,7 @@ contract PositionManagerV2 is IPositionManagerV2 {
     }
 
     function registerTranche(Phase9Types.Tranche calldata) external override {
-        Phase9Types.Tranche memory tranche_ =
-            abi.decode(msg.data[4:], (Phase9Types.Tranche));
+        Phase9Types.Tranche memory tranche_ = abi.decode(msg.data[4:], (Phase9Types.Tranche));
         _requireCoordinator();
 
         bytes32 trancheId = tranche_.trancheId;
@@ -90,8 +88,7 @@ contract PositionManagerV2 is IPositionManagerV2 {
     }
 
     function issuePosition(Phase9Types.Position calldata) external override {
-        Phase9Types.Position memory position_ =
-            abi.decode(msg.data[4:], (Phase9Types.Position));
+        Phase9Types.Position memory position_ = abi.decode(msg.data[4:], (Phase9Types.Position));
         _requireCoordinator();
 
         bytes32 positionId = position_.positionId;
@@ -105,8 +102,7 @@ contract PositionManagerV2 is IPositionManagerV2 {
 
         uint256 positionCount = _positionIds.length;
         if (
-            positionId == bytes32(0) || positionCount >= 32
-                || position_.trancheId == bytes32(0)
+            positionId == bytes32(0) || positionCount >= 32 || position_.trancheId == bytes32(0)
                 || _tranches[position_.trancheId].trancheId == bytes32(0)
                 || position_.owner == address(0) || position_.claim == 0
                 || position_.state != Phase9Types.PositionState.ACTIVE
@@ -253,8 +249,7 @@ contract PositionManagerV2 is IPositionManagerV2 {
             revert InvalidPositionOperation();
         }
 
-        Phase9Types.LoanConfiguration memory configuration_ =
-            _accountConfiguration(_loanAccount);
+        Phase9Types.LoanConfiguration memory configuration_ = _accountConfiguration(_loanAccount);
         if (
             configuration_.refinanceCoordinator != msg.sender
                 || configuration_.positionManager != address(this)
@@ -308,14 +303,12 @@ contract PositionManagerV2 is IPositionManagerV2 {
         return length == 0 ? 0 : checkpoints[length - 1].value;
     }
 
-    function _writeOwnerCheckpoint(
-        Phase9Types.Checkpoint[] storage checkpoints,
-        address owner
-    ) private {
+    function _writeOwnerCheckpoint(Phase9Types.Checkpoint[] storage checkpoints, address owner)
+        private
+    {
         uint64 currentBlock = uint64(block.number);
-        Phase9Types.Checkpoint memory checkpoint = Phase9Types.Checkpoint({
-            blockNumber: currentBlock, value: 0, owner: owner
-        });
+        Phase9Types.Checkpoint memory checkpoint =
+            Phase9Types.Checkpoint({ blockNumber: currentBlock, value: 0, owner: owner });
         uint256 length = checkpoints.length;
         if (length != 0 && checkpoints[length - 1].blockNumber == currentBlock) {
             checkpoints[length - 1] = checkpoint;
@@ -324,14 +317,12 @@ contract PositionManagerV2 is IPositionManagerV2 {
         }
     }
 
-    function _writeValueCheckpoint(
-        Phase9Types.Checkpoint[] storage checkpoints,
-        uint256 value
-    ) private {
+    function _writeValueCheckpoint(Phase9Types.Checkpoint[] storage checkpoints, uint256 value)
+        private
+    {
         uint64 currentBlock = uint64(block.number);
-        Phase9Types.Checkpoint memory checkpoint = Phase9Types.Checkpoint({
-            blockNumber: currentBlock, value: value, owner: address(0)
-        });
+        Phase9Types.Checkpoint memory checkpoint =
+            Phase9Types.Checkpoint({ blockNumber: currentBlock, value: value, owner: address(0) });
         uint256 length = checkpoints.length;
         if (length != 0 && checkpoints[length - 1].blockNumber == currentBlock) {
             checkpoints[length - 1] = checkpoint;

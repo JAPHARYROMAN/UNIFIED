@@ -465,16 +465,13 @@ def test_refinance_additions_are_owned_by_their_exact_contracts() -> None:
         "LienRegistry": checkpoints.LIEN_REGISTRY_ABI_ADDITIONS,
         "RefinanceCoordinator": checkpoints.REFINANCE_COORDINATOR_ABI_ADDITIONS,
     }
-    assert checkpoints.REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR not in additions[
-        "RefinanceCoordinator"
-    ]
-    assert checkpoints.REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR not in additions[
-        "LienRegistry"
-    ]
+    assert checkpoints.REFINANCE_UNKNOWN_LIEN_HANDOFF_ERROR not in additions["RefinanceCoordinator"]
+    assert checkpoints.REFINANCE_UNKNOWN_FUNDING_COMMITMENT_ERROR not in additions["LienRegistry"]
     assert checkpoints.ACTIVATION_PACKAGES["P9-REFI-001"]["requiredBacklogIds"] == (
         "UNI-ADR-016",
         "UNI-ADR-017",
         "UNI-ADR-018",
+        "UNI-ADR-019",
         "UNI-REFI-001",
         "UNI-REFI-002",
     )
@@ -500,10 +497,12 @@ def test_control_bundle_paths_are_ordinal_and_include_abi_ownership_checker() ->
         key=lambda path: path.encode("utf-8"),
     )
     assert checkpoints.CONTROL_BUNDLE_PATHS.count("tools/check_abi.py") == 1
+    assert checkpoints.CONTROL_BUNDLE_PATHS.count("tools/check_phase9_local_prohibitions.py") == 1
     assert (
-        checkpoints.CONTROL_BUNDLE_PATHS.count(
-            "tools/check_phase9_refinance_linked_modules.py"
-        )
+        checkpoints.CONTROL_BUNDLE_PATHS.count("tools/tests/test_phase9_local_prohibitions.py") == 1
+    )
+    assert (
+        checkpoints.CONTROL_BUNDLE_PATHS.count("tools/check_phase9_refinance_linked_modules.py")
         == 1
     )
     assert (
@@ -804,9 +803,7 @@ def test_auxiliary_source_ownership_validation_fails_closed(
             "P9-EXAMPLE-001", source_order, contracts, activated
         )
 
-    nonbaseline = {
-        "P9-EXAMPLE-001": (("protocol/src/interfaces/phase9/IMissing.sol", "Example"),)
-    }
+    nonbaseline = {"P9-EXAMPLE-001": (("protocol/src/interfaces/phase9/IMissing.sol", "Example"),)}
     monkeypatch.setattr(checkpoints, "PACKAGE_AUXILIARY_SOURCE_OWNERS", nonbaseline)
     with pytest.raises(SystemExit, match="not in the baseline"):
         checkpoints.package_auxiliary_source_owners(
@@ -908,9 +905,27 @@ def test_dependency_paths_use_explicit_ordinal_utf8_order(
 def test_foundation_prepares_remapped_sources_before_phase9_checkpoint_checks() -> None:
     foundation_check = (ROOT / "scripts/check-foundation.ps1").read_text(encoding="utf-8")
     preparation = "pwsh ./scripts/prepare-foundry.ps1"
+    phase9_check = "uv run python tools/check_phase9.py"
     checkpoint_check = "uv run python tools/check_phase9_implementation_checkpoints.py"
     assert foundation_check.count(preparation) == 1
+    assert foundation_check.count(phase9_check) == 1
+    assert foundation_check.count(checkpoint_check) == 1
     assert foundation_check.index(preparation) < foundation_check.index(checkpoint_check)
+    assert "verify_phase9_payoff_deployment.py" not in foundation_check
+    checkpoints.validate_foundation_orchestration()
+
+
+def test_foundation_rejects_reintroduced_historical_payoff_pin_gate(tmp_path: Path) -> None:
+    foundation = tmp_path / "check-foundation.ps1"
+    foundation.write_text(
+        "uv run python tools/check_phase9.py\n"
+        "uv run python tools/check_phase9_implementation_checkpoints.py\n"
+        "uv run python tools/verify_phase9_payoff_deployment.py --check-pins\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(SystemExit, match="historical payoff deployment verifier"):
+        checkpoints.validate_foundation_orchestration(foundation)
 
 
 def external_helper_checkpoint(
@@ -1042,6 +1057,7 @@ def test_payoff_implementation_evidence_bundle_paths_are_exact_and_cycle_free() 
         "protocol/foundry.toml",
         "protocol/script/DeployPhase9Local.s.sol",
         "protocol/src/ProtocolCompilation.sol",
+        "docs/architecture/phase-9-payoff-deployment-evidence.md",
         "tools/verify_phase9_payoff_deployment.py",
         "infrastructure/local/phase9-payoff-deployment-candidate.schema.json",
         "infrastructure/local/phase9-payoff-deployment-evidence.schema.json",
@@ -1066,6 +1082,16 @@ def test_payoff_implementation_evidence_bundle_paths_are_exact_and_cycle_free() 
     )
 
 
+def test_historical_payoff_tool_docs_schemas_and_tests_remain_preserved() -> None:
+    assert set(checkpoints.HISTORICAL_PAYOFF_ARCHIVE_PATHS) <= set(
+        checkpoints.PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS
+    )
+    assert all(
+        (ROOT / relative).is_file() for relative in checkpoints.HISTORICAL_PAYOFF_ARCHIVE_PATHS
+    )
+    checkpoints.validate_historical_payoff_archive()
+
+
 def test_refinance_d1_evidence_paths_are_exact_shared_and_fail_closed() -> None:
     paths = checkpoints.REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS
     assert list(paths) == sorted(paths, key=lambda path: path.encode("utf-8"))
@@ -1074,6 +1100,7 @@ def test_refinance_d1_evidence_paths_are_exact_shared_and_fail_closed() -> None:
         "adr/0021-phase-9-atomic-refinance-authority-and-activation.md",
         "adr/0022-phase-9-factory-account-position-bootstrap-semantics.md",
         "adr/0023-phase-9-refinance-fixed-module-partition.md",
+        "adr/0024-phase-9-refinance-activation-topology-control.md",
         "docs/architecture/phase-9-refinance-acceptance.md",
         "protocol/test/Phase9RefinanceBootstrapAcceptanceMap.sol",
         "protocol/test/Phase9RefinanceBootstrapHarness.sol",
@@ -1083,7 +1110,9 @@ def test_refinance_d1_evidence_paths_are_exact_shared_and_fail_closed() -> None:
         "protocol/test/Phase9RefinanceRequestFuzz.t.sol",
         "protocol/test/Phase9RefinanceRequestGolden.t.sol",
         "protocol/test/Phase9RefinanceRequestInvariants.t.sol",
+        "tools/check_phase9_local_prohibitions.py",
         "tools/check_phase9_refinance_linked_modules.py",
+        "tools/tests/test_phase9_local_prohibitions.py",
         "tools/tests/test_phase9_refinance_linked_modules.py",
     }.issubset(paths)
     refinance_contracts = checkpoints.ACTIVATION_PACKAGES["P9-REFI-001"]["contracts"]
@@ -1105,6 +1134,7 @@ def test_refinance_package_cannot_activate_with_only_d1_evidence() -> None:
                 "UNI-ADR-016",
                 "UNI-ADR-017",
                 "UNI-ADR-018",
+                "UNI-ADR-019",
                 "UNI-REFI-001",
                 "UNI-REFI-002",
             ],

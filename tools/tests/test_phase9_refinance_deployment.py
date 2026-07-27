@@ -16,6 +16,7 @@ import check_phase9_refinance_linked_modules as linked_checker  # noqa: E402
 import verify_phase9_refinance_deployment as verifier  # noqa: E402
 
 JsonObject = dict[str, Any]
+CANONICAL_CANDIDATE_BROADCASTER_CHECKSUM = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
 
 
 def _address(value: int) -> str:
@@ -203,8 +204,9 @@ def _candidate(plan: Mapping[str, Any]) -> JsonObject:
         payload[f"predicted_{key}"] = _mixed_case_address(address)
         payload[f"actual_{key}"] = _mixed_case_address(address)
         payload[f"{key}_runtime_code_hash"] = by_key[key]["runtime_code_hash"]
-    for field in {"broadcaster", *(verifier.CONFIG_FIELDS - {"maximum_quote_validity"})}:
+    for field in verifier.CONFIG_FIELDS - {"maximum_quote_validity"}:
         payload[field] = _mixed_case_address(payload[field])
+    payload["broadcaster"] = CANONICAL_CANDIDATE_BROADCASTER_CHECKSUM
     return payload
 
 
@@ -218,7 +220,7 @@ def _fixture(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     monkeypatch.setattr(verifier, "_git_identity", lambda root=ROOT: (commit, True))
     plan: JsonObject = verifier.build_plan(
         _configuration(),
-        _address(500),
+        verifier.CANONICAL_ANVIL_BROADCASTER,
         _hash(2),
         generated_at="2026-07-27T12:00:00Z",
         pre_broadcast_block={"number": "0x5", "hash": _hash(5)},
@@ -228,6 +230,7 @@ def _fixture(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     transactions: list[JsonObject] = []
     receipts: list[JsonObject] = []
     responses: dict[tuple[str, tuple[object, ...]], object] = {
+        _rpc_key("eth_accounts"): list(verifier.CANONICAL_ANVIL_ACCOUNTS),
         _rpc_key("eth_chainId"): "0x7a69",
         _rpc_key("eth_getBlockByNumber", "0x0", False): {
             "number": "0x0",
@@ -343,7 +346,7 @@ def _verify(fixture: Mapping[str, Any]) -> JsonObject:
         fixture["candidate"],
         fixture["broadcast"],
         FakeRpc(fixture["responses"]),
-        rpc_url="http://127.0.0.1:8545",
+        rpc_url=verifier.CANONICAL_RPC_URL,
     )
 
 
@@ -358,6 +361,7 @@ def test_valid_topology_is_non_activating_and_schema_valid(
     assert evidence["topology_verified"] is True
     assert evidence["activation_accepted"] is False
     assert evidence["role_grant_performed"] is False
+    assert evidence["broadcaster_provenance"] == verifier.CANONICAL_BROADCASTER_PROVENANCE
     assert evidence["nonce_transcript"]["latest_final"] == "0xb"
     assert any(character.isupper() for character in fixture["candidate"]["broadcaster"])
     assert evidence["reset_command"] == "pwsh ./scripts/smoke-phase9-refinance-anvil.ps1"
@@ -368,6 +372,70 @@ def test_valid_topology_is_non_activating_and_schema_valid(
     ):
         schema = verifier._read_json(ROOT / schema_path)
         jsonschema.Draft202012Validator.check_schema(schema)
+
+
+@pytest.mark.parametrize(
+    ("artifact_key", "schema_relative", "field", "value"),
+    [
+        (
+            "plan",
+            verifier.PLAN_SCHEMA_RELATIVE,
+            "broadcaster",
+            _address(9999),
+        ),
+        (
+            "candidate",
+            verifier.CANDIDATE_SCHEMA_RELATIVE,
+            "broadcaster",
+            _mixed_case_address(_address(9999)),
+        ),
+        (
+            "evidence",
+            verifier.EVIDENCE_SCHEMA_RELATIVE,
+            "broadcaster",
+            _address(9999),
+        ),
+        (
+            "plan",
+            verifier.PLAN_SCHEMA_RELATIVE,
+            "reset_command",
+            "do-nothing",
+        ),
+        (
+            "evidence",
+            verifier.EVIDENCE_SCHEMA_RELATIVE,
+            "reset_command",
+            "do-nothing",
+        ),
+        (
+            "evidence",
+            verifier.EVIDENCE_SCHEMA_RELATIVE,
+            "rpc_url",
+            "http://localhost:18545",
+        ),
+    ],
+)
+def test_artifact_schemas_pin_local_broadcaster_rpc_and_reset_command(
+    monkeypatch: pytest.MonkeyPatch,
+    artifact_key: str,
+    schema_relative: Path,
+    field: str,
+    value: object,
+) -> None:
+    fixture = _fixture(monkeypatch)
+    artifacts = {
+        "plan": fixture["plan"],
+        "candidate": fixture["candidate"],
+        "evidence": _verify(fixture),
+    }
+    payload = copy.deepcopy(artifacts[artifact_key])
+    payload[field] = value
+    with pytest.raises(verifier.VerificationError, match="does not satisfy schema"):
+        verifier._validate_schema(
+            payload,
+            ROOT / schema_relative,
+            artifact_key,
+        )
 
 
 def test_plan_pins_ten_creates_links_self_patch_and_limits(
@@ -431,6 +499,7 @@ def test_plan_pins_ten_creates_links_self_patch_and_limits(
         ("rpc_nonce", "RPC transaction nonce mismatch"),
         ("rpc_chain", "RPC transaction chain mismatch"),
         ("rpc_value", "RPC transaction value mismatch"),
+        ("anvil_account_profile", "canonical freshly spawned Anvil fixture profile"),
         ("rpc_input", "RPC transaction input mismatch"),
         ("wrong_runtime", "deployed runtime mismatch"),
         ("wrong_storage", "constructor storage mismatch"),
@@ -440,6 +509,7 @@ def test_plan_pins_ten_creates_links_self_patch_and_limits(
         ("pre_block_substitution", "no longer canonical"),
         ("candidate_substitution", "candidate does not exactly bind"),
         ("candidate_unknown_field", "does not satisfy schema"),
+        ("broadcaster_provenance", "does not satisfy schema"),
         ("reset_substitution", "reset_identity does not match"),
         ("missing_dependency_code", "must contain code before broadcast"),
         ("wrong_dependency_runtime", "asset_registry runtime does not match"),
@@ -477,6 +547,8 @@ def test_rpc_and_candidate_mutations_fail_closed(
         }
         field, value = field_values[mutation]
         rpc_transaction[field] = value
+    elif mutation == "anvil_account_profile":
+        fixture["responses"][_rpc_key("eth_accounts")][1] = _address(9999)
     elif mutation == "wrong_runtime":
         row = fixture["plan"]["transactions"][5]
         fixture["responses"][
@@ -526,6 +598,8 @@ def test_rpc_and_candidate_mutations_fail_closed(
         fixture["candidate"]["source_commit"] = "2" * 40
     elif mutation == "candidate_unknown_field":
         fixture["candidate"]["unexpected_authority"] = True
+    elif mutation == "broadcaster_provenance":
+        fixture["plan"]["broadcaster_provenance"]["private_key_input"] = True
     elif mutation == "reset_substitution":
         fixture["responses"][_rpc_key("eth_getBlockByNumber", "0x0", False)]["hash"] = _hash(3)
     elif mutation == "missing_dependency_code":
@@ -564,6 +638,19 @@ def test_plan_or_compiler_link_drift_is_rejected(monkeypatch: pytest.MonkeyPatch
         _verify(fixture)
 
 
+def test_noncanonical_broadcaster_provenance_is_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(verifier, "_git_identity", lambda root=ROOT: ("1" * 40, True))
+    with pytest.raises(verifier.VerificationError, match="canonical freshly spawned Anvil"):
+        verifier.build_plan(
+            _configuration(),
+            _address(500),
+            _hash(2),
+            generated_at="2026-07-27T12:00:00Z",
+        )
+
+
 def test_dirty_worktree_and_bad_module_self_patch_reject(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -576,7 +663,7 @@ def test_dirty_worktree_and_bad_module_self_patch_reject(
     with pytest.raises(verifier.VerificationError, match="worktree changes"):
         verifier.build_plan(
             _configuration(),
-            _address(500),
+            verifier.CANONICAL_ANVIL_BROADCASTER,
             _hash(2),
             generated_at="2026-07-27T12:00:00Z",
         )
@@ -589,7 +676,7 @@ def test_dirty_worktree_and_bad_module_self_patch_reject(
     with pytest.raises(verifier.VerificationError, match="self-patch template drifted"):
         verifier.build_plan(
             _configuration(),
-            _address(500),
+            verifier.CANONICAL_ANVIL_BROADCASTER,
             _hash(2),
             generated_at="2026-07-27T12:00:00Z",
         )
@@ -604,7 +691,7 @@ def test_distinct_quote_and_refinance_policies_reject(
     with pytest.raises(verifier.VerificationError, match="must equal"):
         verifier.build_plan(
             configuration,
-            _address(500),
+            verifier.CANONICAL_ANVIL_BROADCASTER,
             _hash(2),
             generated_at="2026-07-27T12:00:00Z",
         )
@@ -615,9 +702,23 @@ def test_reset_identity_must_be_block_hash(monkeypatch: pytest.MonkeyPatch) -> N
     with pytest.raises(verifier.VerificationError, match="block-zero hash"):
         verifier.build_plan(
             _configuration(),
-            _address(500),
+            verifier.CANONICAL_ANVIL_BROADCASTER,
             "sha256:" + "2" * 64,
             generated_at="2026-07-27T12:00:00Z",
+        )
+
+
+def test_build_plan_rejects_noncanonical_reset_command(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(verifier, "_git_identity", lambda root=ROOT: ("1" * 40, True))
+    with pytest.raises(verifier.VerificationError, match="canonical command"):
+        verifier.build_plan(
+            _configuration(),
+            verifier.CANONICAL_ANVIL_BROADCASTER,
+            _hash(2),
+            generated_at="2026-07-27T12:00:00Z",
+            reset_command="do-nothing",
         )
 
 
@@ -646,12 +747,21 @@ def test_canonical_path_rejects_parent_reparse(
 @pytest.mark.parametrize(
     "url",
     [
-        "https://127.0.0.1:8545",
-        "http://192.168.1.2:8545",
-        "http://user:pass@127.0.0.1:8545",
-        "http://127.0.0.1:8545/rpc",
+        "https://127.0.0.1:18545",
+        "http://192.168.1.2:18545",
+        "http://user:pass@127.0.0.1:18545",
+        "http://127.0.0.1:18545/rpc",
+        "http://127.0.0.1:18545/",
+        "http://127.0.0.1:18546",
+        "http://localhost:18545",
+        "http://[::1]:18545",
+        "http://127.0.0.1.evil:18545",
     ],
 )
 def test_rpc_boundary_rejects_noncanonical_urls(url: str) -> None:
     with pytest.raises(verifier.VerificationError):
         verifier.canonical_rpc_url(url)
+
+
+def test_rpc_boundary_accepts_only_the_canonical_url() -> None:
+    assert verifier.canonical_rpc_url(verifier.CANONICAL_RPC_URL) == verifier.CANONICAL_RPC_URL

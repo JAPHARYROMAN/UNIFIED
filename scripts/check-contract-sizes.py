@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "protocol" / "out"
@@ -78,18 +79,38 @@ NON_PRODUCTION = {
 }
 
 
+def _is_test_support(payload: dict[str, Any], contract_name: str) -> bool:
+    """Identify compiler artifacts whose exact compilation target is under test/."""
+    metadata = payload.get("metadata")
+    if not isinstance(metadata, dict):
+        return False
+    settings = metadata.get("settings")
+    if not isinstance(settings, dict):
+        return False
+    target = settings.get("compilationTarget")
+    if not isinstance(target, dict) or len(target) != 1:
+        return False
+    source, target_contract = next(iter(target.items()))
+    if not isinstance(source, str) or target_contract != contract_name:
+        return False
+    parts = source.split("/")
+    return (
+        len(parts) > 1
+        and parts[0] == "test"
+        and all(part not in {"", ".", ".."} for part in parts)
+        and parts[-1].endswith(".sol")
+    )
+
+
 def main() -> None:
     failures: list[str] = []
     checked = 0
     for artifact in OUT.rglob("*.json"):
-        if (
-            "build-info" in artifact.parts
-            or artifact.parent.name.endswith((".t.sol", ".s.sol"))
-        ):
+        if "build-info" in artifact.parts or artifact.parent.name.endswith((".t.sol", ".s.sol")):
             continue
         payload = json.loads(artifact.read_text(encoding="utf-8"))
         contract_name = artifact.stem
-        if contract_name in NON_PRODUCTION:
+        if contract_name in NON_PRODUCTION or _is_test_support(payload, contract_name):
             continue
         deployed = payload.get("deployedBytecode", {}).get("object", "")
         if not deployed:

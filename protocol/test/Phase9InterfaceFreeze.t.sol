@@ -2,14 +2,12 @@
 pragma solidity 0.8.36;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { ILoanRegistry } from "../src/interfaces/ILoanRegistry.sol";
 import { ICollateralCustodyV2 } from "../src/interfaces/phase9/ICollateralCustodyV2.sol";
 import { IGuaranteeVault } from "../src/interfaces/phase9/IGuaranteeVault.sol";
 import { IInsuranceManager } from "../src/interfaces/phase9/IInsuranceManager.sol";
 import { IInsuranceReserveVault } from "../src/interfaces/phase9/IInsuranceReserveVault.sol";
 import { ILienRegistry } from "../src/interfaces/phase9/ILienRegistry.sol";
 import { IPhase9LoanAccount } from "../src/interfaces/phase9/IPhase9LoanAccount.sol";
-import { IPhase9LoanFactory } from "../src/interfaces/phase9/IPhase9LoanFactory.sol";
 import { IPositionManagerV2 } from "../src/interfaces/phase9/IPositionManagerV2.sol";
 import { IRecoveryManager } from "../src/interfaces/phase9/IRecoveryManager.sol";
 import { IRefinanceCoordinator } from "../src/interfaces/phase9/IRefinanceCoordinator.sol";
@@ -25,7 +23,6 @@ import { RecoveryManager } from "../src/recovery/RecoveryManager.sol";
 import { CollateralCustodyV2 } from "../src/resolution/CollateralCustodyV2.sol";
 import { LienRegistry } from "../src/resolution/LienRegistry.sol";
 import { Phase9LoanAccount } from "../src/resolution/Phase9LoanAccount.sol";
-import { Phase9LoanFactory } from "../src/resolution/Phase9LoanFactory.sol";
 import { Phase9Types } from "../src/resolution/Phase9Types.sol";
 import { PositionManagerV2 } from "../src/resolution/PositionManagerV2.sol";
 import { RefinanceCoordinator } from "../src/resolution/RefinanceCoordinator.sol";
@@ -35,25 +32,24 @@ contract Phase9InterfaceFreezeTest {
     bytes4 private constant FROZEN = bytes4(keccak256("Phase9ImplementationNotFrozen()"));
 
     function testEveryStillUnopenedNonTokenComponentRejectsItsRepresentativeMutator() public {
-        Phase9Types.LoanCreationRequest memory loanCreationRequest;
+        Phase9LoanAccount account = new Phase9LoanAccount();
         _requireFrozen(
-            address(
-                new Phase9LoanFactory(
-                    ILoanRegistry(address(0)),
-                    address(0),
-                    address(0),
-                    address(0),
-                    address(0),
-                    address(0),
-                    address(0),
-                    address(0)
-                )
-            ),
-            abi.encodeCall(IPhase9LoanFactory.createLoan, (loanCreationRequest))
+            address(account),
+            abi.encodeCall(
+                IPhase9LoanAccount.recordRefinancePayoff,
+                (bytes32(uint256(1)), 1, bytes32(uint256(2)))
+            )
+        );
+        Phase9Types.DebtState memory replacementDebt;
+        _requireFrozen(
+            address(account),
+            abi.encodeCall(
+                IPhase9LoanAccount.activateReplacementLoan,
+                (bytes32(uint256(1)), replacementDebt, bytes32(uint256(2)))
+            )
         );
         _requireFrozen(
-            address(new Phase9LoanAccount()),
-            abi.encodeCall(IPhase9LoanAccount.closeLoan, (bytes32(uint256(1))))
+            address(account), abi.encodeCall(IPhase9LoanAccount.closeLoan, (bytes32(uint256(1))))
         );
         _requireFrozen(
             address(new CollateralCustodyV2(address(0), address(0), address(0))),
@@ -62,36 +58,52 @@ contract Phase9InterfaceFreezeTest {
                 (bytes32(uint256(1)), 1, Phase9Types.CustodyStatus.HELD, bytes32(uint256(2)))
             )
         );
+        LienRegistry liens = new LienRegistry(address(0));
         _requireFrozen(
-            address(new LienRegistry(address(0))),
+            address(liens),
             abi.encodeCall(
                 ILienRegistry.beginHandoff,
                 (bytes32(uint256(1)), bytes32(uint256(2)), bytes32(uint256(3)), uint64(1))
             )
         );
         _requireFrozen(
-            address(
-                new RefinanceCoordinator(
-                    address(0),
-                    address(0),
-                    address(0),
-                    address(0),
-                    address(0),
-                    address(0),
-                    address(0),
-                    address(0),
-                    IERC20(address(0))
-                )
-            ),
+            address(liens),
+            abi.encodeCall(
+                ILienRegistry.completeHandoff, (bytes32(uint256(1)), bytes32(uint256(2)))
+            )
+        );
+        RefinanceCoordinator coordinator = new RefinanceCoordinator(
+            address(0),
+            address(0),
+            address(0),
+            address(0),
+            address(0),
+            address(0),
+            address(0),
+            address(0),
+            IERC20(address(0))
+        );
+        _requireFrozen(
+            address(coordinator),
+            abi.encodeCall(
+                IRefinanceCoordinator.executeRefinance, (bytes32(uint256(1)), bytes32(uint256(2)))
+            )
+        );
+        _requireFrozen(
+            address(coordinator),
             abi.encodeCall(
                 IRefinanceCoordinator.cancelRefinance, (bytes32(uint256(1)), bytes32(uint256(2)))
             )
         );
         _requireFrozen(
-            address(new PositionManagerV2()),
+            address(coordinator),
             abi.encodeCall(
-                IPositionManagerV2.initialize, (bytes32(uint256(1)), address(1), address(2))
+                IRefinanceCoordinator.refundCommitment, (bytes32(uint256(1)), bytes32(uint256(2)))
             )
+        );
+        _requireFrozen(
+            address(new PositionManagerV2()),
+            abi.encodeCall(IPositionManagerV2.transferPosition, (bytes32(uint256(1)), address(1)))
         );
         _requireFrozen(
             address(new RestructuringController(address(0), address(0), address(0))),
@@ -134,12 +146,15 @@ contract Phase9InterfaceFreezeTest {
         );
     }
 
-    function testPerInstanceAccountInitializerIsFrozen() public {
+    function testDirectAccountImplementationInitializerIsLockedByCallerAuthentication() public {
         Phase9Types.LoanConfiguration memory configuration;
         Phase9Types.DebtState memory initialDebt;
-        _requireFrozen(
+        _requireError(
             address(new Phase9LoanAccount()),
-            abi.encodeCall(IPhase9LoanAccount.initialize, (configuration, initialDebt))
+            abi.encodeCall(IPhase9LoanAccount.initialize, (configuration, initialDebt)),
+            abi.encodeWithSelector(
+                IPhase9LoanAccount.UnauthorizedPhase9LoanCaller.selector, address(this)
+            )
         );
     }
 
@@ -168,5 +183,11 @@ contract Phase9InterfaceFreezeTest {
         (bool success, bytes memory result) = target.call(callData);
         require(!success, "mutator succeeded");
         require(result.length == 4 && bytes4(result) == FROZEN, "wrong freeze error");
+    }
+
+    function _requireError(address target, bytes memory callData, bytes memory expected) private {
+        (bool success, bytes memory result) = target.call(callData);
+        require(!success, "mutator succeeded");
+        require(keccak256(result) == keccak256(expected), "wrong rejection error");
     }
 }

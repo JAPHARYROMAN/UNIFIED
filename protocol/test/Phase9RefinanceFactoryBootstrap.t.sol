@@ -23,15 +23,12 @@ contract Phase9RefinanceFactoryBootstrapTest is Phase9RefinanceBootstrapHarness 
     }
 
     function test_P9R_BOOT001_CreatesCanonicalBootstrapGraph() public {
-        (address account, address manager, bytes32 creationId) =
-            _createBootstrap(_bootstrapSpec);
+        (address account, address manager, bytes32 creationId) = _createBootstrap(_bootstrapSpec);
         require(account.code.length != 0 && manager.code.length != 0, "clone code");
         require(creationId != bytes32(0), "canonical creation id");
         require(phase9LoanFactory.nextLoanNonce() == 2, "factory nonce");
         require(phase9LoanFactory.loanAccount(_bootstrapSpec.loanId) == account, "account map");
-        require(
-            phase9LoanFactory.positionManager(_bootstrapSpec.loanId) == manager, "manager map"
-        );
+        require(phase9LoanFactory.positionManager(_bootstrapSpec.loanId) == manager, "manager map");
         require(loanRegistry.loanAccount(_bootstrapSpec.loanId) == account, "registry account");
         require(loanRegistry.protocolVersionOf(_bootstrapSpec.loanId) == 9, "registry version");
 
@@ -40,14 +37,10 @@ contract Phase9RefinanceFactoryBootstrapTest is Phase9RefinanceBootstrapHarness 
         require(debt.servicingState == Phase9Types.ServicingState.CURRENT, "current state");
         require(debt.termsVersion == 1, "terms version");
         require(
-            IPhase9LoanAccount(account).agreementVersionHash(1)
-                == _bootstrapSpec.agreementHash,
+            IPhase9LoanAccount(account).agreementVersionHash(1) == _bootstrapSpec.agreementHash,
             "agreement binding"
         );
-        require(
-            IPhase9LoanAccount(account).agreementVersionHash(0) == bytes32(0),
-            "version zero"
-        );
+        require(IPhase9LoanAccount(account).agreementVersionHash(0) == bytes32(0), "version zero");
 
         _installBootstrapPositions(_bootstrapSpec.loanId);
         settlementToken.approve(address(collateralCustody), _bootstrapSpec.collateralQuantity);
@@ -58,8 +51,7 @@ contract Phase9RefinanceFactoryBootstrapTest is Phase9RefinanceBootstrapHarness 
             "custody total"
         );
         require(
-            lienRegistry.lien(_bootstrapSpec.collateralId).seniorLoanId
-                == _bootstrapSpec.loanId,
+            lienRegistry.lien(_bootstrapSpec.collateralId).seniorLoanId == _bootstrapSpec.loanId,
             "senior lien"
         );
     }
@@ -71,8 +63,7 @@ contract Phase9RefinanceFactoryBootstrapTest is Phase9RefinanceBootstrapHarness 
         _recordBootstrapSecurity(_bootstrapSpec.loanId);
 
         uint64 nonceBefore = phase9LoanFactory.nextLoanNonce();
-        (address replayAccount, address replayManager) =
-            _replayCanonical(_bootstrapSpec.loanId);
+        (address replayAccount, address replayManager) = _replayCanonical(_bootstrapSpec.loanId);
         require(replayAccount == account && replayManager == manager, "replay pair");
         require(phase9LoanFactory.nextLoanNonce() == nonceBefore, "replay nonce");
 
@@ -84,8 +75,7 @@ contract Phase9RefinanceFactoryBootstrapTest is Phase9RefinanceBootstrapHarness 
             "setup replay wrote"
         );
 
-        Phase9Types.LoanCreationRequest memory changed =
-            _canonicalRequest(_bootstrapSpec.loanId);
+        Phase9Types.LoanCreationRequest memory changed = _canonicalRequest(_bootstrapSpec.loanId);
         changed.configuration.recoveryPolicyHash = keccak256("CHANGED_RECOVERY_POLICY");
         _expectFactoryError(
             abi.encodeCall(IPhase9LoanFactory.createLoan, (changed)),
@@ -118,26 +108,28 @@ contract Phase9RefinanceFactoryBootstrapTest is Phase9RefinanceBootstrapHarness 
 
     function test_P9R_BOOT004_FreshIdentityAndAuthorityFailuresRollback() public {
         (Phase9Types.LoanCreationRequest memory request,) = _prepareBootstrap(_bootstrapSpec);
-        Phase9Types.DebtState memory initialDebt = policyResolver
-            .bootstrap(canonicalBootstrapIds[_bootstrapSpec.loanId]).initialDebt;
-        (bool locked, bytes memory lockError) = address(loanAccountImplementation).call(
-            abi.encodeCall(IPhase9LoanAccount.initialize, (request.configuration, initialDebt))
-        );
+        Phase9Types.DebtState memory initialDebt =
+        policyResolver.bootstrap(canonicalBootstrapIds[_bootstrapSpec.loanId]).initialDebt;
+        (bool locked, bytes memory lockError) = address(loanAccountImplementation)
+            .call(
+                abi.encodeCall(IPhase9LoanAccount.initialize, (request.configuration, initialDebt))
+            );
         require(!locked, "account implementation initialized");
         require(
             _selector(lockError) == IPhase9LoanAccount.UnauthorizedPhase9LoanCaller.selector,
             "account lock selector"
         );
-        (locked, lockError) = address(positionManagerImplementation).call(
-            abi.encodeCall(
-                IPositionManagerV2.initialize,
-                (
-                    request.configuration.loanId,
-                    _predictLoanAccount(request.configuration.loanId),
-                    address(settlementToken)
+        (locked, lockError) = address(positionManagerImplementation)
+            .call(
+                abi.encodeCall(
+                    IPositionManagerV2.initialize,
+                    (
+                        request.configuration.loanId,
+                        _predictLoanAccount(request.configuration.loanId),
+                        address(settlementToken)
+                    )
                 )
-            )
-        );
+            );
         require(!locked, "manager implementation initialized");
         require(
             _selector(lockError) == IPositionManagerV2.InvalidPositionOperation.selector,
@@ -153,9 +145,12 @@ contract Phase9RefinanceFactoryBootstrapTest is Phase9RefinanceBootstrapHarness 
 
         request.creationId = bytes32(0);
         Phase9BootstrapUnauthorizedCaller attacker = new Phase9BootstrapUnauthorizedCaller();
-        (bool success, bytes memory returned) = address(attacker).call(
-            abi.encodeCall(Phase9BootstrapUnauthorizedCaller.createLoan, (phase9LoanFactory, request))
-        );
+        (bool success, bytes memory returned) = address(attacker)
+            .call(
+                abi.encodeCall(
+                    Phase9BootstrapUnauthorizedCaller.createLoan, (phase9LoanFactory, request)
+                )
+            );
         require(!success, "unauthorized creation");
         require(
             _selector(returned) == IPhase9LoanFactory.InvalidPhase9LoanConfiguration.selector,
@@ -178,8 +173,7 @@ contract Phase9RefinanceFactoryBootstrapTest is Phase9RefinanceBootstrapHarness 
         _createReplacement(replacement);
         require(phase9LoanFactory.nextLoanNonce() == 3, "later creation nonce");
 
-        (address replayAccount, address replayManager) =
-            _replayCanonical(_bootstrapSpec.loanId);
+        (address replayAccount, address replayManager) = _replayCanonical(_bootstrapSpec.loanId);
         require(
             replayAccount == bootstrapAccount && replayManager == bootstrapManager,
             "historical replay pair"
@@ -190,8 +184,7 @@ contract Phase9RefinanceFactoryBootstrapTest is Phase9RefinanceBootstrapHarness 
             "stored canonical id"
         );
 
-        Phase9Types.LoanCreationRequest memory zeroRetry =
-            _canonicalRequest(_bootstrapSpec.loanId);
+        Phase9Types.LoanCreationRequest memory zeroRetry = _canonicalRequest(_bootstrapSpec.loanId);
         zeroRetry.creationId = bytes32(0);
         _expectFactoryError(
             abi.encodeCall(IPhase9LoanFactory.createLoan, (zeroRetry)),
@@ -243,9 +236,8 @@ contract Phase9RefinanceFactoryBootstrapTest is Phase9RefinanceBootstrapHarness 
 
         Phase9Types.Position memory changed = second;
         changed.claim = 11;
-        (bool success, bytes memory returned) = manager.call(
-            abi.encodeCall(IPositionManagerV2.issuePosition, (changed))
-        );
+        (bool success, bytes memory returned) =
+            manager.call(abi.encodeCall(IPositionManagerV2.issuePosition, (changed)));
         require(!success, "changed position replay");
         require(
             _selector(returned) == IPositionManagerV2.InvalidPositionOperation.selector,

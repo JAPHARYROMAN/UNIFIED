@@ -41,6 +41,35 @@ EVIDENCE_SCHEMA_RELATIVE = Path(
 )
 DEFAULT_RESET_COMMAND = "pwsh ./scripts/smoke-phase9-refinance-anvil.ps1"
 CHAIN_ID = 31_337
+CANONICAL_RPC_URL = "http://127.0.0.1:18545"
+CANONICAL_ANVIL_BROADCASTER = "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+CANONICAL_ANVIL_ACCOUNTS = (
+    "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+    CANONICAL_ANVIL_BROADCASTER,
+    "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+    "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+    "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65",
+    "0x9965507d1a55bcc2695c58ba16fb37d819b0a4dc",
+    "0x976ea74026e726554db657fa54763abd0c3a0aa9",
+    "0x14dc79964da2c08b23698b3d3cc7ca32193d9955",
+    "0x23618e81e3f5cdf7f54c3d65f7fbb11fd1e8f7ab",
+    "0xa0ee7a142d267c1f36714e9a8f75612f20a79720",
+)
+CANONICAL_ANVIL_ACCOUNT_SET_SHA256 = (
+    "sha256:"
+    + hashlib.sha256(
+        json.dumps(CANONICAL_ANVIL_ACCOUNTS, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+)
+CANONICAL_BROADCASTER_PROVENANCE: dict[str, object] = {
+    "provider": "anvil",
+    "account_profile": "foundry-default-account-1",
+    "account_index": 1,
+    "address": CANONICAL_ANVIL_BROADCASTER,
+    "account_set_sha256": CANONICAL_ANVIL_ACCOUNT_SET_SHA256,
+    "unlocked": True,
+    "private_key_input": False,
+}
 EIP_170_LIMIT = 24_576
 EIP_3860_LIMIT = 49_152
 SELF_PATCH_OFFSET = 1
@@ -377,6 +406,27 @@ def _address(value: object, label: str) -> str:
     return normalized
 
 
+def _canonical_broadcaster(value: object) -> str:
+    broadcaster = _address(value, "broadcaster")
+    if broadcaster != CANONICAL_ANVIL_BROADCASTER:
+        _fail(
+            "broadcaster must be canonical freshly spawned Anvil default account 1 "
+            f"({CANONICAL_ANVIL_BROADCASTER})"
+        )
+    return broadcaster
+
+
+def _require_canonical_anvil_accounts(rpc: RpcCall) -> None:
+    accounts = rpc("eth_accounts", [])
+    if not isinstance(accounts, list):
+        _fail("RPC eth_accounts must return the canonical Anvil default account set")
+    normalized = tuple(
+        _address(account, f"eth_accounts[{index}]") for index, account in enumerate(accounts)
+    )
+    if normalized != CANONICAL_ANVIL_ACCOUNTS:
+        _fail("RPC account set is not the canonical freshly spawned Anvil fixture profile")
+
+
 def _bytes32(value: object, label: str) -> str:
     if not isinstance(value, str) or re.fullmatch(r"(?:0x|sha256:)[0-9a-fA-F]{64}", value) is None:
         _fail(f"{label} must be a 32-byte digest")
@@ -402,20 +452,18 @@ def _hex_blob(value: object, label: str) -> bytes:
 def canonical_rpc_url(value: str) -> str:
     parsed = urllib.parse.urlsplit(value)
     if (
-        parsed.scheme != "http"
+        value != CANONICAL_RPC_URL
+        or parsed.scheme != "http"
         or parsed.username is not None
         or parsed.password is not None
-        or parsed.path not in {"", "/"}
+        or parsed.hostname != "127.0.0.1"
+        or parsed.port != 18_545
+        or parsed.path != ""
         or parsed.query
         or parsed.fragment
-        or parsed.port is None
     ):
-        _fail("RPC URL must be credential-free loopback HTTP with an explicit port")
-    hostname = (parsed.hostname or "").lower()
-    if hostname not in {"127.0.0.1", "localhost", "::1"}:
-        _fail("RPC URL must use a literal loopback endpoint")
-    host = f"[{hostname}]" if ":" in hostname else hostname
-    return f"http://{host}:{parsed.port}"
+        _fail(f"RPC URL must be the canonical credential-free endpoint {CANONICAL_RPC_URL}")
+    return CANONICAL_RPC_URL
 
 
 class HttpRpc:
@@ -982,7 +1030,7 @@ def build_plan(
     working_tree_clean: bool | None = None,
 ) -> dict[str, object]:
     config = _validate_config(config_payload)
-    broadcaster = _address(broadcaster_value, "broadcaster")
+    broadcaster = _canonical_broadcaster(broadcaster_value)
     reset_identity = _bytes32(reset_identity_value, "reset_identity")
     if not reset_identity.startswith("0x"):
         _fail("reset_identity must be the canonical block-zero hash")
@@ -998,8 +1046,8 @@ def build_plan(
     timestamp = generated_at or datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", timestamp) is None:
         _fail("generated_at must be canonical UTC seconds")
-    if not isinstance(reset_command, str) or not reset_command.strip():
-        _fail("reset_command must be nonempty")
+    if reset_command != DEFAULT_RESET_COMMAND:
+        _fail(f"reset_command must equal canonical command {DEFAULT_RESET_COMMAND!r}")
     transcript = dict(
         nonce_transcript
         or {
@@ -1134,6 +1182,7 @@ def build_plan(
         "working_tree_clean": True,
         "generated_at": timestamp,
         "broadcaster": broadcaster,
+        "broadcaster_provenance": dict(CANONICAL_BROADCASTER_PROVENANCE),
         "starting_nonce": 1,
         "final_nonce": 11,
         "reset_identity": reset_identity,
@@ -1280,6 +1329,7 @@ def verify(
     root: Path = ROOT,
 ) -> dict[str, object]:
     canonical_url = canonical_rpc_url(rpc_url)
+    _require_canonical_anvil_accounts(rpc)
     if rpc("eth_chainId", []) != "0x7a69":
         _fail("RPC eth_chainId must be canonical 0x7a69")
     _validate_schema(plan, root / PLAN_SCHEMA_RELATIVE, "plan")
@@ -1576,6 +1626,7 @@ def verify(
         "working_tree_clean": True,
         "generated_at": plan["generated_at"],
         "broadcaster": plan["broadcaster"],
+        "broadcaster_provenance": plan["broadcaster_provenance"],
         "starting_nonce": 1,
         "final_nonce": 11,
         "reset_identity": plan["reset_identity"],
@@ -1670,9 +1721,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "--prepare requires config, broadcaster, reset-identity, plan, and rpc-url"
                 )
             rpc = HttpRpc(cast(str, args.rpc_url))
+            _require_canonical_anvil_accounts(rpc)
             if rpc("eth_chainId", []) != "0x7a69":
                 _fail("RPC eth_chainId must be canonical 0x7a69")
-            broadcaster = _address(args.broadcaster, "broadcaster")
+            broadcaster = _canonical_broadcaster(args.broadcaster)
             latest_before = rpc("eth_getTransactionCount", [broadcaster, "latest"])
             pending_before = rpc("eth_getTransactionCount", [broadcaster, "pending"])
             if latest_before != "0x0" or pending_before != "0x0":

@@ -1,10 +1,14 @@
 # Phase 9 payoff deployment evidence
 
-The payoff deployment has two deliberately separate stages. A Forge simulation cannot
-authorize activation because script-side reads and file writes occur before Forge sends
-broadcast transactions.
+Status: historical evidence for the accepted payoff-only checkpoint
 
-## Stage A: broadcast and non-accepted candidate
+This document preserves the reviewed nested pair-deployer procedure and its two stages.
+It does not describe the current refinance deployment topology. ADRs 0021, 0023, and
+0024 supersede that current-deployment use with an explicitly linked ten-CREATE graph
+that forbids a pair deployer. A Forge simulation cannot authorize activation because
+script-side reads and file writes occur before Forge sends broadcast transactions.
+
+## Historical Stage A: broadcast and non-accepted candidate
 
 `DeployPhase9Local.s.sol` deploys the exact local token and the constructor-only pair
 deployer. The pair deployment transaction creates the payoff engine at pair-deployer
@@ -15,7 +19,7 @@ produce accepted evidence. `maximum_quote_validity` is serialized as a base-10 d
 string so the full `uint64` range remains portable across JSON consumers. The entrypoint
 rejects every output path except the canonical candidate path before broadcasting.
 
-From `protocol/`, substitute the existing local dependency addresses:
+At the reviewed payoff commit, the Stage A invocation from `protocol/` was:
 
 ```powershell
 New-Item -ItemType Directory -Force deployments/local | Out-Null
@@ -27,25 +31,32 @@ forge script script/DeployPhase9Local.s.sol:DeployPhase9Local `
   "deployments/local/phase9-payoff-deployment-candidate.json"
 ```
 
-The actual Forge artifact is expected at
+The corresponding historical Forge artifact path was
 `protocol/broadcast/DeployPhase9Local.s.sol/31337/run-latest.json`.
 
-Before any broadcast, verify the reviewed manifest against the current Forge artifacts
-without making a network call:
+At the payoff checkpoint's reviewed commit, the reviewed manifest was verified against
+that commit's Forge artifacts without making a network call:
 
 ```powershell
 uv run python tools/verify_phase9_payoff_deployment.py --check-pins
 ```
 
-This command accepts only the canonical manifest at
+The historical tool and command are retained for reviewed-commit reconstruction and
+their isolated regression fixtures. They are intentionally not invoked by the current
+foundation gate and must not be used to validate, link, or authorize the current
+refinance artifacts. Those artifacts are governed by
+`phase-9-refinance-deployment-evidence.md` and its linked-module and ten-CREATE
+verifiers.
+
+The command accepts only the canonical manifest at
 `infrastructure/local/phase9-payoff-deployment-code-hashes.json`. It verifies the
 reviewed manifest digest, compiler profile, exact repository-relative artifact paths,
 compiler source hashes, and creation/runtime bytecode sizes and hashes. Stale artifacts
 and absolute, traversal, alternate, or symlinked artifact paths are rejected.
 
-## Stage B: post-broadcast verification
+## Historical Stage B: post-broadcast verification
 
-From the repository root, run:
+At the reviewed payoff commit, the post-broadcast invocation was:
 
 ```powershell
 uv run python tools/verify_phase9_payoff_deployment.py `

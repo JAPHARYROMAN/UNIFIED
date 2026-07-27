@@ -82,6 +82,15 @@ PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS = (
     "tsconfig.json",
     "uv.lock",
 )
+HISTORICAL_PAYOFF_ARCHIVE_PATHS = (
+    "docs/architecture/phase-9-payoff-deployment-evidence.md",
+    "infrastructure/local/phase9-payoff-deployment-candidate.schema.json",
+    "infrastructure/local/phase9-payoff-deployment-code-hashes.json",
+    "infrastructure/local/phase9-payoff-deployment-evidence.schema.json",
+    "protocol/script/DeployPhase9Local.s.sol",
+    "protocol/test/Phase9PayoffLocalDeploymentEvidence.t.sol",
+    "tools/verify_phase9_payoff_deployment.py",
+)
 REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS = (
     ".gitattributes",
     ".github/workflows/foundation.yml",
@@ -89,6 +98,7 @@ REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS = (
     "adr/0021-phase-9-atomic-refinance-authority-and-activation.md",
     "adr/0022-phase-9-factory-account-position-bootstrap-semantics.md",
     "adr/0023-phase-9-refinance-fixed-module-partition.md",
+    "adr/0024-phase-9-refinance-activation-topology-control.md",
     "docs/architecture/phase-9-data-layouts.md",
     "docs/architecture/phase-9-refinance-acceptance.md",
     "docs/architecture/phase-9-refinance-deployment-evidence.md",
@@ -111,11 +121,13 @@ REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS = (
     "tools/check_abi.py",
     "tools/check_phase9.py",
     "tools/check_phase9_implementation_checkpoints.py",
+    "tools/check_phase9_local_prohibitions.py",
     "tools/check_phase9_refinance_linked_modules.py",
     "tools/check_phase9_storage_layouts.py",
     "tools/compile_phase9_storage_layouts.mjs",
     "tools/tests/test_phase9_compatibility.py",
     "tools/tests/test_phase9_implementation_checkpoints.py",
+    "tools/tests/test_phase9_local_prohibitions.py",
     "tools/tests/test_phase9_refinance_linked_modules.py",
     "tools/tests/test_phase9_warning_policy.mjs",
     "tools/tests/test_update_phase9_implementation_checkpoint.py",
@@ -248,6 +260,7 @@ ACTIVATION_PACKAGES = {
             "UNI-ADR-016",
             "UNI-ADR-017",
             "UNI-ADR-018",
+            "UNI-ADR-019",
             "UNI-REFI-001",
             "UNI-REFI-002",
         ),
@@ -266,12 +279,14 @@ CONTROL_BUNDLE_PATHS = (
     "tools/check_abi.py",
     "tools/check_phase9.py",
     "tools/check_phase9_implementation_checkpoints.py",
+    "tools/check_phase9_local_prohibitions.py",
     "tools/check_phase9_refinance_linked_modules.py",
     "tools/check_phase9_schema.py",
     "tools/check_phase9_storage_layouts.py",
     "tools/compile_phase9_storage_layouts.mjs",
     "tools/tests/test_phase9_compatibility.py",
     "tools/tests/test_phase9_implementation_checkpoints.py",
+    "tools/tests/test_phase9_local_prohibitions.py",
     "tools/tests/test_phase9_refinance_linked_modules.py",
     "tools/tests/test_phase9_schema.py",
     "tools/tests/test_phase9_warning_policy.mjs",
@@ -481,6 +496,35 @@ def read_json(path: Path) -> object:
         raise SystemExit(f"{path.relative_to(ROOT)} is missing") from exc
     except json.JSONDecodeError as exc:
         raise SystemExit(f"{path.relative_to(ROOT)} is not valid JSON: {exc}") from exc
+
+
+def validate_foundation_orchestration(path: Path | None = None) -> None:
+    """Keep historical payoff verification out of the active foundation gate."""
+    foundation_path = ROOT / "scripts/check-foundation.ps1" if path is None else path
+    try:
+        foundation = foundation_path.read_text(encoding="utf-8").replace("\\", "/")
+    except FileNotFoundError as exc:
+        raise SystemExit("scripts/check-foundation.ps1 is missing") from exc
+    if "verify_phase9_payoff_deployment.py" in foundation:
+        raise SystemExit(
+            "foundation invokes the historical payoff deployment verifier as a current gate"
+        )
+    for invocation in (
+        "tools/check_phase9.py",
+        "tools/check_phase9_implementation_checkpoints.py",
+    ):
+        if foundation.count(invocation) != 1:
+            raise SystemExit(f"foundation current Phase 9 invocation drifted: {invocation}")
+
+
+def validate_historical_payoff_archive() -> None:
+    """Preserve the accessible files whose exact reviewed bytes remain in Git history."""
+    evidence_paths = set(PAYOFF_IMPLEMENTATION_EVIDENCE_PATHS)
+    for relative in HISTORICAL_PAYOFF_ARCHIVE_PATHS:
+        if relative not in evidence_paths:
+            raise SystemExit(f"historical payoff evidence path is unbound: {relative}")
+        if not (ROOT / relative).is_file():
+            raise SystemExit(f"historical payoff evidence path is missing: {relative}")
 
 
 def historical_manifest() -> dict[str, Any]:
@@ -697,9 +741,7 @@ def package_auxiliary_source_owners(
                 f"{checkpoint_id}: auxiliary source overlaps an activated contract: {path}"
             )
         if owner not in activated_contracts or owner not in contracts:
-            raise SystemExit(
-                f"{checkpoint_id}: auxiliary source owner is not activated: {owner}"
-            )
+            raise SystemExit(f"{checkpoint_id}: auxiliary source owner is not activated: {owner}")
         dependencies = dependency_paths_by_owner.get(owner)
         if dependencies is None:
             source_path = ROOT / contracts[owner]["sourcePath"]
@@ -1669,6 +1711,8 @@ def activated_signatures() -> dict[str, frozenset[str]]:
 
 
 def main() -> None:
+    validate_foundation_orchestration()
+    validate_historical_payoff_archive()
     entries = validate_checkpoints()
     print(
         "Phase 9 implementation checkpoints passed "

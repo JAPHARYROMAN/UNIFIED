@@ -16,9 +16,14 @@ method or checkpoint by itself.
 The nested payoff pair-deployer evidence remains valid for the already accepted
 payoff-only checkpoint. It is historical evidence and is not rewritten. This revision
 permits only a preliminary, non-activating topology checkpoint for the larger refinance
-graph. The final activation-grade form is deliberately unresolved: a later ADR must
-freeze either a nonce-0 `RoleManager` bootstrap or explicit nonce preconditioning, and
-must separately freeze the role-initialization and activation sequence.
+graph. ADR 0024 now selects explicit nonce preconditioning and freezes complete
+topology verification before one distinct governance-executor factory-role grant. The
+current topology harness remains preliminary because it deliberately stops before that
+grant and emits only non-activating evidence.
+
+The accepted `P9-PAYOFF-001` checkpoint anchors that historical tool and evidence to its
+reviewed Git blobs; the current foundation instead uses the linked-module gate and the
+live ten-CREATE refinance verifier, and does not run the legacy payoff pin check.
 
 The deployment remains disposable synthetic-local evidence only and local-only
 by design. It provides no business-logic activation and has no production,
@@ -88,10 +93,42 @@ following:
 
 The topology candidate stops after nonce 10. It cannot grant the factory role, enable a
 successful protocol flow, set `activation_accepted=true`, satisfy a `P9R-DEPLOY-*` row,
-or create a `P9-REFI-001` checkpoint. Before activation-grade evidence is designed or
-accepted, a later ADR must resolve nonce-0 `RoleManager` bootstrap versus explicit
-nonce preconditioning and bind the final role and activation order. The candidate
-checkpoint does not prejudge that decision.
+or create a `P9-REFI-001` checkpoint. ADR 0024 selects this explicit nonce-preconditioned
+form for later activation-grade evidence and binds the final role order, but the
+candidate checkpoint does not implement or evidence its positive grant.
+
+## ADR 0024 activation-grade extension
+
+Activation-grade evidence must preserve the candidate sequence above and add no
+transaction until its independent topology verification passes. The prerequisite
+`RoleManager` is deployed separately with pairwise-distinct setup administrator and
+governance executor identities. Its constructor grants only `DEFAULT_ADMIN_ROLE` to
+the setup administrator and `GOVERNANCE_EXECUTOR_ROLE` to the governance executor.
+The candidate broadcaster and fixture allocator are distinct from both identities and
+receive no role.
+
+The selected order is exact:
+
+1. record the prerequisite RoleManager constructor transaction and its two constructor
+   `RoleGranted` logs; no later prerequisite role or role-admin transaction is allowed;
+2. observe the roleless candidate broadcaster at `latest == pending == 0x0`, apply one
+   evidenced `anvil_setNonce(..., 0x1)`, and observe both views at `0x1`;
+3. broadcast and independently verify the exact ten zero-value `CREATE` transactions at
+   candidate nonces 1 through 10, ending at `latest == pending == 0xb`;
+4. prove the nonce-5 factory has zero role expiry and no `LOAN_FACTORY_ROLE`, the
+   candidate broadcaster has no administrative or governance role, and
+   `roleAdmin(LOAN_FACTORY_ROLE) == GOVERNANCE_EXECUTOR_ROLE`;
+5. only then allow the dedicated governance executor, observed fresh at nonce `0x0`,
+   to send one zero-value transaction to the RoleManager calling
+   `grantRole(LOAN_FACTORY_ROLE, phase9LoanFactory, type(uint64).max)`; and
+6. at the canonical receipt block, prove the exact single event, maximum expiry,
+   positive role membership, unchanged role admin, governance nonce `0x1`, no role for
+   the candidate broadcaster, and no second or intervening transaction.
+
+That grant is the last activation-topology transaction. No policy mutation, setup,
+repair, bootstrap, quote, refinance, funding, execution, cancellation, refund, or other
+business action is part of this evidence. The positive role evidence remains
+insufficient to activate any method or checkpoint until the bundled D1-D4 gate passes.
 
 The factory-internal deterministic minimal clones governed by ADRs 0021 and 0022 are a
 separate per-loan mechanism. Their `CREATE2`-style salts do not authorize
@@ -165,7 +202,7 @@ contains:
 | Field | Required evidence |
 |---|---|
 | Plan identity | schema version, artifact type `PHASE9_REFINANCE_DEPLOYMENT_PLAN`, environment `local`, chain `31337`, source commit, dirty-state rejection, generated-at, and canonical plan digest |
-| Broadcaster and nonce precondition | nonzero dedicated disposable Anvil account, no imported or production-origin key, observed raw before/preconditioned `latest` and `pending` nonce evidence for `0x0`/`0x1`, expected final nonce `0xb`, exact `anvil_setNonce` request and response, and no prior or pending transaction |
+| Broadcaster and nonce precondition | exact freshly spawned Foundry-default Anvil account 1 (`0x70997970c51812dc3a010c7d01b50e0d17dc79c8`), exact ordered default account-set digest, account index/profile and recorded unlocked/no-private-key-input harness provenance, observed raw before/preconditioned `latest` and `pending` nonce evidence for `0x0`/`0x1`, expected final nonce `0xb`, exact `anvil_setNonce` request and response, and no prior or pending transaction; the standalone verifier rejects every other broadcaster or account profile, while the profile and digest identify the fixture but do not independently prove signer origin |
 | RPC boundary | harness-enforced canonical literal loopback URL, no credentials/path/query/fragment/proxy, expected chain ID, pinned Anvil client identity, block-zero reset identity, and pre-broadcast canonical block |
 | Compiler boundary | harness-enforced Solidity/Foundry versions plus plan-bound optimizer settings, EVM version, remappings, artifact paths, compiler source-set hashes, all four same-source coordinator/module compiler artifacts, exact creation/runtime bytecode hashes, module runtime self-patch offsets, and runtime/initcode byte counts |
 | Ordered transactions | exactly ten rows for top-level `CREATE` nonces 1 through 10 and no other broadcaster transaction; exact ordinal, sender nonce, predicted address, artifact, constructor ABI encoding, zero value, input hash, and expected runtime hash |
@@ -222,7 +259,11 @@ deployment or checkpoint. It consumes the immutable plan, candidate, raw broadca
 artifact, canonical RPC, compiler artifacts, and expected source head. It must
 independently prove:
 
-1. `eth_chainId == 0x7a69` and the endpoint is the accepted loopback endpoint;
+1. `eth_accounts` is the exact ordered Foundry-default Anvil account set, account 1 is
+   the plan broadcaster; its digest/profile identifies the expected fixture but does not
+   independently prove signer origin, so the harness-owned process and recorded invocation
+   supply the separate no-caller-private-key-input provenance,
+   `eth_chainId == 0x7a69`, and the endpoint is the accepted loopback endpoint;
 2. raw precondition evidence proves the dedicated account was at nonce `0x0`, the exact
    `anvil_setNonce` call set it to `0x1`, and immediate `latest` and `pending` reads
    both returned `0x1` before broadcast;
@@ -296,8 +337,8 @@ For this preliminary topology checkpoint it observes:
 - the pre-existing `RoleManager` as untrusted local context: before broadcast for the
   predicted nonce-5 factory and after broadcast for the actual factory,
   `roleExpiry(LOAN_FACTORY_ROLE, factory) == 0` and `hasRole(...) == false`; no grant or
-  role-admin transaction/log occurs, while future positive role-initialization evidence
-  is deferred to the later activation-topology ADR;
+  role-admin transaction/log occurs; ADR 0024 requires a separate activation-grade
+  artifact to prove the later verification-before-governance-grant sequence;
 - no role, policy, setup, repair, bootstrap, quote, refinance, or other business-action
   transaction is present in the candidate broadcaster's exact ten-transaction history.
 
@@ -306,8 +347,8 @@ full initial application state, and behavioral getter/caller tests are deferred 
 later activation-grade evidence described by the acceptance matrix.
 
 No bootstrap or protocol flow may run from this topology checkpoint. Fixture state may
-be created only after the later ADR and activation-grade deployment evidence pass, and
-is evidenced separately under `P9R-BOOT-*`.
+be created only after ADR 0024-conforming activation-grade deployment evidence passes,
+and is evidenced separately under `P9R-BOOT-*`.
 
 ## Rejection, reset, and residue
 
@@ -336,25 +377,26 @@ the deployed local graph.
 
 The following rows remain activation-grade requirements. The topology candidate can
 provide preliminary bytecode, address, nonce, and receipt observations, but cannot
-satisfy any row until the later topology ADR resolves nonce zero and role activation.
+satisfy any row until a separate artifact proves ADR 0024's selected nonce and role
+order.
 
 | Acceptance row | Later activation-grade artifact/result |
 |---|---|
-| `P9R-DEPLOY-001` | Later-ADR-selected nonce-0 bootstrap or nonce-preconditioning form, exact ten-CREATE nonce-1-through-10 sequence, modules at 6/7/8, engine at 9, coordinator at 10, and the separately frozen role-initialization order |
-| `P9R-DEPLOY-002` | Independent nonce-6/7/8 module and nonce-10 coordinator prediction, exact seven-link reproduction, reciprocal constructor binding, and the later-ADR-selected RoleManager bootstrap/initialization receipt, log, and EIP-1898 state evidence |
-| `P9R-DEPLOY-003` | Complete activation candidate, broadcast, RPC transaction/receipt/log, module self-patches, unlinked/linked code, link offsets, sizes, constructor, role, slot, behavior, schema, and accepted-digest verification after the topology choice is frozen |
+| `P9R-DEPLOY-001` | ADR 0024 explicit nonce-preconditioning form, pairwise-distinct identities, exact ten-CREATE nonce-1-through-10 sequence, modules at 6/7/8, engine at 9, coordinator at 10, complete verification, and one final governance-executor factory-role grant |
+| `P9R-DEPLOY-002` | Independent prerequisite RoleManager proof, raw nonce precondition, nonce-6/7/8 module and nonce-10 coordinator prediction, exact seven-link reproduction, reciprocal constructor binding, and exact grant receipt, log, nonce, and EIP-1898 state evidence |
+| `P9R-DEPLOY-003` | Complete activation candidate, broadcast, RPC transaction/receipt/log, module self-patches, unlinked/linked code, link offsets, sizes, constructor, role, slot, behavior, schema, and accepted-digest verification under ADR 0024 |
 | `P9R-DEPLOY-004` | Negative evidence for wrong chain/key/order/nonce/prediction/code/constructor/RPC/provider/top-level CREATE2 or undeclared/mismatched/failed/late/post-hoc role action plus bounded reset |
-| `P9R-BOOT-005` | Reserved and unsatisfied until the later topology ADR and activation-grade deployment pass; then prove per-loan factory nonce/replay, salts/predictions/runtime, initialization/authentication, registry/event order, frozen errors, raw-ID ordering, zero-version/policy rules, and same-block checkpoint rollback |
+| `P9R-BOOT-005` | Reserved and unsatisfied until ADR 0024-conforming activation-grade deployment passes; then prove per-loan factory nonce/replay, salts/predictions/runtime, initialization/authentication, registry/event order, frozen errors, raw-ID ordering, zero-version/policy rules, and same-block checkpoint rollback |
 | `P9R-DON-004` | One-command bounded-local-reset command/script, reset-generation manifest, before/after chain identity, observed removal of donated surplus, and proof that no production disposal/recovery authority exists |
 | `P9R-FZ-001` | Exact source, compiler, ABI, storage, one-event/two-error additive allowlist, and method-level checkpoint binding |
 | `P9R-LOCAL-001` | Synthetic-local dependency/provider/credential boundary scan |
-| `P9R-LOCAL-002` | Reserved and unsatisfied until the later topology ADR; then prove clean bootstrap, accepted deployment, flow, restart/replay, and reset evidence from the same reset generation |
+| `P9R-LOCAL-002` | Reserved and unsatisfied until ADR 0024-conforming activation-grade evidence; then prove clean bootstrap, accepted deployment, flow, restart/replay, and reset evidence from the same reset generation |
 | `P9R-LOCAL-003` | Explicit proof that the evidence cannot be reused as public-chain or production authorization |
 
 No deployment checkpoint may pass until independent architecture and security
 review approve the accepted evidence and exact source head, and the bundled
 `UNI-REFI-001`/`UNI-REFI-002` method activation gate passes. The topology candidate
-authorized here is preliminary input only and cannot satisfy any row above. A later ADR
-must first freeze nonce-0 `RoleManager` bootstrap versus explicit nonce preconditioning
-and the final role/activation sequence. This document alone does not change either
-backlog row from `TODO`.
+authorized here is preliminary input only and cannot satisfy any row above. ADR 0024
+selects explicit nonce preconditioning and the final verification-before-grant sequence,
+but this document alone does not execute that sequence or change either backlog row
+from `TODO`.

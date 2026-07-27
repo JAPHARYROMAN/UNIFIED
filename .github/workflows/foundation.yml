@@ -49,6 +49,7 @@ jobs:
         run: |
           ./scripts/generate.ps1
           git diff --exit-code
+          uv run --frozen python tools/check_phase9_local_prohibitions.py
           ./scripts/check-foundation.ps1
 
   local-smoke:
@@ -82,6 +83,23 @@ jobs:
           pnpm install --frozen-lockfile
           uv sync --frozen
           ./scripts/prepare-foundry.ps1
+      - name: Stage pinned Foundry tools for Phase 9 topology
+        shell: pwsh
+        run: |
+          $target = Join-Path $PWD '.cache/foundry-v1.7.1'
+          New-Item -ItemType Directory -Force -Path $target | Out-Null
+          foreach ($name in @('forge', 'cast', 'anvil')) {
+            $source = (Get-Command $name -ErrorAction Stop).Source
+            New-Item -ItemType SymbolicLink -Path (Join-Path $target $name) `
+              -Target $source | Out-Null
+          }
+      - name: Verify Phase 9 synthetic-local prohibition surface
+        shell: pwsh
+        run: uv run --frozen python tools/check_phase9_local_prohibitions.py
+      - name: Deploy and verify non-activating Phase 9 topology
+        timeout-minutes: 10
+        shell: pwsh
+        run: ./scripts/smoke-phase9-refinance-anvil.ps1
       - name: Start isolated foundation topology
         shell: pwsh
         run: ./scripts/local-up.ps1

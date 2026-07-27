@@ -77,7 +77,7 @@ def _yul_call(name: str, *arguments: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _validation_assembly() -> dict[str, Any]:
+def _bounded_staticcall_assembly(identifier: int = 2_050) -> dict[str, Any]:
     staticcall = _yul_call(
         "staticcall",
         _yul_call("gas"),
@@ -157,9 +157,7 @@ def _validation_assembly() -> dict[str, Any]:
                                     _yul_identifier("output"),
                                     _yul_number("0x20"),
                                 ),
-                                _yul_call(
-                                    "add", _yul_identifier("size"), _yul_number("0x1f")
-                                ),
+                                _yul_call("add", _yul_identifier("size"), _yul_number("0x1f")),
                             ),
                             _yul_call("not", _yul_number("0x1f")),
                         ),
@@ -170,7 +168,7 @@ def _validation_assembly() -> dict[str, Any]:
         },
         "externalReferences": [],
         "flags": ["memory-safe"],
-        "id": 2_050,
+        "id": identifier,
         "nodeType": "InlineAssembly",
     }
 
@@ -203,6 +201,69 @@ def _solidity_identifier(name: str) -> dict[str, str]:
 
 def _solidity_number(value: int) -> dict[str, str]:
     return {"kind": "number", "nodeType": "Literal", "value": str(value)}
+
+
+def _solidity_binary(operator: str, left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "leftExpression": left,
+        "nodeType": "BinaryOperation",
+        "operator": operator,
+        "rightExpression": right,
+    }
+
+
+def _word_at_offset_node(key: str) -> dict[str, Any]:
+    if key.isdecimal():
+        return _solidity_number(int(key))
+    if key in {"collateralOffset", "trancheOffset", "positionOffset"}:
+        return _solidity_identifier(key)
+    if key == "((trancheOffset+64)+(i*160))":
+        return _solidity_binary(
+            "+",
+            _solidity_binary("+", _solidity_identifier("trancheOffset"), _solidity_number(64)),
+            _solidity_binary("*", _solidity_identifier("i"), _solidity_number(160)),
+        )
+    if key in {"(positionStart+64)", "(positionStart+160)"}:
+        return _solidity_binary(
+            "+",
+            _solidity_identifier("positionStart"),
+            _solidity_number(64 if key.endswith("64)") else 160),
+        )
+    raise AssertionError(f"unknown _wordAt fixture offset {key}")
+
+
+def _word_at_call(offset: str) -> dict[str, Any]:
+    return {
+        "arguments": [_solidity_identifier("raw"), _word_at_offset_node(offset)],
+        "expression": _solidity_identifier("_wordAt"),
+        "nodeType": "FunctionCall",
+    }
+
+
+def _word_at_assembly(identifier: int = 4_060) -> dict[str, Any]:
+    return {
+        "AST": {
+            "nodeType": "YulBlock",
+            "statements": [
+                {
+                    "nodeType": "YulAssignment",
+                    "value": _yul_call(
+                        "mload",
+                        _yul_call(
+                            "add",
+                            _yul_call("add", _yul_identifier("encoded"), _yul_number("0x20")),
+                            _yul_identifier("offset"),
+                        ),
+                    ),
+                    "variableNames": [_yul_identifier("value")],
+                }
+            ],
+        },
+        "externalReferences": [],
+        "flags": ["memory-safe"],
+        "id": identifier,
+        "nodeType": "InlineAssembly",
+    }
 
 
 def _bounded_solidity_call(selector: str | None, cap: int) -> dict[str, Any]:
@@ -290,9 +351,13 @@ def _unknown_lien_condition() -> dict[str, Any]:
     }
 
 
-def _bounded_site_functions(start: int) -> list[dict[str, Any]]:
+def _bounded_site_functions(
+    start: int,
+    sites_by_function: dict[str, list[tuple[str | None, int]]] | None = None,
+) -> list[dict[str, Any]]:
     functions: list[dict[str, Any]] = []
-    for index, (name, sites) in enumerate(checker.BOUNDED_STATICCALL_SITES.items()):
+    selected_sites = sites_by_function or checker.BOUNDED_STATICCALL_SITES
+    for index, (name, sites) in enumerate(selected_sites.items()):
         statements: list[dict[str, Any]] = [
             _bounded_solidity_call(selector, cap) for selector, cap in sites
         ]
@@ -453,7 +518,7 @@ def _source_ast() -> dict[str, Any]:
         _variable(1_000 + index, field.name, field.type_string)
         for index, field in enumerate(checker.MIRROR_FIELDS)
     ]
-    validation_assembly = _validation_assembly()
+    validation_assembly = _bounded_staticcall_assembly()
     validation_nodes = _linked_functions(checker.VALIDATION_MODULE, 2_000)
     preflight = next(node for node in validation_nodes if node.get("name") == "preflight")
     preflight["body"] = {
@@ -493,12 +558,57 @@ def _source_ast() -> dict[str, Any]:
         "nodeType": "ContractDefinition",
         "nodes": _linked_functions(checker.REQUEST_MODULE, 3_001),
     }
+    lifecycle_assembly = _bounded_staticcall_assembly(4_050)
+    lifecycle_nodes = _linked_functions(checker.LIFECYCLE_MODULE, 4_001)
+    lifecycle_site_nodes = _bounded_site_functions(
+        4_100, checker.LIFECYCLE_BOUNDED_STATICCALL_SITES
+    )
+    lifecycle_sites_by_name = {str(node["name"]): node for node in lifecycle_site_nodes}
+    for index, (name, offsets) in enumerate(checker.LIFECYCLE_WORD_AT_SITES.items()):
+        calls = [_word_at_call(offset) for offset in offsets]
+        if name in lifecycle_sites_by_name:
+            lifecycle_sites_by_name[name]["body"]["statements"].extend(calls)
+        else:
+            lifecycle_site_nodes.append(
+                _function(
+                    4_200 + index,
+                    name,
+                    [],
+                    [],
+                    visibility="private",
+                    state_mutability="pure",
+                    body={"nodeType": "Block", "statements": calls},
+                )
+            )
+    lifecycle_nodes.extend(lifecycle_site_nodes)
+    lifecycle_nodes.append(
+        _function(
+            4_040,
+            "_boundedStaticcall",
+            [("address", "default"), ("bytes", "memory"), ("uint256", "default")],
+            [("bool", "default"), ("bytes", "memory")],
+            visibility="private",
+            state_mutability="view",
+            body={"nodeType": "Block", "statements": [lifecycle_assembly]},
+        )
+    )
+    lifecycle_nodes.append(
+        _function(
+            4_060,
+            "_wordAt",
+            [("bytes", "memory"), ("uint256", "default")],
+            [("uint256", "default")],
+            visibility="private",
+            state_mutability="pure",
+            body={"nodeType": "Block", "statements": [_word_at_assembly()]},
+        )
+    )
     lifecycle = {
         "contractKind": "library",
         "id": 4_000,
         "name": checker.LIFECYCLE_MODULE,
         "nodeType": "ContractDefinition",
-        "nodes": _linked_functions(checker.LIFECYCLE_MODULE, 4_001),
+        "nodes": lifecycle_nodes,
     }
     layout_assembly = {
         "AST": {
@@ -545,9 +655,7 @@ def _source_ast() -> dict[str, Any]:
                 "id": 901,
                 "members": [
                     _variable(902 + index, name, type_string)
-                    for index, (name, type_string) in enumerate(
-                        checker.VALIDATION_CONTEXT_FIELDS
-                    )
+                    for index, (name, type_string) in enumerate(checker.VALIDATION_CONTEXT_FIELDS)
                 ],
                 "name": "Phase9RefinanceValidationContext",
                 "nodeType": "StructDefinition",
@@ -563,9 +671,7 @@ def _source_ast() -> dict[str, Any]:
 def _storage_layout() -> dict[str, Any]:
     types: dict[str, dict[str, str]] = {}
     storage: list[dict[str, object]] = []
-    for index, field in enumerate(
-        field for field in checker.MIRROR_FIELDS if not field.padding
-    ):
+    for index, field in enumerate(field for field in checker.MIRROR_FIELDS if not field.padding):
         type_id = f"t_{index}"
         types[type_id] = {"label": field.type_string}
         storage.append(
@@ -671,9 +777,9 @@ def test_missing_candidate_fails_closed() -> None:
 
 def test_method_identifier_allowlist_drift_is_rejected() -> None:
     output, snapshot = _fixture()
-    methods = output["contracts"][checker.REFINANCE_SOURCE][checker.REQUEST_MODULE][
-        "evm"
-    ]["methodIdentifiers"]
+    methods = output["contracts"][checker.REFINANCE_SOURCE][checker.REQUEST_MODULE]["evm"][
+        "methodIdentifiers"
+    ]
     methods["extra(Phase9RefinanceStorageLayout storage)"] = "deadbeef"
 
     with pytest.raises(checker.LinkedModuleCheckError, match="linked-entry allowlist drift"):
@@ -714,6 +820,29 @@ def test_bounded_staticcall_selector_cap_inventory_is_pinned() -> None:
         _validate(output, snapshot)
 
 
+def test_lifecycle_bounded_staticcall_selector_cap_inventory_is_pinned() -> None:
+    assert checker.LIFECYCLE_BOUNDED_STATICCALL_SITES == {
+        "_resolveRefinancePolicy": [("resolveRefinancePolicy", 8_992)],
+        "_requireFundingOpen": [("emergencyState", 96)],
+        "_validateSettlementAsset": [("resolveRefinanceAsset", 160)],
+    }
+    output, snapshot = _fixture()
+    lifecycle = _definition(output, checker.LIFECYCLE_MODULE)
+    policy = next(
+        node for node in lifecycle["nodes"] if node.get("name") == "_resolveRefinancePolicy"
+    )
+    call = next(
+        node
+        for node in checker._walk(policy)
+        if node.get("nodeType") == "FunctionCall"
+        and node.get("expression", {}).get("name") == "_boundedStaticcall"
+    )
+    call["arguments"][2]["value"] = "8991"
+
+    with pytest.raises(checker.LinkedModuleCheckError, match="selector/cap inventory drift"):
+        _validate(output, snapshot)
+
+
 def test_unknown_lien_absence_requires_exact_failure_shape() -> None:
     output, snapshot = _fixture()
     validation = _definition(output, checker.VALIDATION_MODULE)
@@ -740,9 +869,9 @@ def test_unknown_lien_absence_requires_exact_failure_shape() -> None:
 
 def test_exact_seven_link_inventory_is_enforced() -> None:
     output, snapshot = _fixture()
-    runtime = output["contracts"][checker.REFINANCE_SOURCE][checker.COORDINATOR][
-        "evm"
-    ]["deployedBytecode"]
+    runtime = output["contracts"][checker.REFINANCE_SOURCE][checker.COORDINATOR]["evm"][
+        "deployedBytecode"
+    ]
     placeholder = "__$" + "1" * 34 + "$__"
     start = len(runtime["object"]) // 2 + 1
     runtime["object"] += "73" + placeholder + "f4"
@@ -768,9 +897,7 @@ def test_module_storage_delegatecall_and_links_are_rejected(violation: str) -> N
         placeholder = "__$" + "1" * 34 + "$__"
         module["evm"]["deployedBytecode"] = {
             "linkReferences": {
-                checker.REFINANCE_SOURCE: {
-                    checker.VALIDATION_MODULE: [{"length": 20, "start": 1}]
-                }
+                checker.REFINANCE_SOURCE: {checker.VALIDATION_MODULE: [{"length": 20, "start": 1}]}
             },
             "object": "73" + placeholder,
             "opcodes": "",
@@ -783,9 +910,9 @@ def test_module_storage_delegatecall_and_links_are_rejected(violation: str) -> N
 
 def test_validation_runtime_forbidden_opcode_is_rejected() -> None:
     output, snapshot = _fixture()
-    runtime = output["contracts"][checker.REFINANCE_SOURCE][checker.VALIDATION_MODULE][
-        "evm"
-    ]["deployedBytecode"]
+    runtime = output["contracts"][checker.REFINANCE_SOURCE][checker.VALIDATION_MODULE]["evm"][
+        "deployedBytecode"
+    ]
     runtime["object"] = "faf1"
 
     with pytest.raises(checker.LinkedModuleCheckError, match="forbidden opcode"):
@@ -796,9 +923,7 @@ def test_padding_reference_is_rejected() -> None:
     output, snapshot = _fixture()
     mirror = _definition(output, "Phase9RefinanceStorageLayout")
     padding_id = next(
-        member["id"]
-        for member in mirror["members"]
-        if member["name"] == "loanRegistryPadding"
+        member["id"] for member in mirror["members"] if member["name"] == "loanRegistryPadding"
     )
     _definition(output, checker.COORDINATOR)["nodes"].append(
         {"nodeType": "Identifier", "referencedDeclaration": padding_id}
@@ -836,9 +961,7 @@ def test_validation_assembly_forbidden_yul_operation_is_rejected() -> None:
     output, snapshot = _fixture()
     validation = _definition(output, checker.VALIDATION_MODULE)
     staticcall = next(
-        node
-        for node in checker._walk(validation)
-        if checker._yul_call_name(node) == "staticcall"
+        node for node in checker._walk(validation) if checker._yul_call_name(node) == "staticcall"
     )
     staticcall["functionName"]["name"] = "call"
 
@@ -852,12 +975,61 @@ def test_validation_assembly_must_bound_copy_length() -> None:
     guard = next(
         node
         for node in checker._walk(validation)
-        if node.get("nodeType") == "YulIf"
-        and checker._is_yul_call(node.get("condition"), "gt")
+        if node.get("nodeType") == "YulIf" and checker._is_yul_call(node.get("condition"), "gt")
     )
     guard["body"]["statements"] = guard["body"]["statements"][:1]
 
     with pytest.raises(checker.LinkedModuleCheckError, match="copy length"):
+        _validate(output, snapshot)
+
+
+def test_lifecycle_bounded_assembly_forbidden_yul_operation_is_rejected() -> None:
+    output, snapshot = _fixture()
+    lifecycle = _definition(output, checker.LIFECYCLE_MODULE)
+    staticcall = next(
+        node for node in checker._walk(lifecycle) if checker._yul_call_name(node) == "staticcall"
+    )
+    staticcall["functionName"]["name"] = "delegatecall"
+
+    with pytest.raises(checker.LinkedModuleCheckError, match="forbidden Yul"):
+        _validate(output, snapshot)
+
+
+def test_lifecycle_word_at_offset_inventory_is_pinned() -> None:
+    output, snapshot = _fixture()
+    lifecycle = _definition(output, checker.LIFECYCLE_MODULE)
+    funding_open = next(
+        node for node in lifecycle["nodes"] if node.get("name") == "_requireFundingOpen"
+    )
+    word_call = next(
+        node
+        for node in checker._walk(funding_open)
+        if node.get("nodeType") == "FunctionCall"
+        and node.get("expression", {}).get("name") == "_wordAt"
+    )
+    word_call["arguments"][1]["value"] = "1"
+
+    with pytest.raises(checker.LinkedModuleCheckError, match="_wordAt call inventory drift"):
+        _validate(output, snapshot)
+
+
+def test_lifecycle_word_at_assembly_is_exact_memory_load() -> None:
+    output, snapshot = _fixture()
+    lifecycle = _definition(output, checker.LIFECYCLE_MODULE)
+    helper = next(node for node in lifecycle["nodes"] if node.get("name") == "_wordAt")
+    load = next(node for node in checker._walk(helper) if checker._yul_call_name(node) == "mload")
+    load["functionName"]["name"] = "calldataload"
+
+    with pytest.raises(checker.LinkedModuleCheckError, match="must load mload"):
+        _validate(output, snapshot)
+
+
+def test_lifecycle_rejects_any_second_assembly_block() -> None:
+    output, snapshot = _fixture()
+    lifecycle = _definition(output, checker.LIFECYCLE_MODULE)
+    lifecycle["nodes"].append(_bounded_staticcall_assembly(4_999))
+
+    with pytest.raises(checker.LinkedModuleCheckError, match="only the validation"):
         _validate(output, snapshot)
 
 
@@ -929,9 +1101,9 @@ def test_context_coordinator_guard_must_precede_dependency() -> None:
 
 def test_eip_170_boundary_is_enforced() -> None:
     output, snapshot = _fixture()
-    runtime = output["contracts"][checker.REFINANCE_SOURCE][checker.REQUEST_MODULE][
-        "evm"
-    ]["deployedBytecode"]
+    runtime = output["contracts"][checker.REFINANCE_SOURCE][checker.REQUEST_MODULE]["evm"][
+        "deployedBytecode"
+    ]
     runtime["object"] = "00" * (checker.EIP_170_LIMIT + 1)
 
     with pytest.raises(checker.LinkedModuleCheckError, match="runtime exceeds EIP-170"):
