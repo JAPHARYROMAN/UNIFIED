@@ -4,6 +4,7 @@ pragma solidity 0.8.36;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ILoanRegistry } from "../src/interfaces/ILoanRegistry.sol";
 import { IRoleManager } from "../src/interfaces/IRoleManager.sol";
+import { IRefinanceCoordinator } from "../src/interfaces/phase9/IRefinanceCoordinator.sol";
 import { CollateralCustodyV2 } from "../src/resolution/CollateralCustodyV2.sol";
 import { LienRegistry } from "../src/resolution/LienRegistry.sol";
 import { PayoffQuoteEngine } from "../src/resolution/PayoffQuoteEngine.sol";
@@ -242,19 +243,50 @@ contract DeployPhase9RefinanceLocal {
         if (LienRegistry(deployment.actual[0]).registeredRefinanceCoordinator() != coordinator) {
             revert InvalidDeploymentConfiguration();
         }
+        _assertNoKnownRefinanceBusinessState(coordinator);
         if (
             Phase9LoanFactory(deployment.actual[4]).nextLoanNonce() != 1
                 || Phase9LoanFactory(deployment.actual[4]).loanAccount(bytes32(0)) != address(0)
                 || Phase9LoanFactory(deployment.actual[4]).positionManager(bytes32(0)) != address(0)
                 || CollateralCustodyV2(deployment.actual[1]).totalCustody(bytes32(0)) != 0
                 || CollateralCustodyV2(deployment.actual[1]).operationProcessed(bytes32(0))
-                || RefinanceCoordinator(coordinator).escrowedUnits(bytes32(0)) != 0
                 || RefinanceCoordinator(coordinator).operationProcessed(bytes32(0))
-                || RefinanceCoordinator(coordinator).commitmentIds(bytes32(0)).length != 0
         ) revert InvalidDeploymentConfiguration();
 
         _assertConstructorStorage(configuration, deployment);
         _assertCoordinatorLinks(deployment);
+    }
+
+    function _assertNoKnownRefinanceBusinessState(address coordinator) internal view {
+        try IRefinanceCoordinator(coordinator).escrowedUnits(bytes32(0)) returns (uint256) {
+            revert InvalidDeploymentConfiguration();
+        } catch (bytes memory returned) {
+            _requireUnknownRefinance(returned);
+        }
+        try IRefinanceCoordinator(coordinator).commitmentIds(bytes32(0)) returns (
+            bytes32[] memory
+        ) {
+            revert InvalidDeploymentConfiguration();
+        } catch (bytes memory returned) {
+            _requireUnknownRefinance(returned);
+        }
+    }
+
+    function _requireUnknownRefinance(bytes memory returned) private pure {
+        bytes4 selector;
+        bytes32 refinanceId;
+        if (returned.length == 36) {
+            assembly ("memory-safe") {
+                selector := mload(add(returned, 0x20))
+                refinanceId := mload(add(returned, 0x24))
+            }
+        }
+        if (
+            returned.length != 36 || selector != IRefinanceCoordinator.UnknownRefinance.selector
+                || refinanceId != bytes32(0)
+        ) {
+            revert InvalidDeploymentConfiguration();
+        }
     }
 
     function _assertConstructorStorage(
