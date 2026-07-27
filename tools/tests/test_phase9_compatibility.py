@@ -229,7 +229,7 @@ def test_backlog_dependency_order_is_fail_closed() -> None:
         phase9.check_backlog_precedence(implementation_before_activation)
 
     for refinance_id in ("UNI-REFI-001", "UNI-REFI-002"):
-        for required_adr in ("UNI-ADR-016", "UNI-ADR-017"):
+        for required_adr in ("UNI-ADR-016", "UNI-ADR-017", "UNI-ADR-018"):
             refinance_before_activation = copy.deepcopy(rows)
             refinance_before_activation[required_adr]["status"] = "TODO"
             refinance_before_activation[refinance_id]["status"] = "DONE"
@@ -239,12 +239,16 @@ def test_backlog_dependency_order_is_fail_closed() -> None:
 
 def test_refinance_activation_row_and_acceptance_inventory_are_exact() -> None:
     refinance_index = phase9.BACKLOG_IDS.index("UNI-REFI-001")
-    assert phase9.BACKLOG_IDS[refinance_index - 2 : refinance_index] == (
+    assert phase9.BACKLOG_IDS[refinance_index - 3 : refinance_index] == (
         "UNI-ADR-016",
         "UNI-ADR-017",
+        "UNI-ADR-018",
     )
-    assert {"UNI-ADR-016", "UNI-ADR-017"}.issubset(phase9.BOUNDARY_COMPLETE_IDS)
+    assert {"UNI-ADR-016", "UNI-ADR-017", "UNI-ADR-018"}.issubset(
+        phase9.BOUNDARY_COMPLETE_IDS
+    )
     assert phase9.FACTORY_BOOTSTRAP_ADR_PATH in phase9.BOUNDARY_PATHS
+    assert phase9.REFINANCE_MODULE_ADR_PATH in phase9.BOUNDARY_PATHS
     assert len(phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS) == 80
     assert "P9R-COMPAT-003" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
     assert "P9R-DON-004" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
@@ -264,6 +268,12 @@ def test_refinance_boundary_evidence_is_exact() -> None:
             "Work item: `UNI-ADR-017`",
             "Work item: `UNI-ADR-999`",
             "factory/account/position bootstrap semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_MODULE_ADR_PATH,
+            "Work item: `UNI-ADR-018`",
+            "Work item: `UNI-ADR-999`",
+            "refinance fixed-module candidate boundary",
         ),
         (
             phase9.REFINANCE_ADR_PATH,
@@ -457,13 +467,17 @@ contract Example {{
 '''
 
 
-def test_activated_contract_allows_only_exact_unreachable_freeze_abi_marker() -> None:
-    phase9.check_implemented_freeze_abi_compatibility(
-        "Example", implemented_abi_compatibility_fixture()
-    )
+def test_activated_contract_allows_only_exact_unreachable_freeze_abi_marker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = implemented_abi_compatibility_fixture()
+    phase9.check_implemented_freeze_abi_compatibility("Example", source)
+    path = tmp_path / "Example.sol"
+    path.write_text(source, encoding="utf-8")
+    monkeypatch.setattr(phase9, "PHASE9_PRODUCTION_CONTRACTS", ("Example",))
     phase9.check_phase9_stub_sources(
-        phase9.protocol_compilation_imports(),
-        implemented={"PayoffQuoteEngine"},
+        {"Example": path},
+        implemented={"Example"},
     )
 
 
@@ -524,20 +538,25 @@ def test_activated_contract_rejects_malformed_freeze_abi_marker(
         )
 
 
-def test_nonimplemented_stub_checks_remain_fail_closed(tmp_path: Path) -> None:
-    imports = phase9.protocol_compilation_imports()
-    factory_source = imports["Phase9LoanFactory"].read_text(encoding="utf-8")
-    mutated_source = factory_source.replace(
+def test_nonimplemented_stub_checks_remain_fail_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    frozen_source = """
+    contract Example {
+        function mutate() external { revert Phase9ImplementationNotFrozen(); }
+    }
+    """
+    mutated_source = frozen_source.replace(
         "revert Phase9ImplementationNotFrozen();",
         "if (false) revert Phase9ImplementationNotFrozen();",
         1,
     )
-    mutated_path = tmp_path / "Phase9LoanFactory.sol"
+    mutated_path = tmp_path / "Example.sol"
     mutated_path.write_text(mutated_source, encoding="utf-8")
-    imports["Phase9LoanFactory"] = mutated_path
+    monkeypatch.setattr(phase9, "PHASE9_PRODUCTION_CONTRACTS", ("Example",))
 
     with pytest.raises(SystemExit, match="successful or non-canonical mutating stub path"):
-        phase9.check_phase9_stub_sources(imports, implemented={"PayoffQuoteEngine"})
+        phase9.check_phase9_stub_sources({"Example": mutated_path})
 
 
 def test_method_level_activation_keeps_unopened_mutators_frozen(
@@ -570,6 +589,72 @@ def test_method_level_activation_keeps_unopened_mutators_frozen(
             {"Example": path},
             {"Example": frozenset({"opened()"})},
         )
+
+
+def test_refinance_candidate_delegates_exact_assembly_gate(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = """
+    library Phase9RefinanceValidationModule {}
+    library Phase9RefinanceRequestModule {}
+    library Phase9RefinanceLifecycleModule {}
+    contract RefinanceCoordinator {
+        function mutate() external { revert Phase9ImplementationNotFrozen(); }
+        function bounded() private pure { assembly (\"memory-safe\") { pop(0) } }
+        function layout() private pure { assembly { pop(0) } }
+    }
+    """
+    path = tmp_path / "RefinanceCoordinator.sol"
+    path.write_text(source, encoding="utf-8")
+    observed: list[str] = []
+    monkeypatch.setattr(phase9, "PHASE9_PRODUCTION_CONTRACTS", ("RefinanceCoordinator",))
+    monkeypatch.setattr(
+        phase9,
+        "check_refinance_linked_modules",
+        lambda: observed.append("checked"),
+    )
+
+    phase9.check_phase9_stub_sources({"RefinanceCoordinator": path})
+
+    assert observed == ["checked"]
+
+
+def test_refinance_candidate_rejects_unattested_assembly(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "RefinanceCoordinator.sol"
+    path.write_text(
+        """
+        contract RefinanceCoordinator {
+            function mutate() external { revert Phase9ImplementationNotFrozen(); }
+            function layout() private pure { assembly { pop(0) } }
+        }
+        """,
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(phase9, "PHASE9_PRODUCTION_CONTRACTS", ("RefinanceCoordinator",))
+
+    with pytest.raises(SystemExit, match="incomplete ADR 0023 fixed-module candidate"):
+        phase9.check_phase9_stub_sources({"RefinanceCoordinator": path})
+
+
+def test_non_refinance_assembly_remains_forbidden(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "Example.sol"
+    path.write_text(
+        """
+        contract Example {
+            function mutate() external { revert Phase9ImplementationNotFrozen(); }
+            function layout() private pure { assembly { pop(0) } }
+        }
+        """,
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(phase9, "PHASE9_PRODUCTION_CONTRACTS", ("Example",))
+
+    with pytest.raises(SystemExit, match="prohibited freeze-stub mechanisms: assembly"):
+        phase9.check_phase9_stub_sources({"Example": path})
 
 
 def test_payoff_quote_engine_compiled_abi_remains_historical(tmp_path: Path) -> None:

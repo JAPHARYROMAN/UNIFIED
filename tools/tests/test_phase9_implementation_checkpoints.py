@@ -474,6 +474,7 @@ def test_refinance_additions_are_owned_by_their_exact_contracts() -> None:
     assert checkpoints.ACTIVATION_PACKAGES["P9-REFI-001"]["requiredBacklogIds"] == (
         "UNI-ADR-016",
         "UNI-ADR-017",
+        "UNI-ADR-018",
         "UNI-REFI-001",
         "UNI-REFI-002",
     )
@@ -499,6 +500,18 @@ def test_control_bundle_paths_are_ordinal_and_include_abi_ownership_checker() ->
         key=lambda path: path.encode("utf-8"),
     )
     assert checkpoints.CONTROL_BUNDLE_PATHS.count("tools/check_abi.py") == 1
+    assert (
+        checkpoints.CONTROL_BUNDLE_PATHS.count(
+            "tools/check_phase9_refinance_linked_modules.py"
+        )
+        == 1
+    )
+    assert (
+        checkpoints.CONTROL_BUNDLE_PATHS.count(
+            "tools/tests/test_phase9_refinance_linked_modules.py"
+        )
+        == 1
+    )
 
 
 def test_later_revision_requires_exact_supersession_and_monotonic_activation(
@@ -1060,6 +1073,7 @@ def test_refinance_d1_evidence_paths_are_exact_shared_and_fail_closed() -> None:
     assert {
         "adr/0021-phase-9-atomic-refinance-authority-and-activation.md",
         "adr/0022-phase-9-factory-account-position-bootstrap-semantics.md",
+        "adr/0023-phase-9-refinance-fixed-module-partition.md",
         "docs/architecture/phase-9-refinance-acceptance.md",
         "protocol/test/Phase9RefinanceBootstrapAcceptanceMap.sol",
         "protocol/test/Phase9RefinanceBootstrapHarness.sol",
@@ -1069,6 +1083,8 @@ def test_refinance_d1_evidence_paths_are_exact_shared_and_fail_closed() -> None:
         "protocol/test/Phase9RefinanceRequestFuzz.t.sol",
         "protocol/test/Phase9RefinanceRequestGolden.t.sol",
         "protocol/test/Phase9RefinanceRequestInvariants.t.sol",
+        "tools/check_phase9_refinance_linked_modules.py",
+        "tools/tests/test_phase9_refinance_linked_modules.py",
     }.issubset(paths)
     refinance_contracts = checkpoints.ACTIVATION_PACKAGES["P9-REFI-001"]["contracts"]
     assert all(
@@ -1088,6 +1104,7 @@ def test_refinance_package_cannot_activate_with_only_d1_evidence() -> None:
             "requiredBacklogIds": [
                 "UNI-ADR-016",
                 "UNI-ADR-017",
+                "UNI-ADR-018",
                 "UNI-REFI-001",
                 "UNI-REFI-002",
             ],

@@ -7,8 +7,9 @@ Date: 2026-07-26
 ## Purpose
 
 This document fixes the independent evidence model required by ADR 0021, ADR 0022,
-and the `P9R-*` acceptance matrix. It does not claim that a Solidity implementation or
-a golden-output bundle exists. The first accepted implementation checkpoint must
+ADR 0023's candidate-only fixed-module partition, and the `P9R-*` acceptance matrix.
+It does not claim that a Solidity implementation or a golden-output bundle exists. The
+first accepted implementation checkpoint must
 publish the calculated outputs for these exact inputs from Solidity, Go,
 TypeScript, and Python and prove byte equality.
 
@@ -67,8 +68,11 @@ entry boundaries. `new_loan_nonce == refinance_nonce`, and that shared value is
 nonzero, high-bit clear, and less than `NONCE_MASK`; inequality is rejected during
 the pure checks before the old-loan lock write.
 
-Pure normalization/derived-zero/local-key checks precede the local old-loan lock write.
-The lock is acquired before the first external resolver call; policy, borrower,
+Pure normalization/derived-zero/local-key checks and the fixed compiler-linked request
+`begin` dispatch precede and perform the local old-loan lock write. The validation
+`preflight` and request `complete` dispatches occur only while that lock is active. These
+three immutable library dispatches are internal code partitioning, not dependencies or
+new authority. The lock is acquired before the first external resolver call; policy, borrower,
 new-loan/predicted-manager, bootstrap, quote, and clone validation then occur under the
 lock, and any rejection reverts it. After that check, one outer
 borrower-authenticated coordinator transaction performs optional old bootstrap clone
@@ -88,7 +92,10 @@ next(raw)   = 1 when raw == 0, otherwise raw when not active
 ```
 
 Acceptance rejects high-bit caller nonce, active raw, mismatch, and
-`nonce >= NONCE_MASK`, then stores `ACTIVE_MASK | nonce` before any external call.
+`nonce >= NONCE_MASK`, then stores `ACTIVE_MASK | nonce` before any resolver, token,
+registry, factory, quote-engine, provider, or other effect-capable dependency
+interaction. The compiler-linked `begin` dispatch that performs the write is not such
+an interaction.
 Every nonterminal mutator proves exact raw lock ownership. `REFUNDABLE` retains the
 lock; `COMPLETED`, `CANCELLED`, `EXPIRED`, and final `REFUNDED` release to `nonce + 1`
 after all other terminal effects. Unlocked `NONCE_MASK` is permanently exhausted.
@@ -391,6 +398,15 @@ event. It never recomputes the creation ID with the current factory nonce:
 the original value is not separately recoverable from the frozen storage after later
 creations. First-execution validation, the stored request and creation commitment, and
 the emitted `loanNonce` are the historical evidence.
+
+The coordinator's fresh bootstrap and replacement requests supply zero `creationId`
+because the frozen coordinator has no implementation-address fields and the factory
+has no prediction getter. The factory rejects a fresh nonzero value, derives both
+implementation-dependent clone predictions, derives the canonical nonzero creation
+ID, and stores only a memory-canonicalized request containing that ID. Direct exact
+factory replay supplies the complete stored canonical request. A later zero-ID attempt
+for the same loan is a creation collision, not direct factory replay; the outer
+refinance request is separately rejected by the consumed old-loan nonce.
 
 For bootstrap replay, the factory revalidates the creation resolver's complete
 configuration, mode, and deterministic bootstrap ID. It does not claim to byte-compare

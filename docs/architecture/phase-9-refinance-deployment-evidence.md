@@ -7,8 +7,11 @@ Date: 2026-07-26
 ## Purpose and relationship to payoff evidence
 
 This document defines the deployment evidence required before the ADRs 0021 and 0022
-refinance method bundle can be activated. It does not authorize a deployment or
-claim that a candidate, verifier, manifest, or accepted evidence file exists.
+refinance method bundle can be activated under ADR 0023's candidate-only fixed-module
+partition. It does not authorize a deployment or claim that a complete candidate,
+verifier, manifest, or accepted evidence file exists. ADR 0023 permits architecture and
+tooling work only; none of its library, linking, or deployment evidence activates a
+method or checkpoint by itself.
 
 The nested payoff pair-deployer evidence remains valid for the already accepted
 payoff-only checkpoint. It is historical evidence and is not rewritten. A later
@@ -36,6 +39,13 @@ creates. The sequence must satisfy all of the following:
 - every manifest transaction has the same fresh sender, the next consecutive nonce,
   and zero value; every creation has exact reviewed creation bytecode and exact
   constructor arguments;
+- there are exactly ten top-level creations from the broadcaster's contract nonce 1:
+  lien registry at nonce 1, collateral custody at 2, account implementation at 3,
+  position-manager implementation at 4, factory at 5, validation module at 6, request
+  module at 7, lifecycle module at 8, payoff engine at 9, and fully linked coordinator
+  at 10;
+- the coordinator prediction is derived from nonce 10 with the single RLP nonce byte
+  `0x0a`; the three module predictions use nonces 6, 7, and 8;
 - the manifest enumerates every transaction in exact ordinal order, including every
   top-level dependency's artifact, source, compiler profile, creation/runtime hashes,
   predicted address, constructor ABI types, and constructor values;
@@ -45,6 +55,19 @@ creates. The sequence must satisfy all of the following:
   broadcaster nonce at its manifest ordinal;
 - the lien registry and payoff engine constructors receive that predicted
   coordinator address;
+- before the nonce-10 broadcast, the coordinator creation bytecode is dynamically
+  linked to only the predicted validation, request, and lifecycle module addresses at
+  the exact seven compiler-reported offsets; reproduced linked bytes equal the complete
+  transaction input before constructor arguments;
+- each module has no storage, nested link reference, or delegatecall opcode, and its
+  compiler template runtime, Solidity deployment-address self-patch offset,
+  address-patched deployed runtime, and address-dependent code hash are recorded;
+- the linked coordinator has no unresolved placeholder and contains only the seven
+  fixed compiler-generated call sites: request `begin`, validation `preflight`, request
+  `complete`, and the four lifecycle entries;
+- each module and the linked coordinator is at most 24,576 runtime bytes and each
+  creation satisfies the active initcode limit under Solidity 0.8.36, Prague,
+  optimizer 200, and non-via-IR settings;
 - the coordinator constructor receives the actual immediately preceding engine
   and every exact already-created dependency;
 - immediately after all address-sensitive creates, the final manifest transaction is
@@ -75,8 +98,8 @@ implementation instances contain the exact reviewed runtime and have their exist
 `initialized` storage member set by declaration initialization; direct initialization of
 either implementation fails, while a fresh minimal clone begins with zero storage.
 
-For every bootstrap or replacement creation trace, evidence records the factory nonce,
-creation ID, both domain-separated salts, implementation addresses/runtime hashes,
+For every bootstrap or replacement creation trace, evidence records the fresh zero input,
+factory-derived canonical nonzero creation ID, factory nonce, both domain-separated salts, implementation addresses/runtime hashes,
 predicted and actual clone addresses, minimal-proxy creation/runtime hashes, and code at
 both clones. The trace proves the atomic order: reserve the unique creation identity,
 stored request, processed flag, predicted mappings, and incremented nonce; deploy both
@@ -85,13 +108,14 @@ and reciprocal fields through the account; register and verify protocol version 
 `LoanRegistry`; and emit the one creation event. Failure injection at every step proves
 that no nonce reservation, clone, registry entry, mapping, or event survives a revert.
 
-An exact old `creationId` replay is tested after later successful creations have advanced
+An exact old canonical `creationId` replay is tested after later successful creations have advanced
 the global nonce. It is classified from the stored request before the current nonce,
 revalidates the active four-field creation-resolver tuple and canonical clone/registry
 bindings, returns the stored pair, and produces no state-changing call, write, deployment,
 initialization, registration, nonce movement, or event. Changed reuse fails with
-`InvalidPhase9LoanConfiguration`; a distinct creation identity for an existing loan
-fails with `Phase9LoanAlreadyExists(loanId)`. Clone, resolver, authority, nonce, prediction,
+`InvalidPhase9LoanConfiguration`; a fresh nonzero ID fails, while a zero-ID retry or other
+distinct creation identity for an existing loan fails with
+`Phase9LoanAlreadyExists(loanId)`. Clone, resolver, authority, nonce, prediction,
 initialization, and registration failures expose no additional factory error.
 
 The same execution evidence proves unsigned raw-`bytes32` ordering and exact inert replay
@@ -112,8 +136,9 @@ contains:
 | Manifest identity | schema version, artifact type, environment `local`, chain `31337`, source commit, dirty-state rejection, generated-at, and canonical manifest digest |
 | Broadcaster and roles | nonzero address, proof it is a fresh disposable local key and the `RoleManager` governance executor, distinct nonzero synthetic local administrator, starting/final expected nonces, and no prior/pending transaction |
 | RPC boundary | canonical literal loopback URL, no credentials/path/query/fragment/proxy, expected chain ID, and reset generation |
-| Compiler boundary | Solidity/Foundry versions, optimizer settings, EVM version, remappings, artifact paths, compiler source-set hashes, and exact creation/runtime bytecode hashes |
-| Ordered transactions | one row per top-level `CREATE` followed by exactly one `RoleManager.grantRole` row; exact ordinal, sender nonce, target/predicted address as applicable, artifact or selector, constructor/calldata ABI encoding, zero value, input hash, expected runtime hash for creates, and expected `RoleGranted` log for the grant |
+| Compiler boundary | Solidity/Foundry versions, optimizer settings, EVM version, remappings, artifact paths, compiler source-set hashes, all four same-source coordinator/module compiler artifacts, exact creation/runtime bytecode hashes, module runtime self-patch offsets, and runtime/initcode byte counts |
+| Ordered transactions | exactly ten rows for top-level `CREATE` nonces 1 through 10 followed by exactly one `RoleManager.grantRole` row; exact ordinal, sender nonce, target/predicted address as applicable, artifact or selector, constructor/calldata ABI encoding, zero value, input hash, expected runtime hash for creates, and expected `RoleGranted` log for the grant |
+| Fixed links | predicted nonce-6/7/8 module addresses, exact seven creation/runtime link-reference offsets, unlinked hashes, fully linked coordinator hashes, no unresolved placeholder, and byte equality with the nonce-10 broadcast input |
 | Reciprocal bindings | predicted coordinator in lien registry and engine; actual engine and all exact registries/factory/controllers/token/recipients in coordinator; exact account/manager implementation runtimes and locked implementation initializers; factory/account-first/manager/registry caller and initialization authority; custody/lien caller authority |
 | Policy surfaces | exact code and behavior for `resolveLoanCreation`, `resolveBootstrap`, `resolveRefinancePolicy`, `resolveRefinanceAsset`, and `resolveCustodyAsset`, including active records, runtime hashes, exact-delta flags, and hard vector caps |
 | Storage pins | historical storage manifest digest and exact reviewed slots/offsets/types to observe after broadcast |
@@ -173,26 +198,35 @@ snapshots, and expected source head. It must independently prove:
    ABI-encoded constructor arguments;
 6. every deployed address contains the exact reviewed runtime code at the
    receipt's canonical EIP-1898 block-hash reference;
-7. the engine is immediately before the coordinator, both actual addresses match
-   the pre-broadcast predictions, and no intervening sender nonce exists;
-8. the lien registry and payoff engine authorize the exact coordinator, while
+7. the validation, request, and lifecycle modules occupy nonces 6, 7, and 8; their
+   deployed runtimes equal the address-self-patched compiler templates; each is
+   storage-free and contains no nested link or delegatecall; and all module and
+   coordinator runtime/initcode sizes pass the pinned limits;
+8. the engine is nonce 9 immediately before the nonce-10 coordinator, all four actual
+   addresses match the pre-broadcast predictions, and no intervening sender nonce
+   exists;
+9. the verifier reproduces the exact seven compiler-reported link replacements from
+   the unlinked coordinator artifact and predicted module addresses, proves no other or
+   unresolved link exists, and byte-compares the fully linked creation/runtime bytes
+   and final nonce-10 transaction input;
+10. the lien registry and payoff engine authorize the exact coordinator, while
    the coordinator binds the exact loan registry, factory, engine, lien registry,
    asset registry, refinance policy registry, emergency controller, treasury fee
    recipient, and settlement token;
-9. the final initialization receipt contains exactly
+11. the final initialization receipt contains exactly
    `RoleGranted(LOAN_FACTORY_ROLE, phase9Factory, type(uint64).max, broadcaster)`;
    canonical EIP-1898 reads at its block hash prove the exact expiry and `hasRole`,
    source and transaction/log completeness prove no other role grant or role-admin
    change, and no business action precedes it;
-10. factory/account/position-manager/custody implementations and every other
+12. factory/account/position-manager/custody implementations and every other
     constructor-bound dependency agree through storage and behavioral getters, and
     enforce the exact coordinator/factory caller graph and locked-implementation
     semantics in ADRs 0021 and 0022;
-11. all recorded addresses are nonzero where required, contain code where
+13. all recorded addresses are nonzero where required, contain code where
     required, and have no production-looking identity or provider binding;
-12. the historical ABI/storage freeze and exact additive allowlist of one transition
+14. the historical ABI/storage freeze and exact additive allowlist of one transition
     event plus two typed unknown-ID errors match the exact deployed source; and
-13. the accepted evidence schema and canonical evidence digest validate before
+15. the accepted evidence schema and canonical evidence digest validate before
     the accepted file is written.
 
 The token observation is bound to its receipt block hash. Each dependency and
@@ -270,9 +304,9 @@ Donation residue is removed only with the disposable local reset.
 
 | Acceptance row | Required artifact/result |
 |---|---|
-| `P9R-DEPLOY-001` | Fresh synthetic governance-executor broadcaster, distinct synthetic administrator, chain 31337, exact complete nonce-ordered CREATEs then one factory-role initialization, engine immediately before coordinator |
-| `P9R-DEPLOY-002` | Independent CREATE prediction, reciprocal constructor binding, and exact factory-role call/receipt/log/EIP-1898 state evidence |
-| `P9R-DEPLOY-003` | Candidate, complete broadcast, RPC transaction/receipt/log, code, constructor, role, slot, behavior, schema, and accepted-digest verification |
+| `P9R-DEPLOY-001` | Fresh synthetic governance-executor broadcaster, distinct synthetic administrator, chain 31337, exact ten-CREATE nonce-1-through-10 sequence then one factory-role initialization, modules at 6/7/8, engine at 9, and coordinator at 10 |
+| `P9R-DEPLOY-002` | Independent nonce-6/7/8 module and nonce-10 coordinator prediction, exact seven-link reproduction, reciprocal constructor binding, and exact factory-role call/receipt/log/EIP-1898 state evidence |
+| `P9R-DEPLOY-003` | Candidate, complete broadcast, RPC transaction/receipt/log, module self-patches, unlinked/linked code, link offsets, sizes, constructor, role, slot, behavior, schema, and accepted-digest verification |
 | `P9R-DEPLOY-004` | Negative evidence for wrong chain/key/order/nonce/prediction/code/constructor/RPC/provider/top-level CREATE2 or undeclared/mismatched/failed/late/post-hoc role action plus bounded reset |
 | `P9R-BOOT-005` | Per-loan factory nonce and replay classification, exact salts/predictions/runtime, account-before-manager initialization/authentication, registry/event order, frozen errors, raw-ID ordering, zero-version/policy rules, and same-block checkpoint coalescing with rollback at every step |
 | `P9R-DON-004` | One-command bounded-local-reset command/script, reset-generation manifest, before/after chain identity, observed removal of donated surplus, and proof that no production disposal/recovery authority exists |

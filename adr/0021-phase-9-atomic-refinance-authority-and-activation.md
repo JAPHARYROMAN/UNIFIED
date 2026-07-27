@@ -293,7 +293,8 @@ raw == 0:
 Acceptance rejects a caller nonce with its high bit set, requires an unlocked raw
 value and `request.refinanceNonce == (raw == 0 ? 1 : raw)`, rejects
 `refinanceNonce >= NONCE_MASK`, and stores `ACTIVE_MASK | refinanceNonce` before any
-external call. Every later nonterminal mutator re-derives the old loan and proves that
+resolver, token, registry, factory, quote engine, provider, or other effect-capable
+dependency interaction. Every later nonterminal mutator re-derives the old loan and proves that
 the raw value equals `ACTIVE_MASK | record.refinanceNonce`. `REFUNDABLE` retains the
 lock. After all other terminal effects, `COMPLETED`, `CANCELLED`, `EXPIRED`, and final
 `REFUNDED` release to `record.refinanceNonce + 1`. `NONCE_MASK` is the permanent
@@ -306,7 +307,8 @@ The exact acyclic `requestRefinance` sequence is:
 1. perform only pure calldata normalization, derived-zero checks, local-chain syntax,
    nonzero old-loan-key validation, and exact `newLoanNonce == refinanceNonce` checks;
 2. require the old-loan lock to be unlocked, match the high-bit-clear next nonce, and
-   store its active encoding before any external call, so concurrent/same-quote,
+   store its active encoding before any resolver, token, registry, factory, quote
+   engine, provider, or other effect-capable dependency interaction, so concurrent/same-quote,
    reentrant, and exact-repeat requests fail before another quote can issue;
 3. call the external resolvers and validate the borrower, proposal, policies,
    `newLoanId`, new-loan nonce, predicted account/manager, and replacement absence;
@@ -325,6 +327,14 @@ The exact acyclic `requestRefinance` sequence is:
    configuration, manager, and zero debt; and
 8. store the reconstructed `ACCEPTED` record at version one and emit the frozen request
    event plus the typed transition event.
+
+ADR 0023's exact compiler-linked coordinator-to-library calls are an internal
+code-partition mechanism for performing these steps, not a resolver or effect-capable
+dependency interaction. Its fixed `RequestModule.begin` dispatch performs only step 1
+and the step-2 lock write. No resolver, token, registry, factory, quote engine,
+provider, or other callback-capable dependency is called before that write. The fixed
+validation preflight and request completion dispatches occur only after the lock is
+active, and any failure rolls back the dispatch, lock, and complete transaction.
 
 Any revert rolls back the reserved nonce, bootstrap registration, quote issuance,
 clones, registry entries, state, and events. A successful request is not idempotent:
@@ -684,6 +694,15 @@ request-internal local-bootstrap call and the already-derived refinance ID for t
 request-internal replacement call. This is acyclic because new loan/predicted clones,
 then quote/refinance ID, then creation ID are derived in that order. The factory still
 independently resolves every creation fact.
+
+Because the coordinator has neither implementation address in storage and the frozen
+factory exposes no prediction selector, its fresh internal `LoanCreationRequest`
+supplies `creationId == 0`. The factory alone knows both constructor-bound
+implementations, derives both predictions and the canonical nonzero creation ID, and
+stores a memory-canonicalized request containing that ID. A direct exact factory replay
+later supplies that complete stored canonical request. Fresh caller-authored nonzero
+creation IDs are invalid; this convention does not add a selector or let the
+coordinator choose an identity.
 
 The factory-global loan nonce starts at one, advances once only on successful unique
 creation, cannot wrap, and is bound to the creation record. There is no separate

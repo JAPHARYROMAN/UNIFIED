@@ -24,6 +24,8 @@ from check_phase9_implementation_checkpoints import (
     CHECKPOINT_PATH as PHASE9_IMPLEMENTATION_CHECKPOINT_PATH,
 )
 from check_phase9_implementation_checkpoints import activated_signatures, validate_checkpoints
+from check_phase9_refinance_linked_modules import LinkedModuleCheckError
+from check_phase9_refinance_linked_modules import check_repository as check_refinance_linked_modules
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -32,6 +34,9 @@ ACTIVATION_ADR_PATH = ROOT / "adr/0020-phase-9-payoff-authority-and-implementati
 REFINANCE_ADR_PATH = ROOT / "adr/0021-phase-9-atomic-refinance-authority-and-activation.md"
 FACTORY_BOOTSTRAP_ADR_PATH = (
     ROOT / "adr/0022-phase-9-factory-account-position-bootstrap-semantics.md"
+)
+REFINANCE_MODULE_ADR_PATH = (
+    ROOT / "adr/0023-phase-9-refinance-fixed-module-partition.md"
 )
 ARCHITECTURE_PATH = ROOT / "docs/architecture/phase-9-resolution-protection-recovery.md"
 DATA_LAYOUTS_PATH = ROOT / "docs/architecture/phase-9-data-layouts.md"
@@ -89,6 +94,11 @@ PHASE9_CONTRACTS = (*PHASE9_PRODUCTION_CONTRACTS, "Phase9LocalSyntheticToken")
 PHASE9_FOUNDRY_WARNING_CODE = 2018
 PHASE9_FREEZE_ERROR = "Phase9ImplementationNotFrozen"
 PHASE9_FREEZE_ABI_COMPATIBILITY_MARKER = "_phase9FrozenErrorCompatibilityMarker"
+REFINANCE_LINKED_MODULE_MARKERS = (
+    "library Phase9RefinanceValidationModule",
+    "library Phase9RefinanceRequestModule",
+    "library Phase9RefinanceLifecycleModule",
+)
 
 EXPECTED_QUOTE_PREIMAGE = (
     '"UNIFIED_PAYOFF_QUOTE_V1"',
@@ -123,6 +133,7 @@ BACKLOG_IDS = (
     "UNI-PAYOFF-001",
     "UNI-ADR-016",
     "UNI-ADR-017",
+    "UNI-ADR-018",
     "UNI-REFI-001",
     "UNI-REFI-002",
     "UNI-RESTRUCT-001",
@@ -146,6 +157,7 @@ BOUNDARY_COMPLETE_IDS = {
     "UNI-ADR-015",
     "UNI-ADR-016",
     "UNI-ADR-017",
+    "UNI-ADR-018",
 }
 SECURITY_REVIEW_ID = "UNI-SEC-014"
 EXIT_REVIEW_ID = "UNI-REVIEW-012"
@@ -208,6 +220,7 @@ BOUNDARY_PATHS = (
     ACTIVATION_ADR_PATH,
     REFINANCE_ADR_PATH,
     FACTORY_BOOTSTRAP_ADR_PATH,
+    REFINANCE_MODULE_ADR_PATH,
     ARCHITECTURE_PATH,
     DATA_LAYOUTS_PATH,
     REFINANCE_ACCEPTANCE_PATH,
@@ -375,6 +388,7 @@ def check_backlog_precedence(by_id: dict[str, dict[str, str]]) -> None:
 
     refinance_activation_done = by_id["UNI-ADR-016"]["status"] == "DONE"
     refinance_bootstrap_done = by_id["UNI-ADR-017"]["status"] == "DONE"
+    refinance_module_candidate_done = by_id["UNI-ADR-018"]["status"] == "DONE"
     refinance_done = [
         identifier
         for identifier in ("UNI-REFI-001", "UNI-REFI-002")
@@ -388,6 +402,11 @@ def check_backlog_precedence(by_id: dict[str, dict[str, str]]) -> None:
     require(
         refinance_bootstrap_done or not refinance_done,
         "UNI-ADR-017 must be DONE before either Phase 9 refinance row can be DONE: "
+        + ", ".join(refinance_done),
+    )
+    require(
+        refinance_module_candidate_done or not refinance_done,
+        "UNI-ADR-018 must be DONE before either Phase 9 refinance row can be DONE: "
         + ", ".join(refinance_done),
     )
 
@@ -455,6 +474,7 @@ def require_abi_encode_formula(
 def check_refinance_boundary_evidence() -> None:
     refinance_adr = read(REFINANCE_ADR_PATH)
     factory_bootstrap_adr = read(FACTORY_BOOTSTRAP_ADR_PATH)
+    refinance_module_adr = read(REFINANCE_MODULE_ADR_PATH)
     acceptance = read(REFINANCE_ACCEPTANCE_PATH)
     reference = read(REFINANCE_REFERENCE_EVIDENCE_PATH)
     deployment = read(REFINANCE_DEPLOYMENT_EVIDENCE_PATH)
@@ -473,6 +493,23 @@ def check_refinance_boundary_evidence() -> None:
             "this decision does not expand adr 0021's method allowlist",
         ),
         "Phase 9 factory/account/position bootstrap semantic boundary",
+    )
+    require_tokens(
+        normalized(refinance_module_adr),
+        (
+            "status: accepted for synthetic-local candidate architecture; "
+            "implementation activation pending",
+            "work item: `uni-adr-018`",
+            "phase9refinancevalidationmodule",
+            "phase9refinancerequestmodule",
+            "phase9refinancelifecyclemodule",
+            "contains exactly seven compiler-generated fixed-library call sites",
+            "revised ten-create deployment order",
+            "nonce 10: the fully linked `refinancecoordinator(...)`",
+            "no module may contain a compiler link reference or delegate again",
+            "it does not activate any method",
+        ),
+        "Phase 9 refinance fixed-module candidate boundary",
     )
 
     actual_acceptance_ids = set(
@@ -620,6 +657,11 @@ def check_refinance_boundary_evidence() -> None:
             "REFUNDABLE",
             "chain-31337",
             "synthetic-local",
+            "exactly seven fixed compiler-linked call sites",
+            "No module may link or delegate again",
+            "Exactly ten top-level `CREATE`s occur at nonces 1 through 10",
+            "`UNI-ADR-018`, `UNI-REFI-001`, and `UNI-REFI-002`",
+            "the accepted candidate architecture alone activates nothing",
             "It does not authorize a successful Solidity refinance path",
         ),
         "Phase 9 refinance acceptance semantics",
@@ -652,6 +694,9 @@ def check_refinance_boundary_evidence() -> None:
             "storage",
             "attributed_escrow_*` is scoped to the refinance",
             "Unsolicited surplus is excluded from every liability",
+            "fixed compiler-linked request `begin` dispatch",
+            "before any resolver, token, registry, factory, quote-engine, provider, or other "
+            "effect-capable dependency interaction",
         ),
         "Phase 9 refinance reference evidence",
     )
@@ -676,6 +721,10 @@ def check_refinance_boundary_evidence() -> None:
         (
             "chain ID is exactly `31337`",
             "disposable synthetic-local evidence only",
+            "exactly ten top-level creations",
+            "coordinator prediction is derived from nonce 10",
+            "exact seven compiler-reported offsets",
+            "module runtime self-patch offsets",
             "It does not authorize a deployment",
             "does not change either backlog row from `TODO`",
         ),
@@ -1684,10 +1733,25 @@ def check_phase9_stub_sources(
     imports: dict[str, Path],
     implemented: set[str] | dict[str, frozenset[str]] | None = None,
 ) -> None:
-    forbidden = ("delegatecall", "selfdestruct", "assembly", "Phase8")
+    forbidden = ("delegatecall", "selfdestruct", "Phase8")
     for contract in PHASE9_PRODUCTION_CONTRACTS:
         source = strip_solidity_comments(read(imports[contract]))
         require_tokens(source, (f"contract {contract}",), f"{contract} Phase 9 source")
+        linked_candidate = contract == "RefinanceCoordinator" and (
+            "assembly" in source.lower()
+            or any(marker in source for marker in REFINANCE_LINKED_MODULE_MARKERS)
+        )
+        if linked_candidate:
+            require(
+                all(marker in source for marker in REFINANCE_LINKED_MODULE_MARKERS),
+                "RefinanceCoordinator has an incomplete ADR 0023 fixed-module candidate",
+            )
+            try:
+                check_refinance_linked_modules()
+            except LinkedModuleCheckError as error:
+                raise SystemExit(
+                    "RefinanceCoordinator ADR 0023 linked-module check failed: " + str(error)
+                ) from error
         mutators = phase9_public_mutators(source)
         mutator_names = {name for name, _body in mutators}
         activated_names = activated_function_names(contract, mutator_names, implemented)
@@ -1700,7 +1764,8 @@ def check_phase9_stub_sources(
             )
         elif fully_activated:
             check_implemented_freeze_abi_compatibility(contract, source)
-        present = [token for token in forbidden if token.lower() in source.lower()]
+        source_forbidden = forbidden if linked_candidate else (*forbidden, "assembly")
+        present = [token for token in source_forbidden if token.lower() in source.lower()]
         require(
             not present,
             f"{contract} contains prohibited freeze-stub mechanisms: {', '.join(present)}",

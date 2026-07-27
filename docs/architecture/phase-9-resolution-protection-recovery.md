@@ -613,9 +613,12 @@ The frozen five-selector first slice persists `ACCEPTED` on the successful
 makes execution eligible.
 
 The caller supplies zero refinance/quote IDs and zero derived state. After pure wire/
-derived/key checks the coordinator acquires the old-loan tagged lock before external
-resolver calls; policy, borrower, and acyclic new-loan/predicted-manager validation
-then occurs under rollback. The one borrower-authenticated request transaction has the registered coordinator create the
+derived/key checks the coordinator's fixed request `begin` dispatch acquires the
+old-loan tagged lock before any external resolver or other effect-capable dependency
+interaction. The fixed validation `preflight` and request `complete` dispatches occur
+only with that lock active; they are ADR 0023 code partitioning rather than new runtime
+authority. Policy, borrower, and acyclic new-loan/predicted-manager validation then
+occurs under rollback. The one borrower-authenticated request transaction has the registered coordinator create the
 unique old bootstrap clone if absent, register/validate old positions/custody/liens,
 issue the quote internally, derive quote/refinance IDs, create exact dormant
 replacement clones, validate, and store `ACCEPTED`. No replacement preexists. Failure
@@ -623,7 +626,8 @@ rolls back bootstrap, quote, clones, nonce, state, and events; exact request rep
 fails the consumed old-loan refinance nonce before a new quote.
 
 The existing `uint64` old-loan nonce uses bit 63 as an active lock and the low 63 bits
-as the matching nonce/next value. It is acquired before external request calls, held
+as the matching nonce/next value. It is acquired before resolver, token, registry,
+factory, quote-engine, provider, or other effect-capable dependency interactions, held
 through `ACCEPTED`, `FUNDING_ESCROWED`, and `REFUNDABLE`, and advanced/released only
 after `COMPLETED`, `CANCELLED`, `EXPIRED`, or final `REFUNDED` effects. The all-low-bits
 mask is exhausted; no request, reentry, or same quote can overlap the active owner.
@@ -637,6 +641,12 @@ Factory creation replay is distinct from request replay. The factory recognizes 
 request, live resolver facts, clones, mappings, and registry identity agree. The external
 borrower request still rejects its consumed old-loan refinance nonce before issuing a
 second quote.
+
+Fresh coordinator creation supplies zero `creationId`: the frozen coordinator has no
+implementation-address fields or factory prediction selector. The factory derives both
+predictions and the canonical nonzero ID, stores only the canonicalized request, and
+rejects a fresh caller-authored nonzero ID. Direct factory replay later supplies that
+complete stored canonical request.
 
 ### PositionManagerV2
 
@@ -1384,11 +1394,14 @@ external `IPayoffQuoteEngineV2` ABI and exact `PayoffQuoteEngine` storage layout
 compatible while its new source hashes and independent architecture/security review are
 recorded separately.
 
-For atomic refinance, `UNI-ADR-016` accepts ADR 0021's boundary and `UNI-ADR-017`
-accepts ADR 0022's factory/account/position bootstrap semantics. The later
+For atomic refinance, `UNI-ADR-016` accepts ADR 0021's boundary, `UNI-ADR-017`
+accepts ADR 0022's factory/account/position bootstrap semantics, and `UNI-ADR-018`
+accepts ADR 0023's synthetic-local three-library/seven-call/ten-CREATE candidate
+architecture without activating an implementation or deployment. The later
 implementation checkpoint is method-level: it may activate only the exact factory,
 account, custody, lien, coordinator, and position-manager methods listed by ADRs 0021
-and 0022,
+and 0022, while the candidate must also pass ADR 0023's linked-module checker and
+nonce-10 deployment-evidence gates,
 retains the exact freeze stub for every other mutator, and requires
 `UNI-REFI-001` plus `UNI-REFI-002` as one bundled gate. The exact additive ABI allowlist
 contains only coordinator-owned `RefinanceStateTransitioned` and

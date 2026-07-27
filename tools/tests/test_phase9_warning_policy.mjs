@@ -599,6 +599,7 @@ test("Node and Python checkpoint tooling share the exact evidence path list", ()
   assert.ok(
     [
       "adr/0022-phase-9-factory-account-position-bootstrap-semantics.md",
+      "adr/0023-phase-9-refinance-fixed-module-partition.md",
       "protocol/test/Phase9RefinanceBootstrapAcceptanceMap.sol",
       "protocol/test/Phase9RefinanceBootstrapHarness.sol",
       "protocol/test/Phase9RefinanceCustodyLienBootstrap.t.sol",
@@ -607,6 +608,8 @@ test("Node and Python checkpoint tooling share the exact evidence path list", ()
       "protocol/test/Phase9RefinanceRequestFuzz.t.sol",
       "protocol/test/Phase9RefinanceRequestGolden.t.sol",
       "protocol/test/Phase9RefinanceRequestInvariants.t.sol",
+      "tools/check_phase9_refinance_linked_modules.py",
+      "tools/tests/test_phase9_refinance_linked_modules.py",
     ].every((path) => REFINANCE_IMPLEMENTATION_EVIDENCE_PATHS.includes(path)),
   );
   for (const contract of REFINANCE_ACTIVATED_SIGNATURES.keys()) {
@@ -624,7 +627,13 @@ test("Node and Python checkpoint tooling share the exact evidence path list", ()
 test("node checkpoint validation rejects refinance while D2-D4 paths are unfrozen", () => {
   const refinancePackage = {
     checkpointId: "P9-REFI-001",
-    requiredBacklogIds: ["UNI-ADR-016", "UNI-ADR-017", "UNI-REFI-001", "UNI-REFI-002"],
+    requiredBacklogIds: [
+      "UNI-ADR-016",
+      "UNI-ADR-017",
+      "UNI-ADR-018",
+      "UNI-REFI-001",
+      "UNI-REFI-002",
+    ],
     review: {},
     revisions: [],
   };
@@ -658,11 +667,13 @@ test("Node and Python checkpoint tooling bind the exact control path list", () =
     "tools/check_abi.py",
     "tools/check_phase9.py",
     "tools/check_phase9_implementation_checkpoints.py",
+    "tools/check_phase9_refinance_linked_modules.py",
     "tools/check_phase9_schema.py",
     "tools/check_phase9_storage_layouts.py",
     "tools/compile_phase9_storage_layouts.mjs",
     "tools/tests/test_phase9_compatibility.py",
     "tools/tests/test_phase9_implementation_checkpoints.py",
+    "tools/tests/test_phase9_refinance_linked_modules.py",
     "tools/tests/test_phase9_schema.py",
     "tools/tests/test_phase9_warning_policy.mjs",
     "tools/tests/test_update_phase9_implementation_checkpoint.py",
