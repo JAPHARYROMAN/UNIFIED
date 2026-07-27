@@ -114,7 +114,7 @@
         "account_profile": { "const": "foundry-default-account-1" },
         "account_index": { "const": 1 },
         "address": { "const": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8" },
-        "account_set_sha256": { "const": "sha256:19901d67310664f0f09541131dbc6669f2aa9ce4ffdb1cf497d8a7da8d1ba307" },
+        "account_set_sha256": { "const": "sha256:0148b2c691381eeef3248447c4e12089414c4fa3e1214f2c4e8a1b89e51ffdc2" },
         "unlocked": { "const": true },
         "private_key_input": { "const": false }
       }

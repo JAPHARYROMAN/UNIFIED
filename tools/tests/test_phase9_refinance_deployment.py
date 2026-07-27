@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
 import sys
 from collections.abc import Mapping
 from pathlib import Path
@@ -17,6 +19,21 @@ import verify_phase9_refinance_deployment as verifier  # noqa: E402
 
 JsonObject = dict[str, Any]
 CANONICAL_CANDIDATE_BROADCASTER_CHECKSUM = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+EXPECTED_CANONICAL_ANVIL_ACCOUNTS = (
+    "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266",
+    "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+    "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+    "0x90f79bf6eb2c4f870365e785982e1f101e93b906",
+    "0x15d34aaf54267db7d7c367839aaf71a00a2c6a65",
+    "0x9965507d1a55bcc2695c58ba16fb37d819b0a4dc",
+    "0x976ea74026e726554db657fa54763abd0c3a0aa9",
+    "0x14dc79964da2c08b23698b3d3cc7ca32193d9955",
+    "0x23618e81e3f5cdf7f54c3d65f7fbc0abf5b21e8f",
+    "0xa0ee7a142d267c1f36714e4a8f75612f20a79720",
+)
+EXPECTED_CANONICAL_ANVIL_ACCOUNT_SET_SHA256 = (
+    "sha256:0148b2c691381eeef3248447c4e12089414c4fa3e1214f2c4e8a1b89e51ffdc2"
+)
 
 
 def _address(value: int) -> str:
@@ -350,6 +367,25 @@ def _verify(fixture: Mapping[str, Any]) -> JsonObject:
     )
 
 
+def test_canonical_anvil_account_profile_and_digest_match_independent_literals() -> None:
+    assert verifier.CANONICAL_ANVIL_ACCOUNTS == EXPECTED_CANONICAL_ANVIL_ACCOUNTS
+    serialized = json.dumps(
+        EXPECTED_CANONICAL_ANVIL_ACCOUNTS,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    independently_derived_digest = "sha256:" + hashlib.sha256(serialized).hexdigest()
+    assert independently_derived_digest == EXPECTED_CANONICAL_ANVIL_ACCOUNT_SET_SHA256
+    assert verifier.CANONICAL_ANVIL_ACCOUNT_SET_SHA256 == independently_derived_digest
+
+    for schema_relative in (
+        verifier.PLAN_SCHEMA_RELATIVE,
+        verifier.EVIDENCE_SCHEMA_RELATIVE,
+    ):
+        schema = verifier._read_json(ROOT / schema_relative)
+        account_set = schema["$defs"]["broadcasterProvenance"]["properties"]["account_set_sha256"]
+        assert account_set["const"] == EXPECTED_CANONICAL_ANVIL_ACCOUNT_SET_SHA256
+
+
 def test_valid_topology_is_non_activating_and_schema_valid(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -628,6 +664,23 @@ def test_rpc_and_candidate_mutations_fail_closed(
         ] = "0x6000"
 
     with pytest.raises(verifier.VerificationError, match=message):
+        _verify(fixture)
+
+
+@pytest.mark.parametrize("account_index", [8, 9])
+def test_either_corrected_tail_account_mutation_is_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+    account_index: int,
+) -> None:
+    fixture = _fixture(monkeypatch)
+    accounts = fixture["responses"][_rpc_key("eth_accounts")]
+    assert accounts[account_index] == EXPECTED_CANONICAL_ANVIL_ACCOUNTS[account_index]
+    accounts[account_index] = _address(9_000 + account_index)
+
+    with pytest.raises(
+        verifier.VerificationError,
+        match="canonical freshly spawned Anvil fixture profile",
+    ):
         _verify(fixture)
 
 

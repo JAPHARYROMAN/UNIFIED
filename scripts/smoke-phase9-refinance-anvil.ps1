@@ -307,7 +307,7 @@ try {
         [int]$plan.broadcaster_provenance.account_index -ne 1 -or
         [string]$plan.broadcaster_provenance.address -ne $candidateBroadcaster -or
         [string]$plan.broadcaster_provenance.account_set_sha256 -ne `
-            'sha256:19901d67310664f0f09541131dbc6669f2aa9ce4ffdb1cf497d8a7da8d1ba307' -or
+            'sha256:0148b2c691381eeef3248447c4e12089414c4fa3e1214f2c4e8a1b89e51ffdc2' -or
         $plan.broadcaster_provenance.unlocked -ne $true -or
         $plan.broadcaster_provenance.private_key_input -ne $false -or
         [string]$plan.reset_command -ne 'pwsh ./scripts/smoke-phase9-refinance-anvil.ps1'
@@ -409,7 +409,7 @@ try {
         [int]$evidence.broadcaster_provenance.account_index -ne 1 -or
         [string]$evidence.broadcaster_provenance.address -ne $candidateBroadcaster -or
         [string]$evidence.broadcaster_provenance.account_set_sha256 -ne `
-            'sha256:19901d67310664f0f09541131dbc6669f2aa9ce4ffdb1cf497d8a7da8d1ba307' -or
+            'sha256:0148b2c691381eeef3248447c4e12089414c4fa3e1214f2c4e8a1b89e51ffdc2' -or
         $evidence.broadcaster_provenance.unlocked -ne $true -or
         $evidence.broadcaster_provenance.private_key_input -ne $false -or
         [string]$evidence.reset_command -ne 'pwsh ./scripts/smoke-phase9-refinance-anvil.ps1'

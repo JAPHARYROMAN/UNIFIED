@@ -23,7 +23,7 @@ CANONICAL_RPC_PORT = 18_545
 CANONICAL_TOKEN_NAME = "Unified Phase 9 Local Synthetic Unit"  # noqa: S105 - public identity
 CANONICAL_TOKEN_SYMBOL = "P9UNIT"  # noqa: S105 - public symbol
 CANONICAL_ACCOUNT_SET_SHA256 = (
-    "sha256:19901d67310664f0f09541131dbc6669f2aa9ce4ffdb1cf497d8a7da8d1ba307"
+    "sha256:0148b2c691381eeef3248447c4e12089414c4fa3e1214f2c4e8a1b89e51ffdc2"
 )
 ACCEPTANCE_NON_ACTIVATION_SENTENCE = (
     "ADR 0023 additionally permits one preliminary topology checkpoint that cannot "
