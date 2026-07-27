@@ -54,6 +54,21 @@ the ADR 0021 `creation_id`, rejects `type(uint64).max`, and advances the value e
 once. Any later failure reverts the nonce and every other factory, clone, registry, and
 event effect.
 
+The frozen coordinator does not store either implementation address and has no
+factory prediction selector. It therefore cannot reconstruct a creation ID whose
+preimage includes both implementation-dependent clone predictions. For a fresh
+creation, `request.creationId` MUST be zero. After resolving the creation and deriving
+both clone predictions, the factory derives the canonical nonzero creation ID itself,
+copies the request to memory, sets that canonical ID, and stores only the canonicalized
+request. A fresh nonzero caller-authored creation ID is invalid. This rule adds no
+selector, storage field, caller authority, or caller-selected identity.
+
+Direct factory replay is distinct: it MUST supply the complete stored canonical
+request, including its nonzero derived creation ID. A second zero-ID fresh attempt for
+the same loan is not an exact factory replay and collides with the already-created
+loan. The enclosing `requestRefinance` path is independently non-idempotent because its
+old-loan tagged nonce has already been consumed.
+
 `createLoan` classifies `_processedCreationIds[request.creationId]` before consulting
 the current global nonce or testing fresh-loan absence. For a processed identity it:
 
@@ -85,8 +100,8 @@ The exact factory error mapping is:
   `InvalidPhase9LoanConfiguration()`;
 - a different creation identity that collides with an existing canonical loan reverts
   `Phase9LoanAlreadyExists(loanId)`; and
-- invalid mode, nonce, authorization, resolver output, configuration, implementation,
-  prediction, partial graph, or nonce exhaustion reverts
+- a fresh nonzero creation ID, invalid mode, nonce, authorization, resolver output,
+  configuration, implementation, prediction, partial graph, or nonce exhaustion reverts
   `InvalidPhase9LoanConfiguration()`.
 
 An exact replay must branch before `LoanRegistry.registerLoan`, whose append-only

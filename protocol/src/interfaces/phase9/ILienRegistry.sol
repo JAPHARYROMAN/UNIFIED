@@ -7,6 +7,7 @@ interface ILienRegistry {
     error InvalidLien();
     error UnknownLien(bytes32 collateralId);
     error InvalidLienHandoff(bytes32 collateralId, uint64 lienVersion);
+    error UnknownLienHandoff(bytes32 handoffId);
 
     event LienRegistered(
         bytes32 indexed collateralId, bytes32 indexed seniorLoanId, uint64 lienVersion

@@ -7,6 +7,7 @@ interface IRefinanceCoordinator {
     error InvalidRefinance();
     error UnknownRefinance(bytes32 refinanceId);
     error RefinanceReplayConflict(bytes32 refinanceId);
+    error UnknownFundingCommitment(bytes32 commitmentId);
 
     event RefinanceRequested(
         bytes32 indexed refinanceId,
@@ -25,6 +26,14 @@ interface IRefinanceCoordinator {
     );
     event RefinanceRefunded(
         bytes32 indexed refinanceId, bytes32 indexed commitmentId, uint256 amount
+    );
+    event RefinanceStateTransitioned(
+        bytes32 indexed refinanceId,
+        Phase9Types.RefinanceState indexed previousState,
+        Phase9Types.RefinanceState indexed nextState,
+        uint64 stateVersion,
+        bytes32 operationId,
+        bytes32 evidenceHash
     );
 
     function requestRefinance(Phase9Types.RefinanceRecord calldata request)

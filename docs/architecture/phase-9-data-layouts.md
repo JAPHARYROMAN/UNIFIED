@@ -698,7 +698,13 @@ addition can wrap, and advances exactly once only when clone deployment, both
 initializations, registry registration, mapping writes, and the creation event all
 succeed.
 
-Creation replay is classified by the supplied `creationId` and the stored
+Fresh coordinator creation supplies zero `creationId` because neither implementation
+address exists in the frozen coordinator layout and the factory exposes no prediction
+selector. The factory resolves the request, derives both clone predictions and the
+canonical nonzero ID, and stores only the memory-canonicalized request. A fresh nonzero
+ID is invalid.
+
+Direct creation replay is classified by the supplied canonical `creationId` and the stored
 `_processedCreationIds`/`_creationRequests` entry before consulting the current global
 nonce or attempting a clone or registry effect. The exact stored request and the current
 active four-field creation-resolver tuple must still match. The full historical bootstrap
@@ -707,8 +713,8 @@ debt may legitimately change. An exact replay verifies the stored protocol-versi
 registry identity and returns the stored account and manager without recomputing
 `creationId` from the now-advanced nonce, writing, emitting, or calling
 `LoanRegistry.registerLoan`; changed reuse reverts
-`InvalidPhase9LoanConfiguration`. A new creation identity for an already existing loan
-reverts `Phase9LoanAlreadyExists(loanId)`. Every other factory validation, authority,
+`InvalidPhase9LoanConfiguration`. A zero-ID retry or other new creation identity for an
+already existing loan reverts `Phase9LoanAlreadyExists(loanId)`. Every other factory validation, authority,
 resolver, mode, nonce, prediction, implementation, deployment, initialization, or
 registration inconsistency uses `InvalidPhase9LoanConfiguration`; no clone-library error
 is added to the ABI.
