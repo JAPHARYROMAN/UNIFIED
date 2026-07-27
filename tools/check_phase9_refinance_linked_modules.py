@@ -91,7 +91,7 @@ _FORBIDDEN_YUL_OPERATIONS: Final = {
     "sload",
     "sstore",
 }
-BOUNDED_STATICCALL_SITES: Final = {
+BOUNDED_STATICCALL_SITES: Final[dict[str, list[tuple[str | None, int]]]] = {
     "_validateRequestEnvironment": [
         ("emergencyState", 96),
         ("resolveRefinanceAsset", 160),

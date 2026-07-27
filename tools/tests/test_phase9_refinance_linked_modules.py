@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -720,10 +720,13 @@ def test_unknown_lien_absence_requires_exact_failure_shape() -> None:
     absence = next(
         node for node in validation["nodes"] if node.get("name") == "_requireCollateralAbsent"
     )
-    condition = next(
-        node.get("condition")
-        for node in checker._walk(absence)
-        if node.get("nodeType") == "IfStatement"
+    condition = cast(
+        dict[str, Any],
+        next(
+            node.get("condition")
+            for node in checker._walk(absence)
+            if node.get("nodeType") == "IfStatement"
+        ),
     )
     condition["leftExpression"]["leftExpression"] = {
         "nodeType": "UnaryOperation",
@@ -945,4 +948,5 @@ def test_repository_candidate_integration() -> None:
 
     result = checker.check_repository()
 
-    assert set(result["runtimeBytes"]) == {*checker.MODULES, checker.COORDINATOR}
+    runtime_bytes = cast(dict[str, int], result["runtimeBytes"])
+    assert set(runtime_bytes) == {*checker.MODULES, checker.COORDINATOR}
