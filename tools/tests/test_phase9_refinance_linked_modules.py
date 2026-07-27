@@ -745,6 +745,24 @@ def _validate(output: dict[str, Any], snapshot: dict[str, Any]) -> dict[str, obj
     return checker.validate_compiler_output(output, coordinator_storage_snapshot=snapshot)
 
 
+def _runtime_link_references(output: dict[str, Any]) -> object:
+    return output["contracts"][checker.REFINANCE_SOURCE][checker.COORDINATOR]["evm"][
+        "deployedBytecode"
+    ]["linkReferences"]
+
+
+def _deployment_script_for(link_references: object) -> str:
+    bindings = checker._runtime_link_bindings(link_references)
+    constants = [
+        f"uint256 private constant {name} = {offset};" for name, _module, offset, _index in bindings
+    ]
+    assertions = [
+        f"_assertRuntimeLink(coordinator, {name}, deployment.actual[{index}]);"
+        for name, _module, _offset, index in bindings
+    ]
+    return "\n".join((*constants, *assertions))
+
+
 def _definition(output: dict[str, Any], name: str) -> dict[str, Any]:
     return next(
         node
@@ -881,6 +899,41 @@ def test_exact_seven_link_inventory_is_enforced() -> None:
 
     with pytest.raises(checker.LinkedModuleCheckError, match="exact seven"):
         _validate(output, snapshot)
+
+
+def test_deployment_script_runtime_links_follow_compiler_reported_order() -> None:
+    output, _snapshot = _fixture()
+    link_references = _runtime_link_references(output)
+    script_source = _deployment_script_for(link_references)
+
+    bindings = checker.validate_deployment_script_runtime_links(script_source, link_references)
+
+    assert [binding["offset"] for binding in bindings] == [1, 23, 45, 67, 89, 111, 133]
+
+
+@pytest.mark.parametrize("mutation", ("shifted", "reordered"))
+def test_deployment_script_runtime_link_offset_mutation_is_rejected(mutation: str) -> None:
+    output, _snapshot = _fixture()
+    link_references = _runtime_link_references(output)
+    lines = _deployment_script_for(link_references).splitlines()
+    if mutation == "shifted":
+        lines[0] = lines[0].replace(" = 1;", " = 2;")
+    else:
+        lines[0], lines[1] = lines[1], lines[0]
+
+    with pytest.raises(checker.LinkedModuleCheckError, match="constants/order drifted"):
+        checker.validate_deployment_script_runtime_links("\n".join(lines), link_references)
+
+
+def test_deployment_script_runtime_assertion_target_mutation_is_rejected() -> None:
+    output, _snapshot = _fixture()
+    link_references = _runtime_link_references(output)
+    script_source = _deployment_script_for(link_references).replace(
+        "deployment.actual[5]", "deployment.actual[6]", 1
+    )
+
+    with pytest.raises(checker.LinkedModuleCheckError, match="assertion order drifted"):
+        checker.validate_deployment_script_runtime_links(script_source, link_references)
 
 
 @pytest.mark.parametrize("violation", ["storage", "delegatecall", "module_link"])
@@ -1122,3 +1175,47 @@ def test_repository_candidate_integration() -> None:
 
     runtime_bytes = cast(dict[str, int], result["runtimeBytes"])
     assert set(runtime_bytes) == {*checker.MODULES, checker.COORDINATOR}
+    assert result["runtimeLinks"] == [
+        {
+            "constant": "LIFECYCLE_LINK_0",
+            "deploymentIndex": 7,
+            "module": checker.LIFECYCLE_MODULE,
+            "offset": 1300,
+        },
+        {
+            "constant": "LIFECYCLE_LINK_1",
+            "deploymentIndex": 7,
+            "module": checker.LIFECYCLE_MODULE,
+            "offset": 1391,
+        },
+        {
+            "constant": "LIFECYCLE_LINK_2",
+            "deploymentIndex": 7,
+            "module": checker.LIFECYCLE_MODULE,
+            "offset": 1520,
+        },
+        {
+            "constant": "LIFECYCLE_LINK_3",
+            "deploymentIndex": 7,
+            "module": checker.LIFECYCLE_MODULE,
+            "offset": 1662,
+        },
+        {
+            "constant": "REQUEST_LINK_0",
+            "deploymentIndex": 6,
+            "module": checker.REQUEST_MODULE,
+            "offset": 1775,
+        },
+        {
+            "constant": "VALIDATION_LINK_0",
+            "deploymentIndex": 5,
+            "module": checker.VALIDATION_MODULE,
+            "offset": 2046,
+        },
+        {
+            "constant": "REQUEST_LINK_1",
+            "deploymentIndex": 6,
+            "module": checker.REQUEST_MODULE,
+            "offset": 2253,
+        },
+    ]

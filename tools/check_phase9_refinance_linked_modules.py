@@ -16,6 +16,7 @@ from typing import Any, Final, cast
 ROOT: Final = Path(__file__).resolve().parents[1]
 COMPILATION_SOURCE: Final = "protocol/src/ProtocolCompilation.sol"
 REFINANCE_SOURCE: Final = "protocol/src/resolution/RefinanceCoordinator.sol"
+DEPLOYMENT_SCRIPT: Final = Path("protocol/script/DeployPhase9RefinanceLocal.s.sol")
 STORAGE_SNAPSHOT: Final = Path("protocol/storage-layout/phase9/RefinanceCoordinator.storage.json")
 COORDINATOR: Final = "RefinanceCoordinator"
 VALIDATION_MODULE: Final = "Phase9RefinanceValidationModule"
@@ -54,6 +55,16 @@ COORDINATOR_LINK_COUNTS: Final = {
     VALIDATION_MODULE: 1,
     REQUEST_MODULE: 2,
     LIFECYCLE_MODULE: 4,
+}
+DEPLOYMENT_MODULE_INDEX: Final = {
+    VALIDATION_MODULE: 5,
+    REQUEST_MODULE: 6,
+    LIFECYCLE_MODULE: 7,
+}
+DEPLOYMENT_MODULE_PREFIX: Final = {
+    VALIDATION_MODULE: "VALIDATION",
+    REQUEST_MODULE: "REQUEST",
+    LIFECYCLE_MODULE: "LIFECYCLE",
 }
 COORDINATOR_CALLS: Final = {
     (VALIDATION_MODULE, "preflight"): 1,
@@ -201,6 +212,16 @@ VALIDATION_CONTEXT_FIELDS: Final = (
 
 _PLACEHOLDER = re.compile(r"__\$[0-9a-fA-F]{34}\$__")
 _HEX = re.compile(r"[0-9a-fA-F]*")
+_RUNTIME_LINK_CONSTANT = re.compile(
+    r"^\s*uint256\s+private\s+constant\s+"
+    r"((?:LIFECYCLE|REQUEST|VALIDATION)_LINK_\d+)\s*=\s*(\d+)\s*;\s*$",
+    flags=re.MULTILINE,
+)
+_RUNTIME_LINK_ASSERTION = re.compile(
+    r"_assertRuntimeLink\(\s*coordinator\s*,\s*"
+    r"((?:LIFECYCLE|REQUEST|VALIDATION)_LINK_\d+)\s*,\s*"
+    r"deployment\.actual\[(\d+)\]\s*\)\s*;"
+)
 
 
 class LinkedModuleCheckError(RuntimeError):
@@ -457,6 +478,65 @@ def _flatten_links(link_references: object) -> list[tuple[str, str, int, int]]:
                     raise LinkedModuleCheckError("link-reference start/length is malformed")
                 result.append((source_name, library, start, length))
     return result
+
+
+def _runtime_link_bindings(link_references: object) -> list[tuple[str, str, int, int]]:
+    links = sorted(_flatten_links(link_references), key=lambda link: link[2])
+    observed_counts = {module: 0 for module in MODULES}
+    bindings: list[tuple[str, str, int, int]] = []
+    observed_starts: set[int] = set()
+    for source_name, module, start, length in links:
+        _require(
+            source_name == REFINANCE_SOURCE and module in MODULES,
+            f"deployment runtime has undeclared link target {source_name}:{module}",
+        )
+        _require(length == 20, "deployment runtime link is not 20 bytes")
+        _require(start not in observed_starts, "deployment runtime link offset is duplicated")
+        observed_starts.add(start)
+        occurrence = observed_counts[module]
+        observed_counts[module] += 1
+        bindings.append(
+            (
+                f"{DEPLOYMENT_MODULE_PREFIX[module]}_LINK_{occurrence}",
+                module,
+                start,
+                DEPLOYMENT_MODULE_INDEX[module],
+            )
+        )
+    _require(
+        observed_counts == COORDINATOR_LINK_COUNTS
+        and len(bindings) == sum(COORDINATOR_LINK_COUNTS.values()),
+        "deployment runtime does not contain the exact seven module links",
+    )
+    return bindings
+
+
+def validate_deployment_script_runtime_links(
+    script_source: str, link_references: object
+) -> list[dict[str, object]]:
+    """Bind Solidity runtime assertions to the compiler-reported seven link offsets."""
+    bindings = _runtime_link_bindings(link_references)
+    expected_constants = [(name, str(start)) for name, _module, start, _index in bindings]
+    observed_constants = _RUNTIME_LINK_CONSTANT.findall(script_source)
+    _require(
+        observed_constants == expected_constants,
+        "deployment script runtime link constants/order drifted from compiler linkReferences",
+    )
+    expected_assertions = [(name, str(index)) for name, _module, _start, index in bindings]
+    observed_assertions = _RUNTIME_LINK_ASSERTION.findall(script_source)
+    _require(
+        observed_assertions == expected_assertions,
+        "deployment script runtime link assertion order drifted from compiler linkReferences",
+    )
+    return [
+        {
+            "constant": name,
+            "module": module,
+            "offset": start,
+            "deploymentIndex": index,
+        }
+        for name, module, start, index in bindings
+    ]
 
 
 def _validate_bytecode_links(
@@ -1806,7 +1886,23 @@ def check_repository(root: Path = ROOT) -> dict[str, object]:
             "authoritative RefinanceCoordinator storage snapshot is unavailable"
         ) from error
     _require(isinstance(snapshot, dict), "authoritative storage snapshot is malformed")
-    return validate_compiler_output(compile_protocol(root), coordinator_storage_snapshot=snapshot)
+    compiler_output = compile_protocol(root)
+    result = validate_compiler_output(compiler_output, coordinator_storage_snapshot=snapshot)
+    try:
+        script_source = (root / DEPLOYMENT_SCRIPT).read_text(encoding="utf-8")
+    except OSError as error:
+        raise LinkedModuleCheckError(
+            "Phase 9 refinance deployment script is unavailable"
+        ) from error
+    contract_source = compiler_output.get("contracts", {}).get(REFINANCE_SOURCE)
+    _require(isinstance(contract_source, dict), "refinance compiler contract output is missing")
+    coordinator = contract_source.get(COORDINATOR)
+    _require(isinstance(coordinator, dict), "coordinator compiler artifact is missing")
+    runtime = _evm_artifact(coordinator, "deployedBytecode")
+    result["runtimeLinks"] = validate_deployment_script_runtime_links(
+        script_source, runtime.get("linkReferences")
+    )
+    return result
 
 
 def main(argv: Sequence[str] | None = None) -> int:

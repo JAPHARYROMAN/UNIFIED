@@ -110,13 +110,13 @@ contract DeployPhase9RefinanceLocal {
         keccak256("UNIFIED_PHASE9_REFINANCE_DEPLOYMENT_CONFIGURATION_V1");
     bytes32 private constant LOAN_FACTORY_ROLE = keccak256("LOAN_FACTORY_ROLE");
 
-    uint256 private constant LIFECYCLE_LINK_0 = 1178;
-    uint256 private constant LIFECYCLE_LINK_1 = 1269;
-    uint256 private constant LIFECYCLE_LINK_2 = 1398;
-    uint256 private constant LIFECYCLE_LINK_3 = 1540;
-    uint256 private constant REQUEST_LINK_0 = 1589;
-    uint256 private constant VALIDATION_LINK_0 = 1860;
-    uint256 private constant REQUEST_LINK_1 = 2067;
+    uint256 private constant LIFECYCLE_LINK_0 = 1300;
+    uint256 private constant LIFECYCLE_LINK_1 = 1391;
+    uint256 private constant LIFECYCLE_LINK_2 = 1520;
+    uint256 private constant LIFECYCLE_LINK_3 = 1662;
+    uint256 private constant REQUEST_LINK_0 = 1775;
+    uint256 private constant VALIDATION_LINK_0 = 2046;
+    uint256 private constant REQUEST_LINK_1 = 2253;
 
     Phase9RefinanceLocalDeploymentVm private constant vm =
         Phase9RefinanceLocalDeploymentVm(address(uint160(uint256(keccak256("hevm cheat code")))));
