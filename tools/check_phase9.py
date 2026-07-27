@@ -42,6 +42,9 @@ REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH = (
 REFINANCE_EXECUTION_SEMANTICS_ADR_PATH = (
     ROOT / "adr/0025-phase-9-refinance-execution-observation-and-settlement-semantics.md"
 )
+REFINANCE_REPARTITION_ADR_PATH = (
+    ROOT / "adr/0026-phase-9-refinance-execution-module-repartition.md"
+)
 ARCHITECTURE_PATH = ROOT / "docs/architecture/phase-9-resolution-protection-recovery.md"
 DATA_LAYOUTS_PATH = ROOT / "docs/architecture/phase-9-data-layouts.md"
 REFINANCE_ACCEPTANCE_PATH = ROOT / "docs/architecture/phase-9-refinance-acceptance.md"
@@ -103,6 +106,206 @@ REFINANCE_LINKED_MODULE_MARKERS = (
     "library Phase9RefinanceRequestModule",
     "library Phase9RefinanceLifecycleModule",
 )
+REFINANCE_REPARTITION_MANIFEST_START = (
+    "<!-- phase9-refinance-repartition-manifest:start -->"
+)
+REFINANCE_REPARTITION_MANIFEST_END = (
+    "<!-- phase9-refinance-repartition-manifest:end -->"
+)
+
+_REFINANCE_EXECUTION_PLAN_FIELDS = (
+    ("domain", "bytes32", 0, 1),
+    ("chainId", "uint256", 1, 1),
+    ("coordinator", "address", 2, 1),
+    ("refinanceId", "bytes32", 3, 1),
+    ("operationId", "bytes32", 4, 1),
+    ("executionBlock", "uint64", 5, 1),
+    ("executedAt", "uint64", 6, 1),
+    ("planSuffixHash", "bytes32", 7, 1),
+    ("storedStateVersion", "uint64", 8, 1),
+    ("refinanceNonce", "uint64", 9, 1),
+    ("quoteId", "bytes32", 10, 1),
+    ("consumedDebtStateVersion", "uint64", 11, 1),
+    ("consumedQuoteHash", "bytes32", 12, 1),
+    ("refinancePolicyHash", "bytes32", 13, 1),
+    ("oldLoanId", "bytes32", 14, 1),
+    ("newLoanId", "bytes32", 15, 1),
+    ("oldAccount", "address", 16, 1),
+    ("oldPositionManager", "address", 17, 1),
+    ("newAccount", "address", 18, 1),
+    ("newPositionManager", "address", 19, 1),
+    ("settlementToken", "address", 20, 1),
+    ("collateralCount", "uint32", 21, 1),
+    ("collateralIdsHash", "bytes32", 22, 1),
+    ("replacementTrancheCount", "uint32", 23, 1),
+    ("replacementTranchesHash", "bytes32", 24, 1),
+    ("replacementPositionCount", "uint32", 25, 1),
+    ("replacementPositionsHash", "bytes32", 26, 1),
+    ("commitmentCount", "uint32", 27, 1),
+    ("fundedCommitmentInventoryHash", "bytes32", 28, 1),
+    ("distinctRecipientCount", "uint8", 29, 1),
+    ("payoutRecipients", "address[4]", 30, 4),
+    ("payoutAmounts", "uint256[4]", 34, 4),
+    ("uniqueRecipients", "address[4]", 38, 4),
+    ("uniqueExpected", "uint256[4]", 42, 4),
+    ("uniqueStartingBalances", "uint256[4]", 46, 4),
+    ("firstLegRecipientBefore", "uint256[2]", 50, 2),
+    ("firstLegRecipientAfter", "uint256[2]", 52, 2),
+    ("firstLegCoordinatorBefore", "uint256[2]", 54, 2),
+    ("firstLegCoordinatorAfter", "uint256[2]", 56, 2),
+    ("firstLegHashes", "bytes32[2]", 58, 2),
+    ("initialTrancheHash", "bytes32", 60, 1),
+    ("initialPositionHash", "bytes32", 61, 1),
+    ("initialRightsHash", "bytes32", 62, 1),
+    ("replacementDebtHash", "bytes32", 63, 1),
+    ("componentPayoutHash", "bytes32", 64, 1),
+    ("oldDebtStateHash", "bytes32", 65, 1),
+    ("oldDebtResultHash", "bytes32", 66, 1),
+    ("coordinatorBalanceBeforeAll", "uint256", 67, 1),
+)
+
+EXPECTED_REFINANCE_REPARTITION_MANIFEST: dict[str, object] = {
+    "schema": "phase9-refinance-repartition-v1",
+    "execution_plan": {
+        "name": "ExecutionPlanV1",
+        "abi_words": 68,
+        "abi_bytes": 2176,
+        "domain": "UNIFIED_REFINANCE_EXECUTION_PLAN_V1",
+        "suffix_word_start": 8,
+        "suffix_word_count": 60,
+        "suffix_bytes": 1920,
+        "fields": [
+            {
+                "name": name,
+                "abi_type": abi_type,
+                "word_start": word_start,
+                "word_count": word_count,
+            }
+            for name, abi_type, word_start, word_count in _REFINANCE_EXECUTION_PLAN_FIELDS
+        ],
+    },
+    "caps": {
+        "collateral_count": 16,
+        "replacement_tranche_count": 8,
+        "replacement_position_count": 32,
+        "commitment_count": 32,
+        "distinct_recipient_count": 4,
+    },
+    "hashes": {
+        "plan_suffix_hash": (
+            "keccak256(raw 1920-byte planBytes suffix at bytes 256..2175 / words 8..67)"
+        ),
+        "plan_bytes": "abi.encode(ExecutionPlanV1)",
+        "plan_hash": "keccak256(planBytes)",
+        "replacement_debt_hash": "keccak256(abi.encode(replacementDebt))",
+        "funded_commitment_inventory_hash": (
+            "keccak256(abi.encode(keccak256(\"UNIFIED_REFINANCE_FUNDED_COMMITMENT_"
+            "INVENTORY_V1\"), block.chainid, address(this), refinanceId, "
+            "orderedCommitmentIds, orderedFundingCommitmentRecords))"
+        ),
+    },
+    "zero_tail_rules": [
+        "uniqueRecipients[i] == address(0) for i >= distinctRecipientCount",
+        "uniqueExpected[i] == 0 for i >= distinctRecipientCount",
+        "uniqueStartingBalances[i] == 0 for i >= distinctRecipientCount",
+    ],
+    "modules": [
+        {
+            "name": "Phase9RefinanceValidationModule",
+            "ownership": "request-preflight",
+            "entries": ["preflight"],
+        },
+        {
+            "name": "Phase9RefinanceRequestModule",
+            "ownership": "request-lock-and-completion",
+            "entries": ["begin", "complete"],
+        },
+        {
+            "name": "Phase9RefinanceLifecycleModule",
+            "ownership": "funding-cancellation-refund",
+            "entries": [
+                "recordFundingCommitment",
+                "cancelRefinance",
+                "refundCommitment",
+            ],
+        },
+        {
+            "name": "Phase9RefinanceExecutionPrepareModule",
+            "ownership": "execution-replay-validation-midpoint",
+            "entries": ["prepareExecution"],
+        },
+        {
+            "name": "Phase9RefinanceExecutionFinalizeModule",
+            "ownership": "execution-reresolution-lien-activation-terminal",
+            "entries": ["finalizeExecution"],
+        },
+    ],
+    "call_sites": [
+        {
+            "ordinal": 1,
+            "wrapper": "requestRefinance",
+            "module": "Phase9RefinanceRequestModule",
+            "entry": "begin",
+        },
+        {
+            "ordinal": 2,
+            "wrapper": "requestRefinance",
+            "module": "Phase9RefinanceValidationModule",
+            "entry": "preflight",
+        },
+        {
+            "ordinal": 3,
+            "wrapper": "requestRefinance",
+            "module": "Phase9RefinanceRequestModule",
+            "entry": "complete",
+        },
+        {
+            "ordinal": 4,
+            "wrapper": "recordFundingCommitment",
+            "module": "Phase9RefinanceLifecycleModule",
+            "entry": "recordFundingCommitment",
+        },
+        {
+            "ordinal": 5,
+            "wrapper": "executeRefinance",
+            "module": "Phase9RefinanceExecutionPrepareModule",
+            "entry": "prepareExecution",
+        },
+        {
+            "ordinal": 6,
+            "wrapper": "executeRefinance",
+            "module": "Phase9RefinanceExecutionFinalizeModule",
+            "entry": "finalizeExecution",
+        },
+        {
+            "ordinal": 7,
+            "wrapper": "cancelRefinance",
+            "module": "Phase9RefinanceLifecycleModule",
+            "entry": "cancelRefinance",
+        },
+        {
+            "ordinal": 8,
+            "wrapper": "refundCommitment",
+            "module": "Phase9RefinanceLifecycleModule",
+            "entry": "refundCommitment",
+        },
+    ],
+    "create_order": [
+        {"nonce": 1, "artifact": "LienRegistry"},
+        {"nonce": 2, "artifact": "CollateralCustodyV2"},
+        {"nonce": 3, "artifact": "Phase9LoanAccount"},
+        {"nonce": 4, "artifact": "PositionManagerV2"},
+        {"nonce": 5, "artifact": "Phase9LoanFactory"},
+        {"nonce": 6, "artifact": "Phase9RefinanceValidationModule"},
+        {"nonce": 7, "artifact": "Phase9RefinanceRequestModule"},
+        {"nonce": 8, "artifact": "Phase9RefinanceLifecycleModule"},
+        {"nonce": 9, "artifact": "Phase9RefinanceExecutionPrepareModule"},
+        {"nonce": 10, "artifact": "Phase9RefinanceExecutionFinalizeModule"},
+        {"nonce": 11, "artifact": "PayoffQuoteEngine"},
+        {"nonce": 12, "artifact": "RefinanceCoordinator"},
+    ],
+    "module_runtime_budget_bytes": 22118,
+}
 
 EXPECTED_QUOTE_PREIMAGE = (
     '"UNIFIED_PAYOFF_QUOTE_V1"',
@@ -231,6 +434,7 @@ BOUNDARY_PATHS = (
     REFINANCE_MODULE_ADR_PATH,
     REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH,
     REFINANCE_EXECUTION_SEMANTICS_ADR_PATH,
+    REFINANCE_REPARTITION_ADR_PATH,
     ARCHITECTURE_PATH,
     DATA_LAYOUTS_PATH,
     REFINANCE_ACCEPTANCE_PATH,
@@ -524,6 +728,155 @@ def require_tokens(text: str, tokens: Iterable[str], label: str) -> None:
     require(not missing, f"{label} is missing: {', '.join(missing)}")
 
 
+def parse_refinance_repartition_manifest(document: str) -> dict[str, object]:
+    require(
+        document.count(REFINANCE_REPARTITION_MANIFEST_START) == 1,
+        "Phase 9 refinance repartition manifest must have exactly one start marker",
+    )
+    require(
+        document.count(REFINANCE_REPARTITION_MANIFEST_END) == 1,
+        "Phase 9 refinance repartition manifest must have exactly one end marker",
+    )
+    start = document.index(REFINANCE_REPARTITION_MANIFEST_START)
+    end = document.index(REFINANCE_REPARTITION_MANIFEST_END)
+    require(
+        start < end,
+        "Phase 9 refinance repartition manifest markers are out of order",
+    )
+    fenced = document[start + len(REFINANCE_REPARTITION_MANIFEST_START) : end]
+    match = re.fullmatch(r"\s*```json\s*(?P<payload>.*?)\s*```\s*", fenced, re.DOTALL)
+    require(
+        match is not None,
+        "Phase 9 refinance repartition manifest must be one JSON code fence",
+    )
+
+    def reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        result: dict[str, object] = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"duplicate key {key}")
+            result[key] = value
+        return result
+
+    try:
+        parsed = json.loads(match.group("payload"), object_pairs_hook=reject_duplicate_keys)
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise SystemExit(
+            f"ERROR: Phase 9 refinance repartition manifest is invalid JSON: {exc}"
+        ) from exc
+    require(
+        isinstance(parsed, dict),
+        "Phase 9 refinance repartition manifest root must be an object",
+    )
+    return cast(dict[str, object], parsed)
+
+
+def validate_refinance_repartition_manifest(document: str) -> None:
+    manifest = parse_refinance_repartition_manifest(document)
+    plan = manifest.get("execution_plan")
+    require(
+        isinstance(plan, dict),
+        "Phase 9 refinance repartition manifest execution_plan must be an object",
+    )
+    fields = plan.get("fields")
+    require(
+        isinstance(fields, list),
+        "Phase 9 refinance repartition manifest fields must be an array",
+    )
+
+    cursor = 0
+    for index, raw_field in enumerate(fields):
+        require(
+            isinstance(raw_field, dict),
+            f"Phase 9 refinance repartition manifest field {index} must be an object",
+        )
+        field = cast(dict[str, object], raw_field)
+        name = field.get("name")
+        abi_type = field.get("abi_type")
+        word_start = field.get("word_start")
+        word_count = field.get("word_count")
+        require(
+            isinstance(name, str) and isinstance(abi_type, str),
+            f"Phase 9 refinance repartition manifest field {index} identity is malformed",
+        )
+        require(
+            isinstance(word_start, int)
+            and not isinstance(word_start, bool)
+            and isinstance(word_count, int)
+            and not isinstance(word_count, bool),
+            f"Phase 9 refinance repartition manifest field {name} range is malformed",
+        )
+        require(
+            word_start == cursor and word_count > 0,
+            f"Phase 9 refinance repartition manifest field {name} range is not contiguous",
+        )
+        static_array = re.search(r"\[(\d+)\]$", abi_type)
+        expected_words = int(static_array.group(1)) if static_array else 1
+        require(
+            word_count == expected_words,
+            f"Phase 9 refinance repartition manifest field {name} ABI width drifted",
+        )
+        cursor += word_count
+
+    require(
+        cursor == 68,
+        "Phase 9 refinance repartition manifest fields must occupy exactly 68 words",
+    )
+    require(
+        plan.get("abi_words") == cursor and plan.get("abi_bytes") == cursor * 32,
+        "Phase 9 refinance repartition manifest ABI size must be 68 words / 2176 bytes",
+    )
+    suffix_word_start = plan.get("suffix_word_start")
+    suffix_word_count = plan.get("suffix_word_count")
+    require(
+        suffix_word_start == 8
+        and suffix_word_count == cursor - suffix_word_start
+        and plan.get("suffix_bytes") == suffix_word_count * 32,
+        "Phase 9 refinance repartition manifest suffix must be words 8..67 / 1920 bytes",
+    )
+
+    modules = manifest.get("modules")
+    call_sites = manifest.get("call_sites")
+    create_order = manifest.get("create_order")
+    require(
+        isinstance(modules, list) and len(modules) == 5,
+        "Phase 9 refinance repartition manifest must own exactly five modules",
+    )
+    require(
+        isinstance(call_sites, list)
+        and len(call_sites) == 8
+        and all(
+            isinstance(call_site, dict) and call_site.get("ordinal") == ordinal
+            for ordinal, call_site in enumerate(call_sites, start=1)
+        ),
+        "Phase 9 refinance repartition manifest must order exactly eight call sites",
+    )
+    require(
+        isinstance(create_order, list)
+        and len(create_order) == 12
+        and all(
+            isinstance(creation, dict) and creation.get("nonce") == nonce
+            for nonce, creation in enumerate(create_order, start=1)
+        ),
+        "Phase 9 refinance repartition manifest must order CREATE nonces 1 through 12",
+    )
+    require(
+        manifest.get("module_runtime_budget_bytes") == 22118,
+        "Phase 9 refinance repartition manifest module budget must be 22118 bytes",
+    )
+
+    actual = json.dumps(manifest, ensure_ascii=False, separators=(",", ":"))
+    expected = json.dumps(
+        EXPECTED_REFINANCE_REPARTITION_MANIFEST,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    require(
+        actual == expected,
+        "Phase 9 refinance repartition manifest content or ordering drifted",
+    )
+
+
 def require_abi_encode_formula(
     text: str,
     name: str,
@@ -548,10 +901,13 @@ def check_refinance_boundary_evidence() -> None:
     refinance_module_adr = read(REFINANCE_MODULE_ADR_PATH)
     refinance_activation_topology_adr = read(REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH)
     refinance_execution_semantics_adr = read(REFINANCE_EXECUTION_SEMANTICS_ADR_PATH)
+    refinance_repartition_adr = read(REFINANCE_REPARTITION_ADR_PATH)
     acceptance = read(REFINANCE_ACCEPTANCE_PATH)
     reference = read(REFINANCE_REFERENCE_EVIDENCE_PATH)
     deployment = read(REFINANCE_DEPLOYMENT_EVIDENCE_PATH)
     data_layouts = read(DATA_LAYOUTS_PATH)
+
+    validate_refinance_repartition_manifest(refinance_repartition_adr)
 
     forbidden_execute_replay_claims = (
         "on both first execution and exact terminal replay",
@@ -600,9 +956,11 @@ def check_refinance_boundary_evidence() -> None:
     require_tokens(
         normalized(refinance_module_adr),
         (
-            "status: accepted for synthetic-local candidate architecture; "
-            "implementation activation pending",
+            "status: accepted historical candidate architecture; topology superseded "
+            "by adr 0026; implementation activation pending",
             "work item: `uni-adr-018`",
+            "adr 0026 replaces this adr's operative three-library, seven-call, "
+            "ten-create, nonce-10 coordinator, and lifecycle-execution ownership controls",
             "phase9refinancevalidationmodule",
             "phase9refinancerequestmodule",
             "phase9refinancelifecyclemodule",
@@ -688,6 +1046,51 @@ def check_refinance_boundary_evidence() -> None:
             "D3 logic may open only after the complete bundled implementation",
         ),
         "Phase 9 D3 execution-semantics boundary",
+    )
+    require_tokens(
+        normalized(refinance_repartition_adr),
+        (
+            "status: accepted for synthetic-local repartition specification; "
+            "implementation and topology migration pending",
+            "f408d159a8fbf8cbde9197e71456cf817d2c101f23e64c5abb10d7abdf4abc76",
+            "complete lifecycle prototype | 40,375 | 40,427 | 15,799 bytes over",
+            "funding, cancellation, and refund | 19,273 | 19,325 | 5,303 bytes under",
+            "execution only | 26,547 | 26,599 | 1,971 bytes over",
+            "phase9refinanceexecutionpreparemodule",
+            "phase9refinanceexecutionfinalizemodule",
+            "exactly eight compiler-generated fixed-library call sites",
+            "all-static abi tuple of exactly 68 words and exactly 2,176 bytes",
+            'keccak256("unified_refinance_execution_plan_v1")',
+            "plansuffixhash = keccak256(raw 1920-byte planbytes suffix from byte 256 "
+            "through byte 2175)",
+            "the suffix is exactly the contiguous abi words 8 through 67",
+            "the full `planhash` is domain-bound by word 0 and binds word 7's suffix hash",
+            "replacementdebthash = keccak256(abi.encode(replacementdebt))",
+            'keccak256("unified_refinance_funded_commitment_inventory_v1")',
+            "an internal, transaction-local transport binding, not a protocol "
+            "event/result preimage",
+            "current stored `executing`, the unchanged active old-loan lock, full "
+            "attributed escrow equal to accepted funding, execution attempt zero, "
+            "terminal evidence zero, and an unprocessed matching operation id",
+            "it forwards the identical byte string and hash to finalization",
+            "does not decode a dynamic tail, rewrite a word, catch a prepare/finalize "
+            "revert, or perform an external call between the two modules",
+            "re-resolves and re-hashes the canonical quote, policy, accounts, managers, "
+            "asset, collateral, replacement, commitment, payout, public snapshot, and "
+            "old-debt facts before the first finalization effect",
+            "each execution module has a hard candidate budget of 22,118 runtime bytes",
+            "exactly twelve consecutive zero-value top-level `create` transactions",
+            "nonce 12: the fully linked `refinancecoordinator`",
+            "`0xca03dc4665a8c3603cb4fd5ce71af9649dc00d44`",
+            "latest and pending candidate nonces at 13 (`0x0d`)",
+            "priority-zero acceptance requires storage-only replay before dependencies, "
+            "no catch around either execution-module call, no external/caller-authored/"
+            "persisted plan, full rollback under injected failure at every boundary",
+            "priority-one acceptance requires mutation of every plan word, fixed-array "
+            "tail, count/hash pair, and ordering rule",
+            "does not make the current oversized prototype deployable",
+        ),
+        "Phase 9 refinance execution-module repartition boundary",
     )
 
     actual_acceptance_ids = set(
@@ -862,10 +1265,12 @@ def check_refinance_boundary_evidence() -> None:
             "cancellation_prior_version = stored_refinance.stateVersion - refunded_count - 1",
             "`CANCELLED` and `EXPIRED` require the canonical empty inventory",
             "`REFUNDABLE` and `REFUNDED` require length `1..32`",
-            "whose `commitmentId` equals that vector ID, whose `refinanceId` equals the current refinance",
+            "whose `commitmentId` equals that vector ID, whose `refinanceId` equals the "
+            "current refinance",
             "`NONE`, `CONSUMED`, or any other state conflicts",
             "count/version inconsistency, checked underflow",
-            "stored `REFUNDABLE` or `REFUNDED` reconstructs both reason-1 and reason-2 candidate IDs",
+            "stored `REFUNDABLE` or `REFUNDED` reconstructs both reason-1 and reason-2 "
+            "candidate IDs",
             "never relies on `current stateVersion - 1` alone",
             "block.chainid == 31337",
             "It does not activate a successful Solidity business path",
@@ -898,11 +1303,13 @@ def check_refinance_boundary_evidence() -> None:
             "REFUNDABLE",
             "chain-31337",
             "synthetic-local",
-            "exactly seven fixed compiler-linked call sites",
+            "exactly eight fixed compiler-linked call sites",
             "No module may link or delegate again",
-            "exactly ten top-level `CREATE`s at nonces 1 through 10",
-            "`UNI-ADR-018`, `UNI-ADR-019`, `UNI-ADR-020`, `UNI-REFI-001`, and "
-            "`UNI-REFI-002`",
+            "exactly twelve top-level `CREATE`s at nonces 1 through 12",
+            "exact all-static `ExecutionPlanV1`: 68 ABI words",
+            "forwards identical bytes without a catch or intervening external call",
+            "the existing prerequisite backlog rows, both refinance implementation rows, "
+            "ADR 0026 repartition",
             "accepted specification, architecture, and topology controls alone activate nothing",
             "explicit nonce precondition, pairwise-distinct authorities, "
             "verification-before-grant order",
@@ -913,7 +1320,8 @@ def check_refinance_boundary_evidence() -> None:
             "all four leg hashes exist",
             "distinct recipients sorted by increasing `uint160`",
             "one exact `uint64(block.number)`",
-            "first execution reads the stored quote, recomputes the operation ID from its pre-payoff version",
+            "first execution enters the provisional guard, completes quote consumption, "
+            "payout legs 0/1, payoff, and midpoint proofs in prepare",
             "The complete stored terminal tuple must match",
             "reconstructs a nonzero execution-event ID from the exact domain",
             "makes zero dependency calls, writes, transfers, counter changes, and logs",
@@ -926,12 +1334,13 @@ def check_refinance_boundary_evidence() -> None:
             "`REFUNDABLE`/`REFUNDED` require `1..32` unique IDs",
             "only `FUNDED` or `REFUNDED`",
             "permits only reason 1 for `CANCELLED`, only reason 2 for `EXPIRED`",
-            "Every inventory, identity, state, count, arithmetic, candidate, or operation mismatch reverts",
+            "Every inventory, identity, state, count, arithmetic, candidate, or operation "
+            "mismatch reverts",
             "provisional `EXECUTING` emits none",
-            "ADR 0025 changes evidence semantics only",
+            "exact 68-word/2,176-byte plan",
             "consumed-quote component binding",
             "typed replacement hashes",
-            "one representable `executed_at`",
+            "one captured `executed_at` is reused in event ID terminal hash and terminal storage",
             "zero/coordinator/settlement-token recipients fail before effects; all four leg "
             "hashes exist; each immediate recipient/coordinator delta is exact",
         ),
@@ -987,6 +1396,17 @@ def check_refinance_boundary_evidence() -> None:
             "bytes32 replacement_positions_hash = keccak256(abi.encode(replacement_positions))",
             "captures `executed_at = uint64(block.timestamp)` exactly once",
             "unequal to the settlement-token address before quote consumption or balance change",
+            "exactly 68 static ABI words and 2,176 bytes",
+            'execution_plan_domain = keccak256("UNIFIED_REFINANCE_EXECUTION_PLAN_V1")',
+            "plan_suffix_hash = keccak256(raw 1920-byte execution_plan_bytes suffix at "
+            "bytes 256..2175)",
+            "len(execution_plan_bytes) = 2176",
+            "replacement_debt_hash = keccak256(abi.encode(replacement_debt))",
+            'keccak256("UNIFIED_REFINANCE_FUNDED_COMMITMENT_INVENTORY_V1")',
+            "not a protocol event/result preimage and creates no new evidence preimage",
+            "forwards identical bytes and hash with no catch or intervening external call",
+            "Exact replay returns from prepare before any dependency read and never invokes "
+            "finalize",
             "Execute replay validates the complete stored terminal tuple",
             "require stored_terminal_result.executionEventId != bytes32(0)",
             "require replayed_execution_event_id != bytes32(0)",
@@ -1022,11 +1442,18 @@ def check_refinance_boundary_evidence() -> None:
         (
             "chain ID is exactly `31337`",
             "disposable synthetic-local evidence only",
-            "exactly ten top-level creations",
-            "coordinator prediction is derived from nonce 10",
-            "exact seven compiler-reported offsets",
+            "exactly twelve consecutive zero-value top-level `CREATE` transactions",
+            "prediction uses RLP nonce byte `0x0c`",
+            "`0xca03dc4665a8c3603cb4fd5ce71af9649dc00d44`",
+            "Both candidate nonce views must end at 13 (`0x0d`)",
+            "exactly eight compiler-generated fixed-library call sites",
+            "Both execution modules must be at most 22,118 runtime bytes",
+            "Production Solidity, the deployment script, plan schema, smoke harness, "
+            "verifier fixtures, expected hashes, and current candidate files deliberately "
+            "remain unchanged",
+            "cannot satisfy a `P9R-DEPLOY-*` row",
             "module runtime self-patch offsets",
-            "It does not authorize a deployment",
+            "does not authorize a deployment",
             "change either backlog row from `TODO`",
             "ADR 0024 activation-grade extension",
             "that grant is the last activation-topology transaction",

@@ -1423,8 +1423,12 @@ recorded separately.
 
 For atomic refinance, `UNI-ADR-016` accepts ADR 0021's boundary, `UNI-ADR-017`
 accepts ADR 0022's factory/account/position bootstrap semantics, and `UNI-ADR-018`
-accepts ADR 0023's synthetic-local three-library/seven-call/ten-CREATE candidate
-architecture without activating an implementation or deployment. `UNI-ADR-019`
+records ADR 0023's historical synthetic-local three-library/seven-call/ten-CREATE
+candidate without activating an implementation or deployment. That candidate was
+invalidated by the compiled maximum lifecycle path. ADR 0026 therefore governs the
+future target: five same-file fixed libraries, eight compiler-linked calls, an exact
+two-call execute protocol using a 68-word/2,176-byte static plan, and twelve top-level
+CREATEs ending at the nonce-12 coordinator. `UNI-ADR-019`
 accepts ADR 0024's explicit Anvil nonce precondition and exact
 verification-before-governance-grant order without executing that grant. `UNI-ADR-020`
 accepts ADR 0025's computable execution observations, alias-aware payout conservation,
@@ -1432,8 +1436,9 @@ single durable completion transition, and four-phase lien handoff without openin
 or changing any frozen interface. The later
 implementation checkpoint is method-level: it may activate only the exact factory,
 account, custody, lien, coordinator, and position-manager methods listed by ADRs 0021
-and 0022, while the candidate must also pass ADR 0023's linked-module checker and
-nonce-10 deployment-evidence gates plus ADR 0024's activation-topology controls,
+and 0022, while a future candidate must also pass ADR 0026's five-module checker,
+22,118-byte execution-module budgets, exact static-plan controls, and nonce-12
+deployment-evidence gates plus ADR 0024's unchanged identity/grant/reset controls,
 retains the exact freeze stub for every other mutator, and requires
 `UNI-ADR-020`, `UNI-REFI-001`, and `UNI-REFI-002` as one bundled gate. The exact additive ABI allowlist
 contains only coordinator-owned `RefinanceStateTransitioned` and

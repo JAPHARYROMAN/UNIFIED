@@ -7,8 +7,9 @@ Date: 2026-07-27
 ## Purpose
 
 This document fixes the independent evidence model required by ADR 0021, ADR 0022,
-ADR 0023's candidate-only fixed-module partition, ADR 0025's D3 execution-semantics
-freeze, and the `P9R-*` acceptance matrix.
+ADR 0023's historical candidate-only fixed-module partition, ADR 0025's D3
+execution-semantics freeze, ADR 0026's measured execution repartition, and the
+`P9R-*` acceptance matrix.
 It does not claim that a Solidity implementation or a golden-output bundle exists. The
 first accepted implementation checkpoint must
 publish the calculated outputs for these exact inputs from Solidity, Go,
@@ -103,6 +104,65 @@ after all other terminal effects. Unlocked `NONCE_MASK` is permanently exhausted
 Exact terminal replay is checked before lock ownership. Exact/same-quote/concurrent,
 reentrant, wrong-owner, rollback, refundable, maximum, terminal replay, and next-nonce
 distinct-quote cases are golden vectors.
+
+## Internal execution-plan transport
+
+ADR 0026 adds no protocol input or evidence preimage. It fixes one internal,
+transaction-local `ExecutionPlanV1` transport between fixed compiler-linked prepare and
+finalize modules. The plan is exactly 68 static ABI words and 2,176 bytes. Its first
+eight words are the V1 domain, chain ID, coordinator, refinance ID, operation ID,
+`execution_block`, `executed_at`, and `planSuffixHash`. The next 13 words bind the stored
+version and nonce, quote/debt version, typed quote and policy hashes, canonical loan,
+account, manager, and settlement-token identities. Nine count/hash words bind the
+collateral, replacement-tranche, replacement-position, commitment, and distinct-
+recipient vectors. Thirty fixed-array words bind the four payout legs, four sorted
+unique-recipient aggregates with zero tails, and the first two legs' midpoint
+recipient/coordinator balances and leg hashes. The final eight words bind the initial
+three snapshot hashes, replacement-debt hash, component payout, old debt state/result,
+and initial coordinator balance.
+
+```text
+execution_plan_domain = keccak256("UNIFIED_REFINANCE_EXECUTION_PLAN_V1")
+plan_suffix_hash = keccak256(raw 1920-byte execution_plan_bytes suffix at bytes 256..2175)
+plan_hash = keccak256(execution_plan_bytes)
+len(execution_plan_bytes) = 2176
+replacement_debt_hash = keccak256(abi.encode(replacement_debt))
+funded_commitment_inventory_hash = keccak256(abi.encode(
+  keccak256("UNIFIED_REFINANCE_FUNDED_COMMITMENT_INVENTORY_V1"),
+  block.chainid,
+  address(this),
+  refinance_id,
+  ordered_commitment_ids,
+  ordered_funding_commitment_records
+))
+```
+
+The suffix is the exact raw 1,920-byte range covering ordered ABI words 8 through 67;
+it is not re-encoded, has no separate domain, and does not authorize packed encoding,
+dynamic slicing, or a new Solidity formula. The full plan hash binds that suffix hash
+and is domain-bound by word 0.
+Every quote, policy, vector, snapshot, payout, and debt member uses the normative typed
+ADR 0025 hash or preimage already fixed in this document. Identity hashing, nested
+compression, alternate domains, omitted fields, changed widths, and reordered words
+are invalid.
+
+The funded-commitment inventory hash is only an internal, transaction-local transport
+binding. It is not a protocol event/result preimage and creates no new evidence
+preimage. Finalize reconstructs the exact ordered ID array and complete stored funding-
+commitment record array before effects. It also recomputes the after-payoff snapshot
+hashes at the captured execution block and requires equality to the initial hashes
+before entering the uninterrupted lien barrier.
+
+Prepare returns the bytes and `plan_hash`. The coordinator checks exact length,
+header, suffix/hash agreement, provisional `EXECUTING`, active lock, full attributed
+escrow, attempt zero, terminal evidence zero, and the matching unprocessed operation;
+it forwards identical bytes and hash with no catch or intervening external call.
+Finalize repeats every check and re-resolves and re-hashes the complete canonical
+vectors and observations before the uninterrupted begin-all, verify-all-pending,
+complete-all, verify-all-active lien window. Exact replay returns from prepare before
+any dependency read and never invokes finalize. No caller, service, provider, policy,
+later transaction, persisted slot, or external selector can supply or reuse the plan.
+Any mutation or failure rolls back both module phases atomically.
 
 ## Canonical identity preimages
 

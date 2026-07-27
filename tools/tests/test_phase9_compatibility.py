@@ -261,6 +261,7 @@ def test_refinance_activation_row_and_acceptance_inventory_are_exact() -> None:
     assert phase9.REFINANCE_MODULE_ADR_PATH in phase9.BOUNDARY_PATHS
     assert phase9.REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH in phase9.BOUNDARY_PATHS
     assert phase9.REFINANCE_EXECUTION_SEMANTICS_ADR_PATH in phase9.BOUNDARY_PATHS
+    assert phase9.REFINANCE_REPARTITION_ADR_PATH in phase9.BOUNDARY_PATHS
     assert len(phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS) == 80
     assert "P9R-COMPAT-003" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
     assert "P9R-DON-004" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
@@ -319,6 +320,70 @@ def test_refinance_boundary_evidence_is_exact() -> None:
 
 
 @pytest.mark.parametrize(
+    ("target", "replacement"),
+    (
+        (
+            '"name": "executionBlock", "abi_type": "uint64", "word_start": 5',
+            '"name": "executionBlock", "abi_type": "uint256", "word_start": 5',
+        ),
+        (
+            '"name": "payoutAmounts", "abi_type": "uint256[4]", "word_start": 34',
+            '"name": "payoutAmounts", "abi_type": "uint256[4]", "word_start": 35',
+        ),
+        ('"collateral_count": 16', '"collateral_count": 15'),
+        (
+            '"ownership": "funding-cancellation-refund"',
+            '"ownership": "funding-refund"',
+        ),
+        ('"entries": ["prepareExecution"]', '"entries": ["prepare"]'),
+        (
+            '{"ordinal": 6, "wrapper": "executeRefinance"',
+            '{"ordinal": 7, "wrapper": "executeRefinance"',
+        ),
+        (
+            '{"nonce": 10, "artifact": "Phase9RefinanceExecutionFinalizeModule"}',
+            '{"nonce": 11, "artifact": "Phase9RefinanceExecutionFinalizeModule"}',
+        ),
+        (
+            '{"nonce": 11, "artifact": "PayoffQuoteEngine"}',
+            '{"nonce": 11, "artifact": "RefinanceCoordinator"}',
+        ),
+        (
+            '"plan_suffix_hash": "keccak256(raw 1920-byte planBytes suffix at bytes '
+            '256..2175 / words 8..67)"',
+            '"plan_suffix_hash": "keccak256(abi.encode(words 8..67))"',
+        ),
+        (
+            '"plan_hash": "keccak256(planBytes)"',
+            '"plan_hash": "keccak256(abi.encode(planBytes))"',
+        ),
+        (
+            '"uniqueRecipients[i] == address(0) for i >= distinctRecipientCount"',
+            '"uniqueRecipients[i] may remain nonzero after distinctRecipientCount"',
+        ),
+        ('"module_runtime_budget_bytes": 22118', '"module_runtime_budget_bytes": 24576'),
+    ),
+)
+def test_refinance_repartition_manifest_mutations_fail_closed(
+    monkeypatch: pytest.MonkeyPatch,
+    target: str,
+    replacement: str,
+) -> None:
+    canonical_read = phase9.read
+
+    def mutated_read(candidate: Path) -> str:
+        text = canonical_read(candidate)
+        if candidate != phase9.REFINANCE_REPARTITION_ADR_PATH:
+            return text
+        assert text.count(target) == 1
+        return text.replace(target, replacement, 1)
+
+    monkeypatch.setattr(phase9, "read", mutated_read)
+    with pytest.raises(SystemExit, match="repartition manifest"):
+        phase9.check_refinance_boundary_evidence()
+
+
+@pytest.mark.parametrize(
     ("path", "target", "replacement", "message"),
     (
         (
@@ -368,6 +433,31 @@ def test_refinance_boundary_evidence_is_exact() -> None:
             "call `beginHandoff` for every collateral",
             "begin and complete each collateral before the next",
             "D3 execution-semantics boundary",
+        ),
+        (
+            phase9.REFINANCE_REPARTITION_ADR_PATH,
+            "all-static ABI tuple of exactly 68 words and exactly 2,176 bytes",
+            "dynamic ABI tuple bounded to 22,272 bytes",
+            "execution-module repartition boundary",
+        ),
+        (
+            phase9.REFINANCE_REPARTITION_ADR_PATH,
+            "Each execution module has a hard candidate budget of 22,118 runtime bytes",
+            "Each execution module may use all 24,576 runtime bytes",
+            "execution-module repartition boundary",
+        ),
+        (
+            phase9.REFINANCE_REPARTITION_ADR_PATH,
+            "`0xca03dc4665a8c3603cb4fd5ce71af9649dc00d44`",
+            "`0x0000000000000000000000000000000000000000`",
+            "execution-module repartition boundary",
+        ),
+        (
+            phase9.REFINANCE_REPARTITION_ADR_PATH,
+            "does not decode a dynamic tail,\nrewrite a word, catch a prepare/finalize "
+            "revert, or perform an external call between\nthe two modules",
+            "may catch finalization and persist prepare effects",
+            "execution-module repartition boundary",
         ),
         (
             phase9.REFINANCE_ACCEPTANCE_PATH,

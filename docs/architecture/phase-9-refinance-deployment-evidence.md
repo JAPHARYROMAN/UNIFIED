@@ -2,13 +2,14 @@
 
 Status: normative evidence boundary; no accepted deployment exists
 
-Date: 2026-07-26
+Date: 2026-07-27
 
 ## Purpose and relationship to payoff evidence
 
 This document defines the deployment evidence required before the ADRs 0021 and 0022
-refinance method bundle can be activated under ADR 0023's candidate-only fixed-module
-partition. It does not authorize a deployment or claim that a complete candidate,
+refinance method bundle can be activated. ADR 0023's candidate-only fixed-module
+partition is historical; ADR 0026 governs the future deployment target. This document
+does not authorize a deployment or claim that a complete conforming candidate,
 verifier, manifest, or accepted evidence file exists. ADR 0023 permits architecture and
 tooling work only; none of its library, linking, or deployment evidence activates a
 method or checkpoint by itself.
@@ -19,17 +20,65 @@ permits only a preliminary, non-activating topology checkpoint for the larger re
 graph. ADR 0024 now selects explicit nonce preconditioning and freezes complete
 topology verification before one distinct governance-executor factory-role grant. The
 current topology harness remains preliminary because it deliberately stops before that
-grant and emits only non-activating evidence.
+grant and emits only non-activating evidence. It also implements the superseded
+ten-CREATE graph and therefore cannot become activation-grade evidence by adding a
+role grant or changing an evidence label.
 
 The accepted `P9-PAYOFF-001` checkpoint anchors that historical tool and evidence to its
 reviewed Git blobs; the current foundation instead uses the linked-module gate and the
 live ten-CREATE refinance verifier, and does not run the legacy payoff pin check.
+That verifier remains historical control evidence until it is replaced; passing it is
+not evidence for ADR 0026.
 
 The deployment remains disposable synthetic-local evidence only and local-only
 by design. It provides no business-logic activation and has no production,
 public-network, live-fund, external-provider, or mainnet authority.
 
-## Candidate topology form
+## ADR 0026 migration hold and target graph
+
+No accepted ADR-0026 deployment tool or artifact exists. Production Solidity, the
+deployment script, plan schema, smoke harness, verifier fixtures, expected hashes, and
+current candidate files deliberately remain unchanged in this specification-control
+slice. The ten-CREATE evidence described in the historical sections below is retained
+only to bind the measurement and reset history and cannot satisfy a `P9R-DEPLOY-*` row.
+
+The next implementation candidate must generate and independently verify exactly
+twelve consecutive zero-value top-level `CREATE` transactions at broadcaster nonces 1
+through 12:
+
+1. `LienRegistry`;
+2. `CollateralCustodyV2`;
+3. `Phase9LoanAccount` implementation;
+4. `PositionManagerV2` implementation;
+5. `Phase9LoanFactory`;
+6. `Phase9RefinanceValidationModule`;
+7. `Phase9RefinanceRequestModule`;
+8. `Phase9RefinanceLifecycleModule`;
+9. `Phase9RefinanceExecutionPrepareModule`;
+10. `Phase9RefinanceExecutionFinalizeModule`;
+11. `PayoffQuoteEngine`; and
+12. the fully linked `RefinanceCoordinator`.
+
+The future coordinator has exactly eight compiler-generated fixed-library call sites
+across five same-file, storage-free, non-linking modules. Its prediction uses RLP nonce
+byte `0x0c`; from canonical broadcaster
+`0x70997970c51812dc3a010c7d01b50e0d17dc79c8` it is
+`0xca03dc4665a8c3603cb4fd5ce71af9649dc00d44`. Both candidate nonce views must end
+at 13 (`0x0d`). The nonce-1 lien registry and nonce-11 payoff engine bind that predicted
+coordinator. Both execution modules must be at most 22,118 runtime bytes, every artifact
+must pass EIP-170 and EIP-3860, and the coordinator link proof must reproduce all eight
+creation/runtime replacements without an unresolved or undeclared target.
+
+ADR 0024 continues to govern the exact candidate identity, explicit nonce precondition,
+verification-before-grant order, one governance-executor factory-role grant, post-grant
+evidence, and reset. References below to ten creations, three modules, seven links,
+nonce-9 engine, nonce-10 coordinator, or final nonce `0xb` describe only the superseded
+candidate and are not operative requirements.
+
+## Historical ADR 0023 candidate topology record — non-operative
+
+Every imperative in this section records the superseded ADR 0023 candidate verifier.
+It is historical evidence only and is not an ADR 0026 deployment requirement.
 
 The topology candidate must be broadcast from one dedicated disposable Anvil account
 that has no imported or production-origin key, no real-value asset, and no authority
@@ -97,7 +146,11 @@ or create a `P9-REFI-001` checkpoint. ADR 0024 selects this explicit nonce-preco
 form for later activation-grade evidence and binds the final role order, but the
 candidate checkpoint does not implement or evidence its positive grant.
 
-## ADR 0024 activation-grade extension
+## Historical ADR 0024 activation-grade extension — non-operative topology
+
+The identity separation, authority grant, verification-before-grant, and reset controls
+remain operative through ADR 0026. The ten-CREATE topology referenced in this section
+is historical and must not be read as an imperative for a new candidate.
 
 Activation-grade evidence must preserve the candidate sequence above and add no
 transaction until its independent topology verification passes. The prerequisite
@@ -382,8 +435,8 @@ order.
 
 | Acceptance row | Later activation-grade artifact/result |
 |---|---|
-| `P9R-DEPLOY-001` | ADR 0024 explicit nonce-preconditioning form, pairwise-distinct identities, exact ten-CREATE nonce-1-through-10 sequence, modules at 6/7/8, engine at 9, coordinator at 10, complete verification, and one final governance-executor factory-role grant |
-| `P9R-DEPLOY-002` | Independent prerequisite RoleManager proof, raw nonce precondition, nonce-6/7/8 module and nonce-10 coordinator prediction, exact seven-link reproduction, reciprocal constructor binding, and exact grant receipt, log, nonce, and EIP-1898 state evidence |
+| `P9R-DEPLOY-001` | ADR 0024 explicit nonce-preconditioning and identity/grant/reset form with ADR 0026's exact twelve-CREATE nonce-1-through-12 sequence, modules at 6 through 10, engine at 11, coordinator at 12, complete verification, and one final governance-executor factory-role grant |
+| `P9R-DEPLOY-002` | Independent prerequisite RoleManager proof, raw nonce precondition, nonce-6-through-10 module and canonical nonce-12 coordinator prediction, exact eight-link reproduction, reciprocal constructor binding, final candidate nonce `0x0d`, and exact grant receipt, log, nonce, and EIP-1898 state evidence |
 | `P9R-DEPLOY-003` | Complete activation candidate, broadcast, RPC transaction/receipt/log, module self-patches, unlinked/linked code, link offsets, sizes, constructor, role, slot, behavior, schema, and accepted-digest verification under ADR 0024 |
 | `P9R-DEPLOY-004` | Negative evidence for wrong chain/key/order/nonce/prediction/code/constructor/RPC/provider/top-level CREATE2 or undeclared/mismatched/failed/late/post-hoc role action plus bounded reset |
 | `P9R-BOOT-005` | Reserved and unsatisfied until ADR 0024-conforming activation-grade deployment passes; then prove per-loan factory nonce/replay, salts/predictions/runtime, initialization/authentication, registry/event order, frozen errors, raw-ID ordering, zero-version/policy rules, and same-block checkpoint rollback |

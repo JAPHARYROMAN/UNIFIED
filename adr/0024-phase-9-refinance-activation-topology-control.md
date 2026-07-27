@@ -8,6 +8,14 @@ Owner: Protocol Architecture Authority
 
 Work item: `UNI-ADR-019`
 
+Qualification: ADR 0026 supersedes only this ADR's exact ten-CREATE graph, three module
+addresses, nonce-9 payoff engine, nonce-10 coordinator, seven link offsets, and final
+candidate nonce `0xb`. The identity separation, explicit nonce precondition,
+verification-before-grant order, sole governance-executor grant, post-grant evidence,
+activation closure, and bounded reset requirements below remain authoritative. The
+historical ten-CREATE text is retained as evidence of the candidate that was measured,
+not as the future deployment target.
+
 ## Context
 
 ADR 0021 requires a nonce-ordered refinance deployment followed by one exact

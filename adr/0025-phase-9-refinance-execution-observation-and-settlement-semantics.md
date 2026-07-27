@@ -4,6 +4,12 @@ Status: accepted for synthetic-local specification freeze; D3 remains closed
 
 Date: 2026-07-27
 
+Qualification: ADR 0026 repartitions this ADR's unchanged execution semantics across
+fixed prepare and finalize modules. Any inherited reference to ADR 0023's three-module
+candidate is historical. Snapshot, payout, provisional-state, lien-barrier, replay,
+event, and rollback semantics in this ADR remain unchanged and cannot be weakened to
+meet a code-size budget.
+
 ## Context
 
 ADR 0021 fixes the Phase 9 atomic-refinance boundary, but four details remain too
