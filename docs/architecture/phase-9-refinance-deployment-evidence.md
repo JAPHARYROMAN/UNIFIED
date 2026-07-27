@@ -14,45 +14,52 @@ tooling work only; none of its library, linking, or deployment evidence activate
 method or checkpoint by itself.
 
 The nested payoff pair-deployer evidence remains valid for the already accepted
-payoff-only checkpoint. It is historical evidence and is not rewritten. A later
-refinance activation uses a fresh, larger deployment with top-level sequential
-`CREATE` transactions plus one declared role-initialization transaction because the
-complete constructor-bound graph includes the lien registry, payoff engine, refinance
-coordinator reciprocal authority, and a factory that must register loans.
+payoff-only checkpoint. It is historical evidence and is not rewritten. This revision
+permits only a preliminary, non-activating topology checkpoint for the larger refinance
+graph. The final activation-grade form is deliberately unresolved: a later ADR must
+freeze either a nonce-0 `RoleManager` bootstrap or explicit nonce preconditioning, and
+must separately freeze the role-initialization and activation sequence.
 
 The deployment remains disposable synthetic-local evidence only and local-only
 by design. It provides no business-logic activation and has no production,
 public-network, live-fund, external-provider, or mainnet authority.
 
-## Required deployment form
+## Candidate topology form
 
-The candidate must be broadcast from one fresh local account whose starting nonce and
-complete transaction sequence are recorded before broadcast. `RoleManager` binds that
-account as the synthetic `GOVERNANCE_EXECUTOR_ROLE` holder and binds a distinct
-predeclared synthetic local address as administrator. Every top-level dependency is
-first deployed by that broadcaster through an ordinary top-level contract-creation
-transaction. Exactly one declared initialization call follows the address-sensitive
-creates. The sequence must satisfy all of the following:
+The topology candidate must be broadcast from one dedicated disposable Anvil account
+that has no imported or production-origin key, no real-value asset, and no authority
+outside the reset-bounded local chain. Before broadcast, the harness records the raw
+`eth_chainId` and `eth_getTransactionCount` requests and responses at both `latest` and
+`pending`, proving the fresh account nonce is 0. It then records the exact successful
+`anvil_setNonce` request that sets the account nonce to `0x1` and the immediate nonce
+reads proving both views are `0x1`; both original reads must be `0x0`. This Anvil
+mutation is a test precondition, not an
+on-chain transaction, role assignment, or deployment authority.
+
+Each of the ten topology artifacts is then deployed by that account through an ordinary
+top-level contract-creation transaction. There are exactly ten transactions and no
+following initialization or activation call. The sequence must satisfy all of the
+following:
 
 - chain ID is exactly `31337`;
 - the RPC is credential-free literal loopback HTTP with an explicit port;
-- every manifest transaction has the same fresh sender, the next consecutive nonce,
+- every topology-plan transaction has the same fresh sender, the next consecutive nonce,
   and zero value; every creation has exact reviewed creation bytecode and exact
   constructor arguments;
-- there are exactly ten top-level creations from the broadcaster's contract nonce 1:
+- there are exactly ten top-level creations from the broadcaster EOA transaction nonce 1:
   lien registry at nonce 1, collateral custody at 2, account implementation at 3,
   position-manager implementation at 4, factory at 5, validation module at 6, request
   module at 7, lifecycle module at 8, payoff engine at 9, and fully linked coordinator
   at 10;
 - the coordinator prediction is derived from nonce 10 with the single RLP nonce byte
   `0x0a`; the three module predictions use nonces 6, 7, and 8;
-- the manifest enumerates every transaction in exact ordinal order, including every
-  top-level dependency's artifact, source, compiler profile, creation/runtime hashes,
+- the topology plan enumerates every transaction in exact ordinal order, including each
+  topology artifact's source, compiler profile, creation/runtime hashes,
   predicted address, constructor ABI types, and constructor values;
 - the payoff quote engine is the entry immediately before the refinance
   coordinator;
 - before any broadcast, the coordinator address is predicted from the exact
-  broadcaster nonce at its manifest ordinal;
+  broadcaster nonce at its topology-plan ordinal;
 - the lien registry and payoff engine constructors receive that predicted
   coordinator address;
 - before the nonce-10 broadcast, the coordinator creation bytecode is dynamically
@@ -70,19 +77,21 @@ creates. The sequence must satisfy all of the following:
   optimizer 200, and non-via-IR settings;
 - the coordinator constructor receives the actual immediately preceding engine
   and every exact already-created dependency;
-- immediately after all address-sensitive creates, the final manifest transaction is
-  the exact zero-value call from the broadcaster to `RoleManager.grantRole` with
-  `(LOAN_FACTORY_ROLE, phase9Factory, type(uint64).max)` and exact predeclared calldata
-  hash;
-- that initialization succeeds before any loan registration, bootstrap, quote,
-  refinance, or other business action;
+- after the nonce-10 coordinator receipt, raw `eth_getTransactionCount` reads at
+  `latest` and `pending` both return nonce `0xb`;
 - every other reciprocal binding or factory implementation address is predicted
-  and verified in the same manifest before broadcast; and
+  and verified in the same topology plan before broadcast; and
 - there is no top-level pair deployer, `CREATE2`, proxy, setter, rebinding,
   mutable implementation selector, late open-authorization window, arbitrary call,
-  undeclared role grant, role-admin change, or post-hoc administrative repair
-  transaction. The one reviewed initialization call is mandatory configuration, not
-  repair authority.
+  role grant, role-admin change, policy/setup/repair call, loan registration,
+  bootstrap, quote, refinance, funding, or other business-action transaction.
+
+The topology candidate stops after nonce 10. It cannot grant the factory role, enable a
+successful protocol flow, set `activation_accepted=true`, satisfy a `P9R-DEPLOY-*` row,
+or create a `P9-REFI-001` checkpoint. Before activation-grade evidence is designed or
+accepted, a later ADR must resolve nonce-0 `RoleManager` bootstrap versus explicit
+nonce preconditioning and bind the final role and activation order. The candidate
+checkpoint does not prejudge that decision.
 
 The factory-internal deterministic minimal clones governed by ADRs 0021 and 0022 are a
 separate per-loan mechanism. Their `CREATE2`-style salts do not authorize
@@ -126,23 +135,45 @@ the factory/account verify the ADR-bound synthetic-local token/runtime, while on
 coordinator calls the typed asset resolver and proves its active, decimals,
 exact-balance-delta, runtime, and two-configuration equality.
 
-## Pre-broadcast manifest
+## Candidate artifacts and expected implementation paths
 
-The reviewed manifest is immutable input to candidate creation. At minimum it
+The topology checkpoint reserves the following exact paths:
+
+- broadcast script: `protocol/script/DeployPhase9RefinanceLocal.s.sol`;
+- reset-bounded Anvil harness: `scripts/smoke-phase9-refinance-anvil.ps1`;
+- independent verifier: `tools/verify_phase9_refinance_deployment.py`;
+- verifier tests: `tools/tests/test_phase9_refinance_deployment.py`;
+- schemas:
+  `infrastructure/local/phase9-refinance-deployment-plan.schema.json`,
+  `infrastructure/local/phase9-refinance-deployment-candidate.schema.json`, and
+  `infrastructure/local/phase9-refinance-deployment-evidence.schema.json`; and
+- canonical outputs:
+  `protocol/deployments/local/phase9-refinance-deployment-plan.json`,
+  `protocol/deployments/local/phase9-refinance-deployment-candidate.json`, and
+  `protocol/deployments/local/phase9-refinance-deployment-evidence.json`, plus
+  `protocol/broadcast/DeployPhase9RefinanceLocal.s.sol/31337/run-latest.json`.
+
+These are normative candidate expectations only. This document does not claim that
+any path exists, passes, is fresh, or contains approved evidence. Missing or
+nonconforming files leave the topology checkpoint unproven.
+
+## Pre-broadcast topology plan
+
+The reviewed topology plan is the immutable pre-broadcast manifest. At minimum it
 contains:
 
 | Field | Required evidence |
 |---|---|
-| Manifest identity | schema version, artifact type, environment `local`, chain `31337`, source commit, dirty-state rejection, generated-at, and canonical manifest digest |
-| Broadcaster and roles | nonzero address, proof it is a fresh disposable local key and the `RoleManager` governance executor, distinct nonzero synthetic local administrator, starting/final expected nonces, and no prior/pending transaction |
-| RPC boundary | canonical literal loopback URL, no credentials/path/query/fragment/proxy, expected chain ID, and reset generation |
-| Compiler boundary | Solidity/Foundry versions, optimizer settings, EVM version, remappings, artifact paths, compiler source-set hashes, all four same-source coordinator/module compiler artifacts, exact creation/runtime bytecode hashes, module runtime self-patch offsets, and runtime/initcode byte counts |
-| Ordered transactions | exactly ten rows for top-level `CREATE` nonces 1 through 10 followed by exactly one `RoleManager.grantRole` row; exact ordinal, sender nonce, target/predicted address as applicable, artifact or selector, constructor/calldata ABI encoding, zero value, input hash, expected runtime hash for creates, and expected `RoleGranted` log for the grant |
+| Plan identity | schema version, artifact type `PHASE9_REFINANCE_DEPLOYMENT_PLAN`, environment `local`, chain `31337`, source commit, dirty-state rejection, generated-at, and canonical plan digest |
+| Broadcaster and nonce precondition | nonzero dedicated disposable Anvil account, no imported or production-origin key, observed raw before/preconditioned `latest` and `pending` nonce evidence for `0x0`/`0x1`, expected final nonce `0xb`, exact `anvil_setNonce` request and response, and no prior or pending transaction |
+| RPC boundary | harness-enforced canonical literal loopback URL, no credentials/path/query/fragment/proxy, expected chain ID, pinned Anvil client identity, block-zero reset identity, and pre-broadcast canonical block |
+| Compiler boundary | harness-enforced Solidity/Foundry versions plus plan-bound optimizer settings, EVM version, remappings, artifact paths, compiler source-set hashes, all four same-source coordinator/module compiler artifacts, exact creation/runtime bytecode hashes, module runtime self-patch offsets, and runtime/initcode byte counts |
+| Ordered transactions | exactly ten rows for top-level `CREATE` nonces 1 through 10 and no other broadcaster transaction; exact ordinal, sender nonce, predicted address, artifact, constructor ABI encoding, zero value, input hash, and expected runtime hash |
 | Fixed links | predicted nonce-6/7/8 module addresses, exact seven creation/runtime link-reference offsets, unlinked hashes, fully linked coordinator hashes, no unresolved placeholder, and byte equality with the nonce-10 broadcast input |
-| Reciprocal bindings | predicted coordinator in lien registry and engine; actual engine and all exact registries/factory/controllers/token/recipients in coordinator; exact account/manager implementation runtimes and locked implementation initializers; factory/account-first/manager/registry caller and initialization authority; custody/lien caller authority |
-| Policy surfaces | exact code and behavior for `resolveLoanCreation`, `resolveBootstrap`, `resolveRefinancePolicy`, `resolveRefinanceAsset`, and `resolveCustodyAsset`, including active records, runtime hashes, exact-delta flags, and hard vector caps |
-| Storage pins | historical storage manifest digest and exact reviewed slots/offsets/types to observe after broadcast |
-| Scope | `contains_real_value=false`, mocks-only providers, synthetic identities/assets, no production key, no public network, and no live deployment authorization |
+| Reciprocal bindings | predicted coordinator in lien registry and engine; actual engine and all exact registries/factory/controllers/token/recipients in coordinator; exact account/manager implementation runtimes and locked implementation initializers |
+| Prerequisite boundary | exact compiler-produced local runtimes for RoleManager, loan/policy/asset registries, emergency controller, and synthetic settlement token; policy records and resolver behavior remain outside this topology-only checkpoint |
+| Storage pins | exact constructor and implementation-lock slots enumerated below; full historical layout and behavioral compatibility remain activation-grade gates |
+| Scope | `topology_only=true`, `activation_accepted=false`, `role_grant_performed=false`, `contains_real_value=false`, mocks-only providers, synthetic identities/assets, no production key, no public network, and no live deployment authorization |
 
 Absolute, traversal, alternate, symlinked, junction, or Windows-reparse artifact
 and evidence paths are rejected. Every path is resolved and checked inside the
@@ -151,26 +182,28 @@ unknown security-critical fields, noncanonical quantities, or numeric values tha
 can lose integer precision is rejected.
 
 The ordered-transaction section, rather than prose or filesystem discovery, is the only
-accepted sequence. Inserting, omitting, or reordering one transaction—or moving the
-role initialization after any business action—invalidates the complete deployment.
+candidate sequence. Inserting, omitting, or reordering one transaction, or adding a
+role, policy, setup, repair, or business-action transaction, invalidates the topology
+candidate.
 
 ## Stage A: broadcast candidate
 
-The later deployment entrypoint may write only the canonical refinance candidate
-path. A dry run or simulation can validate pre-broadcast pins but cannot write
-accepted evidence. The candidate must contain:
+The smoke harness alone writes the plan and raw nonce transcript. The Forge script may
+write only the canonical candidate path and only after a real `--broadcast`; a dry run
+or simulation writes neither candidate nor evidence. The candidate must contain:
 
 - artifact type `PHASE9_REFINANCE_DEPLOYMENT_CANDIDATE`;
-- `activation_accepted=false` and
+- `topology_only=true`, `activation_accepted=false`,
+  `role_grant_performed=false`, and
   `post_broadcast_verification_required=true`;
-- the exact pre-broadcast manifest digest and source commit;
-- broadcaster, distinct administrator, starting/final nonce, chain ID, canonical
-  dependency addresses, and the complete ordered expected transaction list, including
-  the final role-initialization target, calldata, input hash, and expected log;
+- the exact pre-broadcast plan digest and source commit;
+- broadcaster, raw nonce-preconditioning evidence, starting/final nonce, chain ID, and
+  canonical dependency addresses, all bound to the plan's complete ten-row expected
+  transaction list by its exact digest;
 - all predicted and actual addresses available after broadcast;
-- exact constructor-argument and configuration hashes;
-- expected creation/runtime code hashes and historical ABI/storage manifest
-  digests; and
+- exact configuration hash, predicted/actual address pairs, and observed runtime hashes,
+  with constructor inputs, complete creation/runtime hashes, and source/artifact identities
+  bound indirectly through the immutable plan digest; and
 - `contains_real_value=false` and `deployment_history_reverted=false`.
 
 Script-side reads and writes that occur before Forge sends the transactions do
@@ -180,54 +213,61 @@ the evidence is only a candidate.
 
 ## Stage B: post-broadcast verifier
 
-Only a separate post-broadcast verifier may write
-`activation_accepted=true`. It consumes the immutable manifest, candidate, raw
-broadcast artifact, canonical RPC, compiler artifacts, historical compatibility
-snapshots, and expected source head. It must independently prove:
+Only the separately named post-broadcast verifier may write the canonical topology
+evidence path with artifact type `PHASE9_REFINANCE_TOPOLOGY_EVIDENCE`. Its output
+retains `topology_only=true`, `activation_accepted=false`,
+`role_grant_performed=false`, and `contains_real_value=false`; it sets
+`topology_verified=true` only after every check passes and cannot write an accepted
+deployment or checkpoint. It consumes the immutable plan, candidate, raw broadcast
+artifact, canonical RPC, compiler artifacts, and expected source head. It must
+independently prove:
 
 1. `eth_chainId == 0x7a69` and the endpoint is the accepted loopback endpoint;
-2. the broadcast contains exactly the manifest's ordered contract-creation
-   transactions followed by exactly the one declared role-initialization call, with
-   exactly their ordered receipts;
-3. every transaction hash resolves through RPC to the exact sender, consecutive
+2. raw precondition evidence proves the dedicated account was at nonce `0x0`, the exact
+   `anvil_setNonce` call set it to `0x1`, and immediate `latest` and `pending` reads
+   both returned `0x1` before broadcast;
+3. the broadcast contains exactly the plan's ten ordered contract-creation
+   transactions with exactly their ordered receipts and no other broadcaster
+   transaction;
+4. every transaction hash resolves through RPC to the exact sender, consecutive
    nonce, zero value, target/input, and applicable predicted CREATE address;
-4. every receipt is successful and binds transaction, block number, canonical
-   block hash, applicable contract address, exact expected logs, and gas fields without
-   a missing receipt;
-5. every creation input equals reviewed creation bytecode followed by the exact
+5. every receipt is present, ordered, successful, and binds transaction, block number,
+   canonical block hash, and applicable contract address; role grant/revoke/admin logs
+   are forbidden, while exhaustive event and gas accounting remain activation-grade;
+6. every creation input equals reviewed creation bytecode followed by the exact
    ABI-encoded constructor arguments;
-6. every deployed address contains the exact reviewed runtime code at the
+7. every deployed address contains the exact reviewed runtime code at the
    receipt's canonical EIP-1898 block-hash reference;
-7. the validation, request, and lifecycle modules occupy nonces 6, 7, and 8; their
+8. the validation, request, and lifecycle modules occupy nonces 6, 7, and 8; their
    deployed runtimes equal the address-self-patched compiler templates; each is
    storage-free and contains no nested link or delegatecall; and all module and
    coordinator runtime/initcode sizes pass the pinned limits;
-8. the engine is nonce 9 immediately before the nonce-10 coordinator, all four actual
+9. the engine is nonce 9 immediately before the nonce-10 coordinator, all four actual
    addresses match the pre-broadcast predictions, and no intervening sender nonce
    exists;
-9. the verifier reproduces the exact seven compiler-reported link replacements from
-   the unlinked coordinator artifact and predicted module addresses, proves no other or
-   unresolved link exists, and byte-compares the fully linked creation/runtime bytes
-   and final nonce-10 transaction input;
-10. the lien registry and payoff engine authorize the exact coordinator, while
+10. the verifier reproduces the exact seven executable-code replacements from the
+    unlinked coordinator artifact and predicted module addresses, proves no other or
+    unresolved link exists, and separately byte-compares the compiler-linked creation/
+    runtime bytes—including library-bound compiler metadata—and the nonce-10 input;
+11. the lien registry and payoff engine bind the exact coordinator, while
    the coordinator binds the exact loan registry, factory, engine, lien registry,
    asset registry, refinance policy registry, emergency controller, treasury fee
    recipient, and settlement token;
-11. the final initialization receipt contains exactly
-   `RoleGranted(LOAN_FACTORY_ROLE, phase9Factory, type(uint64).max, broadcaster)`;
-   canonical EIP-1898 reads at its block hash prove the exact expiry and `hasRole`,
-   source and transaction/log completeness prove no other role grant or role-admin
-   change, and no business action precedes it;
-12. factory/account/position-manager/custody implementations and every other
-    constructor-bound dependency agree through storage and behavioral getters, and
-    enforce the exact coordinator/factory caller graph and locked-implementation
-    semantics in ADRs 0021 and 0022;
-13. all recorded addresses are nonzero where required, contain code where
-    required, and have no production-looking identity or provider binding;
-14. the historical ABI/storage freeze and exact additive allowlist of one transition
-    event plus two typed unknown-ID errors match the exact deployed source; and
-15. the accepted evidence schema and canonical evidence digest validate before
-    the accepted file is written.
+12. post-broadcast `latest` and `pending` nonce reads both return `0xb`, and the candidate,
+    broadcast, and RPC evidence contain no role grant, role-admin change, policy/setup/
+    repair call, or business action;
+13. factory/account/position-manager/custody implementations and every other
+    constructor-bound dependency agree through the enumerated storage observations,
+    including locked implementation initializers;
+14. all recorded addresses are nonzero where required, exact code exists where required,
+    and the harness uses only its pinned synthetic identities; and
+15. the candidate topology evidence schema validates before the non-activating topology
+    file is written.
+
+Behavioral resolver tuples, complete caller-graph execution, exhaustive event/gas
+accounting, the historical ABI/storage freeze, additive ABI allowlists, and the final
+canonical evidence digest remain mandatory activation-grade work. This preliminary
+topology verifier neither claims nor satisfies them.
 
 The token observation is bound to its receipt block hash. Each dependency and
 storage observation is bound to that contract's receipt block hash or a later
@@ -242,80 +282,79 @@ The verifier records exact slot words, decodes them using the historical layout,
 and checks matching public or purpose-built read behavior where the frozen surface
 allows it.
 
-At minimum it observes:
+For this preliminary topology checkpoint it observes:
 
 - payoff engine slots `0..3` and their loan registry, quote-policy registry plus
   maximum validity packing, factory, and coordinator bindings;
-- refinance coordinator top-level slots `0..15`, including dependency slots
-  `0..8` and the empty initial mapping roots for refinance nonces, records,
-  commitment vectors, commitments, attributed escrow, terminal results, and
-  processed operations;
-- lien registry slots `0..2`, including the exact coordinator binding and empty
-  initial lien/handoff mappings;
+- refinance coordinator dependency slots `0..8`;
+- lien registry slot `0`, containing the exact coordinator binding;
 - custody, factory, account implementation, and position-manager implementation
   constructor/configuration fields required by their historical layouts, including
   locked implementation initializers without an added constructor ABI item;
-- runtime code and exact code hashes for all resolver mocks, registries,
-  controllers, implementations, token, custody, lien registry, factory, engine,
-  and coordinator;
-- the `RoleManager` constructor's distinct administrator/governance-executor bindings,
-  `roleExpiry(LOAN_FACTORY_ROLE, phase9Factory) == type(uint64).max`,
-  `hasRole(LOAN_FACTORY_ROLE, phase9Factory) == true`, exact expected constructor/grant
-  logs, and no additional grant or role-admin-change transaction/log;
-- creation/bootstrap/refinance/asset resolver selectors return their exact typed
-  tuples, mode values, active flags, vector caps, dormant replacement template, and
-  bootstrap facts; malformed, oversized, or substituted tuples fail closed; and
-- initial zero application state: no loan, clone, custody record, lien, quote,
-  refinance, commitment, escrow liability, terminal result, or processed
-  operation.
+- runtime code and exact code hashes for every configured prerequisite, implementation,
+  custody, lien registry, factory, engine, module, and coordinator;
+- the pre-existing `RoleManager` as untrusted local context: before broadcast for the
+  predicted nonce-5 factory and after broadcast for the actual factory,
+  `roleExpiry(LOAN_FACTORY_ROLE, factory) == 0` and `hasRole(...) == false`; no grant or
+  role-admin transaction/log occurs, while future positive role-initialization evidence
+  is deferred to the later activation-topology ADR;
+- no role, policy, setup, repair, bootstrap, quote, refinance, or other business-action
+  transaction is present in the candidate broadcaster's exact ten-transaction history.
 
-The later bootstrap creates fixture state only after accepted deployment evidence
-exists and is evidenced separately under `P9R-BOOT-*`.
+Coordinator mapping-root observations, lien mapping-root observations, resolver tuples,
+full initial application state, and behavioral getter/caller tests are deferred to the
+later activation-grade evidence described by the acceptance matrix.
+
+No bootstrap or protocol flow may run from this topology checkpoint. Fixture state may
+be created only after the later ADR and activation-grade deployment evidence pass, and
+is evidenced separately under `P9R-BOOT-*`.
 
 ## Rejection, reset, and residue
 
-An intervening or undeclared broadcaster transaction, wrong nonce, wrong prediction,
-wrong code, constructor mismatch, mismatched/failed/missing/late role initialization,
-wrong role expiry/member/sender/calldata/log, any additional role grant or role-admin
-change, post-hoc repair, failed or missing receipt, unexpected log, replacement block,
-non-loopback RPC, dry run, source mismatch, stale artifact, or production-looking input
-rejects the complete activation.
+An intervening or undeclared broadcaster transaction, wrong before/preconditioned/after
+nonce, missing or mismatched `anvil_setNonce` evidence, wrong prediction, wrong code,
+constructor mismatch, any role grant or role-admin change, policy/setup/repair or
+business-action call, failed or missing receipt, unexpected log, replacement block,
+non-loopback RPC, dry run, source mismatch, stale artifact, production-looking key, or
+real-value input rejects the complete topology candidate.
 
-On rejection the verifier removes only the canonical not-yet-accepted output and
-may write a canonical rejection receipt with:
-
-```text
-activation_accepted = false
-bounded_local_reset_required = true
-deployment_history_reverted = false
-```
-
-It does not claim that an on-chain transaction was reverted after confirmation.
-Accepted and rejected refinance evidence cannot coexist for one reset generation.
-A later run cannot accept evidence until the one-command bounded local reset
+On rejection the verifier removes only the canonical not-yet-verified topology output,
+emits diagnostics without creating a fourth evidence artifact, and requires the
+one-command bounded local reset. It does not claim that an on-chain transaction was
+reverted after confirmation. A later run cannot verify topology evidence until the reset
 disposes of the canonical local chain state and canonical refinance evidence
 directory.
 
 Unsolicited token surplus at any deployed address is not a protocol liability,
 does not make candidate evidence acceptable, and creates no rescue authority.
 Donation residue is removed only with the disposable local reset.
+Successful topology verification also requires immediate bounded reset and disposal;
+verified evidence proves the completed observation, not an authority to retain or use
+the deployed local graph.
 
 ## Acceptance mapping
 
-| Acceptance row | Required artifact/result |
+The following rows remain activation-grade requirements. The topology candidate can
+provide preliminary bytecode, address, nonce, and receipt observations, but cannot
+satisfy any row until the later topology ADR resolves nonce zero and role activation.
+
+| Acceptance row | Later activation-grade artifact/result |
 |---|---|
-| `P9R-DEPLOY-001` | Fresh synthetic governance-executor broadcaster, distinct synthetic administrator, chain 31337, exact ten-CREATE nonce-1-through-10 sequence then one factory-role initialization, modules at 6/7/8, engine at 9, and coordinator at 10 |
-| `P9R-DEPLOY-002` | Independent nonce-6/7/8 module and nonce-10 coordinator prediction, exact seven-link reproduction, reciprocal constructor binding, and exact factory-role call/receipt/log/EIP-1898 state evidence |
-| `P9R-DEPLOY-003` | Candidate, complete broadcast, RPC transaction/receipt/log, module self-patches, unlinked/linked code, link offsets, sizes, constructor, role, slot, behavior, schema, and accepted-digest verification |
+| `P9R-DEPLOY-001` | Later-ADR-selected nonce-0 bootstrap or nonce-preconditioning form, exact ten-CREATE nonce-1-through-10 sequence, modules at 6/7/8, engine at 9, coordinator at 10, and the separately frozen role-initialization order |
+| `P9R-DEPLOY-002` | Independent nonce-6/7/8 module and nonce-10 coordinator prediction, exact seven-link reproduction, reciprocal constructor binding, and the later-ADR-selected RoleManager bootstrap/initialization receipt, log, and EIP-1898 state evidence |
+| `P9R-DEPLOY-003` | Complete activation candidate, broadcast, RPC transaction/receipt/log, module self-patches, unlinked/linked code, link offsets, sizes, constructor, role, slot, behavior, schema, and accepted-digest verification after the topology choice is frozen |
 | `P9R-DEPLOY-004` | Negative evidence for wrong chain/key/order/nonce/prediction/code/constructor/RPC/provider/top-level CREATE2 or undeclared/mismatched/failed/late/post-hoc role action plus bounded reset |
-| `P9R-BOOT-005` | Per-loan factory nonce and replay classification, exact salts/predictions/runtime, account-before-manager initialization/authentication, registry/event order, frozen errors, raw-ID ordering, zero-version/policy rules, and same-block checkpoint coalescing with rollback at every step |
+| `P9R-BOOT-005` | Reserved and unsatisfied until the later topology ADR and activation-grade deployment pass; then prove per-loan factory nonce/replay, salts/predictions/runtime, initialization/authentication, registry/event order, frozen errors, raw-ID ordering, zero-version/policy rules, and same-block checkpoint rollback |
 | `P9R-DON-004` | One-command bounded-local-reset command/script, reset-generation manifest, before/after chain identity, observed removal of donated surplus, and proof that no production disposal/recovery authority exists |
 | `P9R-FZ-001` | Exact source, compiler, ABI, storage, one-event/two-error additive allowlist, and method-level checkpoint binding |
 | `P9R-LOCAL-001` | Synthetic-local dependency/provider/credential boundary scan |
-| `P9R-LOCAL-002` | Clean bootstrap, accepted deployment, flow, restart/replay, and reset evidence from the same reset generation |
+| `P9R-LOCAL-002` | Reserved and unsatisfied until the later topology ADR; then prove clean bootstrap, accepted deployment, flow, restart/replay, and reset evidence from the same reset generation |
 | `P9R-LOCAL-003` | Explicit proof that the evidence cannot be reused as public-chain or production authorization |
 
 No deployment checkpoint may pass until independent architecture and security
 review approve the accepted evidence and exact source head, and the bundled
-`UNI-REFI-001`/`UNI-REFI-002` method activation gate passes. This document alone
-does not change either backlog row from `TODO`.
+`UNI-REFI-001`/`UNI-REFI-002` method activation gate passes. The topology candidate
+authorized here is preliminary input only and cannot satisfy any row above. A later ADR
+must first freeze nonce-0 `RoleManager` bootstrap versus explicit nonce preconditioning
+and the final role/activation sequence. This document alone does not change either
+backlog row from `TODO`.

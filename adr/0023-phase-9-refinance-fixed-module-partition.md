@@ -335,10 +335,21 @@ must not cause the coordinator, request module, validation module, or lifecycle 
 to exceed EIP-170, the applicable initcode limit, the reviewed local block-gas budget,
 or compiler stack limits under the pinned non-via-IR settings.
 
-### 7. Revised ten-CREATE deployment order
+### 7. Revised ten-CREATE deployment order and candidate topology
 
-The dedicated synthetic-local request deployer or broadcaster starts at contract
-nonce 1 and performs exactly these top-level sequential `CREATE` operations:
+For the non-activating synthetic-local topology checkpoint only, the broadcaster is a
+dedicated disposable Anvil account with no imported or production-origin key, no real-
+value asset, and no authority outside the reset-bounded local chain. Before broadcast,
+the topology harness requires the decoded `eth_chainId` response to equal `0x7a69`,
+records raw `eth_getTransactionCount` responses at `latest` and `pending`, applies
+`anvil_setNonce` with the broadcaster and `0x1`, and records the immediate postcondition
+that both nonce reads are exactly `0x1`; the original reads must both be exactly
+`0x0`. The nonce mutation is
+an explicit Anvil test precondition, not a transaction, protocol action, governance
+action, or deployment authority.
+
+The same account then performs exactly these ten top-level sequential `CREATE`
+transactions, all with zero value and nonces 1 through 10:
 
 1. nonce 1: `LienRegistry(predictedCoordinator)`;
 2. nonce 2: `CollateralCustodyV2(assetRegistry, lienRegistry, emergencyController)`;
@@ -372,17 +383,54 @@ seven link-reference call sites and the attested linker, then byte-compared with
 input. An ordinary build-time-linked `new RefinanceCoordinator` is not deployment
 evidence for this sequence, and the broadcaster does not patch runtime bytecode. The
 lien registry and payoff engine constructor bindings use the nonce-10 coordinator
-prediction. Evidence must prove every nonce, prediction, actual address, address-
-patched module code hash, constructor argument, link offset, fully linked bytecode,
-zero transaction value, successful receipt, and reciprocal authorization at the
-accepted block hash.
+prediction. Candidate topology evidence must prove every nonce, prediction, actual
+address, address-patched module code hash, constructor argument, link offset, fully
+linked bytecode, zero transaction value, successful receipt, and reciprocal
+constructor binding at canonical receipt block hashes. After the nonce-10 receipt it
+must record `eth_getTransactionCount` at `latest` and `pending` as nonce `0xb`.
 
-After all ten creations, and outside the CREATE sequence, the same declared
-governance broadcaster performs exactly one zero-value
-`RoleManager.grantRole(LOAN_FACTORY_ROLE, phase9Factory,
-type(uint64).max)` transaction. No other role, policy, setup, repair, or business action
-may intervene. Per-loan factory clones remain the separately authorized deterministic
-`CREATE2` operations and do not alter this top-level sequence.
+The candidate topology broadcast stops after the ten creations. It performs no
+`RoleManager.grantRole`, role-admin change, policy/setup/repair call, loan registration,
+bootstrap, quote, refinance, or other business action, and it cannot write an
+activation-accepted artifact. Per-loan factory clones remain the separately authorized
+deterministic `CREATE2` operations and do not alter this top-level sequence.
+
+This nonce preconditioning is not the final activation-grade resolution. Before any
+`P9R-DEPLOY-*` row or `P9-REFI-001` checkpoint can pass, a later ADR must choose and freeze
+either a nonce-0 `RoleManager` bootstrap followed by the ten creations or explicit
+nonce preconditioning as an activation-grade deployment precondition. That ADR must
+also freeze the exact role initialization and activation order. This candidate does
+not prejudge that choice and grants no role or method authority.
+
+The candidate checkpoint reserves these expected implementation and evidence paths:
+
+- `protocol/script/DeployPhase9RefinanceLocal.s.sol` for the exact ten-transaction
+  topology broadcast;
+- `scripts/smoke-phase9-refinance-anvil.ps1` for reset-bounded Anvil setup, raw nonce
+  precondition evidence, broadcast, verification, and disposal;
+- `tools/verify_phase9_refinance_deployment.py` and
+  `tools/tests/test_phase9_refinance_deployment.py` for independent verification and
+  negative tests;
+- `infrastructure/local/phase9-refinance-deployment-plan.schema.json`,
+  `infrastructure/local/phase9-refinance-deployment-candidate.schema.json`, and
+  `infrastructure/local/phase9-refinance-deployment-evidence.schema.json`; and
+- canonical candidate outputs
+  `protocol/deployments/local/phase9-refinance-deployment-plan.json`,
+  `protocol/deployments/local/phase9-refinance-deployment-candidate.json`, and
+  `protocol/deployments/local/phase9-refinance-deployment-evidence.json`, plus
+  `protocol/broadcast/DeployPhase9RefinanceLocal.s.sol/31337/run-latest.json`.
+
+These names are pinned expectations, not claims that the files exist, pass, or are
+accepted. Missing, stale, dirty, or nonconforming files leave the topology checkpoint
+unproven.
+
+The smoke harness alone writes the immutable plan and raw nonce transcript with
+artifact type `PHASE9_REFINANCE_DEPLOYMENT_PLAN`. The Forge script may emit artifact
+type `PHASE9_REFINANCE_DEPLOYMENT_CANDIDATE` only after a real `--broadcast`; a dry run
+emits neither candidate nor evidence. The independent verifier alone may emit artifact
+type `PHASE9_REFINANCE_TOPOLOGY_EVIDENCE` with `topology_verified=true`. Every one of
+the three artifacts must keep `topology_only=true`, `activation_accepted=false`,
+`role_grant_performed=false`, and `contains_real_value=false`.
 
 ### 8. Verifier and implementation-checkpoint changes
 
@@ -409,13 +457,17 @@ before this architecture can be accepted. They must:
 - reject all delegatecall opcodes other than the exact compiler-attributed seven
   coordinator call sites and reject every link reference and delegatecall opcode in
   every module;
-- replace the seven-CREATE request harness and nonce-7 prediction with the exact
-  ten-CREATE sequence and nonce-10 (`0x0a`) prediction;
-- verify all three link targets, final coordinator bytecode, constructor bindings, role
-  grant, and block-hash-pinned deployed code; and
-- make generated-artifact freshness, ABI compatibility, structural storage
-  compatibility, method activation, deployment evidence, and the complete `P9R-*`
-  traceability map pass against one reviewed commit.
+- add the separately named topology script, smoke harness, verifier, tests, schemas,
+  and candidate artifacts pinned in Section 7 without treating the historical
+  seven-CREATE request harness as deployment evidence;
+- verify `anvil_setNonce` preconditioning through raw before/after RPC evidence, the
+  exact ten-CREATE sequence and nonce-10 (`0x0a`) prediction, all three link targets,
+  final coordinator bytecode, constructor bindings, zero transaction values, exact `0xb`
+  postcondition, absence of a role or business-action transaction, and block-hash-
+  pinned deployed code; and
+- keep method activation, activation-grade deployment evidence, and every `P9R-*` row
+  red or reserved while separately requiring the candidate topology artifacts,
+  schemas, reset, and verification checks to pass against one reviewed commit.
 
 An implementation checkpoint may not be marked `PASS`, a backlog row may not become
 `DONE`, and generated checkpoint artifacts may not be accepted merely because the
@@ -534,9 +586,12 @@ assembly, and dynamic-linking gates above. This acceptance permits candidate cod
 tooling work only.
 
 The seven-CREATE harness remains historical candidate code, and the prior nine-CREATE
-candidate model is superseded. The ten-CREATE sequence
-is the required candidate deployment model but is not an approved deployment until
-one reviewed commit proves every gate above. All unresolved D1 findings remain release
-blockers, and no D1-D4 refinance method, deployment, backlog item, or implementation
-checkpoint may be treated as activated before the implementation, independent
-architecture/security/tooling reviews, and complete evidence package pass together.
+candidate model is superseded. The nonce-preconditioned ten-CREATE sequence is
+authorized only as the non-activating disposable-Anvil topology checkpoint above. It
+performs no role grant, creates no accepted `P9R` evidence, and is not an approved
+deployment. A later ADR must resolve nonce-0 `RoleManager` bootstrap versus explicit
+nonce preconditioning before activation-grade evidence can be accepted. All unresolved
+D1 findings remain release blockers, and no D1-D4 refinance method, deployment,
+backlog item, or implementation checkpoint may be treated as activated before the
+implementation, independent architecture/security/tooling reviews, and complete
+evidence package pass together.

@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://unified.local/schemas/phase9-refinance-deployment-plan-v1.json",
+  "title": "UNIFIED Phase 9 refinance non-activating deployment plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "artifact_type", "environment", "contains_real_value", "chain_id",
+    "activation_accepted", "topology_only", "topology_verified", "role_grant_performed",
+    "source_commit", "working_tree_clean", "generated_at", "broadcaster", "starting_nonce", "final_nonce",
+    "reset_identity", "reset_command", "nonce_transcript", "pre_broadcast_block", "configuration_hash", "configuration", "addresses", "compiler",
+    "forge_libraries", "forge_libraries_arguments", "transactions", "modules",
+    "coordinator_links", "storage_expectations", "plan_sha256"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "artifact_type": { "const": "PHASE9_REFINANCE_DEPLOYMENT_PLAN" },
+    "environment": { "const": "local" },
+    "contains_real_value": { "const": false },
+    "chain_id": { "const": 31337 },
+    "activation_accepted": { "const": false },
+    "topology_only": { "const": true },
+    "topology_verified": { "const": false },
+    "role_grant_performed": { "const": false },
+    "source_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "working_tree_clean": { "const": true },
+    "generated_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" },
+    "broadcaster": { "$ref": "#/$defs/address" },
+    "starting_nonce": { "const": 1 },
+    "final_nonce": { "const": 11 },
+    "reset_identity": { "$ref": "#/$defs/bytes32" },
+    "reset_command": { "type": "string", "minLength": 1 },
+    "nonce_transcript": { "$ref": "#/$defs/nonceTranscript" },
+    "pre_broadcast_block": { "$ref": "#/$defs/preBroadcastBlock" },
+    "configuration_hash": { "$ref": "#/$defs/bytes32" },
+    "configuration": { "$ref": "#/$defs/configuration" },
+    "addresses": { "$ref": "#/$defs/addresses" },
+    "compiler": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["solidity", "openzeppelin", "settings", "remappings", "source_set_sha256", "source_count"],
+      "properties": {
+        "solidity": { "type": "string", "pattern": "^0\\.8\\.36\\+commit\\.[0-9a-f]+\\.Emscripten\\.clang$" },
+        "openzeppelin": { "const": "5.6.1" },
+        "settings": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["evmVersion", "optimizer", "viaIR"],
+          "properties": {
+            "evmVersion": { "const": "prague" },
+            "optimizer": {
+              "type": "object", "additionalProperties": false,
+              "required": ["enabled", "runs"],
+              "properties": { "enabled": { "const": true }, "runs": { "const": 200 } }
+            },
+            "viaIR": { "const": false }
+          }
+        },
+        "remappings": {
+          "const": [
+            ":@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+            ":openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/"
+          ]
+        },
+        "source_set_sha256": { "$ref": "#/$defs/sha256" },
+        "source_count": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "forge_libraries": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": { "$ref": "#/$defs/forgeLibrary" }
+    },
+    "forge_libraries_arguments": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": { "type": "string", "pattern": "^src/resolution/RefinanceCoordinator\\.sol:Phase9Refinance(Validation|Request|Lifecycle)Module:0x[0-9a-f]{40}$" }
+    },
+    "transactions": {
+      "type": "array", "minItems": 10, "maxItems": 10,
+      "items": { "$ref": "#/$defs/transaction" }
+    },
+    "modules": {
+      "type": "object", "additionalProperties": false,
+      "required": ["validation_module", "request_module", "lifecycle_module"],
+      "properties": {
+        "validation_module": { "$ref": "#/$defs/module" },
+        "request_module": { "$ref": "#/$defs/module" },
+        "lifecycle_module": { "$ref": "#/$defs/module" }
+      }
+    },
+    "coordinator_links": {
+      "type": "object", "additionalProperties": false, "required": ["creation", "runtime"],
+      "properties": {
+        "creation": { "$ref": "#/$defs/linkArtifact" },
+        "runtime": { "$ref": "#/$defs/linkArtifact" }
+      }
+    },
+    "storage_expectations": {
+      "type": "array", "minItems": 27, "maxItems": 27,
+      "items": { "$ref": "#/$defs/storage" }
+    },
+    "plan_sha256": { "$ref": "#/$defs/sha256" }
+  },
+  "$defs": {
+    "address": { "type": "string", "pattern": "^0x[0-9a-f]{40}$", "not": { "const": "0x0000000000000000000000000000000000000000" } },
+    "bytes32": { "type": "string", "pattern": "^0x[0-9a-f]{64}$" },
+    "sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "digest": { "type": "string", "pattern": "^(0x|sha256:)[0-9a-f]{64}$" },
+    "configuration": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "loan_registry", "role_manager", "settlement_token", "quote_policy_registry",
+        "refinance_policy_registry", "amendment_policy_registry", "protection_policy_registry",
+        "recovery_policy_registry", "asset_registry", "emergency_controller",
+        "treasury_fee_recipient", "maximum_quote_validity"
+      ],
+      "properties": {
+        "loan_registry": { "$ref": "#/$defs/address" },
+        "role_manager": { "$ref": "#/$defs/address" },
+        "settlement_token": { "$ref": "#/$defs/address" },
+        "quote_policy_registry": { "$ref": "#/$defs/address" },
+        "refinance_policy_registry": { "$ref": "#/$defs/address" },
+        "amendment_policy_registry": { "$ref": "#/$defs/address" },
+        "protection_policy_registry": { "$ref": "#/$defs/address" },
+        "recovery_policy_registry": { "$ref": "#/$defs/address" },
+        "asset_registry": { "$ref": "#/$defs/address" },
+        "emergency_controller": { "$ref": "#/$defs/address" },
+        "treasury_fee_recipient": { "$ref": "#/$defs/address" },
+        "maximum_quote_validity": { "type": "integer", "minimum": 1, "maximum": 18446744073709551615 }
+      }
+    },
+    "addresses": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "lien_registry", "collateral_custody", "loan_account_implementation",
+        "position_manager_implementation", "phase9_loan_factory", "validation_module",
+        "request_module", "lifecycle_module", "payoff_quote_engine", "refinance_coordinator"
+      ],
+      "properties": {
+        "lien_registry": { "$ref": "#/$defs/address" },
+        "collateral_custody": { "$ref": "#/$defs/address" },
+        "loan_account_implementation": { "$ref": "#/$defs/address" },
+        "position_manager_implementation": { "$ref": "#/$defs/address" },
+        "phase9_loan_factory": { "$ref": "#/$defs/address" },
+        "validation_module": { "$ref": "#/$defs/address" },
+        "request_module": { "$ref": "#/$defs/address" },
+        "lifecycle_module": { "$ref": "#/$defs/address" },
+        "payoff_quote_engine": { "$ref": "#/$defs/address" },
+        "refinance_coordinator": { "$ref": "#/$defs/address" }
+      }
+    },
+    "forgeLibrary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source", "library", "address"],
+      "properties": {
+        "source": { "const": "src/resolution/RefinanceCoordinator.sol" },
+        "library": { "enum": ["Phase9RefinanceValidationModule", "Phase9RefinanceRequestModule", "Phase9RefinanceLifecycleModule"] },
+        "address": { "$ref": "#/$defs/address" }
+      }
+    },
+    "transaction": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "ordinal", "nonce", "sender", "value", "deployment", "contract", "source", "artifact", "source_sha256", "predicted_address",
+        "constructor_types", "constructor_values", "constructor_bytes", "creation_code_hash",
+        "creation_input_hash", "initcode_bytes", "runtime_code_hash", "runtime_bytes"
+      ],
+      "properties": {
+        "ordinal": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "nonce": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "sender": { "$ref": "#/$defs/address" },
+        "value": { "const": 0 },
+        "deployment": { "type": "string", "minLength": 1 },
+        "contract": { "type": "string", "minLength": 1 },
+        "source": { "type": "string", "pattern": "^protocol/src/" },
+        "artifact": { "type": "string", "pattern": "^protocol/out/[A-Za-z0-9]+\\.sol/[A-Za-z0-9]+\\.json$" },
+        "source_sha256": { "$ref": "#/$defs/sha256" },
+        "predicted_address": { "$ref": "#/$defs/address" },
+        "constructor_types": { "type": "array", "items": { "enum": ["address", "uint64"] }, "maxItems": 9 },
+        "constructor_values": { "type": "array", "items": { "anyOf": [{ "$ref": "#/$defs/address" }, { "type": "integer", "minimum": 1 }] }, "maxItems": 9 },
+        "constructor_bytes": { "type": "integer", "minimum": 0, "maximum": 288 },
+        "creation_code_hash": { "$ref": "#/$defs/bytes32" },
+        "creation_input_hash": { "$ref": "#/$defs/bytes32" },
+        "initcode_bytes": { "type": "integer", "minimum": 1, "maximum": 49152 },
+        "runtime_code_hash": { "$ref": "#/$defs/bytes32" },
+        "runtime_bytes": { "type": "integer", "minimum": 1, "maximum": 24576 }
+      }
+    },
+    "module": {
+      "type": "object", "additionalProperties": false,
+      "required": ["contract", "address", "self_patch_offset", "self_patch_length", "template_runtime_code_hash", "patched_runtime_code_hash", "runtime_bytes"],
+      "properties": {
+        "contract": { "type": "string", "minLength": 1 },
+        "address": { "$ref": "#/$defs/address" },
+        "self_patch_offset": { "const": 1 },
+        "self_patch_length": { "const": 20 },
+        "template_runtime_code_hash": { "$ref": "#/$defs/bytes32" },
+        "patched_runtime_code_hash": { "$ref": "#/$defs/bytes32" },
+        "runtime_bytes": { "type": "integer", "minimum": 1, "maximum": 24576 }
+      }
+    },
+    "link": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source", "library", "start", "length"],
+      "properties": {
+        "source": { "const": "src/resolution/RefinanceCoordinator.sol" },
+        "library": { "enum": ["Phase9RefinanceValidationModule", "Phase9RefinanceRequestModule", "Phase9RefinanceLifecycleModule"] },
+        "start": { "type": "integer", "minimum": 0 },
+        "length": { "const": 20 }
+      }
+    },
+    "linkArtifact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["entries", "linked_code_hash", "linked_bytes", "reproduced_executable_hash"],
+      "properties": {
+        "entries": { "type": "array", "minItems": 7, "maxItems": 7, "items": { "$ref": "#/$defs/link" } },
+        "linked_code_hash": { "$ref": "#/$defs/bytes32" },
+        "linked_bytes": { "type": "integer", "minimum": 1, "maximum": 49152 },
+        "reproduced_executable_hash": { "$ref": "#/$defs/bytes32" }
+      }
+    },
+    "storage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["deployment", "slot", "value"],
+      "properties": {
+        "deployment": { "type": "string", "minLength": 1 },
+        "slot": { "type": "integer", "minimum": 0, "maximum": 64 },
+        "value": { "$ref": "#/$defs/bytes32" }
+      }
+    },
+    "nonceTranscript": {
+      "type": "object", "additionalProperties": false,
+      "required": ["latest_before", "pending_before", "preparation_method", "preparation_value", "preparation_result", "latest_prepared", "pending_prepared"],
+      "properties": {
+        "latest_before": { "const": "0x0" }, "pending_before": { "const": "0x0" },
+        "preparation_method": { "const": "anvil_setNonce" }, "preparation_value": { "const": "0x1" }, "preparation_result": { "type": "null" },
+        "latest_prepared": { "const": "0x1" }, "pending_prepared": { "const": "0x1" }
+      }
+    },
+    "preBroadcastBlock": {
+      "type": "object", "additionalProperties": false, "required": ["number", "hash"],
+      "properties": { "number": { "type": "string", "pattern": "^0x(0|[1-9a-f][0-9a-f]*)$" }, "hash": { "$ref": "#/$defs/bytes32" } }
+    }
+  }
+}
