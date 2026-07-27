@@ -45,6 +45,9 @@ REFINANCE_EXECUTION_SEMANTICS_ADR_PATH = (
 REFINANCE_REPARTITION_ADR_PATH = (
     ROOT / "adr/0026-phase-9-refinance-execution-module-repartition.md"
 )
+REFINANCE_PHASE_TICKET_ADR_PATH = (
+    ROOT / "adr/0027-phase-9-refinance-phase-ticket-execution-repartition.md"
+)
 ARCHITECTURE_PATH = ROOT / "docs/architecture/phase-9-resolution-protection-recovery.md"
 DATA_LAYOUTS_PATH = ROOT / "docs/architecture/phase-9-data-layouts.md"
 REFINANCE_ACCEPTANCE_PATH = ROOT / "docs/architecture/phase-9-refinance-acceptance.md"
@@ -105,12 +108,20 @@ REFINANCE_LINKED_MODULE_MARKERS = (
     "library Phase9RefinanceValidationModule",
     "library Phase9RefinanceRequestModule",
     "library Phase9RefinanceLifecycleModule",
+    "library Phase9RefinanceExecutionPrepareModule",
+    "library Phase9RefinanceExecutionFinalizeModule",
 )
 REFINANCE_REPARTITION_MANIFEST_START = (
     "<!-- phase9-refinance-repartition-manifest:start -->"
 )
 REFINANCE_REPARTITION_MANIFEST_END = (
     "<!-- phase9-refinance-repartition-manifest:end -->"
+)
+REFINANCE_PHASE_TICKET_MANIFEST_START = (
+    "<!-- phase9-refinance-phase-ticket-manifest:start -->"
+)
+REFINANCE_PHASE_TICKET_MANIFEST_END = (
+    "<!-- phase9-refinance-phase-ticket-manifest:end -->"
 )
 
 _REFINANCE_EXECUTION_PLAN_FIELDS = (
@@ -166,6 +177,10 @@ _REFINANCE_EXECUTION_PLAN_FIELDS = (
 
 EXPECTED_REFINANCE_REPARTITION_MANIFEST: dict[str, object] = {
     "schema": "phase9-refinance-repartition-v1",
+    "status": "historical-rejected-topology",
+    "topology_selected": False,
+    "normative_execution_sizes_accepted": False,
+    "execution_plan_retained_by_adr0027": True,
     "execution_plan": {
         "name": "ExecutionPlanV1",
         "abi_words": 68,
@@ -307,6 +322,157 @@ EXPECTED_REFINANCE_REPARTITION_MANIFEST: dict[str, object] = {
     "module_runtime_budget_bytes": 22118,
 }
 
+EXPECTED_REFINANCE_PHASE_TICKET_SEMANTICS: dict[str, object] = {
+    "schema": "phase9-refinance-phase-ticket-repartition-v1",
+    "status": "unproven-non-accepted-topology-candidate",
+    "topology_selected": False,
+    "validation_payload": {
+        "name": "ValidationPayloadV1",
+        "word_formula": "168 + (33+c+5*t+6*p) + (1+6*n+sum(ceil(codeLen[i]/32)))",
+        "caps": {"c": 16, "t": 8, "p": 32, "n": 5},
+        "fixed_codes": [
+            "PRINCIPAL",
+            "ACCRUED_INTEREST",
+            "FEE",
+            "PENALTY",
+            "FEE_PENALTY_CREDIT",
+        ],
+        "maximum_words": 485,
+        "maximum_bytes": 15520,
+        "root_offset": "0x20",
+        "struct_head_words": 167,
+        "struct_head_bytes": "0x14e0",
+        "policy_offset_word": 27,
+        "policy_offset": "0x14e0",
+        "components_offset_word": 52,
+        "components_offset_formula": "0x14e0 + 0x20*(33+c+5*t+6*p)",
+        "policy_nested_offset_formulas": {
+            "collateral": "0x3c0",
+            "tranches": "0x3c0+0x20*(1+c)",
+            "positions": "tranches+0x20*(1+5*t)",
+        },
+        "component_element_offset_formula": (
+            "0x20*n + 0x20*sum(j=0..i-1)(5+ceil(codeLen[j]/32))"
+        ),
+        "component_string_offset": "0x80",
+        "fixed_code_element_offsets": ["0xa0", "0x160", "0x220", "0x2e0", "0x3a0"],
+        "maximum_offsets": {
+            "components": "0x3800",
+            "collateral": "0x3c0",
+            "tranches": "0x5e0",
+            "positions": "0xb00",
+        },
+        "canonical_exact_length_offsets_padding_required": True,
+        "canonical_reencode_must_equal_raw_bytes": True,
+    },
+    "guard": {
+        "domain": "UNIFIED_REFINANCE_EXECUTION_GUARD_V1",
+        "preimage_words": 18,
+        "fields": [
+            "domain",
+            "block.chainid",
+            "address(this)",
+            "refinanceId",
+            "operationId",
+            "oldLoanId",
+            "quoteId",
+            "FUNDING_ESCROWED",
+            "storedStateVersion",
+            "refinanceNonce",
+            "fundingAmount",
+            "acceptedFunding",
+            "escrowedUnits",
+            "activeLockWord",
+            "executionAttempts",
+            "terminalEvidenceHash",
+            "processedOperation",
+            "expiresAt",
+        ],
+    },
+    "pre_payoff_ticket": {
+        "domain": "UNIFIED_REFINANCE_PRE_PAYOFF_TICKET_V1",
+        "preimage_words": 3,
+        "fields": ["domain", "guardHash", "contextHash"],
+    },
+    "replay_discriminator": {
+        "storage_only": True,
+        "returns_stored_terminal_result": True,
+        "returns_empty_context": True,
+        "skips_remaining_execution_calls": 5,
+    },
+    "proof": {
+        "name": "PhaseValidationProofV1",
+        "abi_words": 2,
+        "abi_bytes": 64,
+        "fields": ["phaseFactsHash", "ticketHash"],
+        "ticket_preimage_words": 14,
+        "ticket_preimage_bytes": 448,
+        "ticket_preimage_fields": [
+            "ticketDomain",
+            "block.chainid",
+            "address(this)",
+            "refinanceId",
+            "operationId",
+            "contextHash",
+            "planHash",
+            "parentHash",
+            "executionBlock",
+            "executedAt",
+            "storedStateVersion",
+            "refinanceNonce",
+            "quoteId",
+            "phaseFactsHash",
+        ],
+        "domains": {
+            "pre_lien_facts": "UNIFIED_REFINANCE_PRE_LIEN_FACTS_V1",
+            "pre_lien_ticket": "UNIFIED_REFINANCE_PRE_LIEN_TICKET_V1",
+            "pre_finalize_facts": "UNIFIED_REFINANCE_PRE_FINALIZE_FACTS_V1",
+            "pre_finalize_ticket": "UNIFIED_REFINANCE_PRE_FINALIZE_TICKET_V1",
+        },
+        "common_non_action_observations": 11,
+        "fresh_context_observation": "phaseCurrentContextHash",
+        "fresh_context_preimage_words": 20,
+        "fresh_context_preimage_bytes": 640,
+        "fresh_context_preimage_fields": [
+            "domain",
+            "block.chainid",
+            "address(this)",
+            "refinanceId",
+            "operationId",
+            "EXECUTING",
+            "storedStateVersion",
+            "refinanceNonce",
+            "fundingAmount",
+            "acceptedFunding",
+            "escrowedUnits",
+            "activeLockWord",
+            "executionAttempts",
+            "terminalEvidenceHash",
+            "terminalResultHash",
+            "processedOperation",
+            "quoteId",
+            "contextHash",
+            "collateralCount",
+            "collateralIdsHash",
+        ],
+        "terminal_result_hash_source": "state.terminalResults[refinanceId].resultHash",
+        "terminal_result_hash_required_zero": True,
+        "phase_facts_exclude_lien_action_data": True,
+        "facts_or_ticket_is_action_authority": False,
+    },
+    "current_guard_reread_entries": [
+        "validatePreLien",
+        "executeLienBarrier",
+        "validatePreFinalize",
+        "finalizeExecution",
+    ],
+    "normative_execution_sizes_accepted": False,
+    "normative_execution_remeasurement": "pending",
+    "replacement_topology": (
+        "pending reproducible normative measurement/repartition and successor ADR"
+    ),
+}
+
 EXPECTED_QUOTE_PREIMAGE = (
     '"UNIFIED_PAYOFF_QUOTE_V1"',
     "payoff_quote_engine",
@@ -435,6 +601,7 @@ BOUNDARY_PATHS = (
     REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH,
     REFINANCE_EXECUTION_SEMANTICS_ADR_PATH,
     REFINANCE_REPARTITION_ADR_PATH,
+    REFINANCE_PHASE_TICKET_ADR_PATH,
     ARCHITECTURE_PATH,
     DATA_LAYOUTS_PATH,
     REFINANCE_ACCEPTANCE_PATH,
@@ -728,27 +895,26 @@ def require_tokens(text: str, tokens: Iterable[str], label: str) -> None:
     require(not missing, f"{label} is missing: {', '.join(missing)}")
 
 
-def parse_refinance_repartition_manifest(document: str) -> dict[str, object]:
+def parse_embedded_json_manifest(
+    document: str,
+    start_marker: str,
+    end_marker: str,
+    label: str,
+) -> dict[str, object]:
     require(
-        document.count(REFINANCE_REPARTITION_MANIFEST_START) == 1,
-        "Phase 9 refinance repartition manifest must have exactly one start marker",
+        document.count(start_marker) == 1,
+        f"{label} must have exactly one start marker",
     )
     require(
-        document.count(REFINANCE_REPARTITION_MANIFEST_END) == 1,
-        "Phase 9 refinance repartition manifest must have exactly one end marker",
+        document.count(end_marker) == 1,
+        f"{label} must have exactly one end marker",
     )
-    start = document.index(REFINANCE_REPARTITION_MANIFEST_START)
-    end = document.index(REFINANCE_REPARTITION_MANIFEST_END)
-    require(
-        start < end,
-        "Phase 9 refinance repartition manifest markers are out of order",
-    )
-    fenced = document[start + len(REFINANCE_REPARTITION_MANIFEST_START) : end]
+    start = document.index(start_marker)
+    end = document.index(end_marker)
+    require(start < end, f"{label} markers are out of order")
+    fenced = document[start + len(start_marker) : end]
     match = re.fullmatch(r"\s*```json\s*(?P<payload>.*?)\s*```\s*", fenced, re.DOTALL)
-    require(
-        match is not None,
-        "Phase 9 refinance repartition manifest must be one JSON code fence",
-    )
+    require(match is not None, f"{label} must be one JSON code fence")
 
     def reject_duplicate_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
         result: dict[str, object] = {}
@@ -761,14 +927,27 @@ def parse_refinance_repartition_manifest(document: str) -> dict[str, object]:
     try:
         parsed = json.loads(match.group("payload"), object_pairs_hook=reject_duplicate_keys)
     except (json.JSONDecodeError, ValueError) as exc:
-        raise SystemExit(
-            f"ERROR: Phase 9 refinance repartition manifest is invalid JSON: {exc}"
-        ) from exc
-    require(
-        isinstance(parsed, dict),
-        "Phase 9 refinance repartition manifest root must be an object",
-    )
+        raise SystemExit(f"ERROR: {label} is invalid JSON: {exc}") from exc
+    require(isinstance(parsed, dict), f"{label} root must be an object")
     return cast(dict[str, object], parsed)
+
+
+def parse_refinance_repartition_manifest(document: str) -> dict[str, object]:
+    return parse_embedded_json_manifest(
+        document,
+        REFINANCE_REPARTITION_MANIFEST_START,
+        REFINANCE_REPARTITION_MANIFEST_END,
+        "Phase 9 refinance repartition manifest",
+    )
+
+
+def parse_refinance_phase_ticket_manifest(document: str) -> dict[str, object]:
+    return parse_embedded_json_manifest(
+        document,
+        REFINANCE_PHASE_TICKET_MANIFEST_START,
+        REFINANCE_PHASE_TICKET_MANIFEST_END,
+        "Phase 9 refinance phase-ticket manifest",
+    )
 
 
 def validate_refinance_repartition_manifest(document: str) -> None:
@@ -877,6 +1056,97 @@ def validate_refinance_repartition_manifest(document: str) -> None:
     )
 
 
+def validate_refinance_phase_ticket_manifest(document: str) -> None:
+    manifest = parse_refinance_phase_ticket_manifest(document)
+    label = "Phase 9 refinance phase-ticket manifest"
+
+    for key, expected_value in EXPECTED_REFINANCE_PHASE_TICKET_SEMANTICS.items():
+        actual = json.dumps(
+            manifest.get(key),
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+        expected = json.dumps(
+            expected_value,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+        require(actual == expected, f"{label} semantic field {key} drifted")
+
+    require(
+        not {"modules", "call_sites", "create_order", "coordinator"} & manifest.keys(),
+        f"{label} must not publish an operative selected topology",
+    )
+
+    payload = cast(dict[str, object], manifest["validation_payload"])
+    caps = cast(dict[str, object], payload["caps"])
+    fixed_codes = cast(list[str], payload["fixed_codes"])
+    code_words = sum((len(code.encode("utf-8")) + 31) // 32 for code in fixed_codes)
+    maximum_words = (
+        168
+        + (
+            33
+            + cast(int, caps["c"])
+            + 5 * cast(int, caps["t"])
+            + 6 * cast(int, caps["p"])
+        )
+        + (1 + 6 * cast(int, caps["n"]) + code_words)
+    )
+    require(
+        maximum_words == payload["maximum_words"]
+        and maximum_words * 32 == payload["maximum_bytes"],
+        f"{label} ValidationPayloadV1 maximum arithmetic drifted",
+    )
+    require(
+        cast(int, payload["struct_head_words"]) * 32
+        == int(cast(str, payload["struct_head_bytes"]), 16),
+        f"{label} ValidationPayloadV1 struct-head size drifted",
+    )
+
+    guard = cast(dict[str, object], manifest["guard"])
+    require(
+        guard["preimage_words"] == len(cast(list[object], guard["fields"])) == 18,
+        f"{label} execution guard must contain exactly 18 words",
+    )
+    pre_payoff_ticket = cast(dict[str, object], manifest["pre_payoff_ticket"])
+    require(
+        pre_payoff_ticket["preimage_words"]
+        == len(cast(list[object], pre_payoff_ticket["fields"]))
+        == 3,
+        f"{label} pre-payoff ticket must contain exactly 3 words",
+    )
+
+    proof = cast(dict[str, object], manifest["proof"])
+    require(
+        proof["abi_words"] == len(cast(list[object], proof["fields"])) == 2
+        and proof["abi_bytes"] == 64,
+        f"{label} phase proof must contain exactly 2 ABI words / 64 bytes",
+    )
+    require(
+        proof["ticket_preimage_words"]
+        == len(cast(list[object], proof["ticket_preimage_fields"]))
+        == 14
+        and proof["ticket_preimage_bytes"] == 448,
+        f"{label} phase ticket must contain exactly 14 words / 448 bytes",
+    )
+    require(
+        len(cast(dict[str, object], proof["domains"])) == 4,
+        f"{label} phase proof must bind exactly four domains",
+    )
+    require(
+        proof["fresh_context_preimage_words"]
+        == len(cast(list[object], proof["fresh_context_preimage_fields"]))
+        == 20
+        and proof["fresh_context_preimage_bytes"] == 640,
+        f"{label} fresh current-context receipt must contain exactly 20 words / 640 bytes",
+    )
+    require_tokens(
+        document,
+        ('keccak256("UNIFIED_REFINANCE_PHASE_CURRENT_CONTEXT_V1")',),
+        f"{label} fresh current-context receipt",
+    )
+
+
 def require_abi_encode_formula(
     text: str,
     name: str,
@@ -902,12 +1172,14 @@ def check_refinance_boundary_evidence() -> None:
     refinance_activation_topology_adr = read(REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH)
     refinance_execution_semantics_adr = read(REFINANCE_EXECUTION_SEMANTICS_ADR_PATH)
     refinance_repartition_adr = read(REFINANCE_REPARTITION_ADR_PATH)
+    refinance_phase_ticket_adr = read(REFINANCE_PHASE_TICKET_ADR_PATH)
     acceptance = read(REFINANCE_ACCEPTANCE_PATH)
     reference = read(REFINANCE_REFERENCE_EVIDENCE_PATH)
     deployment = read(REFINANCE_DEPLOYMENT_EVIDENCE_PATH)
     data_layouts = read(DATA_LAYOUTS_PATH)
 
     validate_refinance_repartition_manifest(refinance_repartition_adr)
+    validate_refinance_phase_ticket_manifest(refinance_phase_ticket_adr)
 
     forbidden_execute_replay_claims = (
         "on both first execution and exact terminal replay",
@@ -956,11 +1228,12 @@ def check_refinance_boundary_evidence() -> None:
     require_tokens(
         normalized(refinance_module_adr),
         (
-            "status: accepted historical candidate architecture; topology superseded "
-            "by adr 0026; implementation activation pending",
+            "status: accepted historical candidate architecture; replacement topology "
+            "selection pending",
             "work item: `uni-adr-018`",
-            "adr 0026 replaces this adr's operative three-library, seven-call, "
-            "ten-create, nonce-10 coordinator, and lifecycle-execution ownership controls",
+            "adr 0026 first replaced, and adr 0027 rejects, this adr's operative "
+            "three-library, seven-call, ten-create, nonce-10 coordinator, and "
+            "lifecycle-execution ownership controls",
             "phase9refinancevalidationmodule",
             "phase9refinancerequestmodule",
             "phase9refinancelifecyclemodule",
@@ -1050,8 +1323,8 @@ def check_refinance_boundary_evidence() -> None:
     require_tokens(
         normalized(refinance_repartition_adr),
         (
-            "status: accepted for synthetic-local repartition specification; "
-            "implementation and topology migration pending",
+            "status: rejected for topology by adr 0027; retained as historical "
+            "repartition evidence",
             "f408d159a8fbf8cbde9197e71456cf817d2c101f23e64c5abb10d7abdf4abc76",
             "complete lifecycle prototype | 40,375 | 40,427 | 15,799 bytes over",
             "funding, cancellation, and refund | 19,273 | 19,325 | 5,303 bytes under",
@@ -1078,15 +1351,17 @@ def check_refinance_boundary_evidence() -> None:
             "re-resolves and re-hashes the canonical quote, policy, accounts, managers, "
             "asset, collateral, replacement, commitment, payout, public snapshot, and "
             "old-debt facts before the first finalization effect",
-            "each execution module has a hard candidate budget of 22,118 runtime bytes",
+            "each rejected-candidate execution module had a hard planning budget of "
+            "22,118 runtime bytes",
             "exactly twelve consecutive zero-value top-level `create` transactions",
             "nonce 12: the fully linked `refinancecoordinator`",
             "`0xca03dc4665a8c3603cb4fd5ce71af9649dc00d44`",
             "latest and pending candidate nonces at 13 (`0x0d`)",
-            "priority-zero acceptance requires storage-only replay before dependencies, "
+            "the historical priority-zero plan required storage-only replay before "
+            "dependencies, "
             "no catch around either execution-module call, no external/caller-authored/"
             "persisted plan, full rollback under injected failure at every boundary",
-            "priority-one acceptance requires mutation of every plan word, fixed-array "
+            "its priority-one plan required mutation of every plan word, fixed-array "
             "tail, count/hash pair, and ordering rule",
             "does not make the current oversized prototype deployable",
         ),
@@ -1303,13 +1578,14 @@ def check_refinance_boundary_evidence() -> None:
             "REFUNDABLE",
             "chain-31337",
             "synthetic-local",
-            "exactly eight fixed compiler-linked call sites",
+            "No execution topology is selected",
             "No module may link or delegate again",
-            "exactly twelve top-level `CREATE`s at nonces 1 through 12",
-            "exact all-static `ExecutionPlanV1`: 68 ABI words",
-            "forwards identical bytes without a catch or intervening external call",
+            "the non-accepted ADR-0027 15-CREATE graph and the existing ten- and "
+            "twelve-CREATE plans and observations cannot be relabeled",
+            "unchanged all-static 68-word/2,176-byte `ExecutionPlanV1`",
+            "Every dispatch rehashes unchanged payload and plan bytes",
             "the existing prerequisite backlog rows, both refinance implementation rows, "
-            "ADR 0026 repartition",
+            "ADR 0027 semantic gates, a measured successor topology",
             "accepted specification, architecture, and topology controls alone activate nothing",
             "explicit nonce precondition, pairwise-distinct authorities, "
             "verification-before-grant order",
@@ -1320,8 +1596,9 @@ def check_refinance_boundary_evidence() -> None:
             "all four leg hashes exist",
             "distinct recipients sorted by increasing `uint160`",
             "one exact `uint64(block.number)`",
-            "first execution enters the provisional guard, completes quote consumption, "
-            "payout legs 0/1, payoff, and midpoint proofs in prepare",
+            "Effect-free pre-payoff validation produces the exact payload and guard",
+            "each fresh phase proof binds only non-action observations plus the exact "
+            "20-word current `EXECUTING` context receipt",
             "The complete stored terminal tuple must match",
             "reconstructs a nonzero execution-event ID from the exact domain",
             "makes zero dependency calls, writes, transfers, counter changes, and logs",
@@ -1337,7 +1614,7 @@ def check_refinance_boundary_evidence() -> None:
             "Every inventory, identity, state, count, arithmetic, candidate, or operation "
             "mismatch reverts",
             "provisional `EXECUTING` emits none",
-            "exact 68-word/2,176-byte plan",
+            "exact validation payload, 68-word plan, two-word proof",
             "consumed-quote component binding",
             "typed replacement hashes",
             "one captured `executed_at` is reused in event ID terminal hash and terminal storage",
@@ -1404,9 +1681,10 @@ def check_refinance_boundary_evidence() -> None:
             "replacement_debt_hash = keccak256(abi.encode(replacement_debt))",
             'keccak256("UNIFIED_REFINANCE_FUNDED_COMMITMENT_INVENTORY_V1")',
             "not a protocol event/result preimage and creates no new evidence preimage",
-            "forwards identical bytes and hash with no catch or intervening external call",
-            "Exact replay returns from prepare before any dependency read and never invokes "
-            "finalize",
+            "forwards identical bytes with no catch or intervening call or effect between "
+            "a validator and consumer",
+            "Exact replay returns from `prepareExecution` before any dependency read, "
+            "returns empty context, and invokes none of the other five execution stages",
             "Execute replay validates the complete stored terminal tuple",
             "require stored_terminal_result.executionEventId != bytes32(0)",
             "require replayed_execution_event_id != bytes32(0)",
@@ -1442,12 +1720,12 @@ def check_refinance_boundary_evidence() -> None:
         (
             "chain ID is exactly `31337`",
             "disposable synthetic-local evidence only",
-            "exactly twelve consecutive zero-value top-level `CREATE` transactions",
-            "prediction uses RLP nonce byte `0x0c`",
-            "`0xca03dc4665a8c3603cb4fd5ce71af9649dc00d44`",
-            "Both candidate nonce views must end at 13 (`0x0d`)",
-            "exactly eight compiler-generated fixed-library call sites",
-            "Both execution modules must be at most 22,118 runtime bytes",
+            "no future deployment topology is selected",
+            "The non-accepted ADR 0027 measurement candidate",
+            "unproven-candidate measurement evidence only",
+            "module size is activation-grade",
+            "A successor ADR must independently freeze and reproduce its library/call/"
+            "CREATE order",
             "Production Solidity, the deployment script, plan schema, smoke harness, "
             "verifier fixtures, expected hashes, and current candidate files deliberately "
             "remain unchanged",

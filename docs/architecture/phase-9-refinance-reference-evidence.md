@@ -8,7 +8,8 @@ Date: 2026-07-27
 
 This document fixes the independent evidence model required by ADR 0021, ADR 0022,
 ADR 0023's historical candidate-only fixed-module partition, ADR 0025's D3
-execution-semantics freeze, ADR 0026's measured execution repartition, and the
+execution-semantics freeze, ADR 0026's historical measured repartition, ADR 0027's
+mandatory phase-ticket semantics and size-unproven topology candidate, and the
 `P9R-*` acceptance matrix.
 It does not claim that a Solidity implementation or a golden-output bundle exists. The
 first accepted implementation checkpoint must
@@ -105,11 +106,42 @@ Exact terminal replay is checked before lock ownership. Exact/same-quote/concurr
 reentrant, wrong-owner, rollback, refundable, maximum, terminal replay, and next-nonce
 distinct-quote cases are golden vectors.
 
+## Internal phase-ticket transport
+
+ADR 0027 adds no protocol input or protocol evidence preimage. It freezes one top-level
+execution transaction's semantic stages across pre-payoff validation, payoff, fresh pre-lien
+validation, the uninterrupted lien barrier, fresh pre-finalize validation, and final
+effects. A successor topology must retain exact `ValidationPayloadV1` and
+`ExecutionPlanV1` bytes in coordinator memory and rehash unchanged bytes before every
+fixed dispatch. ADR 0027's measured eight-library topology is not accepted.
+
+`ValidationPayloadV1` uses ADR 0027's exact nested ABI schema, count-derived length
+equation, canonical policy/component/element/string offsets, zero padding, exact
+canonical re-encode equality, and 15,520-byte maximum. `guardHash` commits
+the exact 18 typed words fixed there. `PhaseValidationProofV1` is exactly
+`{phaseFactsHash,ticketHash}` / 64 bytes, while `ticketHash` commits the full exact
+14-word/448-byte phase ticket. Each phase facts hash includes the exact 20-word/640-byte
+current-context receipt, where `terminalResultHash` is exactly
+`state.terminalResults[refinanceId].resultHash` and must be zero. Pre-lien binds the
+payoff receipt; pre-finalize binds the lien result. The payload, plan, receipts, and
+proofs are never external input, storage, protocol-view output, or a durable reference
+result.
+
+Independent vectors SHALL cover every payload count and derived offset, all five fixed
+component codes and padding, each guard word, all four exact phase facts/ticket domains,
+the eleven common non-action observations, every word of the exact fresh current-context
+receipt, the lien consumer's old-active/no-pending reads, the final consumer's
+active-new/completed-handoff reads and reconstructed lien result, each of the 14 ticket
+words, wrong-phase proof, cross-refinance/proof mixing, stale parent, and changed-byte/
+same-semantic attempts. Phase facts containing lien action data fail. A nonzero digest
+without complete fresh context reconstruction fails. The strengthened adjacency and
+consumer-authority checks require fresh module-size evidence; the earlier planning
+measurements are not accepted implementation sizes.
+
 ## Internal execution-plan transport
 
-ADR 0026 adds no protocol input or evidence preimage. It fixes one internal,
-transaction-local `ExecutionPlanV1` transport between fixed compiler-linked prepare and
-finalize modules. The plan is exactly 68 static ABI words and 2,176 bytes. Its first
+ADR 0026 introduced, and ADR 0027 retains unchanged, one internal transaction-local
+`ExecutionPlanV1`. The plan is exactly 68 static ABI words and 2,176 bytes. Its first
 eight words are the V1 domain, chain ID, coordinator, refinance ID, operation ID,
 `execution_block`, `executed_at`, and `planSuffixHash`. The next 13 words bind the stored
 version and nonce, quote/debt version, typed quote and policy hashes, canonical loan,
@@ -148,21 +180,46 @@ are invalid.
 
 The funded-commitment inventory hash is only an internal, transaction-local transport
 binding. It is not a protocol event/result preimage and creates no new evidence
-preimage. Finalize reconstructs the exact ordered ID array and complete stored funding-
-commitment record array before effects. It also recomputes the after-payoff snapshot
-hashes at the captured execution block and requires equality to the initial hashes
-before entering the uninterrupted lien barrier.
+preimage. `prepareExecution` performs storage-only replay first. Exact replay returns
+the stored terminal result with empty context and zero non-replay material; the
+coordinator returns immediately and skips all other five execution calls. First
+execution instead returns the exact validation payload and pre-payoff ticket without
+writing `EXECUTING`.
 
-Prepare returns the bytes and `plan_hash`. The coordinator checks exact length,
-header, suffix/hash agreement, provisional `EXECUTING`, active lock, full attributed
-escrow, attempt zero, terminal evidence zero, and the matching unprocessed operation;
-it forwards identical bytes and hash with no catch or intervening external call.
-Finalize repeats every check and re-resolves and re-hashes the complete canonical
-vectors and observations before the uninterrupted begin-all, verify-all-pending,
-complete-all, verify-all-active lien window. Exact replay returns from prepare before
-any dependency read and never invokes finalize. No caller, service, provider, policy,
-later transaction, persisted slot, or external selector can supply or reuse the plan.
-Any mutation or failure rolls back both module phases atomically.
+`executePayoff` rehashes those bytes, bounded-`STATICCALL` rereads the current canonical
+quote and five components, requires stored state version below `uint64` maximum,
+recomputes the supplied execute-operation ID from the current quote debt-state version,
+and rechecks every current guard fact. It installs provisional `EXECUTING` before the
+first effect, performs payout legs zero and one plus old payoff, and returns the
+unchanged plan, plan hash, and payoff receipt.
+
+`validatePreLien` rereads current execution guards, snapshots, quote, inventory, and
+replacement absence, and returns a fresh non-action proof whose twelfth observation is
+the exact current `EXECUTING` context receipt. With no intervening call or effect,
+`executeLienBarrier` independently rereads the same current authority, then as its first
+action validates the complete old-active/no-pending lien vector and derives every ID,
+version, and evidence hash before it owns the uninterrupted begin-all,
+verify-all-pending, complete-all, verify-all-active window. Pending action material
+remains internal to that module.
+
+`validatePreFinalize` independently rereads the same non-action facts and fresh current
+context and returns its phase-separated proof. With no intervening call or effect,
+`finalizeExecution` independently rereads current authority, rederives and rereads every
+active-new/completed-handoff tuple, reconstructs `lien_handoff_vector_hash` and
+`lienResult` from the unchanged pre-lien ticket and lien output, reconstructs the exact
+commitment inventory and activation inputs, performs activation, payout legs two and
+three, conservation and inventory consumption, and alone writes the terminal result and
+emits the terminal logs. Validator facts/tickets are adjacency receipts only; canonical
+lien/finalization reads are the sole action authority.
+
+The coordinator checks exact payload/plan lengths, canonical offsets, header,
+suffix/hash agreement, and unchanged byte hashes before every fixed dispatch and
+forwards identical bytes with no catch or intervening call or effect between a validator
+and consumer. Exact replay returns from `prepareExecution` before any dependency read,
+returns empty context, and invokes none of the other five execution stages. No caller, service, provider,
+policy, later transaction, persisted slot, or external selector can supply or reuse the
+payload, plan, receipt, or proof. A phase facts/ticket hash is never effect authority.
+Any mutation or failure rolls back all six stages atomically.
 
 ## Canonical identity preimages
 

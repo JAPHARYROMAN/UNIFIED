@@ -262,6 +262,7 @@ def test_refinance_activation_row_and_acceptance_inventory_are_exact() -> None:
     assert phase9.REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH in phase9.BOUNDARY_PATHS
     assert phase9.REFINANCE_EXECUTION_SEMANTICS_ADR_PATH in phase9.BOUNDARY_PATHS
     assert phase9.REFINANCE_REPARTITION_ADR_PATH in phase9.BOUNDARY_PATHS
+    assert phase9.REFINANCE_PHASE_TICKET_ADR_PATH in phase9.BOUNDARY_PATHS
     assert len(phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS) == 80
     assert "P9R-COMPAT-003" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
     assert "P9R-DON-004" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
@@ -383,6 +384,99 @@ def test_refinance_repartition_manifest_mutations_fail_closed(
         phase9.check_refinance_boundary_evidence()
 
 
+def test_refinance_phase_ticket_manifest_semantics_pass() -> None:
+    document = phase9.read(phase9.REFINANCE_PHASE_TICKET_ADR_PATH)
+    phase9.validate_refinance_phase_ticket_manifest(document)
+
+
+@pytest.mark.parametrize(
+    ("target", "replacement"),
+    (
+        (
+            '"schema": "phase9-refinance-phase-ticket-repartition-v1"',
+            '"schema": "phase9-refinance-phase-ticket-repartition-v2"',
+        ),
+        (
+            '"topology_selected": false',
+            '"topology_selected": true',
+        ),
+        (
+            '"word_formula": "168 + (33+c+5*t+6*p) + '
+            '(1+6*n+sum(ceil(codeLen[i]/32)))"',
+            '"word_formula": "168 + (33+c+5*t+6*p)"',
+        ),
+        ('"maximum_words": 485', '"maximum_words": 484'),
+        (
+            '"components_offset_formula": "0x14e0 + 0x20*(33+c+5*t+6*p)"',
+            '"components_offset_formula": "0x14e0 + 0x20*(33+c+5*t)"',
+        ),
+        (
+            '"canonical_reencode_must_equal_raw_bytes": true',
+            '"canonical_reencode_must_equal_raw_bytes": false',
+        ),
+        ('"preimage_words": 18', '"preimage_words": 17'),
+        (
+            '"pre_payoff_ticket": {"domain": "UNIFIED_REFINANCE_PRE_PAYOFF_TICKET_V1", '
+            '"preimage_words": 3',
+            '"pre_payoff_ticket": {"domain": "UNIFIED_REFINANCE_PRE_PAYOFF_TICKET_V1", '
+            '"preimage_words": 4',
+        ),
+        (
+            '"skips_remaining_execution_calls": 5',
+            '"skips_remaining_execution_calls": 4',
+        ),
+        ('"ticket_preimage_bytes": 448', '"ticket_preimage_bytes": 416'),
+        (
+            '"common_non_action_observations": 11',
+            '"common_non_action_observations": 10',
+        ),
+        (
+            '"fresh_context_preimage_bytes": 640',
+            '"fresh_context_preimage_bytes": 608',
+        ),
+        (
+            '"phase_facts_exclude_lien_action_data": true',
+            '"phase_facts_exclude_lien_action_data": false',
+        ),
+        (
+            '"facts_or_ticket_is_action_authority": false',
+            '"facts_or_ticket_is_action_authority": true',
+        ),
+        (
+            '"current_guard_reread_entries": ["validatePreLien", "executeLienBarrier", '
+            '"validatePreFinalize", "finalizeExecution"]',
+            '"current_guard_reread_entries": ["validatePreLien", "validatePreFinalize", '
+            '"finalizeExecution"]',
+        ),
+        (
+            '"normative_execution_sizes_accepted": false',
+            '"normative_execution_sizes_accepted": true',
+        ),
+        (
+            '"replacement_topology": "pending reproducible normative measurement/'
+            'repartition and successor ADR"',
+            '"replacement_topology": "eight-library candidate selected"',
+        ),
+    ),
+)
+def test_refinance_phase_ticket_manifest_mutations_fail_closed(
+    target: str,
+    replacement: str,
+) -> None:
+    document = phase9.read(phase9.REFINANCE_PHASE_TICKET_ADR_PATH)
+    assert document.count(target) == 1
+    mutated = document.replace(target, replacement, 1)
+    with pytest.raises(SystemExit, match="phase-ticket manifest"):
+        phase9.validate_refinance_phase_ticket_manifest(mutated)
+
+
+def test_refinance_phase_ticket_candidate_topology_is_not_pinned() -> None:
+    document = phase9.read(phase9.REFINANCE_PHASE_TICKET_ADR_PATH)
+    target = '"unproven_candidate_final_nonce": 16'
+    assert document.count(target) == 1
+    phase9.validate_refinance_phase_ticket_manifest(document.replace(target, target[:-2] + "17"))
+
+
 @pytest.mark.parametrize(
     ("path", "target", "replacement", "message"),
     (
@@ -442,8 +536,9 @@ def test_refinance_repartition_manifest_mutations_fail_closed(
         ),
         (
             phase9.REFINANCE_REPARTITION_ADR_PATH,
-            "Each execution module has a hard candidate budget of 22,118 runtime bytes",
-            "Each execution module may use all 24,576 runtime bytes",
+            "Each rejected-candidate execution module had a hard planning budget of "
+            "22,118 runtime\nbytes",
+            "Each rejected-candidate execution module may use all 24,576 runtime bytes",
             "execution-module repartition boundary",
         ),
         (
@@ -932,6 +1027,8 @@ def test_refinance_candidate_delegates_exact_assembly_gate(
     library Phase9RefinanceValidationModule {}
     library Phase9RefinanceRequestModule {}
     library Phase9RefinanceLifecycleModule {}
+    library Phase9RefinanceExecutionPrepareModule {}
+    library Phase9RefinanceExecutionFinalizeModule {}
     contract RefinanceCoordinator {
         function mutate() external { revert Phase9ImplementationNotFrozen(); }
         function bounded() private pure { assembly (\"memory-safe\") { pop(0) } }
@@ -959,6 +1056,8 @@ def test_refinance_library_wrapper_pair_is_owner_scoped(
     source = """
     library Phase9RefinanceValidationModule {}
     library Phase9RefinanceRequestModule {}
+    library Phase9RefinanceExecutionPrepareModule {}
+    library Phase9RefinanceExecutionFinalizeModule {}
     library Phase9RefinanceLifecycleModule {
         function recordFundingCommitment(
             Phase9RefinanceStorageLayout storage state,
@@ -999,6 +1098,8 @@ def test_refinance_real_coordinator_overload_drift_is_rejected(
     source = """
     library Phase9RefinanceValidationModule {}
     library Phase9RefinanceRequestModule {}
+    library Phase9RefinanceExecutionPrepareModule {}
+    library Phase9RefinanceExecutionFinalizeModule {}
     library Phase9RefinanceLifecycleModule {
         function recordFundingCommitment(
             Phase9RefinanceStorageLayout storage state,

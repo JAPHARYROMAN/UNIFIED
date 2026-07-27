@@ -1425,10 +1425,13 @@ For atomic refinance, `UNI-ADR-016` accepts ADR 0021's boundary, `UNI-ADR-017`
 accepts ADR 0022's factory/account/position bootstrap semantics, and `UNI-ADR-018`
 records ADR 0023's historical synthetic-local three-library/seven-call/ten-CREATE
 candidate without activating an implementation or deployment. That candidate was
-invalidated by the compiled maximum lifecycle path. ADR 0026 therefore governs the
-future target: five same-file fixed libraries, eight compiler-linked calls, an exact
-two-call execute protocol using a 68-word/2,176-byte static plan, and twelve top-level
-CREATEs ending at the nonce-12 coordinator. `UNI-ADR-019`
+invalidated by the compiled maximum lifecycle path, and ADR 0026's subsequent
+five-library/eight-call/twelve-CREATE repartition was invalidated by its compiled
+execution-module sizes. ADR 0027 then records an eight-library/12-call/15-CREATE
+candidate and freezes corrected six-stage phase-ticket semantics, but rejects that
+candidate's size closure because its measurements predate the exact current-context
+receipt and independently authoritative lien/finalize checks. No replacement topology
+is selected. `UNI-ADR-019`
 accepts ADR 0024's explicit Anvil nonce precondition and exact
 verification-before-governance-grant order without executing that grant. `UNI-ADR-020`
 accepts ADR 0025's computable execution observations, alias-aware payout conservation,
@@ -1436,9 +1439,13 @@ single durable completion transition, and four-phase lien handoff without openin
 or changing any frozen interface. The later
 implementation checkpoint is method-level: it may activate only the exact factory,
 account, custody, lien, coordinator, and position-manager methods listed by ADRs 0021
-and 0022, while a future candidate must also pass ADR 0026's five-module checker,
-22,118-byte execution-module budgets, exact static-plan controls, and nonce-12
-deployment-evidence gates plus ADR 0024's unchanged identity/grant/reset controls,
+and 0022, while a future successor candidate must also pass its independently frozen
+library/call/CREATE checker, ADR 0027's exact payload length and derived-offset controls,
+four phase domains, non-action phase facts, independent consumer-owned lien reads,
+independent current-guard rereads, closed
+dependency codehash/call-graph/write-set proof, 22,118-byte execution-module budgets,
+exact static-plan controls, and successor nonce/address deployment-evidence gates plus ADR 0024's
+unchanged identity/grant/reset controls,
 retains the exact freeze stub for every other mutator, and requires
 `UNI-ADR-020`, `UNI-REFI-001`, and `UNI-REFI-002` as one bundled gate. The exact additive ABI allowlist
 contains only coordinator-owned `RefinanceStateTransitioned` and

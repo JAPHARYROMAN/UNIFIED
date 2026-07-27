@@ -1,10 +1,23 @@
 # ADR 0026: Phase 9 Refinance Execution-Module Repartition
 
-Status: accepted for synthetic-local repartition specification; implementation and topology migration pending
+Status: rejected for topology by ADR 0027; retained as historical repartition evidence
 
 Date: 2026-07-27
 
 Owner: Protocol Architecture Authority
+
+ADR 0027 rejects this ADR's five-library, eight-call, two-execution-module,
+twelve-CREATE, nonce-12 coordinator topology, records a separate unproven candidate,
+and leaves replacement topology selection pending. The 68-word `ExecutionPlanV1`, the
+compiler boundary, and the ADR 0025 execution semantics recorded here remain inputs to
+the next measurement and are not historicalized.
+
+Historical-scope rule: every topology imperative, future-tense requirement,
+implementation instruction, acceptance condition, and migration consequence in
+sections 1 through 9 records only the rejected ADR 0026 candidate. None is operative,
+none authorizes implementation or deployment, and none may satisfy an activation gate.
+Only the unchanged plan format, compiler boundary, measurements, and ADR 0025 semantic
+cross-references remain inputs to a successor ADR.
 
 Work items: prerequisite control for `UNI-REFI-001` and `UNI-REFI-002`
 
@@ -36,17 +49,16 @@ at 31 to 32 KiB runtime, and reducing the original lifecycle module in place wou
 require removal of 15,799 bytes, or 39.1 percent, while retaining semantics. Those
 alternatives do not provide an acceptable implementation boundary.
 
-This ADR replaces only the module-count, linked-call, and deployment-order controls
-that the measurement invalidated. It preserves the protocol ABI, constructor, storage,
+This ADR historically proposed replacing only the module-count, linked-call, and
+deployment-order controls that the measurement invalidated. It preserved the protocol ABI, constructor, storage,
 compiler, authority, state machine, evidence preimages, transaction atomicity, and
 activation closure fixed by ADRs 0021 through 0025.
 
-## Decision
+## Historical decision record — non-operative
 
-### 1. Exact five-library same-source partition
+### 1. Historical exact five-library same-source partition — non-operative
 
-`protocol/src/resolution/RefinanceCoordinator.sol` will contain exactly these five
-source-scope libraries when the repartition is implemented:
+The rejected candidate would have contained exactly these five source-scope libraries:
 
 1. `Phase9RefinanceValidationModule`;
 2. `Phase9RefinanceRequestModule`;
@@ -64,7 +76,7 @@ layouts, no fallback or receive function, no nested compiler link, and no
 delegatecalls. No library address is supplied through calldata, storage, a registry,
 policy, governance action, constructor argument, or post-deployment setter.
 
-### 2. Exact coordinator call inventory
+### 2. Historical exact coordinator call inventory — non-operative
 
 The coordinator contains exactly eight compiler-generated fixed-library call sites:
 
@@ -81,7 +93,7 @@ performs exactly the two fixed calls below and makes no dependency call or other
 between them. No external caller can invoke the second call through the coordinator or
 supply the internal plan.
 
-### 3. Prepare call, replay, and first-phase effects
+### 3. Historical prepare call, replay, and first-phase effects — non-operative
 
 `prepareExecution(layout, refinanceId, operationId)` classifies exact terminal replay
 before any first-execution state, quote, policy, account, registry, token, or other
@@ -104,7 +116,7 @@ The plan is an internal memory transport, not protocol input, persistent state,
 authority, or a new ABI surface. Prepare emits no terminal event and writes no terminal
 result.
 
-### 4. Exact static `ExecutionPlanV1`
+### 4. Historical transport decision for exact static `ExecutionPlanV1`
 
 The execution transport is not a dynamic validation plan. `ExecutionPlanV1` is an
 all-static ABI tuple of exactly 68 words and exactly 2,176 bytes. Its domain word is
@@ -153,16 +165,21 @@ The plan's other typed quote, policy, vector, snapshot, component, replacement-d
 and old-debt hashes use the normative ADR 0025 preimages. This ADR authorizes no change
 to a protocol evidence preimage and no identity-only or ad hoc nested compression.
 
-### 4.1 Machine-readable repartition manifest
+### 4.1 Historical machine-readable repartition manifest — non-operative topology
 
-The following JSON object is normative. Key order, array order, field order, names,
-types, word ranges, caps, ownership, entries, call-site order, creation order, hash
-definitions, zero-tail rules, and budget are checked exactly.
+The following JSON object was normative only for the rejected ADR 0026 candidate. It is
+retained byte-for-byte as historical evidence; its ownership, call-site, creation-order,
+and budget entries are non-operative and cannot authorize implementation or deployment.
+A successor may separately incorporate the unchanged `ExecutionPlanV1` fields.
 
 <!-- phase9-refinance-repartition-manifest:start -->
 ```json
 {
   "schema": "phase9-refinance-repartition-v1",
+  "status": "historical-rejected-topology",
+  "topology_selected": false,
+  "normative_execution_sizes_accepted": false,
+  "execution_plan_retained_by_adr0027": true,
   "execution_plan": {
     "name": "ExecutionPlanV1",
     "abi_words": 68,
@@ -300,7 +317,7 @@ merely because its digest is nonzero. Empty, short, long, offset-bearing, reorde
 nonzero-tail, count/hash-inconsistent, or header/suffix/plan-hash-inconsistent bytes fail
 before finalization effects.
 
-### 5. Finalize call and rollback boundary
+### 5. Historical finalize call and rollback boundary — non-operative
 
 `finalizeExecution(layout, refinanceId, operationId, executionPlanBytes, planHash)`
 repeats the coordinator's exact length, header, plan hash, suffix hash, guard, lock,
@@ -333,29 +350,29 @@ failure reverts the provisional guard, quote
 consumption, payouts, payoff, liens, replacement activation, escrow changes, storage,
 and logs from both calls. There is no recoverable partial phase and no durable plan.
 
-### 6. Size and compiler gates
+### 6. Historical size and compiler gates — non-operative topology
 
 The compiler boundary remains Solidity `0.8.36+commit.8a079791.Emscripten.clang`,
 OpenZeppelin Contracts `5.6.1`, Prague EVM, optimizer enabled at 200 runs, and
 `viaIR: false`.
 
-Each execution module has a hard candidate budget of 22,118 runtime bytes, ten percent
-below the 24,576-byte EIP-170 limit. Meeting EIP-170 while exceeding 22,118 bytes does
-not satisfy the repartition prototype gate. Every module and the coordinator must also
-pass the active 49,152-byte EIP-3860 initcode limit. The measured lifecycle closure is
-the initial 19,273-runtime-byte planning bound; any implementation growth is measured,
-not assumed.
+Each rejected-candidate execution module had a hard planning budget of 22,118 runtime
+bytes, ten percent below the 24,576-byte EIP-170 limit. Meeting EIP-170 while exceeding
+22,118 bytes would not have satisfied that prototype gate. Every module and the
+coordinator was also required to pass the active 49,152-byte EIP-3860 initcode limit.
+The measured lifecycle closure was the initial 19,273-runtime-byte planning bound;
+implementation growth was to be measured, not assumed.
 
-The first repartition prototype must report exact runtime, initcode, linked creation and
-runtime offsets, compiler-generated delegatecall count, and maximum-vector gas for all
-five modules and the coordinator. If either execution module exceeds its budget, work
-stops for another architecture decision; evidence hashes, bounds, checks, or compiler
-settings may not be weakened to recover size.
+The rejected first repartition prototype was required to report exact runtime, initcode,
+linked creation and runtime offsets, compiler-generated delegatecall count, and maximum-
+vector gas for all five modules and the coordinator. Exceeding either execution-module
+budget required another architecture decision; evidence hashes, bounds, checks, and
+compiler settings could not be weakened to recover size.
 
-### 7. Exact twelve-CREATE synthetic-local topology
+### 7. Historical exact twelve-CREATE synthetic-local topology — non-operative
 
-The future ADR-0026-conforming graph uses exactly twelve consecutive zero-value
-top-level `CREATE` transactions from the nonce-preconditioned candidate broadcaster:
+The rejected ADR-0026 candidate graph would have used exactly twelve consecutive
+zero-value top-level `CREATE` transactions from the nonce-preconditioned broadcaster:
 
 1. nonce 1: `LienRegistry`;
 2. nonce 2: `CollateralCustodyV2`;
@@ -370,21 +387,21 @@ top-level `CREATE` transactions from the nonce-preconditioned candidate broadcas
 11. nonce 11: `PayoffQuoteEngine`; and
 12. nonce 12: the fully linked `RefinanceCoordinator`.
 
-The coordinator prediction uses RLP nonce byte `0x0c`. For the canonical synthetic-local
-candidate broadcaster `0x70997970c51812dc3a010c7d01b50e0d17dc79c8`, the predicted
-coordinator is `0xca03dc4665a8c3603cb4fd5ce71af9649dc00d44`. Successful graph
-deployment leaves both latest and pending candidate nonces at 13 (`0x0d`). The lien
-registry at nonce 1 and payoff engine at nonce 11 bind that predicted coordinator.
+The rejected candidate prediction used RLP nonce byte `0x0c`. For the canonical
+synthetic-local broadcaster `0x70997970c51812dc3a010c7d01b50e0d17dc79c8`, its predicted
+coordinator was `0xca03dc4665a8c3603cb4fd5ce71af9649dc00d44`. That graph would
+have left both latest and pending candidate nonces at 13 (`0x0d`), with the nonce-1 lien
+registry and nonce-11 payoff engine bound to the predicted coordinator.
 
 ADR 0024's identity separation, explicit nonce precondition, verification-before-grant,
 single governance-executor role grant, post-grant evidence, and bounded reset controls
 remain unchanged. The existing ten-CREATE scripts, schemas, artifacts, and observations
 are historical candidate evidence only and are not ADR-0026 activation evidence.
 
-### 8. Isolation and threat controls
+### 8. Historical isolation and threat controls — non-operative topology
 
 The repartition adds two fixed code identities and one bounded in-transaction transport.
-Acceptance must prove:
+The historical candidate acceptance plan required evidence for:
 
 - direct calls to effect-capable library entries cannot mutate coordinator storage or
   custody and fail the compiler library execution-context guard;
@@ -404,14 +421,14 @@ Acceptance must prove:
 - maximum 32-commitment, 16-lien, 8-tranche, 32-position, and four-leg alias patterns
   fit the reviewed local block-gas limit with deterministic reset after failure.
 
-### 9. Activation remains closed
+### 9. Historical activation closure — no authority
 
-Priority-zero acceptance requires storage-only replay before dependencies, no catch
-around either execution-module call, no external/caller-authored/persisted plan, full
-rollback under injected failure at every boundary, and an uninterrupted four-stage lien
-barrier. Priority-one acceptance requires mutation of every plan word, fixed-array tail,
-count/hash pair, and ordering rule, plus exact conformance to every normative ADR 0025
-preimage.
+The historical priority-zero plan required storage-only replay before dependencies, no
+catch around either execution-module call, no external/caller-authored/persisted plan,
+full rollback under injected failure at every boundary, and an uninterrupted four-stage
+lien barrier. Its priority-one plan required mutation of every plan word, fixed-array
+tail, count/hash pair, and ordering rule, plus exact conformance to every normative ADR
+0025 preimage.
 
 This ADR changes no interface, selector, tuple, event, error, constructor, storage
 declaration, checkpoint, method-activation manifest, backlog status, security verdict,
@@ -419,9 +436,9 @@ deployment artifact, or production topology. It does not make the current oversi
 prototype deployable and does not authorize updating an expected artifact hash.
 
 `UNI-REFI-001`, `UNI-REFI-002`, every D1-D4 activation gate, and `P9-REFI-001` remain
-closed. Implementation may begin only after the semantic checker accepts this ADR and
-the implementation change separately updates the linked-module, deployment, isolation,
-gas, and evidence controls for the exact five-library/eight-call/twelve-CREATE graph.
+closed. No implementation may begin under ADR 0026. A successor ADR must independently
+select, measure, and freeze its linked-module, deployment, isolation, gas, and evidence
+controls before implementation can be considered.
 
 ## Consequences
 
@@ -431,19 +448,19 @@ gas, and evidence controls for the exact five-library/eight-call/twelve-CREATE g
   module registry, storage migration, or external ABI addition.
 - The fixed link-target count increases from three to five, the compiler call-site
   count from seven to eight, and the top-level creation count from ten to twelve.
-- The payoff engine moves from nonce 9 to nonce 11; the coordinator moves from nonce 10
-  to nonce 12; and every reciprocal prediction and evidence hash must be regenerated
-  only when the production topology is actually migrated.
+- In the rejected candidate, the payoff engine would have moved from nonce 9 to nonce
+  11 and the coordinator from nonce 10 to nonce 12. Those predictions are historical
+  and MUST NOT drive a production or synthetic-local migration.
 - Existing ten-CREATE evidence remains useful as historical failure/repartition input
   but cannot satisfy an implementation or activation gate.
 
 ## Verification
 
-The specification-control change is complete only when deterministic semantic tests
-pin this ADR's status, measured sizes, source-diff digest, five library names, exact
+This historical record is complete only when deterministic semantic tests pin its
+status, measured sizes, source-diff digest, five library names, exact
 ownership, two-call execution order, 68-word/2,176-byte static plan, returned suffix and
 plan hashes, zero tails, plan bindings and caps, 22,118-byte budgets,
 eight call sites, twelve-CREATE order, nonce/address predictions, rollback semantics,
-isolation rules, and closed activation boundary. Production checks remain fail-closed
-against the unimplemented topology until a separate reviewed implementation updates
-the source, linker, deployment verifier, schemas, smoke harness, and evidence artifacts.
+isolation rules, and closed activation boundary. Production checks remain fail-closed;
+only a successor ADR may define the topology and evidence required for a reviewed
+implementation.

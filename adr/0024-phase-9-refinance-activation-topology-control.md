@@ -8,13 +8,18 @@ Owner: Protocol Architecture Authority
 
 Work item: `UNI-ADR-019`
 
-Qualification: ADR 0026 supersedes only this ADR's exact ten-CREATE graph, three module
-addresses, nonce-9 payoff engine, nonce-10 coordinator, seven link offsets, and final
-candidate nonce `0xb`. The identity separation, explicit nonce precondition,
+Qualification: ADR 0026 first superseded this ADR's exact ten-CREATE graph. ADR 0027
+freezes security-approved semantics and records a size-unproven eight-library, 12-call,
+15-CREATE candidate, so no operative
+replacement topology is selected. This ADR's
+three module addresses, nonce-9 payoff engine, nonce-10 coordinator, seven link offsets,
+and final candidate nonce `0xb` are historical. The identity separation, explicit nonce precondition,
 verification-before-grant order, sole governance-executor grant, post-grant evidence,
 activation closure, and bounded reset requirements below remain authoritative. The
 historical ten-CREATE text is retained as evidence of the candidate that was measured,
-not as the future deployment target.
+not as the future deployment target. A successor topology ADR must preserve these
+identity, grant, evidence, and reset controls and independently freeze its own CREATE
+order, nonces, links, and coordinator prediction.
 
 ## Context
 

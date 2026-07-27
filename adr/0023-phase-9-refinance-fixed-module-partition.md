@@ -1,6 +1,6 @@
 # ADR 0023: Phase 9 Refinance Fixed-Module Partition
 
-Status: accepted historical candidate architecture; topology superseded by ADR 0026; implementation activation pending
+Status: accepted historical candidate architecture; replacement topology selection pending
 
 Date: 2026-07-26
 
@@ -8,10 +8,13 @@ Owner: Protocol Architecture Authority
 
 Work item: `UNI-ADR-018`
 
-Supersession: ADR 0026 replaces this ADR's operative three-library, seven-call,
-ten-CREATE, nonce-10 coordinator, and lifecycle-execution ownership controls after the
-maximum-path prototype exceeded EIP-170. The measurements and historical decision
-below remain review evidence; they are not an implementation or activation target.
+Supersession: ADR 0026 first replaced, and ADR 0027 rejects, this ADR's operative
+three-library, seven-call, ten-CREATE, nonce-10 coordinator, and lifecycle-execution
+ownership controls after successive maximum-path prototypes exceeded EIP-170. ADR
+0026's intermediate five-library topology is historical and ADR 0027's eight-library
+candidate is non-accepted pending normative remeasurement. The measurements and
+historical decision below remain review evidence; they are not an implementation or
+activation target.
 The frozen ABI, storage, compiler, fixed-link authority model, and no-nested-link rules
 remain in force.
 
