@@ -2,6 +2,8 @@
 pragma solidity 0.8.36;
 
 import { IPhase9LoanAccount } from "../interfaces/phase9/IPhase9LoanAccount.sol";
+import { IRefinanceCoordinator } from "../interfaces/phase9/IRefinanceCoordinator.sol";
+import { ILoanRegistry } from "../interfaces/ILoanRegistry.sol";
 import { Phase9ImplementationNotFrozen } from "../interfaces/phase9/Phase9Errors.sol";
 import { Phase9LocalSyntheticToken } from "../token/Phase9LocalSyntheticToken.sol";
 import { Phase9Types } from "./Phase9Types.sol";
@@ -144,14 +146,67 @@ contract Phase9LoanAccount is IPhase9LoanAccount {
     }
 
     function recordRefinancePayoff(bytes32, uint256, bytes32) external override {
-        revert Phase9ImplementationNotFrozen();
+        (bytes32 refinanceId, uint256 amount, bytes32 operationId) =
+            abi.decode(msg.data[4:], (bytes32, uint256, bytes32));
+        _requireRefinanceCoordinator();
+        _requireFreshOperation(operationId);
+
+        Phase9Types.RefinanceRecord memory refinance_ = _executingRefinance(refinanceId);
+        if (
+            refinance_.oldLoanId != _loanId || refinance_.borrower != _borrower
+                || refinance_.settlementAssetId != _settlementAssetId
+                || refinance_.oldNetPayoff != amount || !_validPayoffDebt(amount)
+                || !_validRegistryIdentity(false)
+        ) revert InvalidPhase9LoanOperation();
+
+        uint64 nextDebtStateVersion = _debtStateVersion + 1;
+        uint64 nextStateNonce = _stateNonce + 1;
+        _processedOperationIds[operationId] = true;
+        _lifecycle = Phase9Types.LoanLifecycle.CLOSED;
+        _servicingState = Phase9Types.ServicingState.TERMINAL;
+        _debtStateVersion = nextDebtStateVersion;
+        _stateNonce = nextStateNonce;
+        _outstandingPrincipal = 0;
+        _accruedInterest = 0;
+        _capitalizedInterest = 0;
+        _accruedFees = 0;
+        _accruedPenalties = 0;
+        _recoverableCosts = 0;
+        _unappliedCredit = 0;
+        _coveredLossExposure = 0;
+        _realizedLoss = 0;
+        _writtenOffAmount = 0;
+        _recoveredAfterWriteoff = 0;
+        _activeRefinanceId = refinanceId;
+        _activeRestructureId = bytes32(0);
+
+        ILoanRegistry(_loanRegistry).markTerminal(_loanId);
+        if (!_validRegistryIdentity(true)) revert InvalidPhase9LoanOperation();
+
+        emit RefinancePayoffRecorded(refinanceId, amount, nextDebtStateVersion);
     }
 
     function activateReplacementLoan(bytes32, Phase9Types.DebtState calldata, bytes32)
         external
         override
     {
-        revert Phase9ImplementationNotFrozen();
+        (bytes32 refinanceId, Phase9Types.DebtState memory initialDebt, bytes32 operationId) =
+            abi.decode(msg.data[4:], (bytes32, Phase9Types.DebtState, bytes32));
+        _requireRefinanceCoordinator();
+        _requireFreshOperation(operationId);
+
+        Phase9Types.RefinanceRecord memory refinance_ = _executingRefinance(refinanceId);
+        if (
+            !_validDormantReplacementState()
+                || !_validReplacementActivation(initialDebt, refinance_)
+                || !_validRegistryIdentity(false)
+                || _agreementVersionHashes[initialDebt.termsVersion] != bytes32(0)
+        ) revert InvalidPhase9LoanOperation();
+
+        _processedOperationIds[operationId] = true;
+        _agreementVersionHashes[initialDebt.termsVersion] = _agreementHash;
+        _storeDebt(initialDebt);
+        emit ReplacementLoanActivated(refinanceId, initialDebt.debtStateVersion);
     }
 
     function applyRestructuring(Phase9Types.LoanAmendment calldata, bytes32) external override {
@@ -239,6 +294,118 @@ contract Phase9LoanAccount is IPhase9LoanAccount {
             && debt.coveredLossExposure == 0 && debt.realizedLoss == 0 && debt.writtenOffAmount == 0
             && debt.recoveredAfterWriteoff == 0 && debt.activeRefinanceId == bytes32(0)
             && debt.activeRestructureId == bytes32(0);
+    }
+
+    function _requireRefinanceCoordinator() private view {
+        if (msg.sender != _refinanceCoordinator) {
+            revert UnauthorizedPhase9LoanCaller(msg.sender);
+        }
+    }
+
+    function _requireFreshOperation(bytes32 operationId) private view {
+        if (operationId == bytes32(0)) revert InvalidPhase9LoanOperation();
+        if (_processedOperationIds[operationId]) {
+            revert Phase9LoanOperationReplay(operationId);
+        }
+    }
+
+    function _executingRefinance(bytes32 refinanceId)
+        private
+        view
+        returns (Phase9Types.RefinanceRecord memory refinance_)
+    {
+        if (refinanceId == bytes32(0)) revert InvalidPhase9LoanOperation();
+        try IRefinanceCoordinator(_refinanceCoordinator).refinance(refinanceId) returns (
+            Phase9Types.RefinanceRecord memory record
+        ) {
+            refinance_ = record;
+        } catch {
+            revert InvalidPhase9LoanOperation();
+        }
+        if (
+            refinance_.refinanceId != refinanceId
+                || refinance_.state != Phase9Types.RefinanceState.EXECUTING
+        ) revert InvalidPhase9LoanOperation();
+    }
+
+    function _validPayoffDebt(uint256 amount) private view returns (bool) {
+        bool supportedServicingState = _servicingState == Phase9Types.ServicingState.CURRENT
+            || _servicingState == Phase9Types.ServicingState.DELINQUENT
+            || _servicingState == Phase9Types.ServicingState.DEFAULTED;
+        if (
+            !_initialized || _protocolVersion != 9 || _lifecycle != Phase9Types.LoanLifecycle.ACTIVE
+                || !supportedServicingState || _termsVersion == 0 || _debtStateVersion == 0
+                || _debtStateVersion == type(uint64).max || _stateNonce == 0
+                || _stateNonce == type(uint64).max || _commencementTime == 0
+                || _maturityTime <= _commencementTime || _scheduleHash == bytes32(0)
+                || _capitalizedInterest != 0 || _recoverableCosts != 0 || _coveredLossExposure != 0
+                || _realizedLoss != 0 || _writtenOffAmount != 0 || _recoveredAfterWriteoff != 0
+                || _activeRefinanceId != bytes32(0) || _activeRestructureId != bytes32(0)
+        ) return false;
+
+        (bool feesOk, uint256 feesAndPenalties) = _tryAdd(_accruedFees, _accruedPenalties);
+        if (!feesOk || _unappliedCredit > feesAndPenalties) return false;
+        (bool principalOk, uint256 grossPayoff) = _tryAdd(_outstandingPrincipal, _accruedInterest);
+        if (!principalOk || grossPayoff == 0) return false;
+        (bool grossOk, uint256 completeGrossPayoff) = _tryAdd(grossPayoff, feesAndPenalties);
+        if (!grossOk) return false;
+        uint256 netPayoff = completeGrossPayoff - _unappliedCredit;
+        return netPayoff != 0 && amount == netPayoff;
+    }
+
+    function _validDormantReplacementState() private view returns (bool) {
+        return _initialized && _protocolVersion == 9
+            && _lifecycle == Phase9Types.LoanLifecycle.CREATED
+            && _servicingState == Phase9Types.ServicingState.NONE && _termsVersion == 0
+            && _debtStateVersion == 0 && _stateNonce == 0 && _commencementTime == 0
+            && _maturityTime == 0 && _scheduleHash == bytes32(0) && _outstandingPrincipal == 0
+            && _accruedInterest == 0 && _capitalizedInterest == 0 && _accruedFees == 0
+            && _accruedPenalties == 0 && _recoverableCosts == 0 && _unappliedCredit == 0
+            && _coveredLossExposure == 0 && _realizedLoss == 0 && _writtenOffAmount == 0
+            && _recoveredAfterWriteoff == 0 && _activeRefinanceId == bytes32(0)
+            && _activeRestructureId == bytes32(0) && _agreementVersionHashes[0] == bytes32(0);
+    }
+
+    function _validReplacementActivation(
+        Phase9Types.DebtState memory debt,
+        Phase9Types.RefinanceRecord memory refinance_
+    ) private view returns (bool) {
+        return refinance_.newLoanId == _loanId && refinance_.borrower == _borrower
+            && refinance_.newPositionManager == _positionManager
+            && refinance_.settlementAssetId == _settlementAssetId
+            && refinance_.newPolicySetHash == _policySetHash
+            && refinance_.newPrincipal == refinance_.fundingAmount
+            && refinance_.newPrincipal == debt.outstandingPrincipal
+            && refinance_.proposedTermsHash != bytes32(0)
+            && refinance_.refinancePolicyHash != bytes32(0)
+            && debt.lifecycle == Phase9Types.LoanLifecycle.ACTIVE
+            && debt.servicingState == Phase9Types.ServicingState.CURRENT && debt.termsVersion != 0
+            && debt.debtStateVersion != 0 && debt.stateNonce != 0 && debt.commencementTime != 0
+            && debt.maturityTime > debt.commencementTime && debt.scheduleHash != bytes32(0)
+            && debt.outstandingPrincipal != 0 && debt.accruedInterest == 0
+            && debt.capitalizedInterest == 0 && debt.accruedFees == 0 && debt.accruedPenalties == 0
+            && debt.recoverableCosts == 0 && debt.unappliedCredit == 0
+            && debt.coveredLossExposure == 0 && debt.realizedLoss == 0 && debt.writtenOffAmount == 0
+            && debt.recoveredAfterWriteoff == 0 && debt.activeRefinanceId == refinance_.refinanceId
+            && debt.activeRestructureId == bytes32(0);
+    }
+
+    function _validRegistryIdentity(bool terminal) private view returns (bool) {
+        ILoanRegistry registry = ILoanRegistry(_loanRegistry);
+        return registry.exists(_loanId) && registry.loanAccount(_loanId) == address(this)
+            && registry.borrowerOf(_loanId) == _borrower
+            && registry.agreementHashOf(_loanId) == _agreementHash
+            && registry.protocolVersionOf(_loanId) == _protocolVersion
+            && registry.isTerminal(_loanId) == terminal;
+    }
+
+    function _tryAdd(uint256 left, uint256 right)
+        private
+        pure
+        returns (bool success, uint256 result)
+    {
+        if (right > type(uint256).max - left) return (false, 0);
+        return (true, left + right);
     }
 
     function _storeConfiguration(Phase9Types.LoanConfiguration memory configuration_) private {
