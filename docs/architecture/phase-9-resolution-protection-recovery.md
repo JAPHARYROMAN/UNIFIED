@@ -646,7 +646,18 @@ mask is exhausted; no request, reentry, or same quote can overlap the active own
 
 The coordinator is non-upgradeable in the first slice. It has no general token rescue
 or arbitrary target call. Exact balance-delta checks reject fee, rebase, or callback
-behavior. Terminal exact replay returns stored results; changed reuse reverts.
+behavior. First execution alone reads the stored quote and recomputes the execute
+operation ID from its pre-payoff version. Terminal execute replay branches before every
+first-execution current-state, old-lock, quote, or dependency read; validates the exact
+record/terminal identity, `COMPLETED` states, attempt one, nonzero processed supplied
+operation, result/evidence, and reconstructed nonzero execution-event ID; and returns the
+stored result with zero calls, writes, transfers, counters, or logs. Cancel replay is
+also storage-only: the empty or `1..32` unique commitment inventory must match the
+refinance and contain only exact `FUNDED`/`REFUNDED` records, and a bounded refunded count
+reconstructs the exact pre-cancellation version after partial or final refunds. Stored
+state restricts the canonical reason candidate, and supplied-candidate equality plus its
+processed marker is required. Changed, cross-domain, other-refinance, or otherwise
+mismatched reuse reverts `RefinanceReplayConflict`.
 
 Factory creation replay is distinct from request replay. The factory recognizes a stored
 `creationId` before using the now-advanced factory nonce and returns only after the stored

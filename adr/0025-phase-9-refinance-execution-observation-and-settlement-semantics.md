@@ -231,9 +231,9 @@ successor; a revert leaves the attempt at `0`, and an exact terminal replay leav
 `1`. The execution event ID therefore binds `execution_attempt == 1`. The provisional
 `EXECUTING` state can never satisfy exact terminal replay: replay requires stored
 `COMPLETED`, the matching processed execute operation, and the matching nonzero terminal
-result. The execute operation ID is recomputed from the consumed quote's stored
-pre-payoff debt-state version on both first execution and replay, never from the old
-account's current post-payoff version. After terminal storage, the frozen
+result. Only first execution reads the stored quote, recomputes the execute operation ID
+from its pre-payoff debt-state version, and requires supplied-ID equality before writing
+provisional `EXECUTING`. After terminal storage, the frozen
 `RefinanceExecuted` event is emitted first and the one additive completion transition
 event is emitted second, both binding the same `terminal_result_hash`.
 
@@ -245,8 +245,19 @@ execution result/event evidence; it is never resampled later in the transaction.
 
 No durable view, replay result, version history, or event may represent `EXECUTING`.
 An in-transaction reentrant mutator observes the provisional guard and fails. Exact
-terminal replay branches before current-state and lock-owner checks and emits no new
-event.
+terminal replay branches before every first-execution current-state, old-loan-lock,
+quote, or dependency read and is dependency-call-free. The record key and stored
+`refinanceId` must identify the same nonzero refinance; the record must be `COMPLETED`
+with attempt one; the supplied operation ID must be nonzero and processed; and the
+terminal result must identify that refinance, be `COMPLETED`, have a nonzero event ID,
+and have a nonzero result hash equal to terminal evidence. Replay reconstructs the
+execution-event ID from the exact domain, chain, coordinator, refinance ID, stored
+`quoteId`, supplied operation ID, `uint32(1)`, and terminal `recordedAt`. The reconstructed
+ID must be nonzero and equal the stored event ID. Any identity, state, attempt, operation,
+quote-ID, recorded-time, event-ID, result, or evidence mismatch reverts
+`RefinanceReplayConflict`. Exact replay returns the stored result with zero dependency
+calls, writes, transfers, counters, or logs and never recomputes the execute operation ID
+from a debt version.
 
 ### 5. Sorted two-pass lien handoff
 

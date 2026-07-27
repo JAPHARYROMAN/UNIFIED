@@ -953,10 +953,14 @@ First execution requires `FUNDING_ESCROWED`, exact full funding, an unexpired ac
 record, the unconsumed exact quote, unchanged old debt, unchanged policy/asset/collateral
 facts, an inactive exact replacement account whose factory creation record binds this
 refinance ID, and the complete funded position tuple.
-It performs, in order:
+Before those first-execution checks, the wrapper classifies terminal replay entirely
+from coordinator storage as specified in Section 16; that branch makes no quote or
+other dependency call. If it is not an exact terminal replay, first execution performs,
+in order:
 
-1. validate the operation ID and enter provisional, unversioned, non-evented
-   `EXECUTING` reentrancy state;
+1. read the exact stored quote, recompute `execute_operation_id` from its pre-payoff
+   debt-state version, require equality with the supplied operation ID, and only then
+   enter provisional, unversioned, non-evented `EXECUTING` reentrancy state;
 2. re-resolve and verify every canonical source; fix the one `executionBlock`, compute
    the pre-effect old-tranche, old-position, and old-rights public-view observations,
    re-hash the exact five stored quote components and the typed resolver replacement
@@ -1147,11 +1151,68 @@ it is not caller-selected calldata and uses the exact Section 13 values. Funding
 its commitment ID as the operation identity. An operation ID cannot be reused across
 action domains.
 
-`consumed_quote_debt_state_version` is the quote's stored pre-payoff debt version on
-both first execution and exact terminal replay. Replay never substitutes the old
-account's current post-payoff version. Exact execute replay requires the recomputed ID,
-its processed-operation flag, stored `COMPLETED`, `executionAttempts == 1`, and the
-matching nonzero terminal result; provisional `EXECUTING` cannot qualify.
+Terminal execution replay classification occurs before every first-execution
+current-state, old-loan-lock-owner, quote, or dependency read. It uses only coordinator
+storage and is exact only when the record stored under `refinance_id` identifies that
+same nonzero refinance ID, the record is `COMPLETED` with `executionAttempts == 1`, the
+supplied operation ID is nonzero and processed, and the stored terminal result identifies
+the same refinance ID, has state `COMPLETED`, has a nonzero execution-event ID, and has a
+nonzero `resultHash` equal to `stored_refinance.terminalEvidenceHash`. It then
+reconstructs:
+
+```text
+replayed_execution_event_id = keccak256(abi.encode(
+  "UNIFIED_REFINANCE_EXECUTION_EVENT_V1",
+  chainid,
+  coordinator,
+  refinance_id,
+  stored_refinance.quoteId,
+  supplied_operation_id,
+  uint32(1),
+  stored_terminal_result.recordedAt
+))
+```
+
+The reconstructed ID must be nonzero and equal
+`stored_terminal_result.executionEventId`. Any identity, state, attempt, operation,
+quote-ID, recorded-time, event-ID, result, or evidence mismatch in a terminal replay
+reverts `RefinanceReplayConflict`; provisional `EXECUTING` cannot qualify. Exact replay
+returns the stored result with zero dependency calls, writes, transfers, counters, and
+logs. It never reads the quote or another dependency and never recomputes
+`execute_operation_id`.
+
+Only first execution reads the exact stored quote and uses its pre-payoff debt-state
+version to recompute `execute_operation_id`; supplied-ID equality is required before
+provisional `EXECUTING`.
+
+Cancel replay classification is also coordinator-storage-only and occurs before
+first-execution current-state, old-loan-lock-owner, quote, or dependency reads. Its
+stored commitment-ID inventory must be bounded and unique. `CANCELLED` and `EXPIRED`
+require the canonical empty inventory; `REFUNDABLE` and `REFUNDED` require length
+`1..32`. Every vector ID must be nonzero and materialize a stored commitment whose
+`commitmentId` equals that vector ID, whose `refinanceId` equals the current refinance,
+and whose state is exactly `FUNDED` or `REFUNDED`; `NONE`, `CONSUMED`, or any other state
+conflicts. It checked-counts the entries in state `REFUNDED`, then checked-reconstructs
+the version before cancellation:
+
+```text
+refunded_count = count(stored commitments with state REFUNDED)
+cancellation_prior_version = stored_refinance.stateVersion - refunded_count - 1
+```
+
+The keyed refinance record must identify `refinance_id`, the supplied cancel operation
+ID must be nonzero and processed, and the candidate ID uses the exact Section 13 cancel
+preimage with `cancellation_prior_version` and `stored_refinance.expiresAt`. Stored
+`CANCELLED` permits only reason `BORROWER_CANCELLED=1`; stored `EXPIRED` permits only
+reason `EXPIRED=2`; stored `REFUNDABLE` or `REFUNDED` reconstructs both reason-1 and
+reason-2 candidate IDs and accepts the supplied ID only when it equals one candidate.
+Every other refinance or commitment state, over-cap or duplicate inventory, missing or
+wrong commitment identity, wrong commitment refinance, count/version inconsistency,
+checked underflow, unprocessed ID, cross-domain or other-refinance processed ID, or
+candidate mismatch reverts `RefinanceReplayConflict`. Exact cancel replay makes zero
+dependency calls, writes, transfers, counters, and logs. This bounded reconstruction
+remains exact after zero, partial, or final refunds and never relies on
+`current stateVersion - 1` alone.
 
 Replay behavior is method-specific:
 

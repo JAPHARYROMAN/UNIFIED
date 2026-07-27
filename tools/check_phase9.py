@@ -553,6 +553,36 @@ def check_refinance_boundary_evidence() -> None:
     deployment = read(REFINANCE_DEPLOYMENT_EVIDENCE_PATH)
     data_layouts = read(DATA_LAYOUTS_PATH)
 
+    forbidden_execute_replay_claims = (
+        "on both first execution and exact terminal replay",
+        "on both first execution and replay",
+        "first execution and exact terminal replay recompute",
+        "first execution and replay recompute",
+        "exact replay recomputes the id",
+        "execute replay requires the recomputed id",
+        "replay recomputes the operation id",
+        "replay recomputes the execute operation id",
+        "terminal replay recomputes `execute_operation_id`",
+        "terminal replay recomputes the execute operation id",
+        "terminal replay reads the quote",
+    )
+    for label, document in (
+        ("atomic-refinance ADR", refinance_adr),
+        ("D3 execution-semantics ADR", refinance_execution_semantics_adr),
+        ("refinance reference evidence", reference),
+        ("refinance acceptance", acceptance),
+        ("Phase 9 architecture", read(ARCHITECTURE_PATH)),
+        ("Phase 9 backlog", read(BACKLOG_PATH)),
+    ):
+        normalized_document = normalized(document)
+        stale = [
+            claim for claim in forbidden_execute_replay_claims if claim in normalized_document
+        ]
+        require(
+            not stale,
+            f"{label} contains forbidden superseded execute-replay claim: {', '.join(stale)}",
+        )
+
     require_tokens(
         normalized(factory_bootstrap_adr),
         (
@@ -642,8 +672,13 @@ def check_refinance_boundary_evidence() -> None:
             "coordinator_balance_before_all - coordinator_balance_after_all == funding_amount",
             "does not increment `stateVersion`",
             "`FUNDING_ESCROWED -> COMPLETED`",
-            "consumed quote's stored pre-payoff debt-state version",
+            "Only first execution reads the stored quote",
+            "never recomputes the execute operation ID from a debt version",
             "captures exactly one `executed_at = uint64(block.timestamp)`",
+            "The record key and stored `refinanceId` must identify the same nonzero refinance",
+            "terminal result must identify that refinance, be `COMPLETED`, have a nonzero event ID",
+            "The reconstructed ID must be nonzero and equal the stored event ID",
+            "zero dependency calls, writes, transfers, counters, or logs",
             "call `beginHandoff` for every collateral",
             "verify that every old lien is `HANDOFF_PENDING`",
             "call `completeHandoff` for every handoff",
@@ -731,6 +766,57 @@ def check_refinance_boundary_evidence() -> None:
         "Phase 9 refinance reference evidence",
     )
 
+    require_abi_encode_formula(
+        refinance_adr,
+        "replayed_execution_event_id",
+        """
+          "UNIFIED_REFINANCE_EXECUTION_EVENT_V1",
+          chainid,
+          coordinator,
+          refinance_id,
+          stored_refinance.quoteId,
+          supplied_operation_id,
+          uint32(1),
+          stored_terminal_result.recordedAt
+        """,
+        "Phase 9 atomic-refinance semantic boundary",
+    )
+    require_abi_encode_formula(
+        reference,
+        "replayed_execution_event_id",
+        """
+          "UNIFIED_REFINANCE_EXECUTION_EVENT_V1",
+          chainid,
+          refinance_coordinator,
+          refinance_id,
+          stored_refinance.quoteId,
+          supplied_operation_id,
+          uint32(1),
+          stored_terminal_result.recordedAt
+        """,
+        "Phase 9 refinance reference evidence",
+    )
+    require_abi_encode_formula(
+        reference,
+        "borrower_cancel_replay_id",
+        """
+          "UNIFIED_REFINANCE_CANCEL_OPERATION_V1",
+          chainid, refinance_coordinator, refinance_id, cancellation_prior_version,
+          stored_refinance.expiresAt, uint8(1)
+        """,
+        "Phase 9 refinance reference evidence",
+    )
+    require_abi_encode_formula(
+        reference,
+        "expiry_cancel_replay_id",
+        """
+          "UNIFIED_REFINANCE_CANCEL_OPERATION_V1",
+          chainid, refinance_coordinator, refinance_id, cancellation_prior_version,
+          stored_refinance.expiresAt, uint8(2)
+        """,
+        "Phase 9 refinance reference evidence",
+    )
+
     require_tokens(
         normalized(refinance_adr),
         (
@@ -769,6 +855,18 @@ def check_refinance_boundary_evidence() -> None:
             "recognized escrow liability == escrowedUnits(refinanceId)",
             "An unsolicited surplus",
             "is excluded from refinance and ledger reconciliation",
+            "Terminal execution replay classification occurs before every first-execution",
+            "stored terminal result identifies the same refinance ID, has state `COMPLETED`",
+            "The reconstructed ID must be nonzero",
+            "reverts `RefinanceReplayConflict`",
+            "cancellation_prior_version = stored_refinance.stateVersion - refunded_count - 1",
+            "`CANCELLED` and `EXPIRED` require the canonical empty inventory",
+            "`REFUNDABLE` and `REFUNDED` require length `1..32`",
+            "whose `commitmentId` equals that vector ID, whose `refinanceId` equals the current refinance",
+            "`NONE`, `CONSUMED`, or any other state conflicts",
+            "count/version inconsistency, checked underflow",
+            "stored `REFUNDABLE` or `REFUNDED` reconstructs both reason-1 and reason-2 candidate IDs",
+            "never relies on `current stateVersion - 1` alone",
             "block.chainid == 31337",
             "It does not activate a successful Solidity business path",
             "Phase9ImplementationNotFrozen()",
@@ -815,7 +913,20 @@ def check_refinance_boundary_evidence() -> None:
             "all four leg hashes exist",
             "distinct recipients sorted by increasing `uint160`",
             "one exact `uint64(block.number)`",
-            "consumed quote's stored pre-payoff version",
+            "first execution reads the stored quote, recomputes the operation ID from its pre-payoff version",
+            "The complete stored terminal tuple must match",
+            "reconstructs a nonzero execution-event ID from the exact domain",
+            "makes zero dependency calls, writes, transfers, counter changes, and logs",
+            "cancellation_prior_version = stored_refinance.stateVersion - refunded_count - 1",
+            "duplicate/over-cap IDs",
+            "commitment ID or refinance identity",
+            "`NONE`/`CONSUMED`/other commitment state",
+            "prior-version underflow",
+            "`CANCELLED`/`EXPIRED` require an empty commitment inventory",
+            "`REFUNDABLE`/`REFUNDED` require `1..32` unique IDs",
+            "only `FUNDED` or `REFUNDED`",
+            "permits only reason 1 for `CANCELLED`, only reason 2 for `EXPIRED`",
+            "Every inventory, identity, state, count, arithmetic, candidate, or operation mismatch reverts",
             "provisional `EXECUTING` emits none",
             "ADR 0025 changes evidence semantics only",
             "consumed-quote component binding",
@@ -876,6 +987,17 @@ def check_refinance_boundary_evidence() -> None:
             "bytes32 replacement_positions_hash = keccak256(abi.encode(replacement_positions))",
             "captures `executed_at = uint64(block.timestamp)` exactly once",
             "unequal to the settlement-token address before quote consumption or balance change",
+            "Execute replay validates the complete stored terminal tuple",
+            "require stored_terminal_result.executionEventId != bytes32(0)",
+            "require replayed_execution_event_id != bytes32(0)",
+            "Cancel replay uses a bounded refunded-commitment count",
+            "cancellation_prior_version = stored_refinance.stateVersion - refunded_count - 1",
+            "`CANCELLED` and `EXPIRED` require the canonical empty inventory",
+            "`REFUNDABLE` and `REFUNDED` require length `1..32`",
+            "`commitmentId == vector_id`, `refinanceId == refinance_id`",
+            "`NONE`, `CONSUMED`, or any other state conflicts",
+            "count/version inconsistency, checked underflow",
+            "processed cross-domain/other-refinance ID reverts `RefinanceReplayConflict`",
         ),
         "Phase 9 refinance reference evidence",
     )

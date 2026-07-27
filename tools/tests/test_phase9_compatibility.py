@@ -541,9 +541,70 @@ def test_refinance_boundary_evidence_is_exact() -> None:
             "atomic-refinance semantic boundary",
         ),
         (
+            phase9.REFINANCE_ADR_PATH,
+            "  stored_refinance.quoteId,\n  supplied_operation_id,",
+            "  quote_id,\n  supplied_operation_id,",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_ADR_PATH,
+            "cancellation_prior_version = stored_refinance.stateVersion - refunded_count - 1",
+            "cancellation_prior_version = stored_refinance.stateVersion - 1",
+            "atomic-refinance semantic boundary",
+        ),
+        (
+            phase9.REFINANCE_EXECUTION_SEMANTICS_ADR_PATH,
+            "The reconstructed\nID must be nonzero and equal the stored event ID",
+            "The reconstructed ID may be zero or differ from the stored event ID",
+            "D3 execution-semantics boundary",
+        ),
+        (
+            phase9.REFINANCE_EXECUTION_SEMANTICS_ADR_PATH,
+            "Only first execution reads the stored quote",
+            "Only first execution reads the stored quote. The execute operation ID is "
+            "recomputed from the quote on both first execution and replay",
+            "superseded execute-replay claim",
+        ),
+        (
             phase9.REFINANCE_ACCEPTANCE_PATH,
             "exact funding replay remains inert, changed reuse still conflicts",
             "exact funding replay is paused before classification",
+            "refinance acceptance semantics",
+        ),
+        (
+            phase9.REFINANCE_ACCEPTANCE_PATH,
+            "The complete stored terminal tuple must match",
+            "Only the terminal result hash must match",
+            "refinance acceptance semantics",
+        ),
+        (
+            phase9.REFINANCE_ACCEPTANCE_PATH,
+            "cancellation_prior_version = stored_refinance.stateVersion - refunded_count - 1",
+            "cancellation_prior_version = stored_refinance.stateVersion - 1",
+            "refinance acceptance semantics",
+        ),
+        (
+            phase9.REFINANCE_ACCEPTANCE_PATH,
+            "duplicate/over-cap IDs",
+            "repeated or 33-entry IDs are accepted",
+            "refinance acceptance semantics",
+        ),
+        (
+            phase9.REFINANCE_ACCEPTANCE_PATH,
+            "commitment ID or refinance identity",
+            "commitment amount only",
+            "refinance acceptance semantics",
+        ),
+        (
+            phase9.REFINANCE_ACCEPTANCE_PATH,
+            "`NONE`/`CONSUMED`/other commitment state",
+            "only `FUNDED` commitment state",
+            "refinance acceptance semantics",
+        ),
+        (
+            phase9.REFINANCE_ACCEPTANCE_PATH,
+            "prior-version underflow",
+            "unchecked prior-version wraparound",
             "refinance acceptance semantics",
         ),
         (
@@ -562,6 +623,18 @@ def test_refinance_boundary_evidence_is_exact() -> None:
             phase9.REFINANCE_REFERENCE_EVIDENCE_PATH,
             "  bootstrap_id,\n  old_loan_id,\n  collateral_custody,",
             "  bootstrap_id,\n  collateral_custody,",
+            "refinance reference evidence",
+        ),
+        (
+            phase9.REFINANCE_REFERENCE_EVIDENCE_PATH,
+            "  stored_refinance.expiresAt, uint8(1)\n))",
+            "  stored_refinance.expiresAt, uint8(2)\n))",
+            "refinance reference evidence",
+        ),
+        (
+            phase9.REFINANCE_REFERENCE_EVIDENCE_PATH,
+            "require stored_terminal_result.executionEventId != bytes32(0)",
+            "require stored_terminal_result.executionEventId == bytes32(0)",
             "refinance reference evidence",
         ),
         (

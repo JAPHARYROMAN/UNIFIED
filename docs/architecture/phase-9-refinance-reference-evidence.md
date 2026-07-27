@@ -576,11 +576,54 @@ Replay vectors are method-specific: exact request repeats fail the consumed refi
 nonce before another quote; exact funding/cancel/refund and custody/lien setup repeats
 are inert; exact execute returns the stored terminal result; exact factory create
 returns stored clones; and changed identity reuse conflicts.
-`consumed_quote_debt_state_version` is always the quote's stored pre-payoff version.
-First execution and exact terminal replay recompute the operation ID from that stored
-quote fact, never from the old account's current post-payoff version. Execute replay
-requires the recomputed ID, its processed-operation flag, stored `COMPLETED`, attempt
-one, and the matching nonzero terminal result; provisional `EXECUTING` cannot replay.
+On first execution only, `consumed_quote_debt_state_version` is read from the exact
+stored quote and used to recompute the operation ID; supplied-ID equality is required
+before provisional `EXECUTING`. That first-execution recomputation uses the stored quote
+fact, never from the old account's current post-payoff version. Exact terminal replay is
+dependency-call-free and does not read the quote or recompute `execute_operation_id` from
+any debt version. Execute
+replay validates the complete stored terminal tuple: exact nonzero keyed refinance
+identity, record `COMPLETED`, attempt one, nonzero processed supplied operation ID,
+terminal refinance identity and `COMPLETED` state, nonzero event ID, and matching nonzero
+terminal result/evidence. It also requires the exact replay event-ID reconstruction
+defined below. Provisional `EXECUTING` cannot replay.
+
+Cancel replay uses a bounded refunded-commitment count and only coordinator storage.
+Before any first-execution current-state, old-loan-lock-owner, quote, or dependency read,
+validate that the commitment-ID vector is bounded and unique. `CANCELLED` and `EXPIRED`
+require the canonical empty inventory; `REFUNDABLE` and `REFUNDED` require length
+`1..32`. Every vector ID is nonzero and materializes an exact stored commitment with
+`commitmentId == vector_id`, `refinanceId == refinance_id`, and state exactly `FUNDED` or
+`REFUNDED`; `NONE`, `CONSUMED`, or any other state conflicts. Checked-count exact entries
+whose stored state is `REFUNDED`, then use checked arithmetic:
+
+```text
+refunded_count = count(stored commitments with state REFUNDED)
+cancellation_prior_version = stored_refinance.stateVersion - refunded_count - 1
+
+borrower_cancel_replay_id = keccak256(abi.encode(
+  "UNIFIED_REFINANCE_CANCEL_OPERATION_V1",
+  chainid, refinance_coordinator, refinance_id, cancellation_prior_version,
+  stored_refinance.expiresAt, uint8(1)
+))
+
+expiry_cancel_replay_id = keccak256(abi.encode(
+  "UNIFIED_REFINANCE_CANCEL_OPERATION_V1",
+  chainid, refinance_coordinator, refinance_id, cancellation_prior_version,
+  stored_refinance.expiresAt, uint8(2)
+))
+```
+
+The keyed stored refinance identity must match, and the supplied cancel operation ID
+must be nonzero and processed. `CANCELLED` accepts only
+`borrower_cancel_replay_id`; `EXPIRED` accepts only `expiry_cancel_replay_id`;
+`REFUNDABLE` and `REFUNDED` accept either exact candidate because their stored state does
+not encode the original cancellation reason. Every other refinance or commitment state,
+over-cap or duplicate inventory, missing or wrong commitment identity, wrong commitment
+refinance, count/version inconsistency, checked underflow, candidate mismatch, or
+processed cross-domain/other-refinance ID reverts `RefinanceReplayConflict`. Exact cancel
+replay has zero dependency calls, writes, transfers, counters, and logs. It remains exact
+after partial and final refunds and never uses `current stateVersion - 1` alone.
 
 ## Result and transition evidence preimages
 
@@ -996,6 +1039,31 @@ terminal_result_hash = keccak256(abi.encode(
 
 execution_transition_evidence_hash = terminal_result_hash
 
+require refinance_id != bytes32(0)
+require stored_refinance.refinanceId == refinance_id
+require stored_refinance.state == COMPLETED
+require stored_refinance.executionAttempts == uint32(1)
+require supplied_operation_id != bytes32(0)
+require processedOperationIds[supplied_operation_id]
+require stored_terminal_result.refinanceId == refinance_id
+require stored_terminal_result.state == COMPLETED
+require stored_terminal_result.executionEventId != bytes32(0)
+require stored_terminal_result.resultHash != bytes32(0)
+require stored_terminal_result.resultHash == stored_refinance.terminalEvidenceHash
+
+replayed_execution_event_id = keccak256(abi.encode(
+  "UNIFIED_REFINANCE_EXECUTION_EVENT_V1",
+  chainid,
+  refinance_coordinator,
+  refinance_id,
+  stored_refinance.quoteId,
+  supplied_operation_id,
+  uint32(1),
+  stored_terminal_result.recordedAt
+))
+require replayed_execution_event_id != bytes32(0)
+require replayed_execution_event_id == stored_terminal_result.executionEventId
+
 refund_result_hash = keccak256(abi.encode(
   "UNIFIED_REFINANCE_REFUND_RESULT_V1",
   chainid,
@@ -1145,8 +1213,16 @@ completed_state_version, execute_operation_id, terminal_result_hash)` log. For t
 one transition, the event evidence is directly `terminal_result_hash`, as represented
 by `execution_transition_evidence_hash`; it is not the generic transition wrapper.
 Revert restores attempts and version, and provisional `EXECUTING` cannot qualify for
-terminal replay. Exact replay requires stored `COMPLETED`, the processed execute
-operation, attempt `1`, and the matching nonzero terminal result, and emits no log.
+terminal replay. Before every first-execution current-state or old-lock read, exact replay
+requires the record key and its nonzero stored refinance identity to match; stored
+`COMPLETED` and attempt `1`; a nonzero processed supplied operation ID; terminal refinance
+identity and `COMPLETED` state; a nonzero terminal event ID; and matching nonzero terminal
+result/evidence. It reconstructs a nonzero `replayed_execution_event_id` from the exact
+domain, chain, coordinator, refinance ID, stored `quoteId`, supplied ID, attempt one, and
+terminal `recordedAt`, then matches the stored event ID. It makes no quote or dependency
+call, returns the stored result, and performs no write, transfer, counter change, or log.
+It does not recompute `execute_operation_id`; every tuple mismatch, changed ID, or
+unprocessed ID reverts `RefinanceReplayConflict`.
 
 For `BORROWER_CANCELLED`, `quote_disposition_after == INVALIDATED`; for `EXPIRED`,
 it is `EXPIRED`. The latter is exact because every accepted record binds
