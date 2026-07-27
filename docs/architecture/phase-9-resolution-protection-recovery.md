@@ -612,6 +612,18 @@ The frozen five-selector first slice persists `ACCEPTED` on the successful
 `FUNDING_ESCROWED`, and further partial funding remains there until exact full funding
 makes execution eligible.
 
+ADR 0025 fixes successful execution as one durable
+`FUNDING_ESCROWED -> COMPLETED` version increment. `EXECUTING` is only a provisional,
+unversioned, non-evented reentrancy guard; it cannot persist or satisfy terminal replay.
+The same decision replaces private checkpoint-history claims with public one-block
+execution observations, permits canonical external payout-role aliases under exact
+leg/unique-address/coordinator conservation while rejecting zero, coordinator, and
+settlement-token recipients, fixes one representable execution timestamp plus exact
+stored-quote/resolver result bindings, revalidates the replacement's exact stored
+factory creation through checked current `nextLoanNonce - 1` and mapped clones, and
+requires the sorted begin-all,
+verify-all-pending, complete-all, verify-all-active lien sequence. D3 remains closed.
+
 The caller supplies zero refinance/quote IDs and zero derived state. After pure wire/
 derived/key checks the coordinator's fixed request `begin` dispatch acquires the
 old-loan tagged lock before any external resolver or other effect-capable dependency
@@ -873,7 +885,7 @@ The full schema vocabulary supports retained proposal evidence and later phases.
 NONE -> ACCEPTED
 ACCEPTED --first successful funding commitment--> FUNDING_ESCROWED
 FUNDING_ESCROWED --additional partial funding--> FUNDING_ESCROWED
-FUNDING_ESCROWED -> EXECUTING -> COMPLETED
+FUNDING_ESCROWED -> COMPLETED
 
 ACCEPTED --borrower cancellation before expiry--> CANCELLED
 ACCEPTED --permissionless expiry at/after deadline--> EXPIRED
@@ -884,9 +896,11 @@ REFUNDABLE --all stored commitments refunded--> REFUNDED
 `REQUESTED`, `QUOTED`, and `OFFERED` are off-chain evidence stages;
 `REJECTED` is an off-chain outcome; `DISPUTED` is unreachable in this slice.
 
-The local atomic execution cannot persist `EXECUTING`; it exists as a reentrancy guard
-within one transaction. Durable projections may observe the transaction result, never a
-half-committed EVM state.
+The local atomic execution may write `EXECUTING` only as a provisional reentrancy guard
+within one transaction. It consumes no state version or execution attempt and emits no
+transition. Success persists exactly one direct `FUNDING_ESCROWED -> COMPLETED`
+increment/event using the terminal result hash. Durable projections may observe the
+transaction result, never `EXECUTING` or a half-committed EVM state.
 
 ### Restructure
 
@@ -1401,13 +1415,16 @@ accepts ADR 0022's factory/account/position bootstrap semantics, and `UNI-ADR-01
 accepts ADR 0023's synthetic-local three-library/seven-call/ten-CREATE candidate
 architecture without activating an implementation or deployment. `UNI-ADR-019`
 accepts ADR 0024's explicit Anvil nonce precondition and exact
-verification-before-governance-grant order without executing that grant. The later
+verification-before-governance-grant order without executing that grant. `UNI-ADR-020`
+accepts ADR 0025's computable execution observations, alias-aware payout conservation,
+single durable completion transition, and four-phase lien handoff without opening D3
+or changing any frozen interface. The later
 implementation checkpoint is method-level: it may activate only the exact factory,
 account, custody, lien, coordinator, and position-manager methods listed by ADRs 0021
 and 0022, while the candidate must also pass ADR 0023's linked-module checker and
 nonce-10 deployment-evidence gates plus ADR 0024's activation-topology controls,
 retains the exact freeze stub for every other mutator, and requires
-`UNI-REFI-001` plus `UNI-REFI-002` as one bundled gate. The exact additive ABI allowlist
+`UNI-ADR-020`, `UNI-REFI-001`, and `UNI-REFI-002` as one bundled gate. The exact additive ABI allowlist
 contains only coordinator-owned `RefinanceStateTransitioned` and
 `UnknownFundingCommitment(bytes32)`, plus lien-registry-owned
 `UnknownLienHandoff(bytes32)`; no selector, other event/error, tuple, storage, base,

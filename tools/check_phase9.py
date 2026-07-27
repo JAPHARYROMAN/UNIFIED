@@ -39,6 +39,9 @@ REFINANCE_MODULE_ADR_PATH = ROOT / "adr/0023-phase-9-refinance-fixed-module-part
 REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH = (
     ROOT / "adr/0024-phase-9-refinance-activation-topology-control.md"
 )
+REFINANCE_EXECUTION_SEMANTICS_ADR_PATH = (
+    ROOT / "adr/0025-phase-9-refinance-execution-observation-and-settlement-semantics.md"
+)
 ARCHITECTURE_PATH = ROOT / "docs/architecture/phase-9-resolution-protection-recovery.md"
 DATA_LAYOUTS_PATH = ROOT / "docs/architecture/phase-9-data-layouts.md"
 REFINANCE_ACCEPTANCE_PATH = ROOT / "docs/architecture/phase-9-refinance-acceptance.md"
@@ -136,6 +139,7 @@ BACKLOG_IDS = (
     "UNI-ADR-017",
     "UNI-ADR-018",
     "UNI-ADR-019",
+    "UNI-ADR-020",
     "UNI-REFI-001",
     "UNI-REFI-002",
     "UNI-RESTRUCT-001",
@@ -161,6 +165,7 @@ BOUNDARY_COMPLETE_IDS = {
     "UNI-ADR-017",
     "UNI-ADR-018",
     "UNI-ADR-019",
+    "UNI-ADR-020",
 }
 SECURITY_REVIEW_ID = "UNI-SEC-014"
 EXIT_REVIEW_ID = "UNI-REVIEW-012"
@@ -225,6 +230,7 @@ BOUNDARY_PATHS = (
     FACTORY_BOOTSTRAP_ADR_PATH,
     REFINANCE_MODULE_ADR_PATH,
     REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH,
+    REFINANCE_EXECUTION_SEMANTICS_ADR_PATH,
     ARCHITECTURE_PATH,
     DATA_LAYOUTS_PATH,
     REFINANCE_ACCEPTANCE_PATH,
@@ -394,6 +400,7 @@ def check_backlog_precedence(by_id: dict[str, dict[str, str]]) -> None:
     refinance_bootstrap_done = by_id["UNI-ADR-017"]["status"] == "DONE"
     refinance_module_candidate_done = by_id["UNI-ADR-018"]["status"] == "DONE"
     refinance_activation_topology_done = by_id["UNI-ADR-019"]["status"] == "DONE"
+    refinance_execution_semantics_done = by_id["UNI-ADR-020"]["status"] == "DONE"
     refinance_done = [
         identifier
         for identifier in ("UNI-REFI-001", "UNI-REFI-002")
@@ -419,6 +426,11 @@ def check_backlog_precedence(by_id: dict[str, dict[str, str]]) -> None:
         "UNI-ADR-019 must be DONE before either Phase 9 refinance row can be DONE: "
         + ", ".join(refinance_done),
     )
+    require(
+        refinance_execution_semantics_done or not refinance_done,
+        "UNI-ADR-020 must be DONE before either Phase 9 refinance row can be DONE: "
+        + ", ".join(refinance_done),
+    )
 
 
 def check_refinance_checkpoint_precedence(
@@ -439,14 +451,25 @@ def check_refinance_checkpoint_precedence(
         "P9-REFI-001 required backlog IDs are malformed",
     )
     required_backlog_ids = cast(list[str], raw_required)
+    expected_required_backlog_ids = [
+        "UNI-ADR-016",
+        "UNI-ADR-017",
+        "UNI-ADR-018",
+        "UNI-ADR-019",
+        "UNI-ADR-020",
+        "UNI-REFI-001",
+        "UNI-REFI-002",
+    ]
     require(
-        "UNI-ADR-019" in required_backlog_ids,
-        "P9-REFI-001 must bind UNI-ADR-019 in requiredBacklogIds",
+        required_backlog_ids == expected_required_backlog_ids,
+        "P9-REFI-001 requiredBacklogIds must exactly bind UNI-ADR-016 through "
+        "UNI-ADR-020 and both bundled refinance rows",
     )
-    require(
-        by_id["UNI-ADR-019"]["status"] == "DONE",
-        "P9-REFI-001 cannot exist before UNI-ADR-019 is DONE",
-    )
+    for identifier in expected_required_backlog_ids[:5]:
+        require(
+            by_id[identifier]["status"] == "DONE",
+            f"P9-REFI-001 cannot exist before {identifier} is DONE",
+        )
     incomplete = [
         identifier
         for identifier in ("UNI-REFI-001", "UNI-REFI-002")
@@ -524,6 +547,7 @@ def check_refinance_boundary_evidence() -> None:
     factory_bootstrap_adr = read(FACTORY_BOOTSTRAP_ADR_PATH)
     refinance_module_adr = read(REFINANCE_MODULE_ADR_PATH)
     refinance_activation_topology_adr = read(REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH)
+    refinance_execution_semantics_adr = read(REFINANCE_EXECUTION_SEMANTICS_ADR_PATH)
     acceptance = read(REFINANCE_ACCEPTANCE_PATH)
     reference = read(REFINANCE_REFERENCE_EVIDENCE_PATH)
     deployment = read(REFINANCE_DEPLOYMENT_EVIDENCE_PATH)
@@ -599,6 +623,36 @@ def check_refinance_boundary_evidence() -> None:
             "configuration is removed, and the disposable anvil process stops.",
         ),
         "Phase 9 refinance activation-topology control",
+    )
+    require_tokens(
+        normalized(refinance_execution_semantics_adr),
+        (
+            "status: accepted for synthetic-local specification freeze; D3 remains closed",
+            "Acceptance of this ADR is documentation-only",
+            "`UNI-REFI-001`, `UNI-REFI-002`, every D1-D4 activation gate, and "
+            "`P9-REFI-001` remain closed",
+            "execution_block = uint64(block.number)",
+            '"UNIFIED_REFINANCE_OLD_TRANCHE_EXECUTION_SNAPSHOT_V1"',
+            '"UNIFIED_REFINANCE_OLD_POSITION_EXECUTION_SNAPSHOT_V1"',
+            '"UNIFIED_REFINANCE_OLD_RIGHTS_EXECUTION_SNAPSHOT_V1"',
+            "After old-debt payoff and again before terminal persistence",
+            "Execution has exactly four ordered payout legs",
+            "must equal neither the refinance coordinator nor the settlement-token address",
+            "strictly increasing unsigned-`uint160` order",
+            "coordinator_balance_before_all - coordinator_balance_after_all == funding_amount",
+            "does not increment `stateVersion`",
+            "`FUNDING_ESCROWED -> COMPLETED`",
+            "consumed quote's stored pre-payoff debt-state version",
+            "captures exactly one `executed_at = uint64(block.timestamp)`",
+            "call `beginHandoff` for every collateral",
+            "verify that every old lien is `HANDOFF_PENDING`",
+            "call `completeHandoff` for every handoff",
+            "verify that every lien is `ACTIVE` for the successor loan",
+            "During that window the coordinator makes only calls to the canonical lien registry",
+            "This ADR completes only `UNI-ADR-020`",
+            "D3 logic may open only after the complete bundled implementation",
+        ),
+        "Phase 9 D3 execution-semantics boundary",
     )
 
     actual_acceptance_ids = set(
@@ -749,11 +803,26 @@ def check_refinance_boundary_evidence() -> None:
             "exactly seven fixed compiler-linked call sites",
             "No module may link or delegate again",
             "exactly ten top-level `CREATE`s at nonces 1 through 10",
-            "`UNI-ADR-018`, `UNI-ADR-019`, `UNI-REFI-001`, and `UNI-REFI-002`",
-            "the accepted candidate architecture and topology control alone activate nothing",
+            "`UNI-ADR-018`, `UNI-ADR-019`, `UNI-ADR-020`, `UNI-REFI-001`, and "
+            "`UNI-REFI-002`",
+            "accepted specification, architecture, and topology controls alone activate nothing",
             "explicit nonce precondition, pairwise-distinct authorities, "
             "verification-before-grant order",
             "It does not authorize a successful Solidity refinance path",
+            "provisional `EXECUTING` consumes no version/attempt and cannot terminal-replay",
+            "one direct `FUNDING_ESCROWED -> COMPLETED` increment with attempt one",
+            "begin-all, verify-all-pending, complete-all, verify-all-active",
+            "all four leg hashes exist",
+            "distinct recipients sorted by increasing `uint160`",
+            "one exact `uint64(block.number)`",
+            "consumed quote's stored pre-payoff version",
+            "provisional `EXECUTING` emits none",
+            "ADR 0025 changes evidence semantics only",
+            "consumed-quote component binding",
+            "typed replacement hashes",
+            "one representable `executed_at`",
+            "zero/coordinator/settlement-token recipients fail before effects; all four leg "
+            "hashes exist; each immediate recipient/coordinator delta is exact",
         ),
         "Phase 9 refinance acceptance semantics",
     )
@@ -787,6 +856,26 @@ def check_refinance_boundary_evidence() -> None:
             "fixed compiler-linked request `begin` dispatch",
             "before any resolver, token, registry, factory, quote-engine, provider, or other "
             "effect-capable dependency interaction",
+            "consumed_quote_debt_state_version",
+            "never from the old account's current post-payoff version",
+            '"UNIFIED_REFINANCE_OLD_TRANCHE_EXECUTION_SNAPSHOT_V1"',
+            '"UNIFIED_REFINANCE_OLD_POSITION_EXECUTION_SNAPSHOT_V1"',
+            '"UNIFIED_REFINANCE_OLD_RIGHTS_EXECUTION_SNAPSHOT_V1"',
+            '"UNIFIED_REFINANCE_PAYOUT_LEG_DELTA_V1"',
+            "distinct payout_recipients sorted by increasing uint160",
+            '"UNIFIED_REFINANCE_LIEN_PENDING_OBSERVATION_V1"',
+            '"UNIFIED_REFINANCE_LIEN_ACTIVE_OBSERVATION_V1"',
+            "begin-all, verify-all-pending, complete-all, then verify-all-active",
+            "provisional `EXECUTING` consumes neither a version nor an execution attempt",
+            "IPayoffQuoteEngineV2.PayoffComponentV2[] exact_quote_components",
+            "recomputed_component_beneficiary_hash == consumed_quote.componentBeneficiaryHash",
+            "recomputed_component_beneficiary_hash == accepted_record.componentBeneficiaryHash",
+            "Phase9Types.DebtState replacement_debt",
+            "bytes32 replacement_debt_hash = keccak256(abi.encode(replacement_debt))",
+            "bytes32 replacement_tranches_hash = keccak256(abi.encode(replacement_tranches))",
+            "bytes32 replacement_positions_hash = keccak256(abi.encode(replacement_positions))",
+            "captures `executed_at = uint64(block.timestamp)` exactly once",
+            "unequal to the settlement-token address before quote consumption or balance change",
         ),
         "Phase 9 refinance reference evidence",
     )

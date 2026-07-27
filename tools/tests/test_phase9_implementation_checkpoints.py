@@ -472,6 +472,7 @@ def test_refinance_additions_are_owned_by_their_exact_contracts() -> None:
         "UNI-ADR-017",
         "UNI-ADR-018",
         "UNI-ADR-019",
+        "UNI-ADR-020",
         "UNI-REFI-001",
         "UNI-REFI-002",
     )
@@ -1101,6 +1102,7 @@ def test_refinance_d1_evidence_paths_are_exact_shared_and_fail_closed() -> None:
         "adr/0022-phase-9-factory-account-position-bootstrap-semantics.md",
         "adr/0023-phase-9-refinance-fixed-module-partition.md",
         "adr/0024-phase-9-refinance-activation-topology-control.md",
+        "adr/0025-phase-9-refinance-execution-observation-and-settlement-semantics.md",
         "docs/architecture/phase-9-refinance-acceptance.md",
         "protocol/test/Phase9RefinanceBootstrapAcceptanceMap.sol",
         "protocol/test/Phase9RefinanceBootstrapHarness.sol",
@@ -1135,6 +1137,7 @@ def test_refinance_package_cannot_activate_with_only_d1_evidence() -> None:
                 "UNI-ADR-017",
                 "UNI-ADR-018",
                 "UNI-ADR-019",
+                "UNI-ADR-020",
                 "UNI-REFI-001",
                 "UNI-REFI-002",
             ],

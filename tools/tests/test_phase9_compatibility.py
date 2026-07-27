@@ -232,6 +232,7 @@ def test_backlog_dependency_order_is_fail_closed() -> None:
             "UNI-ADR-017",
             "UNI-ADR-018",
             "UNI-ADR-019",
+            "UNI-ADR-020",
         ):
             refinance_before_activation = copy.deepcopy(rows)
             refinance_before_activation[required_adr]["status"] = "TODO"
@@ -242,18 +243,24 @@ def test_backlog_dependency_order_is_fail_closed() -> None:
 
 def test_refinance_activation_row_and_acceptance_inventory_are_exact() -> None:
     refinance_index = phase9.BACKLOG_IDS.index("UNI-REFI-001")
-    assert phase9.BACKLOG_IDS[refinance_index - 4 : refinance_index] == (
+    assert phase9.BACKLOG_IDS[refinance_index - 5 : refinance_index] == (
         "UNI-ADR-016",
         "UNI-ADR-017",
         "UNI-ADR-018",
         "UNI-ADR-019",
+        "UNI-ADR-020",
     )
-    assert {"UNI-ADR-016", "UNI-ADR-017", "UNI-ADR-018", "UNI-ADR-019"}.issubset(
-        phase9.BOUNDARY_COMPLETE_IDS
-    )
+    assert {
+        "UNI-ADR-016",
+        "UNI-ADR-017",
+        "UNI-ADR-018",
+        "UNI-ADR-019",
+        "UNI-ADR-020",
+    }.issubset(phase9.BOUNDARY_COMPLETE_IDS)
     assert phase9.FACTORY_BOOTSTRAP_ADR_PATH in phase9.BOUNDARY_PATHS
     assert phase9.REFINANCE_MODULE_ADR_PATH in phase9.BOUNDARY_PATHS
     assert phase9.REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH in phase9.BOUNDARY_PATHS
+    assert phase9.REFINANCE_EXECUTION_SEMANTICS_ADR_PATH in phase9.BOUNDARY_PATHS
     assert len(phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS) == 80
     assert "P9R-COMPAT-003" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
     assert "P9R-DON-004" in phase9.REQUIRED_REFINANCE_ACCEPTANCE_IDS
@@ -271,17 +278,34 @@ def test_refinance_checkpoint_requires_activation_topology_and_bundled_rows() ->
         [{"checkpointId": "P9-PAYOFF-001", "requiredBacklogIds": ["UNI-PAYOFF-001"]}],
     )
 
-    missing_binding = [{"checkpointId": "P9-REFI-001", "requiredBacklogIds": []}]
-    with pytest.raises(SystemExit, match="must bind UNI-ADR-019"):
-        phase9.check_refinance_checkpoint_precedence(rows, missing_binding)
+    required_ids = [
+        "UNI-ADR-016",
+        "UNI-ADR-017",
+        "UNI-ADR-018",
+        "UNI-ADR-019",
+        "UNI-ADR-020",
+        "UNI-REFI-001",
+        "UNI-REFI-002",
+    ]
+    refinance_package: list[dict[str, object]] = [
+        {"checkpointId": "P9-REFI-001", "requiredBacklogIds": required_ids}
+    ]
+    for omitted in ("UNI-ADR-019", "UNI-ADR-020"):
+        missing_binding: list[dict[str, object]] = [
+            {
+                "checkpointId": "P9-REFI-001",
+                "requiredBacklogIds": [value for value in required_ids if value != omitted],
+            }
+        ]
+        with pytest.raises(SystemExit, match="requiredBacklogIds must exactly bind"):
+            phase9.check_refinance_checkpoint_precedence(rows, missing_binding)
 
-    refinance_package = [{"checkpointId": "P9-REFI-001", "requiredBacklogIds": ["UNI-ADR-019"]}]
+    for incomplete_adr in ("UNI-ADR-019", "UNI-ADR-020"):
+        rows[incomplete_adr]["status"] = "TODO"
+        with pytest.raises(SystemExit, match=incomplete_adr):
+            phase9.check_refinance_checkpoint_precedence(rows, refinance_package)
+        rows[incomplete_adr]["status"] = "DONE"
 
-    rows["UNI-ADR-019"]["status"] = "TODO"
-    with pytest.raises(SystemExit, match="UNI-ADR-019"):
-        phase9.check_refinance_checkpoint_precedence(rows, refinance_package)
-
-    rows["UNI-ADR-019"]["status"] = "DONE"
     with pytest.raises(SystemExit, match="bundled refinance rows"):
         phase9.check_refinance_checkpoint_precedence(rows, refinance_package)
 
@@ -314,6 +338,85 @@ def test_refinance_boundary_evidence_is_exact() -> None:
             "Explicit nonce preconditioning is selected",
             "Nonce-zero candidate RoleManager bootstrap is selected",
             "refinance activation-topology control",
+        ),
+        (
+            phase9.REFINANCE_EXECUTION_SEMANTICS_ADR_PATH,
+            "Status: accepted for synthetic-local specification freeze; D3 remains closed",
+            "Status: implementation activated",
+            "D3 execution-semantics boundary",
+        ),
+        (
+            phase9.REFINANCE_EXECUTION_SEMANTICS_ADR_PATH,
+            "execution_block = uint64(block.number)",
+            "execution_block = uint64(block.timestamp)",
+            "D3 execution-semantics boundary",
+        ),
+        (
+            phase9.REFINANCE_EXECUTION_SEMANTICS_ADR_PATH,
+            "strictly increasing unsigned-`uint160` order",
+            "first-recipient-occurrence order",
+            "D3 execution-semantics boundary",
+        ),
+        (
+            phase9.REFINANCE_EXECUTION_SEMANTICS_ADR_PATH,
+            "does not increment `stateVersion`",
+            "increments `stateVersion` on entry",
+            "D3 execution-semantics boundary",
+        ),
+        (
+            phase9.REFINANCE_EXECUTION_SEMANTICS_ADR_PATH,
+            "call `beginHandoff` for every collateral",
+            "begin and complete each collateral before the next",
+            "D3 execution-semantics boundary",
+        ),
+        (
+            phase9.REFINANCE_ACCEPTANCE_PATH,
+            "provisional `EXECUTING` consumes no version/attempt and cannot terminal-replay",
+            "provisional `EXECUTING` consumes a version and may terminal-replay",
+            "refinance acceptance semantics",
+        ),
+        (
+            phase9.REFINANCE_ACCEPTANCE_PATH,
+            "distinct recipients sorted by increasing `uint160`",
+            "distinct recipients remain in caller order",
+            "refinance acceptance semantics",
+        ),
+        (
+            phase9.REFINANCE_ACCEPTANCE_PATH,
+            "Zero/coordinator/settlement-token recipients fail before effects; all four leg "
+            "hashes exist; each immediate recipient/coordinator delta is exact",
+            "Settlement-token recipients may pass; leg hashes are optional",
+            "refinance acceptance semantics",
+        ),
+        (
+            phase9.REFINANCE_REFERENCE_EVIDENCE_PATH,
+            "never from the old account's current post-payoff version",
+            "always from the old account's current post-payoff version",
+            "refinance reference evidence",
+        ),
+        (
+            phase9.REFINANCE_REFERENCE_EVIDENCE_PATH,
+            "recomputed_component_beneficiary_hash == consumed_quote.componentBeneficiaryHash",
+            "recomputed_component_beneficiary_hash != consumed_quote.componentBeneficiaryHash",
+            "refinance reference evidence",
+        ),
+        (
+            phase9.REFINANCE_REFERENCE_EVIDENCE_PATH,
+            "bytes32 replacement_debt_hash = keccak256(abi.encode(replacement_debt))",
+            "bytes32 replacement_debt_hash = keccak256(abi.encode(refinance_id))",
+            "refinance reference evidence",
+        ),
+        (
+            phase9.REFINANCE_REFERENCE_EVIDENCE_PATH,
+            "captures `executed_at = uint64(block.timestamp)` exactly once",
+            "resamples `executed_at` after every effect",
+            "refinance reference evidence",
+        ),
+        (
+            phase9.REFINANCE_REFERENCE_EVIDENCE_PATH,
+            "unequal\nto the settlement-token address before quote consumption or balance change",
+            "allowed to equal the settlement-token address before quote consumption",
+            "refinance reference evidence",
         ),
         (
             phase9.REFINANCE_ACTIVATION_TOPOLOGY_ADR_PATH,

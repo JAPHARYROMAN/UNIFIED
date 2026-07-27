@@ -2,12 +2,13 @@
 
 Status: normative preimage and vector-input boundary; implementation evidence pending
 
-Date: 2026-07-26
+Date: 2026-07-27
 
 ## Purpose
 
 This document fixes the independent evidence model required by ADR 0021, ADR 0022,
-ADR 0023's candidate-only fixed-module partition, and the `P9R-*` acceptance matrix.
+ADR 0023's candidate-only fixed-module partition, ADR 0025's D3 execution-semantics
+freeze, and the `P9R-*` acceptance matrix.
 It does not claim that a Solidity implementation or a golden-output bundle exists. The
 first accepted implementation checkpoint must
 publish the calculated outputs for these exact inputs from Solidity, Go,
@@ -399,6 +400,36 @@ the original value is not separately recoverable from the frozen storage after l
 creations. First-execution validation, the stored request and creation commitment, and
 the emitted `loanNonce` are the historical evidence.
 
+Therefore first execution uses the frozen serial invariant rather than guessing or
+enumerating a historical creation. It requires `factory.nextLoanNonce() > 1`, sets
+`replacement_factory_loan_nonce = factory.nextLoanNonce() - 1` with checked `uint64`
+arithmetic, reads `mapped_account = factory.loanAccount(new_loan_id)` and
+`mapped_manager = factory.positionManager(new_loan_id)`, and re-resolves the exact
+replacement creation tuple and `mapped_account.configuration()`. It then reconstructs
+the existing `UNIFIED_PHASE9_LOAN_CREATION_V1` preimage using that serial, the mapped
+clone addresses as the already-proved predictions, `REFINANCE_REPLACEMENT`, zero
+bootstrap ID, the source old loan, borrower, derived refinance ID, equal nonzero
+refinance/new-loan nonce, agreement hash, and policy-set hash. For the resulting
+`derived_creation_id` it requires:
+
+```text
+factory.creationRequest(derived_creation_id) == LoanCreationRequest(
+  old_loan_id,
+  new_loan_nonce,
+  refinance_id,
+  exact_replacement_configuration,
+  derived_creation_id
+)
+```
+
+The mapped account/manager must contain the expected clone code; configuration must map
+the same factory, registry, token/asset, borrower, loan ID, manager, custody, lien,
+payoff engine, coordinator, and policy commitments; and factory/account/registry
+identity must agree. An intervening later unique factory creation changes
+`nextLoanNonce() - 1`, so this synthetic-local first-slice execution fails stale without
+consuming the quote or moving value and remains cancellable/refundable. No scan, new
+getter, new storage, or alternate creation identity is authorized.
+
 The coordinator's fresh bootstrap and replacement requests supply zero `creationId`
 because the frozen coordinator has no implementation-address fields and the factory
 has no prediction getter. The factory rejects a fresh nonzero value, derives both
@@ -519,7 +550,7 @@ request_operation_id = keccak256(abi.encode(
 execute_operation_id = keccak256(abi.encode(
   "UNIFIED_REFINANCE_EXECUTE_OPERATION_V1",
   chainid, refinance_coordinator, refinance_id, quote_id,
-  debt_state_version
+  consumed_quote_debt_state_version
 ))
 
 cancel_operation_id = keccak256(abi.encode(
@@ -545,6 +576,11 @@ Replay vectors are method-specific: exact request repeats fail the consumed refi
 nonce before another quote; exact funding/cancel/refund and custody/lien setup repeats
 are inert; exact execute returns the stored terminal result; exact factory create
 returns stored clones; and changed identity reuse conflicts.
+`consumed_quote_debt_state_version` is always the quote's stored pre-payoff version.
+First execution and exact terminal replay recompute the operation ID from that stored
+quote fact, never from the old account's current post-payoff version. Execute replay
+requires the recomputed ID, its processed-operation flag, stored `COMPLETED`, attempt
+one, and the matching nonzero terminal result; provisional `EXECUTING` cannot replay.
 
 ## Result and transition evidence preimages
 
@@ -568,18 +604,151 @@ funding_result_hash = keccak256(abi.encode(
   refinance_state_version_after
 ))
 
+IPayoffQuoteEngineV2.PayoffComponentV2[] exact_quote_components =
+  exact components returned by quote(quote_id)
+require exact_quote_components.length == 5
+bytes32 recomputed_component_beneficiary_hash = keccak256(abi.encode(
+  "UNIFIED_PAYOFF_COMPONENT_BENEFICIARIES_V1",
+  exact_quote_components
+))
+require recomputed_component_beneficiary_hash == consumed_quote.componentBeneficiaryHash
+require recomputed_component_beneficiary_hash == accepted_record.componentBeneficiaryHash
+bytes32 consumed_quote_component_beneficiary_hash = recomputed_component_beneficiary_hash
+
 component_payout_hash = keccak256(abi.encode(
   "UNIFIED_REFINANCE_COMPONENT_PAYOUT_V1",
   chainid,
   refinance_coordinator,
   refinance_id,
   quote_id,
-  payoff_component_hash,
+  consumed_quote_component_beneficiary_hash,
   old_net_payoff,
   refinance_fee,
   borrower_proceeds,
   funding_amount
 ))
+
+execution_block = uint64(block.number)
+
+ordered_tranche_ids = old_position_manager.trancheIds()
+ordered_tranches[i] = old_position_manager.tranche(ordered_tranche_ids[i])
+ordered_tranche_ids_hash = keccak256(abi.encode(ordered_tranche_ids))
+ordered_tranches_hash = keccak256(abi.encode(ordered_tranches))
+
+old_tranche_execution_snapshot_hash = keccak256(abi.encode(
+  "UNIFIED_REFINANCE_OLD_TRANCHE_EXECUTION_SNAPSHOT_V1",
+  chainid,
+  refinance_coordinator,
+  refinance_id,
+  old_loan_id,
+  old_position_manager,
+  execution_block,
+  ordered_tranche_ids_hash,
+  ordered_tranches_hash
+))
+
+ordered_position_ids = old_position_manager.positionIds()
+ordered_positions[i] = old_position_manager.position(ordered_position_ids[i])
+ordered_position_ids_hash = keccak256(abi.encode(ordered_position_ids))
+ordered_positions_hash = keccak256(abi.encode(ordered_positions))
+
+old_position_execution_snapshot_hash = keccak256(abi.encode(
+  "UNIFIED_REFINANCE_OLD_POSITION_EXECUTION_SNAPSHOT_V1",
+  chainid,
+  refinance_coordinator,
+  refinance_id,
+  old_loan_id,
+  old_position_manager,
+  execution_block,
+  ordered_position_ids_hash,
+  ordered_positions_hash
+))
+
+owners_at_execution[i] =
+  old_position_manager.positionOwnerAt(ordered_position_ids[i], execution_block)
+voting_power_at_execution[i] =
+  old_position_manager.positionVotingPowerAt(ordered_position_ids[i], execution_block)
+claims_at_execution[i] =
+  old_position_manager.positionClaimAt(ordered_position_ids[i], execution_block)
+total_voting_power_at_execution =
+  old_position_manager.totalVotingPowerAt(execution_block)
+require ordered_tranches[i].trancheId == ordered_tranche_ids[i] for every i
+require ordered_positions[i].positionId == ordered_position_ids[i] for every i
+require owners_at_execution[i] == ordered_positions[i].owner for every i
+require voting_power_at_execution[i] == ordered_positions[i].votingPower for every i
+require claims_at_execution[i] == ordered_positions[i].claim for every i
+require checked_sum(voting_power_at_execution) == total_voting_power_at_execution
+owners_at_execution_hash = keccak256(abi.encode(owners_at_execution))
+voting_power_at_execution_hash = keccak256(abi.encode(voting_power_at_execution))
+claims_at_execution_hash = keccak256(abi.encode(claims_at_execution))
+
+old_rights_execution_snapshot_hash = keccak256(abi.encode(
+  "UNIFIED_REFINANCE_OLD_RIGHTS_EXECUTION_SNAPSHOT_V1",
+  chainid,
+  refinance_coordinator,
+  refinance_id,
+  old_loan_id,
+  old_position_manager,
+  execution_block,
+  ordered_position_ids_hash,
+  owners_at_execution_hash,
+  voting_power_at_execution_hash,
+  claims_at_execution_hash,
+  total_voting_power_at_execution
+))
+
+address[4] payout_recipients = [
+  old_lender,
+  payoff_fee_recipient,
+  refinance_fee_recipient,
+  borrower
+]
+
+uint256[4] payout_amounts = [
+  old_lender_payoff_amount,
+  payoff_fee_amount,
+  refinance_fee,
+  borrower_proceeds
+]
+
+old_lender_payoff_amount = quote.principal + quote.accruedInterest
+payoff_fee_amount = quote.fees + quote.penalties - quote.credits
+old_lender_payoff_amount + payoff_fee_amount = quote.netPayoff
+
+payout_leg_delta_hash[i] = keccak256(abi.encode(
+  "UNIFIED_REFINANCE_PAYOUT_LEG_DELTA_V1",
+  chainid,
+  refinance_coordinator,
+  refinance_id,
+  settlement_token,
+  uint8(i),
+  payout_recipients[i],
+  payout_amounts[i],
+  leg_recipient_balance_before[i],
+  leg_recipient_balance_after[i],
+  leg_coordinator_balance_before[i],
+  leg_coordinator_balance_after[i]
+))
+bytes32[4] payout_leg_delta_hashes = [
+  payout_leg_delta_hash[0],
+  payout_leg_delta_hash[1],
+  payout_leg_delta_hash[2],
+  payout_leg_delta_hash[3]
+]
+
+address[] unique_recipient_addresses = distinct payout_recipients sorted by increasing uint160
+uint256[] unique_recipient_expected_amounts
+uint256[] unique_recipient_balance_before
+uint256[] unique_recipient_balance_after
+uint256 unique_recipient_count = unique_recipient_addresses.length
+require 1 <= unique_recipient_count <= 4
+require unique_recipient_expected_amounts.length == unique_recipient_count
+require unique_recipient_balance_before.length == unique_recipient_count
+require unique_recipient_balance_after.length == unique_recipient_count
+unique_recipient_expected_amounts[j] = checked sum of payout_amounts for that address
+unique_recipient_balance_before[j] = balance before payout leg 0
+unique_recipient_balance_after[j] = balance after payout leg 3
+coordinator_outflow = coordinator_balance_before_all - coordinator_balance_after_all
 
 recipient_balance_delta_hash = keccak256(abi.encode(
   "UNIFIED_REFINANCE_RECIPIENT_BALANCE_DELTA_V1",
@@ -587,17 +756,17 @@ recipient_balance_delta_hash = keccak256(abi.encode(
   refinance_coordinator,
   refinance_id,
   settlement_token,
-  old_lender,
-  old_lender_delta,
-  payoff_fee_recipient,
-  payoff_fee_delta,
-  refinance_fee_recipient,
-  refinance_fee_delta,
-  borrower,
-  borrower_delta,
+  keccak256(abi.encode(payout_leg_delta_hashes)),
+  keccak256(abi.encode(unique_recipient_addresses)),
+  keccak256(abi.encode(unique_recipient_expected_amounts)),
+  keccak256(abi.encode(unique_recipient_balance_before)),
+  keccak256(abi.encode(unique_recipient_balance_after)),
   attributed_escrow_before,
   attributed_escrow_after,
-  coordinator_operation_delta
+  coordinator_balance_before_all,
+  coordinator_balance_after_all,
+  coordinator_outflow,
+  funding_amount
 ))
 
 old_debt_after_hash = keccak256(abi.encode(
@@ -626,10 +795,18 @@ old_debt_after_hash = keccak256(abi.encode(
   bytes32(0)  // active restructure ID
 ))
 
+uint256[] zero_effective_claims = new uint256[](ordered_position_ids.length)
+uint256[] zero_effective_voting_power = new uint256[](ordered_position_ids.length)
+require zero_effective_claims.length == ordered_position_ids.length
+require zero_effective_voting_power.length == ordered_position_ids.length
+require each zero-array index i corresponds to ordered_position_ids[i]
+require zero_effective_claims[i] == 0 for every ordered position index i
+require zero_effective_voting_power[i] == 0 for every ordered position index i
+
 effective_old_position_rights_hash = keccak256(abi.encode(
   "UNIFIED_REFINANCE_EFFECTIVE_OLD_POSITION_RIGHTS_V1",
   old_loan_id,
-  position_manager,
+  old_position_manager,
   ordered_position_ids,
   zero_effective_claims,
   zero_effective_voting_power,
@@ -647,13 +824,20 @@ old_debt_result_hash = keccak256(abi.encode(
   debt_state_version_before,
   debt_state_version_after,
   old_debt_after_hash,
-  unchanged_historical_tranches_hash,
-  unchanged_historical_positions_hash,
-  unchanged_historical_checkpoints_hash,
+  old_tranche_execution_snapshot_hash,
+  old_position_execution_snapshot_hash,
+  old_rights_execution_snapshot_hash,
   effective_old_position_rights_hash,
   true, // LoanRegistry.isTerminal(old_loan_id) after payoff
   old_net_payoff
 ))
+
+Phase9Types.DebtState replacement_debt = canonical resolver-returned replacementDebt
+Phase9Types.Tranche[] replacement_tranches = canonical resolver-returned replacementTranches
+Phase9Types.Position[] replacement_positions = canonical resolver-returned replacementPositions
+bytes32 replacement_debt_hash = keccak256(abi.encode(replacement_debt))
+bytes32 replacement_tranches_hash = keccak256(abi.encode(replacement_tranches))
+bytes32 replacement_positions_hash = keccak256(abi.encode(replacement_positions))
 
 new_activation_result_hash = keccak256(abi.encode(
   "UNIFIED_REFINANCE_NEW_ACTIVATION_RESULT_V1",
@@ -669,26 +853,119 @@ new_activation_result_hash = keccak256(abi.encode(
   new_principal
 ))
 
-lien_handoff_evidence_hash = keccak256(abi.encode(
+require prior_lien_versions[i] < type(uint64).max for every i
+next_lien_versions[i] = prior_lien_versions[i] + 1
+
+pending_lien_views[i] = Lien(
+  ordered_collateral_ids[i],
+  unchanged_collateral_manager[i],
+  unchanged_vault[i],
+  unchanged_asset_id[i],
+  unchanged_quantity[i],
+  unchanged_borrower[i],
+  old_loan_id,
+  prior_lien_versions[i],
+  HANDOFF_PENDING,
+  refinance_id,
+  new_loan_id
+)
+
+pending_handoff_views[i] = LienHandoffResult(
+  ordered_handoff_ids[i],
+  refinance_id,
+  ordered_collateral_ids[i],
+  old_loan_id,
+  new_loan_id,
+  prior_lien_versions[i],
+  next_lien_versions[i],
+  EXECUTING,
+  bytes32(0)
+)
+
+pending_lien_observation_hash[i] = keccak256(abi.encode(
+  "UNIFIED_REFINANCE_LIEN_PENDING_OBSERVATION_V1",
+  chainid,
+  lien_registry,
+  refinance_id,
+  uint32(i),
+  ordered_collateral_ids[i],
+  ordered_handoff_ids[i],
+  keccak256(abi.encode(pending_lien_views[i])),
+  keccak256(abi.encode(pending_handoff_views[i]))
+))
+pending_lien_observation_hashes[i] = pending_lien_observation_hash[i]
+
+lien_handoff_evidence_hash[i] = keccak256(abi.encode(
   "UNIFIED_REFINANCE_LIEN_HANDOFF_RESULT_V1",
   chainid,
   lien_registry,
-  handoff_id,
+  ordered_handoff_ids[i],
   refinance_id,
-  collateral_id,
+  ordered_collateral_ids[i],
   old_loan_id,
   new_loan_id,
-  prior_lien_version,
-  next_lien_version,
-  final_lien_state
+  prior_lien_versions[i],
+  next_lien_versions[i],
+  ACTIVE_NEW
 ))
+ordered_handoff_evidence_hashes[i] = lien_handoff_evidence_hash[i]
+
+active_lien_views[i] = Lien(
+  ordered_collateral_ids[i],
+  unchanged_collateral_manager[i],
+  unchanged_vault[i],
+  unchanged_asset_id[i],
+  unchanged_quantity[i],
+  unchanged_borrower[i],
+  new_loan_id,
+  next_lien_versions[i],
+  ACTIVE,
+  bytes32(0),
+  bytes32(0)
+)
+
+active_handoff_views[i] = LienHandoffResult(
+  ordered_handoff_ids[i],
+  refinance_id,
+  ordered_collateral_ids[i],
+  old_loan_id,
+  new_loan_id,
+  prior_lien_versions[i],
+  next_lien_versions[i],
+  ACTIVE_NEW,
+  lien_handoff_evidence_hash[i]
+)
+
+active_lien_observation_hash[i] = keccak256(abi.encode(
+  "UNIFIED_REFINANCE_LIEN_ACTIVE_OBSERVATION_V1",
+  chainid,
+  lien_registry,
+  refinance_id,
+  uint32(i),
+  ordered_collateral_ids[i],
+  ordered_handoff_ids[i],
+  keccak256(abi.encode(active_lien_views[i])),
+  keccak256(abi.encode(active_handoff_views[i]))
+))
+active_lien_observation_hashes[i] = active_lien_observation_hash[i]
 
 lien_handoff_vector_hash = keccak256(abi.encode(
   "UNIFIED_REFINANCE_LIEN_HANDOFF_VECTOR_V1",
+  chainid,
+  lien_registry,
   refinance_id,
-  ordered_handoff_ids,
-  ordered_handoff_evidence_hashes
+  keccak256(abi.encode(ordered_collateral_ids)),
+  keccak256(abi.encode(ordered_handoff_ids)),
+  keccak256(abi.encode(pending_lien_observation_hashes)),
+  keccak256(abi.encode(ordered_handoff_evidence_hashes)),
+  keccak256(abi.encode(active_lien_observation_hashes))
 ))
+
+funding_escrowed_state_version = stored stateVersion before provisional EXECUTING
+completed_state_version = funding_escrowed_state_version + 1
+execution_attempt = uint32(1)
+require block.timestamp <= type(uint64).max
+uint64 executed_at = uint64(block.timestamp)
 
 execution_event_id = keccak256(abi.encode(
   "UNIFIED_REFINANCE_EXECUTION_EVENT_V1",
@@ -716,6 +993,8 @@ terminal_result_hash = keccak256(abi.encode(
   old_loan_refinance_lock_after,
   executed_at
 ))
+
+execution_transition_evidence_hash = terminal_result_hash
 
 refund_result_hash = keccak256(abi.encode(
   "UNIFIED_REFINANCE_REFUND_RESULT_V1",
@@ -796,6 +1075,79 @@ transition_evidence_hash = keccak256(abi.encode(
 ))
 ```
 
+`execution_block` is fixed before the first external execution effect and requires
+`block.number <= type(uint64).max`. The three old-manager snapshot hashes are computed
+from the exact bounded ordered arrays above before that effect, recomputed after payoff,
+and recomputed once more before terminal persistence, always using that same block.
+Every recomputation must be byte-equal. These hashes prove only public observations
+available through `trancheIds/tranche`, `positionIds/position`,
+`positionOwnerAt`, `positionVotingPowerAt`, `positionClaimAt`, and
+`totalVotingPowerAt`; they do not assert that private checkpoint arrays were enumerated.
+
+`consumed_quote_component_beneficiary_hash` is read directly from the exact stored
+consumed quote and equals its frozen `componentBeneficiaryHash`; no separately supplied
+or newly derived opaque payoff-component hash exists. The three replacement values are
+the exact active canonical refinance-policy resolver returns, typed respectively as
+`Phase9Types.DebtState`, `Phase9Types.Tranche[]`, and `Phase9Types.Position[]` and encoded
+in their frozen field order. The debt hash binds the resolver template with
+`activeRefinanceId == 0`; the coordinator separately validates the activation copy that
+injects only the derived refinance ID.
+
+After operation/readiness validation and canonical re-resolution, but before the first
+external execution effect, execution requires `block.timestamp <= type(uint64).max` and
+captures `executed_at = uint64(block.timestamp)` exactly once. That one value is used in
+`execution_event_id`, `terminal_result_hash`, terminal `recordedAt`, and every stored or
+emitted execution-result fact. The frozen execution and transition events have no
+timestamp field; they bind the same value transitively through `terminal_result_hash`.
+
+Every payout recipient is validated nonzero, unequal to the coordinator, and unequal
+to the settlement-token address before quote consumption or balance change, including
+zero-amount legs. A recipient is not rejected merely for having code, equaling another
+canonical recipient, or equaling another system-contract address; all four addresses
+still come only from the canonical quote, accepted record, and constructor-bound fee
+configuration. Beyond the settlement-token self-recipient rejection, this freeze adds
+no code-size/system-contract classification. A positive leg makes one transfer
+and requires both immediate recipient inflow and immediate coordinator outflow equal to
+its amount. A zero leg makes no token call and requires both immediate deltas to be
+zero. All four leg hashes remain present.
+
+`unique_recipient_addresses` is deduplicated and sorted by strictly increasing
+unsigned `uint160`, not by role occurrence. Its three parallel vectors have identical
+length and index meaning. Each final recipient delta equals the checked sum of all legs
+naming that address. The four leg amounts checked-sum to the positive `funding_amount`;
+attributed escrow changes from exactly that amount to zero; and
+`coordinator_outflow == funding_amount`. Pre-existing unsolicited surplus is preserved
+by the raw coordinator before/after proof and is excluded from attributed escrow.
+
+The lien vector has `1..16` members, and every count/order/identity/tuple check and
+version addition is completed before the first `beginHandoff`; a prior
+`type(uint64).max` value rejects execution without effect. The observable order is
+begin-all, verify-all-pending, complete-all, then verify-all-active, each in the same
+strictly increasing unsigned-`bytes32` collateral order. Every
+`LienHandoffPending` log precedes the first `LienHandoffCompleted` log. From the first
+begin through the last active observation, every external call targets only the
+canonical lien registry. Pending and active view tuples must equal the exact frozen
+field-order values above. The old senior identity remains enforceable in every pending
+tuple; the pending target/successor is not enforceable until completion. Each indexed completion input is
+`(ordered_handoff_ids[i], lien_handoff_evidence_hash[i])`; its returned result and the
+later stored `handoff` view both equal `active_handoff_views[i]`. The registry's begin,
+complete, lien, and handoff methods make no external call. Any mismatch or failure
+rolls back the complete vector.
+
+Provisional `EXECUTING` consumes neither a version nor an execution attempt and emits
+no transition. First execution requires `executionAttempts == 0` and a
+`funding_escrowed_state_version < type(uint64).max`. Success stores attempt `1` and
+`completed_state_version == funding_escrowed_state_version + 1`. It then emits the
+frozen `RefinanceExecuted(refinance_id, execution_event_id, terminal_result_hash)` log
+followed by exactly one additive
+`RefinanceStateTransitioned(refinance_id, FUNDING_ESCROWED, COMPLETED,
+completed_state_version, execute_operation_id, terminal_result_hash)` log. For this
+one transition, the event evidence is directly `terminal_result_hash`, as represented
+by `execution_transition_evidence_hash`; it is not the generic transition wrapper.
+Revert restores attempts and version, and provisional `EXECUTING` cannot qualify for
+terminal replay. Exact replay requires stored `COMPLETED`, the processed execute
+operation, attempt `1`, and the matching nonzero terminal result, and emits no log.
+
 For `BORROWER_CANCELLED`, `quote_disposition_after == INVALIDATED`; for `EXPIRED`,
 it is `EXPIRED`. The latter is exact because every accepted record binds
 `refinance.expiresAt == quote.validUntil`; boundary vectors prove both transition at
@@ -804,11 +1156,11 @@ the same second. In both cases
 Quote invalidation occurs before refinance persistence and both effects roll back
 together.
 
-`coordinator_operation_delta` is the observed balance delta caused by the current
-operation and must equal the expected attributed inflow or outflow. It is not the
-coordinator's global balance. `attributed_escrow_*` is scoped to the refinance.
-Unsolicited surplus is excluded from every liability, readiness, payout, refund,
-and terminal-result field.
+For funding and refund evidence, an operation delta remains the observed balance change
+caused by that operation and is not the coordinator's global balance. Execution instead
+uses the exact positive `coordinator_outflow` and four immediate leg deltas above.
+`attributed_escrow_*` is scoped to the refinance. Unsolicited surplus is excluded from
+every liability, readiness, payout, refund, and terminal-result field.
 
 `RefinanceTerminalResult` is exact:
 
@@ -822,8 +1174,10 @@ and terminal-result field.
 
 For the request transition `action_result_hash` is its derived request operation ID.
 For funding it is `funding_result_hash`; for borrower cancellation or expiry it is
-`cancellation_result_hash`; for execution it is `terminal_result_hash`; for an
-intermediate or last refund it is that commitment's `refund_result_hash`. The last
+`cancellation_result_hash`; for an intermediate or last refund it is that commitment's
+`refund_result_hash`. Those transitions use the generic wrapper above. Successful
+execution instead places `terminal_result_hash` directly in the one durable transition
+event's `evidenceHash`, and never emits a provisional transition. The last
 refund separately stores `final_refund_completion_hash` as terminal evidence. The
 additive transition event therefore retains the individual refund timestamp/result,
 while the terminal aggregate is deterministically reconstructible from bounded stored
@@ -858,9 +1212,13 @@ At minimum its canonical success vector uses:
 | First accepted state/version | `ACCEPTED`, `1` |
 | State after commitment A | `FUNDING_ESCROWED` with accepted funding `90_000000` |
 | State after commitment B | `FUNDING_ESCROWED` with accepted funding `120_000000` |
+| Successful execution state/version/attempt | one durable `FUNDING_ESCROWED -> COMPLETED` increment, attempt `1`, no provisional transition |
+| Execution evidence inputs | consumed quote's stored five-component hash; typed resolver debt/tranche/position hashes; one `uint64(block.timestamp)` |
 | Attributed escrow after execution | `0` |
+| Recipient ordering and outflow | four ordered leg hashes; unique addresses in increasing `uint160`; exact `120_000000` coordinator outflow |
+| Lien handoff order | begin both, verify both pending, complete both, verify both active-new |
 | Old debt after execution | `CLOSED/TERMINAL`; all economic/loss/credit values zero; debt version and state nonce each incremented once |
-| Old raw positions after execution | byte-identical historical issuance facts; effective claims/votes zero |
+| Old execution observations | exact pre/payoff/post hashes from frozen public views at one `execution_block`; effective claims/votes zero; no private-series claim |
 
 All addresses, IDs, timestamps, versions, policy values, debt, tranches,
 positions, quote components, and collateral facts must be fixed explicitly in
@@ -878,6 +1236,33 @@ commitments/positions, stale quote/debt/policy, dormant-clone reuse after every
 terminal branch, malicious raw `ACTIVE` old position use against every joined-state
 consumer, donation before each value operation, and injected failure at every request
 and execution step.
+
+Execution companions additionally cover every equality partition of the four canonical
+recipient roles (including all-distinct and all-equal), a canonical contract recipient,
+zero recipient, coordinator recipient, settlement-token recipient, another canonical
+system-contract recipient, zero and positive leg combinations, changed
+immediate leg deltas, changed unique-address order/aggregate/final balances, donation
+surplus, and coordinator outflow mismatch. Zero/coordinator/settlement-token recipients
+fail before any effect; another canonical contract recipient is governed by the same
+exact-delta checks and does not create caller-selected authority.
+
+Evidence-input companions mutate every field and order of the exact five stored quote
+components, their recomputed `UNIFIED_PAYOFF_COMPONENT_BENEFICIARIES_V1` hash, the
+consumed quote and accepted-record copies, each typed resolver replacement value and
+its ABI hash, `block.timestamp == type(uint64).max`, an unrepresentable timestamp, and
+any attempted resampling or disagreement among execution ID, terminal hash, terminal
+storage, and event-bound result.
+
+Snapshot companions mutate `execution_block`, every ordered ID, every frozen tranche
+and position field, each owner/voting/claim observation, total voting power, every inner
+array hash, and every outer field; they also force pre/payoff/post recomputation
+mismatch. Lien companions inject failure at every index of begin-all,
+verify-all-pending, complete-all, and verify-all-active; mutate each exact tuple and
+phase vector; reorder IDs; use `type(uint64).max` prior version; and prove every pending
+log precedes every completion log. State/event companions prove provisional
+`EXECUTING` has no version, attempt, terminal replay, or event; success increments once,
+sets attempt one, emits frozen execution then one durable completion transition, and
+exact replay changes nothing.
 
 The same bundle also includes factory replay after later successful creations without
 current-nonce reconstruction; changed request and creation-resolver reuse; an alternate

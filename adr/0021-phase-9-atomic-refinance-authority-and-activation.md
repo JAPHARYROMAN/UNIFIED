@@ -83,7 +83,7 @@ preassembled proposal. A first successful call stores `ACCEPTED` with
 NONE -> ACCEPTED
 ACCEPTED --first successful funding commitment--> FUNDING_ESCROWED
 FUNDING_ESCROWED --additional partial funding--> FUNDING_ESCROWED
-FUNDING_ESCROWED -> EXECUTING -> COMPLETED
+FUNDING_ESCROWED -> COMPLETED
 
 ACCEPTED --borrower cancellation, no funding--> CANCELLED
 ACCEPTED --expiry, no funding--> EXPIRED
@@ -91,12 +91,14 @@ FUNDING_ESCROWED --borrower cancellation or expiry before execution--> REFUNDABL
 REFUNDABLE --all commitments refunded--> REFUNDED
 ```
 
-`EXECUTING` is a transaction-local reentrancy state. It may be written and emitted
-inside the transaction, but a failed transaction cannot persist it. `REJECTED` is
-an off-chain offer outcome in this slice. `DISPUTED` is reserved for a future
-retained-contradiction decision and has no callable transition here. An
-implementation must not invent either state to conceal an ordinary validation
-failure.
+`EXECUTING` is a provisional, transaction-local reentrancy state, not a durable edge
+in that graph. It may be written without incrementing `stateVersion`, but it is not
+emitted and a failed transaction cannot persist it. Successful execution performs
+exactly one durable `FUNDING_ESCROWED -> COMPLETED` version increment and transition
+event, as fixed by ADR 0025. `REJECTED` is an off-chain offer outcome in this slice.
+`DISPUTED` is reserved for a future retained-contradiction decision and has no callable
+transition here. An implementation must not invent either state to conceal an ordinary
+validation failure.
 
 The existing `RefinanceRequested` event retains its frozen signature. In this
 slice it means that the exact borrower-accepted record was created, not that an
@@ -137,6 +139,9 @@ ID defined below because the frozen request selector has no operation-ID argumen
 For funding, it is the commitment ID. For execute, cancel, and refund, it is the
 validated supplied operation ID. `evidenceHash` is an exact domain-separated
 commitment to the transition-specific facts; it is never an opaque caller value.
+For successful execution specifically, the sole durable transition is directly
+`FUNDING_ESCROWED -> COMPLETED` and its `evidenceHash` is the exact
+`terminal_result_hash`; no separate `EXECUTING` transition hash or event exists.
 
 ### 4. Wire normalization and derived-field rejection
 
@@ -582,10 +587,14 @@ each `(collateralId, assetId, quantity, vault, borrower, priorLienVersion)` tupl
 The coordinator does not accept a caller-provided array and does not infer a list by
 enumerating unbounded registry storage.
 
-Execution calls `beginHandoff` and `completeHandoff` for every collateral ID in the
-same sorted order. A pending target is never an enforceable claim. No external token
-transfer or callback is made while a lien is pending. Failure for any collateral
-reverts every earlier handoff in the transaction.
+Execution uses ADR 0025's sorted two-pass handoff: call `beginHandoff` for every
+collateral ID, verify every lien/handoff pending, call `completeHandoff` for every
+handoff, then verify every successor lien/handoff active, always in the same strictly
+increasing unsigned-`bytes32` collateral order. From the first begin call through the
+last active verification, the coordinator makes only calls to the canonical lien
+registry. A pending target is never an enforceable claim and no successor lien becomes
+active before the complete pending vector verifies. Failure for any collateral reverts
+every earlier handoff in the transaction.
 
 ### 10. Replacement debt, tranche, and position tuple
 
@@ -927,35 +936,72 @@ clone permanently unactivatable; it cannot be recycled into another refinance.
 
 ### 14. Atomic execution order
 
+First execution revalidates the dormant replacement creation without a new getter or
+stored field. It requires `Phase9LoanFactory.nextLoanNonce() > 1`, uses the checked
+`uint64` value `nextLoanNonce() - 1` as the replacement's factory serial, reads the
+factory-mapped account and manager for `newLoanId`, re-resolves and matches the complete
+replacement configuration, and reconstructs the Section 11 creation ID with those
+mapped clones, `REFINANCE_REPLACEMENT`, zero bootstrap ID, and the accepted old-loan,
+borrower, refinance, nonce, agreement, and policy facts. The frozen
+`creationRequest(derivedCreationId)` must equal the exact canonical request including
+that same ID; mapped clones/configuration and registry identity must also agree. A later
+unique factory creation makes this synthetic-local first-slice record stale, so
+execution fails before quote/value effects and the normal cancellation/refund exit
+remains available. No enumeration, selector, storage, or alternate identity is added.
+
 First execution requires `FUNDING_ESCROWED`, exact full funding, an unexpired accepted
 record, the unconsumed exact quote, unchanged old debt, unchanged policy/asset/collateral
 facts, an inactive exact replacement account whose factory creation record binds this
 refinance ID, and the complete funded position tuple.
 It performs, in order:
 
-1. validate the operation ID and enter the transaction-local reentrancy state;
-2. re-resolve and verify every canonical source;
+1. validate the operation ID and enter provisional, unversioned, non-evented
+   `EXECUTING` reentrancy state;
+2. re-resolve and verify every canonical source; fix the one `executionBlock`, compute
+   the pre-effect old-tranche, old-position, and old-rights public-view observations,
+   re-hash the exact five stored quote components and the typed resolver replacement
+   debt/tranche/position values, fix one representable
+   `executed_at = uint64(block.timestamp)`, and sample the coordinator plus each
+   distinct canonical recipient before balance;
 3. consume the exact payoff quote;
-4. transfer principal and accrued interest to the quote-bound old lender and the
-   credit-netted fee/penalty amount to the quote-bound fee recipient;
+4. execute payout legs 0 and 1 in order, transferring principal and accrued interest
+   to the quote-bound old lender and the credit-netted fee/penalty amount to the
+   quote-bound fee recipient, with an exact recipient and coordinator delta around
+   each leg;
 5. call `recordRefinancePayoff` on the old account; after writing the exact closed
    terminal debt state, that registered account calls the existing
    `LoanRegistry.markTerminal(oldLoanId)` path, verifies the registry is terminal,
    and returns only if both canonical states agree;
-6. hand off every senior lien in sorted collateral order without releasing custody;
+6. begin every senior-lien handoff in sorted order, verify the complete vector pending,
+   complete every handoff in sorted order, and verify the complete successor vector
+   active, with only canonical lien-registry calls in that pending window and without
+   releasing custody;
 7. register tranches and positions and activate the replacement debt exactly once;
-8. transfer the disclosed refinance fee to the constructor-bound treasury fee
-   recipient;
-9. transfer borrower proceeds only to the canonical borrower;
+8. execute payout leg 2 by transferring the disclosed refinance fee to the
+   constructor-bound treasury fee recipient with its exact leg-local delta;
+9. execute payout leg 3 by transferring borrower proceeds to the canonical borrower
+   with its exact leg-local delta;
 10. consume every funded commitment and clear the refinance's accepted funding and
     escrowed units;
-11. store terminal execution/result evidence and `COMPLETED`, and release the owned
-    old-loan lock; and
-12. prove exact recipient and coordinator operation balance deltas.
+11. recompute and match the three old-position-manager observations at the same
+    execution block, prove every leg-local delta, every sorted unique-recipient
+    aggregate final delta, exact coordinator outflow, and zero attributed escrow, and
+    construct the terminal result from those proven facts; and
+12. replace provisional `EXECUTING` with durable `COMPLETED`, increment the version
+    exactly once from the stored `FUNDING_ESCROWED` version, store terminal evidence,
+    set `executionAttempts` from zero to one, release the owned old-loan lock, emit the
+    frozen `RefinanceExecuted` event, and then emit exactly one
+    `FUNDING_ESCROWED -> COMPLETED` transition event, both with
+    `resultHash`/`evidenceHash == terminal_result_hash`.
 
-No arbitrary target, token, recipient, amount, allowance recipient, calldata, payable
-ETH, hook, callback, or operator-selected fallback exists. Any revert restores quote,
-funding, debt, positions, lien, recipients, operations, and coordinator attribution.
+No canonical payout recipient may be zero, the coordinator, or the settlement-token
+address. Other canonical code/system recipients and cross-leg recipient aliases are
+permitted, but the four payout legs remain separate and exact; the sorted unique-address
+aggregates and coordinator outflow must also reconcile as specified by ADR 0025. No
+arbitrary target, token, recipient, amount, allowance
+recipient, calldata, payable ETH, hook, callback, or operator-selected fallback exists.
+Any revert restores quote, funding, debt, positions, lien, recipients, operations, and
+coordinator attribution.
 
 The old debt after payoff is exact:
 
@@ -990,11 +1036,15 @@ continuing. A preterminal registry record, mismatched account, unauthorized or f
 mark, false postcondition, or reentrant registry behavior reverts the transaction,
 including the debt write, quote consumption, and preceding payouts.
 
-Old tranche/position structs and their checkpoints are immutable historical issuance
-facts, never live receivables by themselves. Payoff does not rewrite their face claim,
-owner, voting power, or stored `ACTIVE` issuance state, does not set `EXHAUSTED`, and
-does not add or repurpose an exhaustion selector. Their enforceable outstanding right
-is derived from canonical account debt:
+Old tranche/position structs and their publicly observable execution-block rights are
+historical issuance facts, never live receivables by themselves. Payoff does not
+rewrite their face claim, owner, voting power, or stored `ACTIVE` issuance state, does
+not set `EXHAUSTED`, and does not add or repurpose an exhaustion selector. The three
+exact ADR 0025 execution-snapshot hashes are computed before the first external
+execution effect and matched again at the same execution block before completion.
+This is not a claim that the frozen ABI exposes or proves the complete private
+checkpoint series. Their enforceable outstanding right is derived from canonical
+account debt:
 
 ```text
 claim_bearing_debt = outstandingPrincipal
@@ -1076,7 +1126,8 @@ request_operation_id = keccak256(abi.encode(
 
 execute_operation_id = keccak256(abi.encode(
   "UNIFIED_REFINANCE_EXECUTE_OPERATION_V1",
-  chainid, coordinator, refinance_id, quote_id, debt_state_version
+  chainid, coordinator, refinance_id, quote_id,
+  consumed_quote_debt_state_version
 ))
 
 cancel_operation_id = keccak256(abi.encode(
@@ -1095,6 +1146,12 @@ refund_operation_id = keccak256(abi.encode(
 it is not caller-selected calldata and uses the exact Section 13 values. Funding uses
 its commitment ID as the operation identity. An operation ID cannot be reused across
 action domains.
+
+`consumed_quote_debt_state_version` is the quote's stored pre-payoff debt version on
+both first execution and exact terminal replay. Replay never substitutes the old
+account's current post-payoff version. Exact execute replay requires the recomputed ID,
+its processed-operation flag, stored `COMPLETED`, `executionAttempts == 1`, and the
+matching nonzero terminal result; provisional `EXECUTING` cannot qualify.
 
 Replay behavior is method-specific:
 
@@ -1115,10 +1172,11 @@ For funding, execute, cancel, and refund, exact replay recognition occurs before
 current-state and old-loan-lock ownership checks so terminal lock release cannot turn a
 valid retry into a false conflict. Changed reuse never receives that bypass.
 
-Execution-event, component-payout, recipient-balance-delta, old-debt-result,
-new-activation-result, lien-handoff-vector, funding-result, refund, terminal-result,
-cancellation/expiry-result, final-refund-completion, and transition-evidence hashes use
-distinct exact `UNIFIED_*_V1` domains documented in
+Execution-event, component-payout, payout-leg-delta, recipient-balance-delta,
+old-tranche/position/rights execution-snapshot, old-debt-result, new-activation-result,
+pending/active lien observation, lien-handoff-vector, funding-result, refund,
+terminal-result, cancellation/expiry-result, final-refund-completion, and
+transition-evidence hashes use distinct exact `UNIFIED_*_V1` domains documented in
 `phase-9-refinance-reference-evidence.md`. `CANCELLED`, `EXPIRED`, `REFUNDED`, and
 `COMPLETED` each store a canonical `terminalResult` and matching
 `terminalEvidenceHash`; `REFUNDABLE` is nonterminal and stores neither. Opaque
@@ -1159,6 +1217,9 @@ state-changing path.
 
 The checkpoint must support historical method revisions, monotonic activated-signature
 sets, and multiple required backlog IDs. The coordinator value path is one bundled gate:
+
+ADR 0025 and completed `UNI-ADR-020` are mandatory specification pins for that gate;
+they are not implementation completion. The required implementation backlog IDs remain:
 
 ```text
 required backlog IDs = [UNI-REFI-001, UNI-REFI-002]
