@@ -414,6 +414,21 @@ contract Phase9LoanAccountRefinanceTest {
             IPhase9LoanAccount.Phase9LoanOperationReplay.selector
         );
         _requirePayoffRollback(account, loanId, operationId, debtHashBefore);
+
+        bytes32 freshReentryOperationId = keccak256("ACCOUNT_PAYOFF_FRESH_REENTRY_OPERATION");
+        _registry.setMarkBehavior(false, false, true, refinanceId, 114, freshReentryOperationId);
+        _expectPayoffError(
+            account,
+            refinanceId,
+            114,
+            operationId,
+            IPhase9LoanAccount.InvalidPhase9LoanOperation.selector
+        );
+        _requirePayoffRollback(account, loanId, operationId, debtHashBefore);
+        require(
+            !account.operationProcessed(freshReentryOperationId),
+            "fresh reentry operation not rolled back"
+        );
     }
 
     function test_ActivateReplacementLoanBindsPolicyConfigurationAndAgreementVersion() public {
@@ -551,6 +566,39 @@ contract Phase9LoanAccountRefinanceTest {
             keccak256(abi.encode(account.debtState())) == keccak256(abi.encode(_dormantDebt())),
             "activation record debt"
         );
+    }
+
+    function test_ActivateReplacementLoanRejectsRegistryIdentityMutationMatrix() public {
+        bytes32 loanId = keccak256("ACCOUNT_ACTIVATION_REGISTRY_MATRIX_LOAN");
+        bytes32 refinanceId = keccak256("ACCOUNT_ACTIVATION_REGISTRY_MATRIX_REFINANCE");
+        bytes32 operationId = keccak256("ACCOUNT_ACTIVATION_REGISTRY_MATRIX_OPERATION");
+        (IPhase9LoanAccount account, Phase9Types.LoanConfiguration memory configuration) =
+            _createAccount(loanId, _dormantDebt());
+        Phase9Types.DebtState memory activationDebt = _activationDebt(refinanceId);
+        _coordinator.setRecord(_newRefinance(configuration, refinanceId, activationDebt));
+
+        for (uint256 mutation = 0; mutation < 6; ++mutation) {
+            _registry.setLoan(
+                loanId,
+                mutation == 0
+                    ? address(0)
+                    : mutation == 1 ? address(_dependency) : address(account),
+                mutation == 2 ? address(0xBADB0B) : configuration.borrower,
+                mutation == 3 ? keccak256("OTHER_AGREEMENT") : configuration.agreementHash,
+                mutation == 4 ? uint32(8) : uint32(9),
+                mutation == 5
+            );
+            _expectActivationInvalid(account, refinanceId, activationDebt, operationId);
+            require(!account.operationProcessed(operationId), "activation registry consumed");
+            require(
+                keccak256(abi.encode(account.debtState())) == keccak256(abi.encode(_dormantDebt())),
+                "activation registry debt"
+            );
+            require(
+                account.agreementVersionHash(activationDebt.termsVersion) == bytes32(0),
+                "activation registry agreement"
+            );
+        }
     }
 
     function test_ActivateReplacementLoanRejectsDebtMutationMatrix() public {
